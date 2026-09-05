@@ -6,16 +6,19 @@ import numpy as np
 
 @dataclass(frozen=True)
 class CameraIntrinsics:
-    """Camera intrinsics model.
-    
-    Defaults match TUM RGB-D Kinect dataset constraints.
-    """
+    """Camera intrinsics (focal length and principal point)."""
     fx: float = 525.0
     fy: float = 525.0
     cx: float = 319.5
     cy: float = 239.5
     width: int = 640
     height: int = 480
+    
+    def __post_init__(self):
+        if self.fx <= 0 or self.fy <= 0:
+            raise ValueError("Focal lengths (fx, fy) must be > 0")
+        if self.width <= 0 or self.height <= 0:
+            raise ValueError("Image dimensions (width, height) must be > 0")
 
     def pixel_to_camera(self, u: float, v: float, depth_m: float) -> tuple[float, float, float]:
         """Project a 2D pixel with depth into 3D camera coordinates.
@@ -41,6 +44,10 @@ class DepthModel:
     TUM uses a scale of 5000 (i.e. 5000 uint16 = 1.0 meters).
     """
     scale: float = 5000.0
+    
+    def __post_init__(self):
+        if self.scale <= 0:
+            raise ValueError("Scale must be > 0")
     
     def depth_to_meters(self, depth_raw: np.ndarray) -> np.ndarray:
         """Convert raw uint16 depth image to metric float depth."""

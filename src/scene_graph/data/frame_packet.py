@@ -37,8 +37,8 @@ def associate_rgb_pose(rgb_timestamps: List[float], pose_timestamps: List[float]
 
 def build_frame_packets(
     sequence_dir: Union[str, Path],
-    start_frame: int = 100,
-    end_frame: int = 300,
+    start_frame: Optional[int] = 100,
+    end_frame: Optional[int] = 300,
     rgb_depth_max_dt: float = 0.02,
     rgb_pose_max_dt: float = 0.02
 ) -> List[FramePacket]:
@@ -50,8 +50,8 @@ def build_frame_packets(
 
     Args:
         sequence_dir: Directory containing TUM dataset.
-        start_frame: Inclusive start index for RGB stream.
-        end_frame: Inclusive end index for RGB stream.
+        start_frame: Inclusive start index for RGB stream. If None, starts at 0.
+        end_frame: Inclusive end index for RGB stream. If None, goes to end.
         rgb_depth_max_dt: Maximum timestamp difference for depth matching.
         rgb_pose_max_dt: Maximum timestamp difference for pose matching.
 
@@ -74,10 +74,13 @@ def build_frame_packets(
     
     packets: List[FramePacket] = []
     
-    # End frame is inclusive, so we need + 1, bounded by stream length
-    safe_end = min(end_frame + 1, len(rgb_entries))
+    _start = 0 if start_frame is None else start_frame
+    _end = len(rgb_entries) - 1 if end_frame is None else end_frame
     
-    for frame_idx in range(start_frame, safe_end):
+    # End frame is inclusive, so we need + 1, bounded by stream length
+    safe_end = min(_end + 1, len(rgb_entries))
+    
+    for frame_idx in range(_start, safe_end):
         rgb_entry = rgb_entries[frame_idx]
         
         # Load RGB Image (Mandatory)

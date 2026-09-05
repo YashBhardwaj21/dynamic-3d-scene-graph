@@ -28,6 +28,12 @@ def test_quaternion_to_matrix_identity():
     np.testing.assert_allclose(R, np.eye(3))
 
 
+def test_quaternion_to_matrix_zero():
+    """Verify zero quaternion is rejected."""
+    with pytest.raises(ValueError, match="non-zero"):
+        quaternion_to_matrix(0, 0, 0, 0)
+
+
 def test_quaternion_to_matrix_rotation():
     """Verify 90 degree rotation about X axis."""
     qx, qy, qz, qw = np.sin(np.pi / 4), 0, 0, np.cos(np.pi / 4)
@@ -85,6 +91,30 @@ def test_transform_points_rotation():
     
     expected = np.array([[1.0, 2.0, 4.0]])
     np.testing.assert_allclose(points_world, expected, atol=1e-7)
+
+
+def test_transform_points_se3_regression():
+    """Verify SE(3) transformation mathematics exactly against known p_w = R p_c + t."""
+    # 90 degrees around Z axis: qx=0, qy=0, qz=sin(pi/4), qw=cos(pi/4)
+    qx, qy, qz, qw = 0.0, 0.0, np.sin(np.pi / 4), np.cos(np.pi / 4)
+    tx, ty, tz = 10.0, -5.0, 2.0
+    
+    T = pose_to_transform(tx, ty, tz, qx, qy, qz, qw)
+    R = T[:3, :3]
+    t = T[:3, 3]
+    
+    # Verify R is valid rotation
+    np.testing.assert_allclose(R.T @ R, np.eye(3), atol=1e-7)
+    assert pytest.approx(np.linalg.det(R)) == 1.0
+    
+    # Point [1, 0, 0] rotated 90 around Z becomes [0, 1, 0]
+    # Translated by [10, -5, 2] becomes [10, -4, 2]
+    p_c = np.array([[1.0, 0.0, 0.0]])
+    p_w = transform_points(T, p_c)
+    
+    expected_p_w = p_c @ R.T + t  # Vectorized R @ p_c.T + t
+    np.testing.assert_allclose(p_w, expected_p_w, atol=1e-7)
+    np.testing.assert_allclose(p_w, [[10.0, -4.0, 2.0]], atol=1e-7)
 
 
 def test_transform_points_empty():

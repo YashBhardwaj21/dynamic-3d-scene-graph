@@ -26,22 +26,29 @@ def test_associate_exceeds_threshold():
     matches = associate(primary, secondary, max_dt=0.02)
     assert matches == [(1, 1)]
 
-def test_associate_greedy_assignment():
-    """Verify greedy assignment minimizes time difference and respects 1-to-1."""
-    # p[0] is distance 0.01 from s[0] and 0.015 from s[1]
-    # p[1] is distance 0.005 from s[1]
-    # Greedy should assign (p[1], s[1]) first, then (p[0], s[0])
-    primary = [1.0, 1.01]
-    secondary = [0.99, 1.015]
+def test_associate_optimal_monotonic_matching():
+    """Verify DP algorithm achieves maximum cardinality even when local NN would fail.
     
-    matches = associate(primary, secondary, max_dt=0.02)
-    # diffs:
-    # (p=0, s=0) -> |1.0 - 0.99| = 0.01
-    # (p=0, s=1) -> |1.0 - 1.015| = 0.015
-    # (p=1, s=0) -> |1.01 - 0.99| = 0.02
-    # (p=1, s=1) -> |1.01 - 1.015| = 0.005
-    # Smallest diff is (p=1, s=1) with 0.005
-    # Next smallest is (p=0, s=0) with 0.01
+    Adversarial case:
+    primary = [1.0, 1.05]
+    secondary = [0.95, 1.0]
+    max_dt = 0.1
+    
+    A local nearest-neighbor algorithm would greedily match P[0] (1.0) with S[1] (1.0) 
+    because diff=0.0. Then P[1] (1.05) cannot match S[0] (0.95) because that violates 
+    monotonic ordering. Total matches = 1.
+    
+    The optimal global DP algorithm maximizes cardinality by matching:
+    P[0] -> S[0] (diff 0.05)
+    P[1] -> S[1] (diff 0.05)
+    Total matches = 2.
+    """
+    primary = [1.0, 1.05]
+    secondary = [0.95, 1.0]
+    
+    matches = associate(primary, secondary, max_dt=0.1)
+    
+    assert len(matches) == 2
     assert matches == [(0, 0), (1, 1)]
 
 def test_associate_asymmetric_lists():

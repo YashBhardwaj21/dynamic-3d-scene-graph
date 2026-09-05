@@ -38,17 +38,44 @@ def test_build_frame_packets_201_frames():
     assert packets[0].frame_index == 100
     assert packets[-1].frame_index == 300
     
+    from scene_graph.data.synchronization import associate
+    from scene_graph.data.tum_loader import TUMLoader
+    
+    loader = TUMLoader(TUM_DATASET_DIR)
+    
+    # Calculate exact expected matches using our frozen optimal DP algorithm
+    rgb_entries = loader.load_rgb()[start_frame:end_frame + 1]
+    depth_entries = loader.load_depth()
+    pose_entries = loader.load_groundtruth()
+    
+    rgb_ts = [e.timestamp for e in rgb_entries]
+    depth_ts = [e.timestamp for e in depth_entries]
+    pose_ts = [e.timestamp for e in pose_entries]
+    
+    expected_depth_matches = len(associate(rgb_ts, depth_ts, max_dt=0.02))
+    expected_pose_matches = len(associate(rgb_ts, pose_ts, max_dt=0.02))
+    
     has_depth_count = sum(1 for p in packets if p.has_depth)
     has_pose_count = sum(1 for p in packets if p.has_pose)
     
-    assert has_depth_count > 150, f"Expected high depth association, got {has_depth_count}"
-    assert has_pose_count > 150, f"Expected high pose association, got {has_pose_count}"
+    assert has_depth_count == expected_depth_matches, f"Expected exact depth association {expected_depth_matches}, got {has_depth_count}"
+    assert has_pose_count == expected_pose_matches, f"Expected exact pose association {expected_pose_matches}, got {has_pose_count}"
+    
+    # Verify exact sequence
+    assert [p.frame_index for p in packets] == list(range(start_frame, end_frame + 1))
+    
+    rgb_to_depth = dict(associate(rgb_ts, depth_ts, max_dt=0.02))
+    rgb_to_pose = dict(associate(rgb_ts, pose_ts, max_dt=0.02))
     
     # Deep integration check for representative frames
     check_indices = [100, 150, 200, 250, 300]
     
     for packet in packets:
+        idx = packet.frame_index
+        local_idx = idx - start_frame
+        
         # Mandatory RGB checks
+        # Verify FramePacket standardizes to strictly RGB channel order
         assert isinstance(packet.rgb, np.ndarray)
         assert packet.rgb.shape == (480, 640, 3)
         assert packet.rgb.dtype == np.uint8
@@ -59,6 +86,11 @@ def test_build_frame_packets_201_frames():
             assert packet.depth.shape == (480, 640)
             assert packet.depth.dtype == np.uint16
             
+            # Verify timestamp delta
+            d_idx = rgb_to_depth[local_idx]
+            dt = abs(rgb_ts[local_idx] - depth_ts[d_idx])
+            assert dt <= 0.02
+            
         # Optional pose checks
         if packet.has_pose:
             assert isinstance(packet.pose, np.ndarray)
@@ -67,9 +99,13 @@ def test_build_frame_packets_201_frames():
             # Verify R.T @ R ≈ I
             R = packet.pose[:3, :3]
             np.testing.assert_allclose(R.T @ R, np.eye(3), atol=1e-5)
-            # Verify det(R) ≈ 1
             assert pytest.approx(np.linalg.det(R), abs=1e-5) == 1.0
             
+            # Verify timestamp delta
+            p_idx = rgb_to_pose[local_idx]
+            dt = abs(rgb_ts[local_idx] - pose_ts[p_idx])
+            assert dt <= 0.02
+            
         # Check specific representative frames if they have data
-        if packet.frame_index in check_indices:
+        if idx in check_indices:
             assert packet.timestamp > 0.0

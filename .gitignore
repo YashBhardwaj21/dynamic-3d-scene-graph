@@ -7,7 +7,17 @@ venv/
 env/
 myenv/
 
+# Artifacts & Caches
 experiments/*/frames/
 experiments/*/logs/
 __pycache__/
-data/processed/*/geometry/
+# Data and Model Assets
+data/raw/
+data/processed/
+models/
+mobileclip2_b.ts
+runs/
+.ultralytics/
+*.ipynb
+yolov8n*.pt
+yolov8s*.pt
