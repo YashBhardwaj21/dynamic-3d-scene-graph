@@ -1,6 +1,16 @@
 """Geometry module for camera intrinsics and 3D transforms."""
 
 from scene_graph.geometry.camera import CameraIntrinsics
+from scene_graph.geometry.point_cloud import (
+    compute_object_bbox_world,
+    compute_object_centroid_world,
+    compute_object_points_world,
+)
+from scene_graph.geometry.reference_frame import (
+    RelationReferenceFrame,
+    compute_gravity_alignment,
+    estimate_support_plane_normal,
+)
 from scene_graph.geometry.transforms import (
     pose_to_transform,
     quaternion_to_matrix,
@@ -12,4 +22,10 @@ __all__ = [
     "quaternion_to_matrix",
     "pose_to_transform",
     "transform_points",
+    "compute_object_points_world",
+    "compute_object_centroid_world",
+    "compute_object_bbox_world",
+    "RelationReferenceFrame",
+    "estimate_support_plane_normal",
+    "compute_gravity_alignment",
 ]
