@@ -14,8 +14,9 @@ def quaternion_to_matrix(qx: float, qy: float, qz: float, qw: float) -> np.ndarr
     """
     q = np.array([qx, qy, qz, qw], dtype=np.float64)
     norm = np.linalg.norm(q)
-    if norm > 0:
-        q = q / norm
+    if norm < 1e-12:
+        raise ValueError("Quaternion norm must be non-zero")
+    q = q / norm
     qx, qy, qz, qw = q
     
     R = np.array([

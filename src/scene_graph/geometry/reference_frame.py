@@ -39,29 +39,37 @@ def estimate_support_plane_normal(points: np.ndarray) -> np.ndarray:
     return normal
 
 
-def compute_gravity_alignment(points_world: np.ndarray) -> np.ndarray:
-    """Compute a 4x4 transform that aligns the normal of points_world to [0, 0, 1]."""
-    normal = estimate_support_plane_normal(points_world)
+def compute_alignment_from_normal(normal: np.ndarray) -> np.ndarray:
+    """Compute a 4x4 transform that aligns the given normal to [0, 0, 1]."""
     target_up = np.array([0.0, 0.0, 1.0])
     
-    # Axis-angle rotation vector
+    normal = normal / np.linalg.norm(normal)
     v = np.cross(normal, target_up)
-    s = np.linalg.norm(v)
     c = np.dot(normal, target_up)
     
-    R = np.eye(3)
-    if s > 1e-6:
-        # Skew-symmetric matrix
+    if c > 0.999:
+        R = np.eye(3)
+    elif c < -0.999:
+        R = np.diag([1.0, -1.0, -1.0])
+    else:
+        s = np.linalg.norm(v)
         vx = np.array([
             [0, -v[2], v[1]],
             [v[2], 0, -v[0]],
             [-v[1], v[0], 0]
         ])
-        R = np.eye(3) + vx + np.dot(vx, vx) * ((1 - c) / (s ** 2))
-    elif c < -0.999:
-        # 180 degree rotation around X axis (if exactly opposite)
-        R = np.diag([1.0, -1.0, -1.0])
+        R = np.eye(3) + vx + (vx @ vx) * ((1 - c) / (s ** 2))
         
     T = np.eye(4)
     T[:3, :3] = R
     return T
+
+
+def compute_alignment_transform(points_world: np.ndarray) -> np.ndarray:
+    """Compute a 4x4 transform that aligns the normal of points_world to [0, 0, 1].
+    
+    This computes an alignment to the dominant support plane (e.g., desk, floor),
+    which is useful for defining a stable world orientation for relations.
+    """
+    normal = estimate_support_plane_normal(points_world)
+    return compute_alignment_from_normal(normal)

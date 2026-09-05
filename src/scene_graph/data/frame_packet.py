@@ -12,8 +12,11 @@ from scene_graph.data.tum_loader import TUMLoader
 
 @dataclass
 class FramePacket:
-    """A synchronized, per-frame container for downstream scene graph tasks."""
-    frame_index: int            # sequential within range (matches RGB stream index)
+    """A synchronized, per-frame container for downstream scene graph tasks.
+    
+    RGB is mandatory. Depth and Pose are optional.
+    """
+    frame_index: int            # original RGB stream index
     timestamp: float            # RGB timestamp
     rgb: np.ndarray             # (480, 640, 3) uint8 RGB format
     depth: Optional[np.ndarray] # (480, 640) uint16
@@ -22,23 +25,35 @@ class FramePacket:
     has_pose: bool
 
 
+def associate_rgb_depth(rgb_timestamps: List[float], depth_timestamps: List[float], max_dt: float) -> dict:
+    """Helper to conceptually separate RGB-Depth synchronization."""
+    return dict(associate(rgb_timestamps, depth_timestamps, max_dt))
+
+
+def associate_rgb_pose(rgb_timestamps: List[float], pose_timestamps: List[float], max_dt: float) -> dict:
+    """Helper to conceptually separate RGB-Pose synchronization."""
+    return dict(associate(rgb_timestamps, pose_timestamps, max_dt))
+
+
 def build_frame_packets(
     sequence_dir: Union[str, Path],
     start_frame: int = 100,
     end_frame: int = 300,
-    max_dt: float = 0.02
+    rgb_depth_max_dt: float = 0.02,
+    rgb_pose_max_dt: float = 0.02
 ) -> List[FramePacket]:
     """Build FramePackets for a specific range of RGB frames.
 
     Iterates over the RGB stream from `start_frame` to `end_frame` (inclusive),
     syncs depth and pose data, loads the images from disk, and constructs FramePackets.
-    Emits packets even if depth or pose are missing.
+    Emits packets even if depth or pose are missing. RGB is strictly mandatory.
 
     Args:
         sequence_dir: Directory containing TUM dataset.
         start_frame: Inclusive start index for RGB stream.
         end_frame: Inclusive end index for RGB stream.
-        max_dt: Maximum timestamp difference for association.
+        rgb_depth_max_dt: Maximum timestamp difference for depth matching.
+        rgb_pose_max_dt: Maximum timestamp difference for pose matching.
 
     Returns:
         List of FramePacket objects.
@@ -54,8 +69,8 @@ def build_frame_packets(
     pose_timestamps = [e.timestamp for e in pose_entries]
     
     # Run nearest-neighbour timestamp association against the RGB anchor stream
-    rgb_to_depth = dict(associate(rgb_timestamps, depth_timestamps, max_dt))
-    rgb_to_pose = dict(associate(rgb_timestamps, pose_timestamps, max_dt))
+    rgb_to_depth = associate_rgb_depth(rgb_timestamps, depth_timestamps, rgb_depth_max_dt)
+    rgb_to_pose = associate_rgb_pose(rgb_timestamps, pose_timestamps, rgb_pose_max_dt)
     
     packets: List[FramePacket] = []
     
@@ -65,14 +80,14 @@ def build_frame_packets(
     for frame_idx in range(start_frame, safe_end):
         rgb_entry = rgb_entries[frame_idx]
         
-        # Load RGB Image
+        # Load RGB Image (Mandatory)
         rgb_path = str(loader.resolve_rgb_path(rgb_entry))
         rgb_bgr = cv2.imread(rgb_path, cv2.IMREAD_COLOR)
         if rgb_bgr is None:
             raise FileNotFoundError(f"Failed to load RGB image at {rgb_path}")
         rgb_np = cv2.cvtColor(rgb_bgr, cv2.COLOR_BGR2RGB)
         
-        # Load Depth Image if matched
+        # Load Depth Image if matched (Optional)
         depth_np = None
         has_depth = False
         if frame_idx in rgb_to_depth:
@@ -84,7 +99,7 @@ def build_frame_packets(
                 depth_np = depth_raw
                 has_depth = True
             
-        # Get Pose Matrix if matched
+        # Get Pose Matrix if matched (Optional)
         pose_np = None
         has_pose = False
         if frame_idx in rgb_to_pose:
