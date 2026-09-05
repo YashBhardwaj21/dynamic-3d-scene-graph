@@ -1,5 +1,12 @@
 rgbd_dataset_freiburg1_desk/
 *.pt
+
+# Virtual environments
+.venv/
+venv/
+env/
+myenv/
+
 experiments/*/frames/
 experiments/*/logs/
 __pycache__/
