@@ -1,0 +1,6 @@
+rgbd_dataset_freiburg1_desk/
+*.pt
+experiments/*/frames/
+experiments/*/logs/
+__pycache__/
+data/processed/*/geometry/
