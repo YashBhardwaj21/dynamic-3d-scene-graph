@@ -71,6 +71,8 @@ class StoredObservationLoader(ObservationSource):
                     centroid_world=np.array(obs_dict["centroid_world"], dtype=np.float32) if obs_dict.get("centroid_world") else None,
                     bbox_min_world=np.array(obs_dict["bbox_min_world"], dtype=np.float32) if obs_dict.get("bbox_min_world") else None,
                     bbox_max_world=np.array(obs_dict["bbox_max_world"], dtype=np.float32) if obs_dict.get("bbox_max_world") else None,
+                    depth_stats=obs_dict.get("depth_stats"),
+                    points_world_sampled=np.array(obs_dict["points_world_sampled"], dtype=np.float32) if obs_dict.get("points_world_sampled") else None,
                     valid_point_count=obs_dict.get("valid_point_count", 0),
                     point_cloud_ref=obs_dict.get("point_cloud_ref")
                 )

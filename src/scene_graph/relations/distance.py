@@ -12,7 +12,7 @@ class DistanceRelationModule(RelationModule):
     """Computes NEAR and FAR relations based on centroid distance."""
     
     def __init__(self, config=None, near_threshold: float = 0.40, far_threshold: float = 1.50):
-        if config is not None:
+        if config is not None and getattr(config, 'relations', None) and getattr(config.relations, 'distance', None):
             self.near_threshold = config.relations.distance.near_threshold
             self.far_threshold = config.relations.distance.far_threshold
         else:

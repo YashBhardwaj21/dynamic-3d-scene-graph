@@ -11,7 +11,7 @@ class ContainmentRelationModule(RelationModule):
     """Computes INSIDE relation based on point cloud containment."""
     
     def __init__(self, config=None, min_containment_ratio: float = 0.5):
-        if config is not None:
+        if config is not None and getattr(config, 'relations', None) and getattr(config.relations, 'containment', None):
             self.min_containment_ratio = config.relations.containment.min_containment_ratio
         else:
             self.min_containment_ratio = min_containment_ratio
@@ -28,12 +28,12 @@ class ContainmentRelationModule(RelationModule):
         if not subj_geo or not obj_geo:
             return evidences
             
-        if subj_geo.points_world is None:
+        pts = subj_geo.points_world_sampled if subj_geo.points_world_sampled is not None else subj_geo.points_world
+        
+        if pts is None:
             return evidences
             
         # Simplified: Check if subject points are inside object bounding box
-        pts = subj_geo.points_world
-        
         in_x = (pts[:, 0] >= obj_geo.bbox_min_world[0]) & (pts[:, 0] <= obj_geo.bbox_max_world[0])
         in_y = (pts[:, 1] >= obj_geo.bbox_min_world[1]) & (pts[:, 1] <= obj_geo.bbox_max_world[1])
         in_z = (pts[:, 2] >= obj_geo.bbox_min_world[2]) & (pts[:, 2] <= obj_geo.bbox_max_world[2])

@@ -11,7 +11,7 @@ class DirectionalRelationModule(RelationModule):
     """Computes LEFT_OF and ABOVE directional relations."""
     
     def __init__(self, config=None, margin_x: float = 0.05, margin_y: float = 0.05):
-        if config is not None:
+        if config is not None and getattr(config, 'relations', None) and getattr(config.relations, 'directional', None):
             self.margin_x = config.relations.directional.margin_x
             self.margin_y = config.relations.directional.margin_y
         else:
@@ -27,14 +27,20 @@ class DirectionalRelationModule(RelationModule):
         subj_geo = context.observation_geometry.get(subject.object_id)
         obj_geo = context.observation_geometry.get(object.object_id)
         
-        if not subj_geo or not obj_geo or subj_geo.points_world is None or obj_geo.points_world is None:
+        if not subj_geo or not obj_geo:
+            return evidences
+            
+        subj_pts = subj_geo.points_world_sampled if subj_geo.points_world_sampled is not None else subj_geo.points_world
+        obj_pts = obj_geo.points_world_sampled if obj_geo.points_world_sampled is not None else obj_geo.points_world
+        
+        if subj_pts is None or obj_pts is None:
             return evidences
             
         # Project points onto reference frame axes
         # Horizontal (LEFT_OF) -> looking from camera, horizontal axis points RIGHT
         # A is LEFT of B if A's max right extent is less than B's min right extent.
-        subj_x = np.dot(subj_geo.points_world, context.reference_frame.horizontal_axis_world)
-        obj_x = np.dot(obj_geo.points_world, context.reference_frame.horizontal_axis_world)
+        subj_x = np.dot(subj_pts, context.reference_frame.horizontal_axis_world)
+        obj_x = np.dot(obj_pts, context.reference_frame.horizontal_axis_world)
         
         gap_x = np.percentile(obj_x, 5) - np.percentile(subj_x, 95)
         
@@ -72,8 +78,8 @@ class DirectionalRelationModule(RelationModule):
             
         # Vertical (ABOVE)
         # A is ABOVE B if A's min y extent is greater than B's max y extent
-        subj_y = np.dot(subj_geo.points_world, context.reference_frame.up_axis_world)
-        obj_y = np.dot(obj_geo.points_world, context.reference_frame.up_axis_world)
+        subj_y = np.dot(subj_pts, context.reference_frame.up_axis_world)
+        obj_y = np.dot(obj_pts, context.reference_frame.up_axis_world)
         
         gap_y = np.percentile(subj_y, 5) - np.percentile(obj_y, 95)
         

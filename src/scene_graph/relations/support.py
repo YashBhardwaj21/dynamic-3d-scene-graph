@@ -11,7 +11,7 @@ class SupportRelationModule(RelationModule):
     """Computes ON relation based on plane fitting and distance."""
     
     def __init__(self, config=None, plane_residual_m: float = 0.02, min_support_overlap: float = 0.1):
-        if config is not None:
+        if config is not None and getattr(config, 'relations', None) and getattr(config.relations, 'support', None):
             self.plane_residual_m = config.relations.support.plane_residual_m
             self.min_support_overlap = config.relations.support.min_support_overlap
         else:
@@ -31,39 +31,23 @@ class SupportRelationModule(RelationModule):
         if not subj_geo or not obj_geo:
             return evidences
             
-        if subj_geo.points_world is None or obj_geo.points_world is None:
+        subj_pts = subj_geo.points_world_sampled if subj_geo.points_world_sampled is not None else subj_geo.points_world
+        obj_pts = obj_geo.points_world_sampled if obj_geo.points_world_sampled is not None else obj_geo.points_world
+        
+        if subj_pts is None or obj_pts is None:
             return evidences
             
-        if len(obj_geo.points_world) < 10 or len(subj_geo.points_world) < 10:
+        if len(obj_pts) < 10 or len(subj_pts) < 10:
             return evidences
             
-        # For object (support surface), estimate plane
-        # Simplified: assume normal is roughly Z-up in world frame, just find Z bounds
-        # In a full implementation, we'd do RANSAC plane fit here.
-        # But per the plan, we'll do a simple percentile check.
-        # A's bottom distance to B's plane.
-        
-        # Approximate plane fit: find the mean Z of the support surface's top points
-        # Or even simpler: the plane is defined by B's centroid Z if it's flat, or its bounding box top
-        
-        # Wait, the instruction says:
-        # "RANSAC plane fit: ax + by + cz + d = 0 (configurable Z-range filter)"
-        # Let's do a fast SVD/PCA for normal if we assume it's flat, or just use the reference frame's gravity axis.
-        # Given we have `ObservationGeometry`, we can just use B's centroid and the reference frame's up vector 
-        # for a basic check, or compute actual distance to B's points.
-        
         # Using reference frame's up_axis_world
         up = context.reference_frame.up_axis_world
         
-        # To find vertical extents, we could project all 8 corners of the AABB
-        # or use points if available. We'll project the centroid and use AABB extents approximately.
-        # But for exactness, if points are missing we return empty above.
-        # So we can project points_world onto the up vector.
-        subj_z_points = np.dot(subj_geo.points_world, up)
-        obj_z_points = np.dot(obj_geo.points_world, up)
+        subj_z_points = np.dot(subj_pts, up)
+        obj_z_points = np.dot(obj_pts, up)
         
-        subj_min_z = np.min(subj_z_points)
-        obj_max_z = np.max(obj_z_points)
+        subj_min_z = np.percentile(subj_z_points, 5)
+        obj_max_z = np.percentile(obj_z_points, 95)
         
         bottom_distance = subj_min_z - obj_max_z
         
@@ -73,10 +57,10 @@ class SupportRelationModule(RelationModule):
             horiz = context.reference_frame.horizontal_axis_world
             depth = context.reference_frame.depth_axis_world
             
-            subj_h = np.dot(subj_geo.points_world, horiz)
-            subj_d = np.dot(subj_geo.points_world, depth)
-            obj_h = np.dot(obj_geo.points_world, horiz)
-            obj_d = np.dot(obj_geo.points_world, depth)
+            subj_h = np.dot(subj_pts, horiz)
+            subj_d = np.dot(subj_pts, depth)
+            obj_h = np.dot(obj_pts, horiz)
+            obj_d = np.dot(obj_pts, depth)
             
             subj_min_xy = np.array([np.min(subj_h), np.min(subj_d)])
             subj_max_xy = np.array([np.max(subj_h), np.max(subj_d)])

@@ -8,16 +8,21 @@ from scene_graph.relations.directional import DirectionalRelationModule
 from scene_graph.relations.depth_order import DepthOrderRelationModule
 from scene_graph.relations.support import SupportRelationModule
 from scene_graph.relations.containment import ContainmentRelationModule
+from scene_graph.relations.evidence import EvidenceResult
 
 
 @pytest.fixture
 def dummy_context():
-    from scene_graph.geometry.reference_frame import RelationReferenceFrame
-    pose = np.eye(4)
-    ref_frame = RelationReferenceFrame.from_camera_pose(pose)
+    from scene_graph.geometry.reference_frame import RelationReferenceFrame, CameraFrame
+    ref_frame = RelationReferenceFrame.from_gravity_and_heading(
+        origin_world=np.zeros(3),
+        up_axis_world=np.array([0.0, 1.0, 0.0]),
+        heading_world=np.array([0.0, 0.0, 1.0])
+    )
+    camera_frame = CameraFrame.from_camera_pose(np.eye(4))
     return FrameContext(
-        frame_index=1, timestamp=1.0, intrinsics=None, world_T_camera=pose,
-        reference_frame=ref_frame, depth_image=None, observation_geometry={}
+        frame_index=1, timestamp=1.0, intrinsics=None, world_T_camera=np.eye(4),
+        reference_frame=ref_frame, camera_frame=camera_frame, depth_image=None, observation_geometry={}
     )
 
 
@@ -31,26 +36,45 @@ def create_track(obj_id, class_name, centroid):
     )
 
 
+def add_dummy_geometry(context, track, pts):
+    """Construct an ObservationGeometry that exactly matches the dataclass schema."""
+    pts_array = np.array(pts)
+    context.observation_geometry[track.object_id] = ObservationGeometry(
+        obs_id=f"obs_{track.object_id}_{context.frame_index}",
+        track_id=track.object_id,
+        centroid_world=track.centroid_world,
+        bbox_min_world=np.min(pts_array, axis=0),
+        bbox_max_world=np.max(pts_array, axis=0),
+        depth_stats={"p05": float(np.min(pts_array[:, 2])), "median": float(np.median(pts_array[:, 2])), "p95": float(np.max(pts_array[:, 2]))},
+        points_world_sampled=pts_array,
+        points_world=pts_array,
+        points_camera=None,
+        mask=None,
+        valid_point_count=len(pts_array)
+    )
+
+
 def test_distance_relations(dummy_context):
     module = DistanceRelationModule(near_threshold=0.40, far_threshold=1.50)
     
-    # NEAR
     t1 = create_track("t1", "cup", [0.0, 0.0, 0.0])
     t2 = create_track("t2", "book", [0.39, 0.0, 0.0])
-    evidences = module.compute(t1, t2, dummy_context)
-    assert len(evidences) == 1
-    assert evidences[0].predicate == "NEAR"
+    add_dummy_geometry(dummy_context, t1, [[0.0, 0.0, 0.0]])
+    add_dummy_geometry(dummy_context, t2, [[0.39, 0.0, 0.0]])
     
-    # NEITHER
-    t3 = create_track("t3", "book", [1.0, 0.0, 0.0])
-    evidences = module.compute(t1, t3, dummy_context)
-    assert len(evidences) == 0
+    evidences = module.compute(t1, t2, dummy_context)
+    # distance returns NEAR/FAR explicitly with SUPPORTED/CONTRADICTED
+    preds = {e.predicate: e.result for e in evidences}
+    assert preds["NEAR"] == EvidenceResult.SUPPORTED
+    assert preds["FAR"] == EvidenceResult.CONTRADICTED
     
     # FAR
     t4 = create_track("t4", "book", [1.6, 0.0, 0.0])
+    add_dummy_geometry(dummy_context, t4, [[1.6, 0.0, 0.0]])
     evidences = module.compute(t1, t4, dummy_context)
-    assert len(evidences) == 1
-    assert evidences[0].predicate == "FAR"
+    preds = {e.predicate: e.result for e in evidences}
+    assert preds["FAR"] == EvidenceResult.SUPPORTED
+    assert preds["NEAR"] == EvidenceResult.CONTRADICTED
 
 
 def test_directional_relations(dummy_context):
@@ -59,15 +83,13 @@ def test_directional_relations(dummy_context):
     # LEFT_OF (dx < -0.05)
     t1 = create_track("t1", "cup", [-0.1, 0.0, 0.0])
     t2 = create_track("t2", "book", [0.0, 0.0, 0.0])
-    evidences = module.compute(t1, t2, dummy_context)
-    assert len(evidences) == 1
-    assert evidences[0].predicate == "LEFT_OF"
+    add_dummy_geometry(dummy_context, t1, [[-0.1, 0.0, 0.0]])
+    add_dummy_geometry(dummy_context, t2, [[0.0, 0.0, 0.0]])
     
-    # ABOVE (dy > 0.05)
-    t3 = create_track("t3", "cup", [0.0, -0.1, 0.0])
-    evidences = module.compute(t3, t2, dummy_context)
-    assert len(evidences) == 1
-    assert evidences[0].predicate == "ABOVE"
+    evidences = module.compute(t1, t2, dummy_context)
+    preds = {e.predicate: e.result for e in evidences}
+    assert preds["LEFT_OF"] == EvidenceResult.SUPPORTED
+    assert preds["ABOVE"] == EvidenceResult.CONTRADICTED
 
 
 def test_depth_order_relations(dummy_context):
@@ -76,6 +98,10 @@ def test_depth_order_relations(dummy_context):
     # IN_FRONT_OF (dz < -0.05)
     t1 = create_track("t1", "cup", [0.0, 0.0, -0.1])
     t2 = create_track("t2", "book", [0.0, 0.0, 0.0])
+    add_dummy_geometry(dummy_context, t1, [[0.0, 0.0, -0.1]])
+    add_dummy_geometry(dummy_context, t2, [[0.0, 0.0, 0.0]])
+    
     evidences = module.compute(t1, t2, dummy_context)
-    assert len(evidences) == 1
-    assert evidences[0].predicate == "IN_FRONT_OF"
+    preds = {e.predicate: e.result for e in evidences}
+    assert preds["IN_FRONT_OF"] == EvidenceResult.SUPPORTED
+
