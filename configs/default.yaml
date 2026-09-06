@@ -77,6 +77,11 @@ geometry:
 
   measurement_noise_std_m: 0.01
 
+  plane_ransac:
+    max_iterations: 100
+    min_inliers: 3
+    random_seed: 0
+
 
 relations:
   distance:

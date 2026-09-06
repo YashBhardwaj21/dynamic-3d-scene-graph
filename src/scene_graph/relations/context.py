@@ -26,6 +26,9 @@ class ObservationGeometry:
     mask: Optional[np.ndarray]
     valid_point_count: int
     position_covariance_world: Optional[np.ndarray] = None
+    obb_center_world: Optional[np.ndarray] = None
+    obb_axes_world: Optional[np.ndarray] = None
+    obb_extents_world: Optional[np.ndarray] = None
 
 
 @dataclass
