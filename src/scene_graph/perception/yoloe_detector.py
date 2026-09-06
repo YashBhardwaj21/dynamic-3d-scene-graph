@@ -11,8 +11,6 @@ except ImportError:
     YOLO = None
 
 from scene_graph.data.frame_packet import FramePacket
-from scene_graph.geometry.camera import CameraIntrinsics, DepthModel
-from scene_graph.geometry.point_cloud import compute_object_geometry, GeometryStatus
 from scene_graph.perception.observation_source import ObservationProducer
 from scene_graph.perception.observation import Observation, encode_mask_rle
 
@@ -22,17 +20,13 @@ class YOLOEDetector(ObservationProducer):
     def __init__(self, 
                  model_path: str, 
                  confidence_threshold: float = 0.40,
-                 allowed_classes: Optional[Tuple[str, ...]] = None,
-                 intrinsics: Optional[CameraIntrinsics] = None,
-                 depth_model: Optional[DepthModel] = None):
+                 allowed_classes: Optional[Tuple[str, ...]] = None):
         """Initialize the detector.
         
         Args:
             model_path: Path to the Ultralytics model weights. Must exist locally.
             confidence_threshold: Minimum confidence score [0, 1].
             allowed_classes: Set of allowed class names. If None, allows all.
-            intrinsics: Camera intrinsics for 3D projection. Defaults to TUM FR1.
-            depth_model: Depth scale model. Defaults to TUM 5000 scale.
         """
         if YOLO is None:
             raise ImportError("ultralytics package is required for YOLOEDetector.")
@@ -58,16 +52,6 @@ class YOLOEDetector(ObservationProducer):
                     f"Cannot filter by requested vocabulary. Error: {e}"
                 ) from e
                 
-        self.intrinsics = intrinsics or CameraIntrinsics()
-        self.depth_model = depth_model or DepthModel()
-        
-        # Get geometry parameters from config if provided, else defaults
-        # We assume scene_graph.config.SceneGraphConfig was loaded if passed, 
-        # but the class signature here only takes intrinsics/depth_model.
-        # We will use defaults matching the 20-step plan unless configured.
-        self.min_valid_points = 30
-        self.depth_outlier_band_m = 0.10
-        
         # Internal sequential ID counter
         self._obs_counter = 1
         
@@ -90,11 +74,6 @@ class YOLOEDetector(ObservationProducer):
         
         if result.boxes is None or len(result.boxes) == 0:
             return observations
-            
-        # Get depth array if available (now assumed to be metric meters)
-        depth_m = None
-        if packet.depth is not None:
-            depth_m = packet.depth
             
         for i, box in enumerate(result.boxes):
             # 1. Parse Box
@@ -124,53 +103,6 @@ class YOLOEDetector(ObservationProducer):
                 mask_np = (mask_np > 0)
                 mask_rle = encode_mask_rle(mask_np)
                 
-            # 3. Compute 3D Geometry
-            centroid_camera = None
-            centroid_world = None
-            bbox_min_world = None
-            bbox_max_world = None
-            valid_point_count = 0
-            geometry_status = GeometryStatus.VALID.value
-            geometry_error = None
-            object_geometry = None
-            
-            if mask_np is not None and depth_m is not None and packet.world_T_camera is not None:
-                try:
-                    obj_geo = compute_object_geometry(
-                        mask_np, depth_m, self.intrinsics, packet.world_T_camera,
-                        min_valid_points=self.min_valid_points,
-                        depth_outlier_band_m=self.depth_outlier_band_m
-                    )
-                    
-                    if obj_geo.status == GeometryStatus.VALID:
-                        centroid_camera = obj_geo.centroid_camera
-                        centroid_world = obj_geo.centroid_world
-                        bbox_min_world = obj_geo.bbox_min_world
-                        bbox_max_world = obj_geo.bbox_max_world
-                        valid_point_count = obj_geo.valid_point_count
-                        geometry_status = obj_geo.status.value
-                        object_geometry = obj_geo
-                    else:
-                        geometry_status = obj_geo.status.value
-                        if obj_geo.status == GeometryStatus.INSUFFICIENT_DEPTH:
-                            geometry_error = f"Valid depth points below threshold ({self.min_valid_points})"
-                        else:
-                            geometry_error = "Unknown geometry error"
-                        object_geometry = obj_geo
-                except Exception as e:
-                    geometry_status = GeometryStatus.INVALID_GEOMETRY.value
-                    geometry_error = str(e)
-            else:
-                if mask_np is None:
-                    geometry_status = GeometryStatus.NO_DEPTH.value # really NO_MASK but observation relies on depth
-                    geometry_error = "Mask missing"
-                elif depth_m is None:
-                    geometry_status = GeometryStatus.NO_DEPTH.value
-                    geometry_error = "Depth image missing"
-                elif packet.world_T_camera is None:
-                    geometry_status = GeometryStatus.NO_POSE.value
-                    geometry_error = "Pose missing"
-                    
             obs = Observation(
                 obs_id=self._generate_obs_id(),
                 frame_index=packet.frame_index,
@@ -178,17 +110,7 @@ class YOLOEDetector(ObservationProducer):
                 class_name=class_name,
                 confidence=conf,
                 bbox_xyxy=xyxy,
-                mask_rle=mask_rle,
-                centroid_camera=centroid_camera,
-                centroid_world=centroid_world,
-                bbox_min_world=bbox_min_world,
-                bbox_max_world=bbox_max_world,
-                depth_stats=object_geometry.depth_stats if object_geometry else None,
-                points_world_sampled=object_geometry.points_world_sampled if object_geometry else None,
-                valid_point_count=valid_point_count,
-                geometry_status=geometry_status,
-                geometry_error=geometry_error,
-                object_geometry=object_geometry
+                mask_rle=mask_rle
             )
             observations.append(obs)
             

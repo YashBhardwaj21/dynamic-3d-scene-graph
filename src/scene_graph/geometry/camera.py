@@ -39,6 +39,22 @@ class CameraIntrinsics:
         z = depth_m
         return x, y, z
 
+    def pixels_to_camera(self, u: np.ndarray, v: np.ndarray, depth_m: np.ndarray) -> np.ndarray:
+        """Vectorized projection from 2D pixels with depth into 3D camera coordinates.
+        
+        Args:
+            u: Horizontal pixel coordinates (N,).
+            v: Vertical pixel coordinates (N,).
+            depth_m: Depth in meters along the Z axis (N,).
+            
+        Returns:
+            (N, 3) numpy array of (x, y, z) camera coordinates.
+        """
+        z = depth_m.astype(np.float64)
+        x = (u - self.cx) * z / self.fx
+        y = (v - self.cy) * z / self.fy
+        return np.column_stack((x, y, z))
+
 
 @dataclass(frozen=True)
 class DepthModel:

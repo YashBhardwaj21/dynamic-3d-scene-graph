@@ -19,6 +19,11 @@ class GraphEdge:
     
     participation: GraphParticipationState = GraphParticipationState.ACTIVE
     
+    start_time: float = -1.0
+    start_frame: int = -1
+    end_time: float = -1.0
+    end_frame: int = -1
+    
     attributes: Dict[str, Any] = field(default_factory=dict)
     
     @property

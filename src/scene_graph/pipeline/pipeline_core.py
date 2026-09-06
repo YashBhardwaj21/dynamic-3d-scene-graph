@@ -22,7 +22,6 @@ from scene_graph.relations.depth_order import DepthOrderRelationModule
 from scene_graph.relations.occlusion import OcclusionRelationModule
 
 from scene_graph.geometry.reference_frame import CameraFrame
-from scene_graph.geometry.reference_frame_provider import ReferenceFrameProvider
 from scene_graph.relations.context import FrameContext, ObservationGeometry
 
 
@@ -44,20 +43,11 @@ class SceneGraphPipeline:
         self._register_modules()
         
         # Temporal state machines
-        self.object_state_machine = ObjectStateMachine(
-            hysteresis_frames=config.temporal.object.max_missing_frames
-        )
-        self.relation_state_machine = RelationStateMachine(
-            confirmation_frames=config.temporal.relation.confirm_frames,
-            missing_frames=config.temporal.relation.max_missing_frames
-        )
+        self.object_state_machine = ObjectStateMachine()
+        self.relation_state_machine = RelationStateMachine(config.temporal.relation)
         
         # 3. Graph
         self.graph = TemporalSceneGraph()
-        
-        # 4. Reference frame from dataset convention (NOT first camera pose)
-        dataset_type = config.dataset.type if config.dataset else "tum_rgbd"
-        self.reference_frame_provider = ReferenceFrameProvider(dataset_type=dataset_type)
         
     def _register_modules(self):
         # Register all core relation modules
@@ -119,16 +109,14 @@ class SceneGraphPipeline:
         if packet.world_T_camera is not None:
             try:
                 camera_frame = CameraFrame.from_camera_pose(packet.world_T_camera)
-                # Global relation frame from dataset convention, frozen for the sequence
-                global_relation_frame = self.reference_frame_provider.get_frame(
-                    origin_world=camera_frame.origin_world
-                )
+                # Global relation frame from dataset convention
+                if packet.relation_frame is None:
+                    raise ValueError(f"Frame {packet.frame_index} missing relation reference frame")
+                global_relation_frame = packet.relation_frame
                 
-                from scene_graph.geometry.camera import CameraIntrinsics
-                if packet.camera_model and "fx" in packet.camera_model:
-                    intrinsics = CameraIntrinsics(**packet.camera_model)
-                else:
-                    raise ValueError(f"Frame {packet.frame_index} missing required 'camera_model' with intrinsics.")
+                if packet.camera_intrinsics is None:
+                    raise ValueError(f"Frame {packet.frame_index} missing camera_intrinsics.")
+                intrinsics = packet.camera_intrinsics
                     
                 context = FrameContext(
                     frame_index=packet.frame_index,
@@ -159,6 +147,7 @@ class SceneGraphPipeline:
                 relation_states = self.relation_state_machine.update(
                     evidences=all_evidences,
                     frame_index=packet.frame_index,
+                    timestamp=packet.timestamp,
                     active_object_ids=active_ids
                 )
                 

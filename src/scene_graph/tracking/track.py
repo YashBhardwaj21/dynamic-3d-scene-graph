@@ -3,6 +3,8 @@ from dataclasses import dataclass, field
 from enum import Enum
 import numpy as np
 
+from scene_graph.tracking.state import KalmanState
+
 
 class TrackState(Enum):
     CANDIDATE = "candidate"
@@ -16,7 +18,7 @@ class Track:
     object_id: str
     class_name: str
     state: TrackState
-    centroid_world: np.ndarray
+    _initial_centroid: np.ndarray
     last_observed_frame: int
     first_observed_frame: int
     observation_count: int
@@ -25,9 +27,26 @@ class Track:
     track_observation_ratio: float
     last_timestamp: float
     recent_observations: deque
-    velocity_world: np.ndarray | None = None
-    position_covariance_world: np.ndarray | None = None
+    kalman_state: KalmanState | None = None
     size_world: np.ndarray | None = None
+    
+    @property
+    def centroid_world(self) -> np.ndarray:
+        if self.kalman_state is not None:
+            return self.kalman_state.position
+        return self._initial_centroid
+        
+    @property
+    def velocity_world(self) -> np.ndarray | None:
+        if self.kalman_state is not None:
+            return self.kalman_state.velocity
+        return None
+        
+    @property
+    def position_covariance_world(self) -> np.ndarray | None:
+        if self.kalman_state is not None:
+            return self.kalman_state.position_covariance
+        return None
     
     # Store the actual object instances (e.g. Observation) over time if needed
     # internally by tracker, bounded by the deque.

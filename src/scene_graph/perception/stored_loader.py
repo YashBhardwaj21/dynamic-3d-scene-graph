@@ -8,6 +8,7 @@ import numpy as np
 from scene_graph.data.frame_packet import FramePacket
 from scene_graph.perception.observation_source import ObservationSource
 from scene_graph.perception.observation import Observation
+from scene_graph.geometry.point_cloud import ObjectGeometry
 
 
 class StoredObservationLoader(ObservationSource):
@@ -58,7 +59,7 @@ class StoredObservationLoader(ObservationSource):
             obs_list = []
             
             for obs_dict in frame_data.get("observations", []):
-                # Convert list back to numpy arrays where necessary
+                # Build Observation with current schema (detection-only fields)
                 obs = Observation(
                     obs_id=obs_dict["obs_id"],
                     frame_index=obs_dict["frame_index"],
@@ -67,15 +68,22 @@ class StoredObservationLoader(ObservationSource):
                     confidence=obs_dict["confidence"],
                     bbox_xyxy=np.array(obs_dict["bbox_xyxy"], dtype=np.float32),
                     mask_rle=obs_dict.get("mask_rle"),
-                    centroid_camera=np.array(obs_dict["centroid_camera"], dtype=np.float32) if obs_dict.get("centroid_camera") else None,
-                    centroid_world=np.array(obs_dict["centroid_world"], dtype=np.float32) if obs_dict.get("centroid_world") else None,
-                    bbox_min_world=np.array(obs_dict["bbox_min_world"], dtype=np.float32) if obs_dict.get("bbox_min_world") else None,
-                    bbox_max_world=np.array(obs_dict["bbox_max_world"], dtype=np.float32) if obs_dict.get("bbox_max_world") else None,
-                    depth_stats=obs_dict.get("depth_stats"),
-                    points_world_sampled=np.array(obs_dict["points_world_sampled"], dtype=np.float32) if obs_dict.get("points_world_sampled") else None,
-                    valid_point_count=obs_dict.get("valid_point_count", 0),
-                    point_cloud_ref=obs_dict.get("point_cloud_ref")
+                    point_cloud_ref=obs_dict.get("point_cloud_ref"),
                 )
+                
+                # Attach geometry if the JSON contains geometry fields
+                centroid_world = np.array(obs_dict["centroid_world"], dtype=np.float32) if obs_dict.get("centroid_world") else None
+                if centroid_world is not None:
+                    obs.object_geometry = ObjectGeometry(
+                        centroid_camera=np.array(obs_dict["centroid_camera"], dtype=np.float32) if obs_dict.get("centroid_camera") else None,
+                        centroid_world=centroid_world,
+                        bbox_min_world=np.array(obs_dict["bbox_min_world"], dtype=np.float32) if obs_dict.get("bbox_min_world") else None,
+                        bbox_max_world=np.array(obs_dict["bbox_max_world"], dtype=np.float32) if obs_dict.get("bbox_max_world") else None,
+                        depth_stats=obs_dict.get("depth_stats"),
+                        points_world_sampled=np.array(obs_dict["points_world_sampled"], dtype=np.float32) if obs_dict.get("points_world_sampled") else None,
+                        valid_point_count=obs_dict.get("valid_point_count", 0),
+                    )
+                
                 obs_list.append(obs)
                 
             self._frames_cache[frame_idx] = obs_list

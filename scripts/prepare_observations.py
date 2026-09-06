@@ -122,15 +122,31 @@ def main():
                 "confidence": obs.confidence,
                 "bbox_xyxy": convert_for_json(obs.bbox_xyxy),
                 "mask_rle": obs.mask_rle,
-                "centroid_camera": convert_for_json(obs.centroid_camera),
-                "centroid_world": convert_for_json(obs.centroid_world),
-                "bbox_min_world": convert_for_json(obs.bbox_min_world),
-                "bbox_max_world": convert_for_json(obs.bbox_max_world),
-                "depth_stats": obs.depth_stats,
-                "points_world_sampled": convert_for_json(obs.points_world_sampled),
-                "valid_point_count": obs.valid_point_count,
                 "point_cloud_ref": obs.point_cloud_ref
             }
+            
+            geo = obs.object_geometry
+            if geo is not None:
+                obs_dict.update({
+                    "centroid_camera": convert_for_json(geo.centroid_camera),
+                    "centroid_world": convert_for_json(geo.centroid_world),
+                    "bbox_min_world": convert_for_json(geo.bbox_min_world),
+                    "bbox_max_world": convert_for_json(geo.bbox_max_world),
+                    "depth_stats": geo.depth_stats,
+                    "points_world_sampled": convert_for_json(geo.points_world_sampled),
+                    "valid_point_count": geo.valid_point_count
+                })
+            else:
+                obs_dict.update({
+                    "centroid_camera": None,
+                    "centroid_world": None,
+                    "bbox_min_world": None,
+                    "bbox_max_world": None,
+                    "depth_stats": None,
+                    "points_world_sampled": None,
+                    "valid_point_count": 0
+                })
+                
             obs_dicts.append(obs_dict)
             
         frame_data = {

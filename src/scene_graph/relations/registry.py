@@ -58,8 +58,9 @@ class RelationRegistry:
             for predicate in module.predicates():
                 module_admissible_pairs.update(self._filter_admissible(candidate_pairs, predicate))
                 
-            # Dispatch all admissible pairs to the module at once
-            evidences = module.compute_pairs(list(module_admissible_pairs), context)
+            # Dispatch all admissible pairs to the module at once, sorted to ensure determinism
+            sorted_pairs = sorted(list(module_admissible_pairs), key=lambda p: (p[0].object_id, p[1].object_id))
+            evidences = module.compute_pairs(sorted_pairs, context)
             for ev in evidences:
                 if ev.predicate not in ALLOWED_PREDICATES:
                     raise ValueError(f"Module {module.__class__.__name__} emitted evidence for invalid predicate '{ev.predicate}'.")

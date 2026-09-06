@@ -1,6 +1,6 @@
 import numpy as np
-import numpy as np
 from typing import List, Tuple
+from scipy.spatial import cKDTree
 
 from scene_graph.tracking.track import Track
 from scene_graph.relations.base import RelationModule
@@ -49,15 +49,18 @@ class DistanceRelationModule(RelationModule):
             subj_geo = context.observation_geometry[subject.object_id]
             obj_geo = context.observation_geometry[object.object_id]
             
-            # AABB to AABB distance
-            # Distance is zero if they intersect, else Euclidean distance between closest edges
-            min_diff = np.maximum(subj_geo.bbox_min_world - obj_geo.bbox_max_world, 0)
-            max_diff = np.maximum(obj_geo.bbox_min_world - subj_geo.bbox_max_world, 0)
-            
-            # For each dimension, the distance is max(0, min(A)-max(B), min(B)-max(A))
-            dist_sq = np.sum(np.square(np.maximum(min_diff, max_diff)))
-            dist = np.sqrt(dist_sq)
-            evidence_type = "aabb_distance"
+            if subj_geo.points_world_sampled is not None and obj_geo.points_world_sampled is not None and len(subj_geo.points_world_sampled) > 0 and len(obj_geo.points_world_sampled) > 0:
+                tree = cKDTree(subj_geo.points_world_sampled)
+                distances, _ = tree.query(obj_geo.points_world_sampled, k=1)
+                dist = np.min(distances)
+                evidence_type = "point_cloud_distance"
+            else:
+                # Fallback to AABB
+                min_diff = np.maximum(subj_geo.bbox_min_world - obj_geo.bbox_max_world, 0)
+                max_diff = np.maximum(obj_geo.bbox_min_world - subj_geo.bbox_max_world, 0)
+                dist_sq = np.sum(np.square(np.maximum(min_diff, max_diff)))
+                dist = np.sqrt(dist_sq)
+                evidence_type = "aabb_distance"
         
         # NEAR
         if dist < self.near_threshold:

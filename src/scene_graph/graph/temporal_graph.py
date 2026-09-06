@@ -5,6 +5,8 @@ from scene_graph.graph.edge import GraphEdge
 from scene_graph.temporal.object_state import ObjectState
 from scene_graph.temporal.relation_state import RelationState
 from scene_graph.graph.participation_state import GraphParticipationState
+from scene_graph.graph.event import GraphEvent, GraphEventType
+from scene_graph.graph.graph_history import GraphHistory
 
 
 class TemporalSceneGraph:
@@ -20,6 +22,8 @@ class TemporalSceneGraph:
         self.nodes: Dict[str, GraphNode] = {}
         # Key: (subject_id, object_id, predicate) -> GraphEdge
         self.edges: Dict[Tuple[str, str, str], GraphEdge] = {}
+        
+        self.history = GraphHistory()
         
         self.current_frame_index: int = -1
         self.current_timestamp: float = -1.0
@@ -48,11 +52,24 @@ class TemporalSceneGraph:
                     track=track,
                     state=state
                 )
+                self.history.add_event(GraphEvent(
+                    event_type=GraphEventType.NODE_ADDED,
+                    timestamp=self.current_timestamp,
+                    frame_index=self.current_frame_index,
+                    subject_id=track.object_id
+                ))
                 
         # Mark UNKNOWN nodes as REMOVED and cascade to edges
         for obj_id, state in list(object_states.items()):
             if state == ObjectState.UNKNOWN and obj_id in self.nodes:
-                self.nodes[obj_id].participation = GraphParticipationState.REMOVED
+                if self.nodes[obj_id].participation != GraphParticipationState.REMOVED:
+                    self.nodes[obj_id].participation = GraphParticipationState.REMOVED
+                    self.history.add_event(GraphEvent(
+                        event_type=GraphEventType.NODE_REMOVED,
+                        timestamp=self.current_timestamp,
+                        frame_index=self.current_frame_index,
+                        subject_id=obj_id
+                    ))
                 self._remove_edges_for_node(obj_id)
 
     def update_edges(self, evidences: list, relation_states: Dict[Tuple[str, str, str], RelationState]):
@@ -72,7 +89,7 @@ class TemporalSceneGraph:
         #    (they were garbage-collected)
         stale_keys = [k for k in self.edges if k not in relation_states]
         for key in stale_keys:
-            del self.edges[key]
+            self._remove_edge(key)
             
         # 2. Update or create edges based on current state
         for key, state in relation_states.items():
@@ -81,7 +98,8 @@ class TemporalSceneGraph:
             # Edges can only exist if both nodes exist and are active
             if subject_id not in self.nodes or object_id not in self.nodes:
                 # Clean up orphaned edges
-                self.edges.pop(key, None)
+                if key in self.edges:
+                    self._remove_edge(key)
                 continue
             
             if state == RelationState.SUPPORTED:
@@ -100,17 +118,28 @@ class TemporalSceneGraph:
                         object_id=object_id,
                         state=state,
                         latest_evidence=latest_ev[key],
-                        participation=GraphParticipationState.ACTIVE
+                        participation=GraphParticipationState.ACTIVE,
+                        start_time=self.current_timestamp,
+                        start_frame=self.current_frame_index
                     )
+                    self.history.add_event(GraphEvent(
+                        event_type=GraphEventType.EDGE_ADDED,
+                        timestamp=self.current_timestamp,
+                        frame_index=self.current_frame_index,
+                        subject_id=subject_id,
+                        object_id=object_id,
+                        predicate=predicate
+                    ))
             elif state in (RelationState.CONTRADICTED, RelationState.UNKNOWN):
                 # Remove the edge entirely — the graph is current belief only
-                self.edges.pop(key, None)
-            elif state == RelationState.HYPOTHESIZED:
+                if key in self.edges:
+                    self._remove_edge(key)
                 # Hypothesized relations are NOT yet in the graph.
                 # They exist in the state machine but haven't earned a graph edge.
                 # If there was an old edge, remove it (the relation was contradicted
                 # and is now re-hypothesized).
-                self.edges.pop(key, None)
+                if key in self.edges:
+                    self._remove_edge(key)
 
     def _remove_edges_for_node(self, node_id: str):
         """Remove all edges connected to a given node."""
@@ -119,7 +148,23 @@ class TemporalSceneGraph:
             if k[0] == node_id or k[1] == node_id
         ]
         for k in keys_to_remove:
-            del self.edges[k]
+            self._remove_edge(k)
+            
+    def _remove_edge(self, key: Tuple[str, str, str]):
+        """Helper to remove edge and log event."""
+        if key in self.edges:
+            edge = self.edges[key]
+            edge.end_time = self.current_timestamp
+            edge.end_frame = self.current_frame_index
+            self.history.add_event(GraphEvent(
+                event_type=GraphEventType.EDGE_REMOVED,
+                timestamp=self.current_timestamp,
+                frame_index=self.current_frame_index,
+                subject_id=key[0],
+                object_id=key[1],
+                predicate=key[2]
+            ))
+            del self.edges[key]
 
     def get_active_nodes(self) -> List[GraphNode]:
         """Return all STABLE nodes."""

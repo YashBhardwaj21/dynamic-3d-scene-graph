@@ -7,6 +7,7 @@ import numpy as np
 import pytest
 
 from scene_graph.data.frame_packet import FramePacket
+from scene_graph.geometry.camera import CameraIntrinsics, DepthModel
 from scene_graph.perception.stored_loader import StoredObservationLoader
 
 
@@ -64,6 +65,11 @@ def dummy_observations_dir():
         yield str(temp_path)
 
 
+# Dummy intrinsics/depth for FramePacket construction
+_DUMMY_INTRINSICS = CameraIntrinsics(fx=525.0, fy=525.0, cx=320.0, cy=240.0, width=640, height=480)
+_DUMMY_DEPTH_MODEL = DepthModel(scale=5000.0)
+
+
 def test_stored_observation_loader(dummy_observations_dir):
     """Verify StoredObservationLoader correctly parses chunked JSON and returns Observations."""
     loader = StoredObservationLoader(dummy_observations_dir)
@@ -77,7 +83,9 @@ def test_stored_observation_loader(dummy_observations_dir):
         timestamp=1.0,
         rgb=np.zeros((10, 10, 3), dtype=np.uint8),
         depth=None,
-        world_T_camera=None
+        world_T_camera=None,
+        camera_intrinsics=_DUMMY_INTRINSICS,
+        depth_model=_DUMMY_DEPTH_MODEL
     )
     
     observations_100 = loader.detect(packet_100)
@@ -88,8 +96,10 @@ def test_stored_observation_loader(dummy_observations_dir):
     assert obs.class_name == "cup"
     assert obs.confidence == 0.95
     np.testing.assert_array_equal(obs.bbox_xyxy, [10.0, 10.0, 50.0, 50.0])
-    np.testing.assert_array_equal(obs.centroid_world, [1.0, 2.0, 3.0])
-    assert obs.valid_point_count == 100
+    # centroid_world now lives on object_geometry, populated by the loader
+    assert obs.object_geometry is not None
+    np.testing.assert_array_almost_equal(obs.object_geometry.centroid_world, [1.0, 2.0, 3.0])
+    assert obs.object_geometry.valid_point_count == 100
     assert obs.mask_rle is None
     
     # Test frame 101 (empty observations)
@@ -98,7 +108,9 @@ def test_stored_observation_loader(dummy_observations_dir):
         timestamp=1.1,
         rgb=np.zeros((10, 10, 3), dtype=np.uint8),
         depth=None,
-        world_T_camera=None
+        world_T_camera=None,
+        camera_intrinsics=_DUMMY_INTRINSICS,
+        depth_model=_DUMMY_DEPTH_MODEL
     )
     
     observations_101 = loader.detect(packet_101)
@@ -110,7 +122,9 @@ def test_stored_observation_loader(dummy_observations_dir):
         timestamp=1.2,
         rgb=np.zeros((10, 10, 3), dtype=np.uint8),
         depth=None,
-        world_T_camera=None
+        world_T_camera=None,
+        camera_intrinsics=_DUMMY_INTRINSICS,
+        depth_model=_DUMMY_DEPTH_MODEL
     )
     
     observations_102 = loader.detect(packet_102)

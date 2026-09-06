@@ -29,10 +29,10 @@ def dummy_context():
 def create_track(obj_id, class_name, centroid):
     return Track(
         object_id=obj_id, class_name=class_name, state=TrackState.ACTIVE,
-        centroid_world=np.array(centroid),
+        _initial_centroid=np.array(centroid),
         last_observed_frame=1, first_observed_frame=1, observation_count=1,
         missing_count=0, detection_confidence=0.9, track_observation_ratio=1.0,
-        recent_observations=[], velocity_world=None, last_timestamp=1.0
+        recent_observations=[], last_timestamp=1.0
     )
 
 

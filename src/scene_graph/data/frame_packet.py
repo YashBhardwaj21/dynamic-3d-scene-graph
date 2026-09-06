@@ -6,6 +6,9 @@ from typing import List, Optional, Union
 import cv2
 import numpy as np
 
+from scene_graph.geometry.camera import CameraIntrinsics, DepthModel
+from scene_graph.geometry.reference_frame import RelationReferenceFrame
+
 
 
 
@@ -20,7 +23,9 @@ class FramePacket:
     rgb: np.ndarray             # HxWx3 uint8 RGB format
     depth: Optional[np.ndarray] # HxW raw depth units
     world_T_camera: Optional[np.ndarray]  # (4, 4) pose matrix
-    camera_model: dict = None         # Camera intrinsics and dimensions
+    camera_intrinsics: CameraIntrinsics
+    depth_model: DepthModel
+    relation_frame: Optional[RelationReferenceFrame] = None
     metadata: dict = None             # Any other dataset-independent metadata
 
     @property

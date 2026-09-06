@@ -3,6 +3,7 @@ from typing import List, Optional
 from scene_graph.graph.temporal_graph import TemporalSceneGraph
 from scene_graph.graph.node import GraphNode
 from scene_graph.graph.edge import GraphEdge
+from scene_graph.graph.event import GraphEvent
 
 
 class QueryEngine:
@@ -65,3 +66,23 @@ class QueryEngine:
             e for e in edges 
             if e.subject_id == subject_id and e.object_id == object_id
         ]
+
+    def get_event_history(self, object_id: str) -> List[GraphEvent]:
+        """Get all structural changes involving a specific object."""
+        return self.graph.history.get_events_for_object(object_id)
+        
+    def query_past_relations(self, subject_id: str, predicate: str, time_window: Optional[tuple[float, float]] = None) -> List[GraphEvent]:
+        """Find historical occurrences of a specific relation."""
+        events = self.graph.history.get_events_for_object(subject_id)
+        
+        # Filter by predicate and EDGE_ADDED
+        relation_events = [
+            e for e in events 
+            if e.subject_id == subject_id and e.predicate == predicate and e.event_type.name == "EDGE_ADDED"
+        ]
+        
+        if time_window:
+            start_t, end_t = time_window
+            relation_events = [e for e in relation_events if start_t <= e.timestamp <= end_t]
+            
+        return relation_events

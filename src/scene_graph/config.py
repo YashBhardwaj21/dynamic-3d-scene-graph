@@ -50,10 +50,20 @@ class SyncConfig(BaseModel):
     rgb_depth_max_dt: float = Field(0.02, gt=0)
     rgb_pose_max_dt: float = Field(0.02, gt=0)
 
+class RobustDepthConfig(BaseModel):
+    model_config = ConfigDict(extra='forbid')
+    method: str = Field("mad")
+    k: float = Field(3.5, gt=0)
+
+class DownsamplingConfig(BaseModel):
+    model_config = ConfigDict(extra='forbid')
+    voxel_size_m: float = Field(0.005, gt=0)
+
 class GeometryConfig(BaseModel):
     model_config = ConfigDict(extra='forbid')
     min_valid_points: int = Field(30, gt=0)
-    depth_outlier_band_m: float = Field(0.10, gt=0)
+    robust_depth: RobustDepthConfig = Field(default_factory=RobustDepthConfig)
+    downsampling: DownsamplingConfig = Field(default_factory=DownsamplingConfig)
 
 class VocabularyConfig(BaseModel):
     model_config = ConfigDict(extra='forbid')
@@ -71,30 +81,55 @@ class PerceptionConfig(BaseModel):
     vocabulary: str = Field("v4_11")
     classes: Tuple[str, ...] = Field(default_factory=tuple)
 
+class TrackingConfirmationConfig(BaseModel):
+    model_config = ConfigDict(extra='forbid')
+    min_hits: int = Field(3, ge=1)
+
+class TrackingOcclusionConfig(BaseModel):
+    model_config = ConfigDict(extra='forbid')
+    max_missing_seconds: float = Field(1.0, ge=0.0)
+
+class TrackingProcessConfig(BaseModel):
+    model_config = ConfigDict(extra='forbid')
+    acceleration_std_mps2: float = Field(1.0, gt=0)
+
+class TrackingMeasurementConfig(BaseModel):
+    model_config = ConfigDict(extra='forbid')
+    position_std_m: float = Field(0.02, gt=0)
+
+class TrackingGatingConfig(BaseModel):
+    model_config = ConfigDict(extra='forbid')
+    chi2_probability: float = Field(0.999, gt=0, lt=1)
+
+class TrackingAssociationConfig(BaseModel):
+    model_config = ConfigDict(extra='forbid')
+    max_distance_m: float = Field(0.50, gt=0)
+    size_weight: float = Field(0.25, ge=0)
+
+class TrackingHistoryConfig(BaseModel):
+    model_config = ConfigDict(extra='forbid')
+    observation_buffer_size: int = Field(10, ge=1)
+
 class TrackingConfig(BaseModel):
     model_config = ConfigDict(extra='forbid')
-    association_method: str = Field("hungarian")
-    association_threshold_m: float = Field(0.25, gt=0)
-    max_missing_frames: int = Field(5, ge=0)
-    min_hits_to_confirm: int = Field(3, ge=1)
-    velocity_history_min: int = Field(3, ge=1)
-    distance_weight: float = Field(1.0, ge=0)
-    velocity_weight: float = Field(0.5, ge=0)
-    size_weight: float = Field(1.0, ge=0)
-
-class ObjectTemporalConfig(BaseModel):
-    model_config = ConfigDict(extra='forbid')
-    min_hits_to_confirm: int = Field(3, ge=1)
-    max_missing_frames: int = Field(5, ge=0)
+    confirmation: TrackingConfirmationConfig = Field(default_factory=TrackingConfirmationConfig)
+    occlusion: TrackingOcclusionConfig = Field(default_factory=TrackingOcclusionConfig)
+    process: TrackingProcessConfig = Field(default_factory=TrackingProcessConfig)
+    measurement: TrackingMeasurementConfig = Field(default_factory=TrackingMeasurementConfig)
+    gating: TrackingGatingConfig = Field(default_factory=TrackingGatingConfig)
+    association: TrackingAssociationConfig = Field(default_factory=TrackingAssociationConfig)
+    history: TrackingHistoryConfig = Field(default_factory=TrackingHistoryConfig)
 
 class RelationTemporalConfig(BaseModel):
     model_config = ConfigDict(extra='forbid')
-    confirm_frames: int = Field(3, ge=1)
-    max_missing_frames: int = Field(2, ge=0)
+    confirmation_threshold: float = Field(0.8, gt=0)
+    contradiction_threshold: float = Field(-0.8, lt=0)
+    decay_per_second: float = Field(0.1, ge=0)
+    unknown_after_seconds: float = Field(2.0, ge=0)
+    lost_after_seconds: float = Field(5.0, ge=0)
 
 class TemporalConfig(BaseModel):
     model_config = ConfigDict(extra='forbid')
-    object: ObjectTemporalConfig = Field(default_factory=ObjectTemporalConfig)
     relation: RelationTemporalConfig = Field(default_factory=RelationTemporalConfig)
 
 class DistanceRelationConfig(BaseModel):

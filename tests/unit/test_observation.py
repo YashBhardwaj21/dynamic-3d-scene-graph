@@ -71,8 +71,6 @@ def test_observation_dataclass():
         confidence=0.85,
         bbox_xyxy=np.array([2.0, 2.0, 4.0, 4.0]),
         mask_rle=rle,
-        centroid_world=np.array([1.0, 2.0, 3.0]),
-        valid_point_count=4
     )
     
     assert obs.obs_id == "obs_test_123"

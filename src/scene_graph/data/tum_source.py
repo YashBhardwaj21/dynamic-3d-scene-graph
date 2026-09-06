@@ -1,10 +1,13 @@
 from typing import Iterator, Optional, Union
 from pathlib import Path
 import cv2
+import numpy as np
 
 from scene_graph.config import SceneGraphConfig
 from scene_graph.data.frame_packet import FramePacket
 from scene_graph.data.frame_source import FrameSource
+from scene_graph.geometry.camera import CameraIntrinsics, DepthModel
+from scene_graph.geometry.reference_frame import RelationReferenceFrame
 from scene_graph.data.tum_loader import TUMLoader
 from scene_graph.data.synchronization import associate
 
@@ -62,20 +65,20 @@ class TUMReplaySource(FrameSource):
     def __iter__(self) -> Iterator[FramePacket]:
         """Yield frame packets one at a time."""
         
-        camera_model = {}
+        camera_intrinsics = None
         if self.config.camera is not None:
-            camera_model = {
-                "fx": self.config.camera.fx,
-                "fy": self.config.camera.fy,
-                "cx": self.config.camera.cx,
-                "cy": self.config.camera.cy,
-                "width": self.config.camera.width,
-                "height": self.config.camera.height
-            }
+            camera_intrinsics = CameraIntrinsics(
+                fx=self.config.camera.fx,
+                fy=self.config.camera.fy,
+                cx=self.config.camera.cx,
+                cy=self.config.camera.cy,
+                width=self.config.camera.width,
+                height=self.config.camera.height
+            )
             
-        depth_scale = 1.0
+        depth_model = None
         if self.config.depth is not None:
-            depth_scale = self.config.depth.scale
+            depth_model = DepthModel(scale=self.config.depth.scale)
             
         for frame_idx in range(self.start_idx, self.end_idx + 1):
             rgb_entry = self.rgb_entries[frame_idx]
@@ -95,8 +98,8 @@ class TUMReplaySource(FrameSource):
                 depth_path = str(self.loader.resolve_depth_path(self.depth_entries[d_idx]))
                 depth_raw = cv2.imread(depth_path, cv2.IMREAD_ANYDEPTH)
                 if depth_raw is not None:
-                    # Convert to metric depth using the scale (e.g. 5000)
-                    depth_np = depth_raw.astype(np.float32) / depth_scale
+                    # Keep as raw depth
+                    depth_np = depth_raw
                     has_depth = True
                 
             # Get Pose Matrix if matched (Optional)
@@ -107,14 +110,23 @@ class TUMReplaySource(FrameSource):
                 pose_np = self.pose_entries[p_idx].as_transform_matrix()
                 has_pose = True
                 
+            # Construct TUM global relation frame
+            relation_frame = RelationReferenceFrame.from_gravity_and_heading(
+                origin_world=np.zeros(3),
+                up_axis_world=np.array([0.0, 0.0, 1.0]),       # Z-up in TUM world
+                heading_world=np.array([1.0, 0.0, 0.0])         # X-forward
+            )
+            
             packet = FramePacket(
                 frame_index=frame_idx,
                 timestamp=rgb_entry.timestamp,
                 rgb=rgb_np,
                 depth=depth_np,
                 world_T_camera=pose_np,
-                camera_model=camera_model,
-                metadata={"depth_scale": depth_scale}
+                camera_intrinsics=camera_intrinsics,
+                depth_model=depth_model,
+                relation_frame=relation_frame,
+                metadata={}
             )
             
             yield packet

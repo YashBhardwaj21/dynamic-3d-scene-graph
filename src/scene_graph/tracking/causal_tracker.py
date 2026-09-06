@@ -8,6 +8,7 @@ from scene_graph.perception.observation import Observation
 from scene_graph.tracking.track import Track, TrackState
 from scene_graph.tracking.tracker_base import TrackerInterface
 from scene_graph.tracking.track_history import TrackHistory
+from scene_graph.tracking.state import KalmanState
 
 
 class CausalTracker(TrackerInterface):
@@ -16,15 +17,18 @@ class CausalTracker(TrackerInterface):
     def __init__(self, config: SceneGraphConfig):
         self.config = config
         
-        self.association_threshold_m = self.config.tracking.association_threshold_m
+        self.association_threshold_m = self.config.tracking.association.max_distance_m
+        self.size_weight = self.config.tracking.association.size_weight
         
-        self.distance_weight = self.config.tracking.distance_weight
-        self.velocity_weight = self.config.tracking.velocity_weight
-        self.size_weight = self.config.tracking.size_weight
+        self.max_missing_seconds = self.config.tracking.occlusion.max_missing_seconds
+        self.min_hits_to_confirm = self.config.tracking.confirmation.min_hits
         
-        self.max_missing_frames = self.config.tracking.max_missing_frames
-        self.min_hits_to_confirm = self.config.tracking.min_hits_to_confirm
-        self.velocity_history_min = self.config.tracking.velocity_history_min
+        self.q_std = self.config.tracking.process.acceleration_std_mps2
+        self.r_cov = np.eye(3) * (self.config.tracking.measurement.position_std_m ** 2)
+        
+        # 99.9% chi-square for 3 DOF is 16.27
+        from scipy.stats import chi2
+        self.chi2_threshold = chi2.ppf(self.config.tracking.gating.chi2_probability, df=3)
         
         self.tracks: Dict[str, Track] = {}
         self.next_track_id = 1
@@ -71,18 +75,14 @@ class CausalTracker(TrackerInterface):
         for track_id, track in self.tracks.items():
             dt = timestamp - track.last_timestamp
             
-            # Predict Position
-            if track.velocity_world is not None and track.recent_observations:
-                pred_pos = track.centroid_world + track.velocity_world * dt
+            # Predict Position and Covariance
+            if track.kalman_state is not None:
+                track.kalman_state.predict(dt, self.q_std)
+                pred_pos = track.kalman_state.position
+                pred_cov = track.kalman_state.position_covariance
             else:
-                pred_pos = np.copy(track.centroid_world)
-                
-            # Predict Covariance
-            if track.position_covariance_world is not None:
-                process_noise = np.eye(3) * 0.1 * dt
-                pred_cov = track.position_covariance_world + process_noise
-            else:
-                pred_cov = np.eye(3) * 1.0
+                pred_pos = track._initial_centroid
+                pred_cov = np.eye(3) * 0.1
                 
             predictions[track_id] = (pred_pos, pred_cov)
                 
@@ -99,15 +99,13 @@ class CausalTracker(TrackerInterface):
         cost_matrix = np.full((len(observations), len(track_ids)), 1e9)
         
         for i, obs in enumerate(observations):
-            if obs.centroid_world is None:
+            if not getattr(obs, 'object_geometry', None) or obs.object_geometry.centroid_world is None:
                 continue # Cannot associate observations without 3D geometry
                 
             # Estimate size
             obs_size = None
-            if getattr(obs, 'object_geometry', None):
+            if obs.object_geometry.bbox_max_world is not None and obs.object_geometry.bbox_min_world is not None:
                 obs_size = obs.object_geometry.bbox_max_world - obs.object_geometry.bbox_min_world
-            elif obs.bbox_max_world is not None and obs.bbox_min_world is not None:
-                obs_size = obs.bbox_max_world - obs.bbox_min_world
                 
             for j, track_id in enumerate(track_ids):
                 track = self.tracks[track_id]
@@ -117,7 +115,7 @@ class CausalTracker(TrackerInterface):
                     continue
                     
                 pred_pos, pred_cov = predictions[track_id]
-                diff = obs.centroid_world - pred_pos
+                diff = obs.object_geometry.centroid_world - pred_pos
                 dist = np.linalg.norm(diff)
                 
                 try:
@@ -126,19 +124,10 @@ class CausalTracker(TrackerInterface):
                 except np.linalg.LinAlgError:
                     mahalanobis_sq = dist * dist / 0.1
                 
-                # Distance must be within Euclidean threshold OR Mahalanobis Chi-Sq threshold
-                # Chi-sq 99.9% for 3 DOF is 16.27
-                if dist <= self.association_threshold_m or mahalanobis_sq <= 16.27:
-                    cost = self.distance_weight * dist
+                # Mahalanobis Chi-Sq gating
+                if mahalanobis_sq <= self.chi2_threshold or dist <= self.association_threshold_m:
+                    cost = dist  # base cost is euclidean distance
                     
-                    if track.velocity_world is not None and self.velocity_weight > 0:
-                        # Estimate implied velocity of observation relative to track's last position
-                        dt = timestamp - track.last_timestamp
-                        if dt > 0:
-                            implied_vel = (obs.centroid_world - track.centroid_world) / dt
-                            vel_diff = np.linalg.norm(implied_vel - track.velocity_world)
-                            cost += self.velocity_weight * vel_diff
-                            
                     if self.size_weight > 0 and obs_size is not None and track.size_world is not None:
                         size_diff = np.linalg.norm(obs_size - track.size_world)
                         cost += self.size_weight * size_diff
@@ -166,30 +155,19 @@ class CausalTracker(TrackerInterface):
         track = self.tracks[track_id]
         old_state = track.state
         
-        # Velocity estimation (Exponential Moving Average)
-        if len(track.recent_observations) > 0:
-            last_obs = track.recent_observations[-1]
-            dt = timestamp - track.last_timestamp
-            if dt > 0 and obs.centroid_world is not None and last_obs.centroid_world is not None:
-                inst_vel = (obs.centroid_world - last_obs.centroid_world) / dt
-                if track.velocity_world is None:
-                    track.velocity_world = inst_vel
-                else:
-                    track.velocity_world = 0.8 * track.velocity_world + 0.2 * inst_vel
-
-        # Simple EMA for covariance
-        obs_noise = np.eye(3) * 0.05
-        if track.position_covariance_world is None:
-            track.position_covariance_world = obs_noise
+        # Update Kalman Filter
+        if track.kalman_state is not None:
+            if getattr(obs, 'object_geometry', None) and obs.object_geometry.centroid_world is not None:
+                track.kalman_state.update(obs.object_geometry.centroid_world, self.r_cov)
         else:
-            track.position_covariance_world = 0.8 * track.position_covariance_world + 0.2 * obs_noise
+            # Initialize Kalman State if it wasn't already (e.g. if this is the first real update)
+            if getattr(obs, 'object_geometry', None) and obs.object_geometry.centroid_world is not None:
+                track.kalman_state = KalmanState(obs.object_geometry.centroid_world)
             
         # Update Size
         obs_size = None
-        if getattr(obs, 'object_geometry', None):
+        if getattr(obs, 'object_geometry', None) and obs.object_geometry.bbox_max_world is not None and obs.object_geometry.bbox_min_world is not None:
             obs_size = obs.object_geometry.bbox_max_world - obs.object_geometry.bbox_min_world
-        elif obs.bbox_max_world is not None and obs.bbox_min_world is not None:
-            obs_size = obs.bbox_max_world - obs.bbox_min_world
             
         if obs_size is not None:
             if track.size_world is None:
@@ -197,7 +175,7 @@ class CausalTracker(TrackerInterface):
             else:
                 track.size_world = 0.8 * track.size_world + 0.2 * obs_size
 
-        track.centroid_world = np.copy(obs.centroid_world)
+
         track.last_observed_frame = frame_index
         track.last_timestamp = timestamp
         track.observation_count += 1
@@ -226,11 +204,12 @@ class CausalTracker(TrackerInterface):
         old_state = track.state
         
         track.missing_count += 1
-        track.last_timestamp = timestamp
         age = frame_index - track.first_observed_frame + 1
         track.track_observation_ratio = track.observation_count / age
         
-        if track.missing_count >= self.max_missing_frames:
+        missing_seconds = timestamp - track.last_timestamp
+        
+        if missing_seconds >= self.max_missing_seconds:
             track.state = TrackState.LOST
         elif track.state == TrackState.ACTIVE:
             track.state = TrackState.TEMPORARILY_UNOBSERVED
@@ -239,7 +218,7 @@ class CausalTracker(TrackerInterface):
             self.history.record_transition(track_id, frame_index, old_state.value, track.state.value, "missing_threshold")
 
     def _create_track(self, obs: Observation, frame_index: int, timestamp: float):
-        if obs.centroid_world is None:
+        if not getattr(obs, 'object_geometry', None) or obs.object_geometry.centroid_world is None:
             return
             
         track_id = f"track_{self.next_track_id:04d}"
@@ -249,7 +228,7 @@ class CausalTracker(TrackerInterface):
             object_id=track_id,
             class_name=obs.class_name,
             state=TrackState.CANDIDATE,
-            centroid_world=np.copy(obs.centroid_world),
+            _initial_centroid=np.copy(obs.object_geometry.centroid_world),
             last_observed_frame=frame_index,
             first_observed_frame=frame_index,
             observation_count=1,
@@ -257,7 +236,8 @@ class CausalTracker(TrackerInterface):
             detection_confidence=obs.confidence,
             track_observation_ratio=1.0,
             last_timestamp=timestamp,
-            recent_observations=collections.deque([obs], maxlen=10)
+            recent_observations=collections.deque([obs], maxlen=self.config.tracking.history.observation_buffer_size),
+            kalman_state=KalmanState(obs.object_geometry.centroid_world)
         )
         
         # Immediate confirmation if min_hits_to_confirm == 1
