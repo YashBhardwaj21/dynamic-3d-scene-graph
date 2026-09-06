@@ -24,6 +24,10 @@ tracking:
   history:
     observation_buffer_size: 10
 
+  initialization:
+    position_variance_m2: 0.01
+    velocity_variance_m2s2: 1.0
+
 
 temporal:
   relation:

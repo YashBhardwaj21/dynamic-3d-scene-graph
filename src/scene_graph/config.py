@@ -140,6 +140,13 @@ class TrackingMeasurementConfig(BaseModel):
     position_std_m: float = Field(0.02, gt=0)
 
 
+class TrackingInitializationConfig(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+
+    position_variance_m2: float = Field(0.01, gt=0)
+    velocity_variance_m2s2: float = Field(1.0, gt=0)
+
+
 class TrackingGatingConfig(BaseModel):
     model_config = ConfigDict(extra="forbid")
 
@@ -166,6 +173,7 @@ class TrackingConfig(BaseModel):
     occlusion: TrackingOcclusionConfig = Field(default_factory=TrackingOcclusionConfig)
     process: TrackingProcessConfig = Field(default_factory=TrackingProcessConfig)
     measurement: TrackingMeasurementConfig = Field(default_factory=TrackingMeasurementConfig)
+    initialization: TrackingInitializationConfig = Field(default_factory=TrackingInitializationConfig)
     gating: TrackingGatingConfig = Field(default_factory=TrackingGatingConfig)
     association: TrackingAssociationConfig = Field(default_factory=TrackingAssociationConfig)
     history: TrackingHistoryConfig = Field(default_factory=TrackingHistoryConfig)
