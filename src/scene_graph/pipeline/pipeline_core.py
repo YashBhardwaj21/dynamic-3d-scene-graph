@@ -135,6 +135,9 @@ class SceneGraphPipeline:
                 ),
                 bbox_min_world=object_geometry.bbox_min_world,
                 bbox_max_world=object_geometry.bbox_max_world,
+                obb_center_world=object_geometry.obb_center_world,
+                obb_axes_world=object_geometry.obb_axes_world,
+                obb_extents_world=object_geometry.obb_extents_world,
                 depth_stats=object_geometry.depth_stats,
                 points_world_sampled=(
                     object_geometry.points_world_sampled
