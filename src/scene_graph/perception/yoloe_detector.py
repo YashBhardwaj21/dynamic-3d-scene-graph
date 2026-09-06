@@ -1,7 +1,7 @@
 """YOLOE Detector wrapper (Substage 2.3)."""
 
 import uuid
-from typing import List, Optional, Set
+from typing import List, Optional, Tuple
 import numpy as np
 from pathlib import Path
 
@@ -12,17 +12,17 @@ except ImportError:
 
 from scene_graph.data.frame_packet import FramePacket
 from scene_graph.geometry.camera import CameraIntrinsics, DepthModel
-from scene_graph.geometry.point_cloud import compute_object_geometry
-from scene_graph.perception.detector_base import DetectorInterface
+from scene_graph.geometry.point_cloud import compute_object_geometry, GeometryStatus
+from scene_graph.perception.observation_source import ObservationProducer
 from scene_graph.perception.observation import Observation, encode_mask_rle
 
-class YOLOEDetector(DetectorInterface):
+class YOLOEDetector(ObservationProducer):
     """Wrapper around Ultralytics YOLOE/YOLOv8 model for observation extraction."""
     
     def __init__(self, 
                  model_path: str, 
                  confidence_threshold: float = 0.40,
-                 allowed_classes: Optional[Set[str]] = None,
+                 allowed_classes: Optional[Tuple[str, ...]] = None,
                  intrinsics: Optional[CameraIntrinsics] = None,
                  depth_model: Optional[DepthModel] = None):
         """Initialize the detector.
@@ -48,15 +48,8 @@ class YOLOEDetector(DetectorInterface):
         
         # Configure open-vocabulary prompting if the model supports it
         if self.allowed_classes is not None:
-            import shutil
-            
-            # Ultralytics hardcodes the search path for this asset to the CWD
-            asset_src = Path("models/ultralytics-assets/mobileclip2_b.ts")
-            asset_dst = Path("mobileclip2_b.ts")
-            if asset_src.exists() and not asset_dst.exists():
-                print(f"Copying {asset_src} to {asset_dst} for Ultralytics...")
-                shutil.copy2(asset_src, asset_dst)
-                
+            # We assume Ultralytics finds its assets without copying to the root.
+            # Fail hard if initialization fails.
             try:
                 self.model.set_classes(list(self.allowed_classes))
             except (AttributeError, AssertionError) as e:
@@ -100,7 +93,7 @@ class YOLOEDetector(DetectorInterface):
             
         # Get depth array if available
         depth_m = None
-        if packet.has_depth and packet.depth is not None:
+        if packet.depth is not None:
             depth_m = self.depth_model.depth_to_meters(packet.depth)
             
         for i, box in enumerate(result.boxes):
@@ -137,38 +130,42 @@ class YOLOEDetector(DetectorInterface):
             bbox_min_world = None
             bbox_max_world = None
             valid_point_count = 0
-            geometry_status = "VALID"
+            geometry_status = GeometryStatus.VALID.value
             geometry_error = None
             
-            if mask_np is not None and depth_m is not None and packet.has_pose:
+            if mask_np is not None and depth_m is not None and packet.world_T_camera is not None:
                 try:
                     obj_geo = compute_object_geometry(
-                        mask_np, depth_m, self.intrinsics, packet.pose,
+                        mask_np, depth_m, self.intrinsics, packet.world_T_camera,
                         min_valid_points=self.min_valid_points,
                         depth_outlier_band_m=self.depth_outlier_band_m
                     )
                     
-                    if obj_geo is not None:
-                        centroid_camera = obj_geo.robust_center_camera
-                        centroid_world = obj_geo.robust_center_world
-                        bbox_min_world = obj_geo.aabb_min_world
-                        bbox_max_world = obj_geo.aabb_max_world
+                    if obj_geo.status == GeometryStatus.VALID:
+                        centroid_camera = obj_geo.centroid_camera
+                        centroid_world = obj_geo.centroid_world
+                        bbox_min_world = obj_geo.bbox_min_world
+                        bbox_max_world = obj_geo.bbox_max_world
                         valid_point_count = obj_geo.valid_point_count
+                        geometry_status = obj_geo.status.value
                     else:
-                        geometry_status = "INSUFFICIENT_DEPTH"
-                        geometry_error = f"Valid depth points below threshold ({self.min_valid_points})"
+                        geometry_status = obj_geo.status.value
+                        if obj_geo.status == GeometryStatus.INSUFFICIENT_DEPTH:
+                            geometry_error = f"Valid depth points below threshold ({self.min_valid_points})"
+                        else:
+                            geometry_error = "Unknown geometry error"
                 except Exception as e:
-                    geometry_status = "INVALID_GEOMETRY"
+                    geometry_status = GeometryStatus.INVALID_GEOMETRY.value
                     geometry_error = str(e)
             else:
                 if mask_np is None:
-                    geometry_status = "NO_DEPTH" # really NO_MASK but observation relies on depth
+                    geometry_status = GeometryStatus.NO_DEPTH.value # really NO_MASK but observation relies on depth
                     geometry_error = "Mask missing"
                 elif depth_m is None:
-                    geometry_status = "NO_DEPTH"
+                    geometry_status = GeometryStatus.NO_DEPTH.value
                     geometry_error = "Depth image missing"
-                elif not packet.has_pose:
-                    geometry_status = "NO_POSE"
+                elif packet.world_T_camera is None:
+                    geometry_status = GeometryStatus.NO_POSE.value
                     geometry_error = "Pose missing"
                     
             obs = Observation(

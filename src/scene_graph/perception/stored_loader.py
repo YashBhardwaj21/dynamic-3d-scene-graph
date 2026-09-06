@@ -6,11 +6,11 @@ from typing import List, Dict, Any
 import numpy as np
 
 from scene_graph.data.frame_packet import FramePacket
-from scene_graph.perception.detector_base import DetectorInterface
+from scene_graph.perception.observation_source import ObservationSource
 from scene_graph.perception.observation import Observation
 
 
-class StoredObservationLoader(DetectorInterface):
+class StoredObservationLoader(ObservationSource):
     """Loads pre-computed observations from chunked JSON files in a directory.
     
     This avoids running the GPU detector during relation/temporal development.
@@ -81,20 +81,23 @@ class StoredObservationLoader(DetectorInterface):
         self._loaded_chunks.add(chunk_filename)
         
     def detect(self, packet: FramePacket) -> List[Observation]:
+        """Match the ObservationProducer API."""
+        return self.observations_for_frame(packet.frame_index)
+        
+    def observations_for_frame(self, frame_index: int) -> List[Observation]:
         """Return the pre-computed observations for the given frame index."""
-        frame_idx = packet.frame_index
         
         # If frame is already in cache, return it
-        if frame_idx in self._frames_cache:
-            return self._frames_cache[frame_idx]
+        if frame_index in self._frames_cache:
+            return self._frames_cache[frame_index]
             
         # Try to find the chunk containing this frame by loading unloaded chunks
         # In a real sequential streaming scenario, it's usually the next chunk
         for chunk_file in self.chunk_files:
             if chunk_file not in self._loaded_chunks:
                 self._load_chunk(chunk_file)
-                if frame_idx in self._frames_cache:
-                    return self._frames_cache[frame_idx]
+                if frame_index in self._frames_cache:
+                    return self._frames_cache[frame_index]
                     
         # If we loaded everything and still don't have it, return empty
         return []

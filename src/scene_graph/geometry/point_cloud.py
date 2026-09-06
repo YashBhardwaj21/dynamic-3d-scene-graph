@@ -7,18 +7,27 @@ from scene_graph.geometry.transforms import transform_points
 
 
 from dataclasses import dataclass
-from typing import Optional
+from typing import Optional, Tuple
+from enum import Enum
+
+class GeometryStatus(str, Enum):
+    VALID = "VALID"
+    INSUFFICIENT_DEPTH = "INSUFFICIENT_DEPTH"
+    INVALID_GEOMETRY = "INVALID_GEOMETRY"
+    NO_DEPTH = "NO_DEPTH"
+    NO_POSE = "NO_POSE"
 
 @dataclass
 class ObjectGeometry:
     """Cached per-observation geometry."""
-    points_camera: np.ndarray        # (N, 3)
-    points_world: np.ndarray         # (N, 3)
-    robust_center_camera: np.ndarray # (3,)
-    robust_center_world: np.ndarray  # (3,)
-    aabb_min_world: np.ndarray       # (3,)
-    aabb_max_world: np.ndarray       # (3,)
-    valid_point_count: int
+    points_camera: Optional[np.ndarray] = None
+    points_world: Optional[np.ndarray] = None
+    centroid_camera: Optional[np.ndarray] = None
+    centroid_world: Optional[np.ndarray] = None
+    bbox_min_world: Optional[np.ndarray] = None
+    bbox_max_world: Optional[np.ndarray] = None
+    valid_point_count: int = 0
+    status: GeometryStatus = GeometryStatus.VALID
 
 
 def compute_object_geometry(
@@ -40,7 +49,7 @@ def compute_object_geometry(
         depth_outlier_band_m: Margin around median depth to retain.
         
     Returns:
-        ObjectGeometry or None if invalid.
+        ObjectGeometry (or None if totally invalid input)
     """
     if mask.ndim != 2 or depth_m.ndim != 2:
         raise ValueError("Mask and depth must be 2D arrays")
@@ -52,7 +61,7 @@ def compute_object_geometry(
     v, u = np.where(valid_depth_mask)
     
     if len(u) < min_valid_points:
-        return None
+        return ObjectGeometry(status=GeometryStatus.INSUFFICIENT_DEPTH)
         
     z_m = depth_m[valid_depth_mask].astype(np.float64)
     
@@ -61,7 +70,7 @@ def compute_object_geometry(
     band_mask = np.abs(z_m - z_med) <= depth_outlier_band_m
     
     if np.sum(band_mask) < min_valid_points:
-        return None
+        return ObjectGeometry(status=GeometryStatus.INSUFFICIENT_DEPTH)
         
     u_filt = u[band_mask]
     v_filt = v[band_mask]
@@ -85,9 +94,10 @@ def compute_object_geometry(
     return ObjectGeometry(
         points_camera=points_camera,
         points_world=points_world,
-        robust_center_camera=center_camera,
-        robust_center_world=center_world,
-        aabb_min_world=aabb_min,
-        aabb_max_world=aabb_max,
-        valid_point_count=len(points_world)
+        centroid_camera=center_camera,
+        centroid_world=center_world,
+        bbox_min_world=aabb_min,
+        bbox_max_world=aabb_max,
+        valid_point_count=len(points_world),
+        status=GeometryStatus.VALID
     )
