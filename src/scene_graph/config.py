@@ -232,7 +232,11 @@ class SupportRelationConfig(BaseModel):
     model_config = ConfigDict(extra="forbid")
 
     plane_residual_m: float = Field(0.05, gt=0)
-    min_support_overlap: float = Field(0.05, gt=0)
+    min_support_overlap: float = Field(0.05, gt=0, le=1.0)
+    contact_tolerance_m: float = Field(0.02, gt=0)
+    min_contact_density: float = Field(0.05, gt=0, le=1.0)
+    min_plane_points: int = Field(10, gt=2)
+    min_plane_alignment_cosine: float = Field(0.8, gt=0, le=1.0)
 
 
 class DirectionalRelationConfig(BaseModel):

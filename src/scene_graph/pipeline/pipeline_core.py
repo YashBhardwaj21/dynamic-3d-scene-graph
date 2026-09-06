@@ -29,6 +29,15 @@ from scene_graph.relations.context import FrameContext, ObservationGeometry
 class SceneGraphPipeline:
 
     def __init__(self, config: SceneGraphConfig):
+        if config is None:
+            raise ValueError("SceneGraphConfig is required.")
+
+        if config.geometry is None:
+            raise ValueError("Geometry configuration is required.")
+
+        if config.temporal is None or config.temporal.relation is None:
+            raise ValueError("Temporal relation configuration is required.")
+
         self.config = config
         self.tracker = CausalTracker(config)
 
@@ -56,32 +65,33 @@ class SceneGraphPipeline:
         observations: List[Observation],
         depth_m,
     ) -> None:
+
         if packet.depth is None:
-            for obs in observations:
-                obs.object_geometry = ObjectGeometry(
+            for observation in observations:
+                observation.object_geometry = ObjectGeometry(
                     status=GeometryStatus.NO_DEPTH
                 )
             return
 
         if packet.world_T_camera is None:
-            for obs in observations:
-                obs.object_geometry = ObjectGeometry(
+            for observation in observations:
+                observation.object_geometry = ObjectGeometry(
                     status=GeometryStatus.NO_POSE
                 )
             return
 
         geometry_config = self.config.geometry
 
-        for obs in observations:
-            mask = obs.get_mask()
+        for observation in observations:
+            mask = observation.get_mask()
 
             if mask is None:
-                obs.object_geometry = ObjectGeometry(
+                observation.object_geometry = ObjectGeometry(
                     status=GeometryStatus.INVALID_GEOMETRY
                 )
                 continue
 
-            obs.object_geometry = compute_object_geometry(
+            observation.object_geometry = compute_object_geometry(
                 mask=mask,
                 depth_m=depth_m,
                 intrinsics=packet.camera_intrinsics,
@@ -96,34 +106,43 @@ class SceneGraphPipeline:
         tracks,
         frame_index: int,
     ) -> dict[str, ObservationGeometry]:
+
         geometry = {}
 
         for track in tracks:
             if not track.recent_observations:
                 continue
 
-            obs = track.recent_observations[-1]
+            observation = track.recent_observations[-1]
 
-            if obs.frame_index != frame_index:
+            if observation.frame_index != frame_index:
                 continue
 
-            geo = obs.object_geometry
+            object_geometry = observation.object_geometry
 
-            if geo is None or geo.status != GeometryStatus.VALID:
+            if (
+                object_geometry is None
+                or object_geometry.status != GeometryStatus.VALID
+            ):
                 continue
 
             geometry[track.object_id] = ObservationGeometry(
-                obs_id=obs.obs_id,
+                obs_id=observation.obs_id,
                 track_id=track.object_id,
-                centroid_world=geo.centroid_world,
-                bbox_min_world=geo.bbox_min_world,
-                bbox_max_world=geo.bbox_max_world,
-                depth_stats=geo.depth_stats,
-                points_world_sampled=geo.points_world_sampled,
-                points_world=geo.points_world,
-                points_camera=geo.points_camera,
-                mask=obs.get_mask(),
-                valid_point_count=geo.valid_point_count,
+                centroid_world=object_geometry.centroid_world,
+                position_covariance_world=(
+                    object_geometry.position_covariance_world
+                ),
+                bbox_min_world=object_geometry.bbox_min_world,
+                bbox_max_world=object_geometry.bbox_max_world,
+                depth_stats=object_geometry.depth_stats,
+                points_world_sampled=(
+                    object_geometry.points_world_sampled
+                ),
+                points_world=object_geometry.points_world,
+                points_camera=object_geometry.points_camera,
+                mask=observation.get_mask(),
+                valid_point_count=object_geometry.valid_point_count,
             )
 
         return geometry
@@ -164,7 +183,10 @@ class SceneGraphPipeline:
             frame_index=packet.frame_index,
         )
 
-        self.graph.update_nodes(tracks, object_states)
+        self.graph.update_nodes(
+            tracks,
+            object_states,
+        )
 
         active_tracks = [
             node.track
@@ -178,6 +200,9 @@ class SceneGraphPipeline:
             active_tracks,
             packet.frame_index,
         )
+
+        if not observation_geometry:
+            return self.graph
 
         if packet.world_T_camera is None:
             return self.graph
@@ -209,9 +234,9 @@ class SceneGraphPipeline:
 
         for evidence in raw_evidences:
             all_evidences.append(evidence)
-            all_evidences.append(
-                derive_inverse_evidence(evidence)
-            )
+            inverse_evidence = derive_inverse_evidence(evidence)
+            if inverse_evidence is not None:
+                all_evidences.append(inverse_evidence)
 
         active_object_ids = {
             track.object_id

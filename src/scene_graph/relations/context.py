@@ -1,14 +1,19 @@
 from dataclasses import dataclass
 from typing import Dict, Optional
+
 import numpy as np
 
 from scene_graph.geometry.camera import CameraIntrinsics
-from scene_graph.geometry.reference_frame import RelationReferenceFrame, CameraFrame
+from scene_graph.geometry.reference_frame import (
+    RelationReferenceFrame,
+    CameraFrame,
+)
 
 
 @dataclass
 class ObservationGeometry:
     """Cached per-observation. Computed ONCE, consumed by all relation modules."""
+
     obs_id: str
     track_id: str
     centroid_world: np.ndarray
@@ -16,10 +21,11 @@ class ObservationGeometry:
     bbox_max_world: np.ndarray
     depth_stats: Optional[Dict[str, float]]
     points_world_sampled: Optional[np.ndarray]
-    points_world: Optional[np.ndarray]  # (N, 3) 
+    points_world: Optional[np.ndarray]
     points_camera: Optional[np.ndarray]
-    mask: Optional[np.ndarray]          # (H, W) bool
+    mask: Optional[np.ndarray]
     valid_point_count: int
+    position_covariance_world: Optional[np.ndarray] = None
 
 
 @dataclass
