@@ -1,52 +1,91 @@
+from typing import Dict
+
 from scene_graph.config import SceneGraphConfig
 from scene_graph.tracking.track import Track
-
-
 from scene_graph.relations.inverse_algebra import INVERSE, SYMMETRIC
 
-ALLOWED_PREDICATES = frozenset(INVERSE.keys()) | frozenset(SYMMETRIC)
+
+ALLOWED_PREDICATES = frozenset(INVERSE) | frozenset(SYMMETRIC)
+
 
 class AdmissibilityFilter:
-    """Filters subject-object pairs based on semantic roles and admissibility rules."""
-    
+
     def __init__(self, config: SceneGraphConfig):
         self.config = config
-        
-        self.roles = {
-            "support_surface": self.config.roles.support_surface,
-            "container": self.config.roles.container,
-            "ordinary_object": self.config.roles.ordinary_object
+
+        self.roles: Dict[str, set[str]] = {
+            "support_surface": set(config.roles.support_surface),
+            "container": set(config.roles.container),
+            "ordinary_object": set(config.roles.ordinary_object),
         }
-        
-        # In a real system, admissibility would also be configurable,
-        # but the contract requires a strict set of 14 predicates.
-        # We enforce ALLOWED_PREDICATES strictly.
+
         self.admissibility = {
-            "ON": {"subject": "ordinary_object", "object": "support_surface"},
-            "INSIDE": {"subject": "ordinary_object", "object": "container"}
+            predicate: {
+                "subject": rule.subject,
+                "object": rule.object,
+            }
+            for predicate, rule in config.relations.admissibility.items()
         }
 
     def get_role(self, class_name: str) -> str:
-        """Get the semantic role of a class name."""
-        for role_name, classes in self.roles.items():
-            if class_name in classes:
-                return role_name
-        return "unknown"
+        matches = [
+            role
+            for role, classes in self.roles.items()
+            if class_name in classes
+        ]
 
-    def is_admissible(self, predicate: str, subject: Track, object: Track) -> bool:
-        """Check if a subject-object pair is admissible for a specific predicate."""
+        if len(matches) > 1:
+            raise ValueError(
+                f"Class '{class_name}' belongs to multiple semantic roles: "
+                f"{matches}"
+            )
+
+        return matches[0] if matches else "unknown"
+
+    def _get_rule(self, predicate: str):
+        rule = self.admissibility.get(predicate)
+
+        if rule is not None:
+            return rule
+
+        inverse = INVERSE.get(predicate)
+
+        if inverse is not None:
+            inverse_rule = self.admissibility.get(inverse)
+
+            if inverse_rule is not None:
+                return {
+                    "subject": inverse_rule["object"],
+                    "object": inverse_rule["subject"],
+                }
+
+        return None
+
+    def is_admissible(
+        self,
+        predicate: str,
+        subject: Track,
+        object: Track,
+    ) -> bool:
+
         if predicate not in ALLOWED_PREDICATES:
-            raise ValueError(f"Predicate '{predicate}' is unknown. Only the 14-predicate contract is supported.")
-            
+            raise ValueError(
+                f"Predicate '{predicate}' is not part of the "
+                f"14-predicate relation contract."
+            )
+
         if subject.object_id == object.object_id:
             return False
-            
-        rules = self.admissibility.get(predicate)
-        if not rules:
-            # If a predicate is in the 14 allowed but has no specific rules, it's admissible
-            return True 
-            
-        subj_role = self.get_role(subject.class_name)
-        obj_role = self.get_role(object.class_name)
-        
-        return subj_role == rules.get("subject") and obj_role == rules.get("object")
+
+        rule = self._get_rule(predicate)
+
+        if rule is None:
+            return True
+
+        subject_role = self.get_role(subject.class_name)
+        object_role = self.get_role(object.class_name)
+
+        return (
+            subject_role == rule["subject"]
+            and object_role == rule["object"]
+        )

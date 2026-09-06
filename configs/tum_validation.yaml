@@ -22,40 +22,91 @@ perception:
   type: "yoloe"
   model_path: "models/yoloe-26m-seg.pt"
   confidence_threshold: 0.3
-  classes: ["monitor", "computer", "keyboard", "mouse", "telephone", "book", "cup", "pen", "paper", "bottle", "desk", "table"]
+  mode: "controlled"
+  vocabulary: "v4_11"
+  classes:
+    - monitor
+    - computer
+    - keyboard
+    - mouse
+    - telephone
+    - book
+    - cup
+    - pen
+    - paper
+    - bottle
+    - desk
+    - table
 
 tracking:
-  association_method: "hungarian"
-  association_threshold_m: 0.3
-  max_missing_frames: 10
+  confirmation:
+    min_hits: 3
+
+  occlusion:
+    max_missing_seconds: 1.0
+
+  process:
+    acceleration_std_mps2: 1.0
+
+  measurement:
+    position_std_m: 0.02
+
+  gating:
+    chi2_probability: 0.999
+
+  association:
+    max_distance_m: 0.3
+    size_weight: 0.25
+
+  history:
+    observation_buffer_size: 10
 
 temporal:
-  object:
-    min_hits_to_confirm: 3
-    max_missing_frames: 5
   relation:
-    confirm_frames: 2
-    max_missing_frames: 2
+    confirmation_threshold: 0.8
+    contradiction_threshold: -0.8
+    decay_per_second: 0.1
+    unknown_after_seconds: 2.0
+    lost_after_seconds: 5.0
 
 roles:
-  support_surface: ["desk", "table"]
+  support_surface:
+    - desk
+    - table
+
   container: []
-  ordinary_object: ["monitor", "computer", "keyboard", "mouse", "telephone", "book", "cup", "pen", "paper", "bottle"]
+
+  ordinary_object:
+    - monitor
+    - computer
+    - keyboard
+    - mouse
+    - telephone
+    - book
+    - cup
+    - pen
+    - paper
+    - bottle
 
 relations:
   distance:
     near_threshold: 0.50
     far_threshold: 1.50
+
   support:
     plane_residual_m: 0.05
     min_support_overlap: 0.05
+
   directional:
     margin_x: 0.1
     margin_y: 0.1
+
   containment:
     min_containment_ratio: 0.5
+
   depth_order:
     depth_margin: 0.1
+
   occlusion:
     min_mask_overlap_ratio: 0.1
     min_depth_order_ratio: 0.7

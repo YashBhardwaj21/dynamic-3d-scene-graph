@@ -2,19 +2,37 @@
 # Frozen parameters for the dynamic 3D scene graph
 
 tracking:
-  association_method: hungarian
-  association_threshold_m: 0.25
-  max_missing_frames: 5
-  min_hits_to_confirm: 3
-  velocity_history_min: 3
+  confirmation:
+    min_hits: 3
+
+  occlusion:
+    max_missing_seconds: 1.0
+
+  process:
+    acceleration_std_mps2: 1.0
+
+  measurement:
+    position_std_m: 0.02
+
+  gating:
+    chi2_probability: 0.999
+
+  association:
+    max_distance_m: 0.25
+    size_weight: 0.25
+
+  history:
+    observation_buffer_size: 10
+
 
 temporal:
-  object:
-    min_hits_to_confirm: 3
-    max_missing_frames: 5
   relation:
-    confirm_frames: 3           # consecutive admissible evidence frames
-    max_missing_frames: 2       # before LOST
+    confirmation_threshold: 0.8
+    contradiction_threshold: -0.8
+    decay_per_second: 0.1
+    unknown_after_seconds: 2.0
+    lost_after_seconds: 5.0
+
 
 perception:
   type: yoloe
@@ -23,6 +41,7 @@ perception:
   device: auto
   mode: controlled
   vocabulary: v4_11
+
 
 vocabularies:
   v4_11:
@@ -40,10 +59,76 @@ vocabularies:
       - desk
       - table
 
+
 sync:
   rgb_depth_max_dt: 0.02
   rgb_pose_max_dt: 0.02
 
+
 geometry:
   min_valid_points: 30
-  depth_outlier_band_m: 0.10
+
+  robust_depth:
+    method: mad
+    k: 3.5
+
+  downsampling:
+    voxel_size_m: 0.005
+
+  measurement_noise_std_m: 0.01
+
+
+relations:
+  distance:
+    near_threshold: 0.50
+    far_threshold: 1.50
+
+  support:
+    plane_residual_m: 0.05
+    min_support_overlap: 0.05
+
+  directional:
+    margin_x: 0.10
+    margin_y: 0.10
+    uncertainty_sigma: 2.0
+
+  containment:
+    min_containment_ratio: 0.50
+
+  depth_order:
+    depth_margin: 0.10
+    uncertainty_sigma: 2.0
+
+  occlusion:
+    min_mask_overlap_ratio: 0.10
+    min_depth_order_ratio: 0.70
+    min_valid_depth_samples: 5
+    depth_margin: 0.05
+
+  admissibility:
+    "ON":
+      subject: ordinary_object
+      object: support_surface
+
+    "INSIDE":
+      subject: ordinary_object
+      object: container
+
+
+roles:
+  support_surface:
+    - desk
+    - table
+
+  container: []
+
+  ordinary_object:
+    - monitor
+    - computer
+    - keyboard
+    - mouse
+    - telephone
+    - book
+    - cup
+    - pen
+    - paper

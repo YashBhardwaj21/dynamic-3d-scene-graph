@@ -6,64 +6,109 @@ from scene_graph.relations.base import RelationModule
 from scene_graph.relations.context import FrameContext
 from scene_graph.relations.evidence import RelationEvidence
 from scene_graph.relations.admissibility import AdmissibilityFilter
-
-
 from scene_graph.relations.inverse_algebra import INVERSE, SYMMETRIC
 
-ALLOWED_PREDICATES = frozenset(INVERSE.keys()) | frozenset(SYMMETRIC)
+
+ALLOWED_PREDICATES = frozenset(INVERSE) | frozenset(SYMMETRIC)
+
 
 class RelationRegistry:
-    """Config-driven declarative registry for relation modules."""
-    
+
     def __init__(self, config: SceneGraphConfig):
         self.config = config
-        self.admissibility_filter = AdmissibilityFilter(self.config)
+        self.admissibility_filter = AdmissibilityFilter(config)
         self._modules: List[RelationModule] = []
-        
-    def register(self, module: RelationModule):
-        """Register a new relation computation module."""
-        self._modules.append(module)
-        
-    def _generate_candidate_pairs(self, tracks: List[Track]) -> List[Tuple[Track, Track]]:
-        """Generate all possible valid object pairs."""
-        # Only evaluate pairs where both tracks are CONFIRMED
-        valid_tracks = [t for t in tracks if t.state == TrackState.ACTIVE]
-        
-        pairs = []
-        for i, subj in enumerate(valid_tracks):
-            for j, obj in enumerate(valid_tracks):
-                if i != j:
-                    pairs.append((subj, obj))
-        return pairs
 
-    def _filter_admissible(self, pairs: List[Tuple[Track, Track]], predicate: str) -> List[Tuple[Track, Track]]:
-        """Filter pairs based on admissibility rules for a specific predicate."""
-        return [
-            (subj, obj) for subj, obj in pairs
-            if self.admissibility_filter.is_admissible(predicate, subj, obj)
+    def register(self, module: RelationModule) -> None:
+        self._modules.append(module)
+
+    @staticmethod
+    def _generate_candidate_pairs(
+        tracks: List[Track],
+    ) -> List[Tuple[Track, Track]]:
+        active_tracks = [
+            track
+            for track in tracks
+            if track.state == TrackState.ACTIVE
         ]
 
-    def compute_all(self, tracks: List[Track], context: FrameContext) -> List[RelationEvidence]:
-        """Compute all registered relations for all admissible pairs."""
+        active_tracks.sort(key=lambda track: track.object_id)
+
+        return [
+            (subject, object_)
+            for subject in active_tracks
+            for object_ in active_tracks
+            if subject.object_id != object_.object_id
+        ]
+
+    def _filter_admissible(
+        self,
+        pairs: List[Tuple[Track, Track]],
+        predicate: str,
+    ) -> List[Tuple[Track, Track]]:
+        return [
+            (subject, object_)
+            for subject, object_ in pairs
+            if self.admissibility_filter.is_admissible(
+                predicate,
+                subject,
+                object_,
+            )
+        ]
+
+    def compute_all(
+        self,
+        tracks: List[Track],
+        context: FrameContext,
+    ) -> List[RelationEvidence]:
         candidate_pairs = self._generate_candidate_pairs(tracks)
-        all_evidences = []
-        
+        all_evidences: List[RelationEvidence] = []
+
         for module in self._modules:
-            for predicate in module.predicates():
-                if predicate not in ALLOWED_PREDICATES:
-                    raise ValueError(f"Module {module.__class__.__name__} provided an invalid predicate '{predicate}' not in the 14-predicate contract.")
-            
-            # Find all admissible pairs for this module (admissible for at least one of its predicates)
-            module_admissible_pairs = set()
-            for predicate in module.predicates():
-                module_admissible_pairs.update(self._filter_admissible(candidate_pairs, predicate))
-                
-            # Dispatch all admissible pairs to the module at once, sorted to ensure determinism
-            sorted_pairs = sorted(list(module_admissible_pairs), key=lambda p: (p[0].object_id, p[1].object_id))
-            evidences = module.compute_pairs(sorted_pairs, context)
-            for ev in evidences:
-                if ev.predicate not in ALLOWED_PREDICATES:
-                    raise ValueError(f"Module {module.__class__.__name__} emitted evidence for invalid predicate '{ev.predicate}'.")
+            predicates = tuple(module.predicates())
+
+            invalid_predicates = [
+                predicate
+                for predicate in predicates
+                if predicate not in ALLOWED_PREDICATES
+            ]
+
+            if invalid_predicates:
+                raise ValueError(
+                    f"Module {module.__class__.__name__} provided "
+                    f"invalid predicates: {invalid_predicates}"
+                )
+
+            admissible_pairs = set()
+
+            for predicate in predicates:
+                admissible_pairs.update(
+                    self._filter_admissible(
+                        candidate_pairs,
+                        predicate,
+                    )
+                )
+
+            sorted_pairs = sorted(
+                admissible_pairs,
+                key=lambda pair: (
+                    pair[0].object_id,
+                    pair[1].object_id,
+                ),
+            )
+
+            evidences = module.compute_pairs(
+                sorted_pairs,
+                context,
+            )
+
+            for evidence in evidences:
+                if evidence.predicate not in ALLOWED_PREDICATES:
+                    raise ValueError(
+                        f"Module {module.__class__.__name__} emitted "
+                        f"invalid predicate '{evidence.predicate}'."
+                    )
+
             all_evidences.extend(evidences)
-                
+
         return all_evidences
