@@ -1,6 +1,6 @@
 """Data loading and synchronization module."""
 
-from scene_graph.data.frame_packet import FramePacket, build_frame_packets
+from scene_graph.data.frame_packet import FramePacket
 from scene_graph.data.synchronization import associate
 from scene_graph.data.tum_loader import (
     DepthEntry,
@@ -24,5 +24,4 @@ __all__ = [
     "load_tum_groundtruth",
     "associate",
     "FramePacket",
-    "build_frame_packets",
 ]

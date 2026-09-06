@@ -12,7 +12,8 @@ from pathlib import Path
 import numpy as np
 import pytest
 
-from scene_graph.data.frame_packet import build_frame_packets
+from scene_graph.config import SceneGraphConfig
+from scene_graph.data.tum_source import TUMReplaySource
 
 
 WORKSPACE_DIR = Path(__file__).resolve().parent.parent.parent
@@ -20,18 +21,22 @@ TUM_DATASET_DIR = WORKSPACE_DIR / "rgbd_dataset_freiburg1_desk"
 
 
 @pytest.mark.skipif(not TUM_DATASET_DIR.is_dir(), reason="TUM dataset not found")
-def test_build_frame_packets_201_frames():
-    """Verify stream builder yields 201 packets with correct shapes and types."""
+def test_tum_replay_source_201_frames():
+    """Verify source yields 201 packets with correct shapes and types."""
     start_frame = 100
     end_frame = 300
     expected_count = end_frame - start_frame + 1  # 201
     
-    packets = build_frame_packets(
-        sequence_dir=TUM_DATASET_DIR,
-        start_frame=start_frame,
-        end_frame=end_frame
-    )
+    config = SceneGraphConfig({
+        "dataset": {"root": str(TUM_DATASET_DIR)},
+        "sequence": {"start_frame": start_frame, "end_frame": end_frame},
+        "sync": {"rgb_depth_max_dt": 0.02, "rgb_pose_max_dt": 0.02}
+    })
     
+    source = TUMReplaySource(config)
+    packets = list(source)
+    
+    assert len(source) == expected_count
     assert len(packets) == expected_count, f"Expected {expected_count} packets, got {len(packets)}"
     
     # Check bounds
@@ -109,3 +114,4 @@ def test_build_frame_packets_201_frames():
         # Check specific representative frames if they have data
         if idx in check_indices:
             assert packet.timestamp > 0.0
+

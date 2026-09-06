@@ -7,8 +7,8 @@ import time
 from pathlib import Path
 import numpy as np
 
-from scene_graph.data.tum_loader import TUMLoader
-from scene_graph.data.frame_packet import build_frame_packets
+from scene_graph.config import SceneGraphConfig
+from scene_graph.data.tum_source import TUMReplaySource
 from scene_graph.geometry.camera import CameraIntrinsics, DepthModel
 from scene_graph.perception.yoloe_detector import YOLOEDetector
 
@@ -26,14 +26,16 @@ def convert_for_json(obj):
 
 def main():
     parser = argparse.ArgumentParser(description="Prepare fixed observation stream.")
-    parser.add_argument("--sequence_dir", type=str, default="rgbd_dataset_freiburg1_desk")
+    parser.add_argument("--config", type=str, default="configs/tum_fr1_desk.yaml")
     parser.add_argument("--out_dir", type=str, default="data/processed/tum_fr1_desk")
     parser.add_argument("--chunk_size", type=int, default=100)
-    parser.add_argument("--model", type=str, default="models/yoloe/yoloe-26m-seg.pt")
     parser.add_argument("--mode", type=str, choices=["controlled", "discovery"], default="controlled")
     args = parser.parse_args()
     
-    seq_dir = Path(args.sequence_dir)
+    # 1. Load config
+    config = SceneGraphConfig.from_files("configs/default.yaml", args.config)
+    
+    seq_dir = Path(config.get("dataset.root", ""))
     if not seq_dir.is_dir():
         print(f"Dataset directory not found: {seq_dir}")
         return
@@ -41,50 +43,41 @@ def main():
     out_dir = Path(args.out_dir)
     
     # Vocabulary Definitions
-    vocabularies = {
-        "controlled": {
-            "name": "v4_11",
-            "classes": {
-                "monitor", "computer", "keyboard", "mouse", "telephone",
-                "book", "cup", "pen", "paper", "desk", "table"
-            }
-        },
-        "discovery": {
-            "name": "expanded",
-            "classes": {
-                "person", "chair", "table", "desk", "monitor", "laptop",
-                "computer", "keyboard", "mouse", "telephone", "phone",
-                "book", "notebook", "paper", "pen", "pencil", "cup",
-                "bottle", "can", "bag", "backpack", "headphones",
-                "remote", "clock", "lamp", "printer", "box", "container"
-            }
-        }
-    }
-    
-    current_vocab = vocabularies[args.mode]
+    vocab_config = config.get(f"vocabularies.{config.get('detector.vocabulary', 'v4_11')}")
+    if args.mode == "discovery":
+        vocab_config = config.get("vocabularies.expanded")
+        
     obs_dir_name = "observations_controlled" if args.mode == "controlled" else "observations_discovery"
     obs_dir = out_dir / obs_dir_name
     obs_dir.mkdir(parents=True, exist_ok=True)
     
-    # 1. Setup Camera and Loader
-    intrinsics = CameraIntrinsics()
-    depth_model = DepthModel()
+    # 2. Setup Camera and Loader
+    intrinsics = CameraIntrinsics(
+        fx=config.get("camera.fx", 525.0),
+        fy=config.get("camera.fy", 525.0),
+        cx=config.get("camera.cx", 319.5),
+        cy=config.get("camera.cy", 239.5),
+        width=config.get("camera.width", 640),
+        height=config.get("camera.height", 480)
+    )
+    depth_model = DepthModel(scale=config.get("depth.scale", 5000.0))
     
-    loader = TUMLoader(seq_dir)
-    
-    # 2. Build packets for the ENTIRE sequence
-    print("Building frame packets for the ENTIRE sequence...")
-    # Passing None for start_frame/end_frame to process all
-    packets = build_frame_packets(seq_dir, start_frame=None, end_frame=None)
-    print(f"Generated {len(packets)} packets.")
+    print(f"Initializing TUMReplaySource for {seq_dir}...")
+    source = TUMReplaySource(config)
+    total_frames = len(source)
+    print(f"Source will yield {total_frames} packets.")
     
     # 3. Setup Detector
-    print(f"Initializing YOLOEDetector with {args.model}...")
+    model_path = config.get("detector.checkpoint", "models/yoloe/yoloe-26m-seg.pt")
+    if args.mode == "discovery":
+        model_path = "models/yoloe/yoloe-26m-seg-pf.pt"
+        
+    print(f"Initializing YOLOEDetector with {model_path}...")
     try:
         detector = YOLOEDetector(
-            model_path=args.model,
-            confidence_threshold=0.40,
-            allowed_classes=current_vocab["classes"],
+            model_path=model_path,
+            confidence_threshold=config.get("detector.confidence", 0.40),
+            allowed_classes=set(vocab_config["classes"]),
             intrinsics=intrinsics,
             depth_model=depth_model
         )
@@ -115,7 +108,7 @@ def main():
             json.dump({"frames": frames}, f, indent=2)
         chunk_files.append(chunk_name)
     
-    for i, packet in enumerate(packets):
+    for i, packet in enumerate(source):
         obs_list = detector.detect(packet)
         
         # Serialize observations
@@ -151,8 +144,8 @@ def main():
             chunk_idx += 1
             current_chunk_frames = []
             
-        if (i + 1) % 10 == 0 or (i + 1) == len(packets):
-            print(f"Processed {i + 1}/{len(packets)} frames.")
+        if (i + 1) % 10 == 0 or (i + 1) == total_frames:
+            print(f"Processed {i + 1}/{total_frames} frames.")
             
     # Save any remaining frames in the last chunk
     if current_chunk_frames:
@@ -165,8 +158,8 @@ def main():
     metadata_json = out_dir / "metadata.json"
     
     metadata = {
-        "dataset": args.sequence_dir,
-        "total_frames": len(packets),
+        "dataset": config.get("dataset.name", "unknown"),
+        "total_frames": total_frames,
         "chunk_size": args.chunk_size,
         "chunks": chunk_files,
         "detector": detector.get_model_info(),
@@ -182,3 +175,4 @@ def main():
 
 if __name__ == "__main__":
     main()
+

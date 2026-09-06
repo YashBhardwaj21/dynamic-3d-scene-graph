@@ -6,8 +6,7 @@ from typing import List, Optional, Union
 import cv2
 import numpy as np
 
-from scene_graph.data.synchronization import associate
-from scene_graph.data.tum_loader import TUMLoader
+
 
 
 @dataclass
@@ -25,100 +24,4 @@ class FramePacket:
     has_pose: bool
 
 
-def associate_rgb_depth(rgb_timestamps: List[float], depth_timestamps: List[float], max_dt: float) -> dict:
-    """Helper to conceptually separate RGB-Depth synchronization."""
-    return dict(associate(rgb_timestamps, depth_timestamps, max_dt))
 
-
-def associate_rgb_pose(rgb_timestamps: List[float], pose_timestamps: List[float], max_dt: float) -> dict:
-    """Helper to conceptually separate RGB-Pose synchronization."""
-    return dict(associate(rgb_timestamps, pose_timestamps, max_dt))
-
-
-def build_frame_packets(
-    sequence_dir: Union[str, Path],
-    start_frame: Optional[int] = 100,
-    end_frame: Optional[int] = 300,
-    rgb_depth_max_dt: float = 0.02,
-    rgb_pose_max_dt: float = 0.02
-) -> List[FramePacket]:
-    """Build FramePackets for a specific range of RGB frames.
-
-    Iterates over the RGB stream from `start_frame` to `end_frame` (inclusive),
-    syncs depth and pose data, loads the images from disk, and constructs FramePackets.
-    Emits packets even if depth or pose are missing. RGB is strictly mandatory.
-
-    Args:
-        sequence_dir: Directory containing TUM dataset.
-        start_frame: Inclusive start index for RGB stream. If None, starts at 0.
-        end_frame: Inclusive end index for RGB stream. If None, goes to end.
-        rgb_depth_max_dt: Maximum timestamp difference for depth matching.
-        rgb_pose_max_dt: Maximum timestamp difference for pose matching.
-
-    Returns:
-        List of FramePacket objects.
-    """
-    loader = TUMLoader(sequence_dir)
-    rgb_entries = loader.load_rgb()
-    depth_entries = loader.load_depth()
-    pose_entries = loader.load_groundtruth()
-    
-    # Extract timestamps for matching
-    rgb_timestamps = [e.timestamp for e in rgb_entries]
-    depth_timestamps = [e.timestamp for e in depth_entries]
-    pose_timestamps = [e.timestamp for e in pose_entries]
-    
-    # Run nearest-neighbour timestamp association against the RGB anchor stream
-    rgb_to_depth = associate_rgb_depth(rgb_timestamps, depth_timestamps, rgb_depth_max_dt)
-    rgb_to_pose = associate_rgb_pose(rgb_timestamps, pose_timestamps, rgb_pose_max_dt)
-    
-    packets: List[FramePacket] = []
-    
-    _start = 0 if start_frame is None else start_frame
-    _end = len(rgb_entries) - 1 if end_frame is None else end_frame
-    
-    # End frame is inclusive, so we need + 1, bounded by stream length
-    safe_end = min(_end + 1, len(rgb_entries))
-    
-    for frame_idx in range(_start, safe_end):
-        rgb_entry = rgb_entries[frame_idx]
-        
-        # Load RGB Image (Mandatory)
-        rgb_path = str(loader.resolve_rgb_path(rgb_entry))
-        rgb_bgr = cv2.imread(rgb_path, cv2.IMREAD_COLOR)
-        if rgb_bgr is None:
-            raise FileNotFoundError(f"Failed to load RGB image at {rgb_path}")
-        rgb_np = cv2.cvtColor(rgb_bgr, cv2.COLOR_BGR2RGB)
-        
-        # Load Depth Image if matched (Optional)
-        depth_np = None
-        has_depth = False
-        if frame_idx in rgb_to_depth:
-            d_idx = rgb_to_depth[frame_idx]
-            depth_path = str(loader.resolve_depth_path(depth_entries[d_idx]))
-            # IMREAD_ANYDEPTH preserves the 16-bit depth values
-            depth_raw = cv2.imread(depth_path, cv2.IMREAD_ANYDEPTH)
-            if depth_raw is not None:
-                depth_np = depth_raw
-                has_depth = True
-            
-        # Get Pose Matrix if matched (Optional)
-        pose_np = None
-        has_pose = False
-        if frame_idx in rgb_to_pose:
-            p_idx = rgb_to_pose[frame_idx]
-            pose_np = pose_entries[p_idx].as_transform_matrix()
-            has_pose = True
-            
-        packet = FramePacket(
-            frame_index=frame_idx,
-            timestamp=rgb_entry.timestamp,
-            rgb=rgb_np,
-            depth=depth_np,
-            pose=pose_np,
-            has_depth=has_depth,
-            has_pose=has_pose
-        )
-        packets.append(packet)
-        
-    return packets
