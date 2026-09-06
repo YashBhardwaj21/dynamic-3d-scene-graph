@@ -12,9 +12,12 @@ from scene_graph.relations.containment import ContainmentRelationModule
 
 @pytest.fixture
 def dummy_context():
+    from scene_graph.geometry.reference_frame import RelationReferenceFrame
+    pose = np.eye(4)
+    ref_frame = RelationReferenceFrame.from_camera_pose(pose)
     return FrameContext(
-        frame_index=1, timestamp=1.0, intrinsics=None, world_T_camera=np.eye(4),
-        reference_frame=None, depth_image=None, observation_geometry={}
+        frame_index=1, timestamp=1.0, intrinsics=None, world_T_camera=pose,
+        reference_frame=ref_frame, depth_image=None, observation_geometry={}
     )
 
 
@@ -24,7 +27,7 @@ def create_track(obj_id, class_name, centroid):
         centroid_world=np.array(centroid),
         last_observed_frame=1, first_observed_frame=1, observation_count=1,
         missing_count=0, detection_confidence=0.9, track_observation_ratio=1.0,
-        recent_observations=[]
+        recent_observations=[], velocity_world=None, last_timestamp=1.0
     )
 
 
@@ -60,8 +63,8 @@ def test_directional_relations(dummy_context):
     assert len(evidences) == 1
     assert evidences[0].predicate == "LEFT_OF"
     
-    # ABOVE (dz > 0.05)
-    t3 = create_track("t3", "cup", [0.0, 0.0, 0.1])
+    # ABOVE (dy > 0.05)
+    t3 = create_track("t3", "cup", [0.0, -0.1, 0.0])
     evidences = module.compute(t3, t2, dummy_context)
     assert len(evidences) == 1
     assert evidences[0].predicate == "ABOVE"
@@ -70,8 +73,8 @@ def test_directional_relations(dummy_context):
 def test_depth_order_relations(dummy_context):
     module = DepthOrderRelationModule(depth_margin=0.05)
     
-    # IN_FRONT_OF (dy < -0.05)
-    t1 = create_track("t1", "cup", [0.0, -0.1, 0.0])
+    # IN_FRONT_OF (dz < -0.05)
+    t1 = create_track("t1", "cup", [0.0, 0.0, -0.1])
     t2 = create_track("t2", "book", [0.0, 0.0, 0.0])
     evidences = module.compute(t1, t2, dummy_context)
     assert len(evidences) == 1

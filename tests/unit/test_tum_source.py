@@ -10,7 +10,8 @@ from scene_graph.data.tum_source import TUMReplaySource
 def mock_config():
     config_dict = {
         "dataset": {
-            "root": "fake_dataset_dir"
+            "root": "fake_dataset_dir",
+            "type": "tum_rgbd"
         },
         "sequence": {
             "start_frame": 0,
@@ -21,7 +22,7 @@ def mock_config():
             "rgb_pose_max_dt": 0.02
         }
     }
-    return SceneGraphConfig(config_dict)
+    return SceneGraphConfig.model_validate(config_dict)
 
 
 @patch("scene_graph.data.tum_source.TUMLoader")

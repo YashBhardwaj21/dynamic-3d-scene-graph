@@ -53,12 +53,12 @@ def test_compute_object_geometry(dummy_scene):
     assert actual_x_set == expected_x_set
     assert actual_y_set == expected_y_set
     
-    assert geo.robust_center_world[0] == pytest.approx(-0.001)
-    assert geo.robust_center_world[1] == pytest.approx(-0.001)
-    assert geo.robust_center_world[2] == pytest.approx(1.0)
+    assert geo.centroid_world[0] == pytest.approx(-0.001)
+    assert geo.centroid_world[1] == pytest.approx(-0.001)
+    assert geo.centroid_world[2] == pytest.approx(1.0)
     
-    np.testing.assert_allclose(geo.aabb_min_world, [-0.002, -0.002, 1.0])
-    np.testing.assert_allclose(geo.aabb_max_world, [0.0, 0.0, 1.0])
+    np.testing.assert_allclose(geo.bbox_min_world, [-0.002, -0.002, 1.0])
+    np.testing.assert_allclose(geo.bbox_max_world, [0.0, 0.0, 1.0])
 
 
 def test_invalid_shapes(dummy_scene):

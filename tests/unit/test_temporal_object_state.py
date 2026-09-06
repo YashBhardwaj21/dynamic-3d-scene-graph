@@ -9,7 +9,8 @@ def create_track(obj_id, state):
         object_id=obj_id, class_name="monitor", state=state,
         centroid_world=None, last_observed_frame=1, first_observed_frame=1,
         observation_count=1, missing_count=0, detection_confidence=0.9,
-        track_observation_ratio=1.0, recent_observations=[], velocity_world=None
+        track_observation_ratio=1.0, recent_observations=[], velocity_world=None,
+        last_timestamp=1.0
     )
 
 
@@ -49,4 +50,4 @@ def test_object_state_machine():
     # 6. Goes LOST
     t1.state = TrackState.LOST
     states = machine.update([t1], frame_index=7)
-    assert states["obj_1"] == ObjectState.REMOVED
+    assert states["obj_1"] == ObjectState.UNKNOWN

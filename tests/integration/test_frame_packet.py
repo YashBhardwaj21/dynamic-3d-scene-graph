@@ -27,8 +27,8 @@ def test_tum_replay_source_201_frames():
     end_frame = 300
     expected_count = end_frame - start_frame + 1  # 201
     
-    config = SceneGraphConfig({
-        "dataset": {"root": str(TUM_DATASET_DIR)},
+    config = SceneGraphConfig.model_validate({
+        "dataset": {"root": str(TUM_DATASET_DIR), "type": "tum"},
         "sequence": {"start_frame": start_frame, "end_frame": end_frame},
         "sync": {"rgb_depth_max_dt": 0.02, "rgb_pose_max_dt": 0.02}
     })
@@ -98,11 +98,11 @@ def test_tum_replay_source_201_frames():
             
         # Optional pose checks
         if packet.has_pose:
-            assert isinstance(packet.pose, np.ndarray)
-            assert packet.pose.shape == (4, 4)
-            assert packet.pose.dtype == np.float64
+            assert isinstance(packet.world_T_camera, np.ndarray)
+            assert packet.world_T_camera.shape == (4, 4)
+            assert packet.world_T_camera.dtype == np.float64
             # Verify R.T @ R ≈ I
-            R = packet.pose[:3, :3]
+            R = packet.world_T_camera[:3, :3]
             np.testing.assert_allclose(R.T @ R, np.eye(3), atol=1e-5)
             assert pytest.approx(np.linalg.det(R), abs=1e-5) == 1.0
             

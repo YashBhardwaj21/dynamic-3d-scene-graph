@@ -77,9 +77,7 @@ def test_stored_observation_loader(dummy_observations_dir):
         timestamp=1.0,
         rgb=np.zeros((10, 10, 3), dtype=np.uint8),
         depth=None,
-        pose=None,
-        has_depth=False,
-        has_pose=False
+        world_T_camera=None
     )
     
     observations_100 = loader.detect(packet_100)
@@ -100,9 +98,7 @@ def test_stored_observation_loader(dummy_observations_dir):
         timestamp=1.1,
         rgb=np.zeros((10, 10, 3), dtype=np.uint8),
         depth=None,
-        pose=None,
-        has_depth=False,
-        has_pose=False
+        world_T_camera=None
     )
     
     observations_101 = loader.detect(packet_101)
@@ -114,9 +110,7 @@ def test_stored_observation_loader(dummy_observations_dir):
         timestamp=1.2,
         rgb=np.zeros((10, 10, 3), dtype=np.uint8),
         depth=None,
-        pose=None,
-        has_depth=False,
-        has_pose=False
+        world_T_camera=None
     )
     
     observations_102 = loader.detect(packet_102)

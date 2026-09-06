@@ -28,9 +28,7 @@ def dummy_packet(index):
         timestamp=index * 0.1,
         rgb=np.zeros((480, 640, 3), dtype=np.uint8),
         depth=np.zeros((480, 640), dtype=np.uint16),
-        pose=np.eye(4),
-        has_depth=True,
-        has_pose=True
+        world_T_camera=np.eye(4)
     )
 
 def dummy_source(config):

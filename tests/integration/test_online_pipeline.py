@@ -8,15 +8,15 @@ from unittest.mock import patch
 
 def test_online_pipeline_empty_init():
     """Verify the causal online pipeline starts completely empty."""
-    config = SceneGraphConfig({
-        "dataset": {"name": "test"}
+    config = SceneGraphConfig.model_validate({
+        "dataset": {"name": "test", "root": ".", "type": "tum"}
     })
     
     with patch('scene_graph.pipeline.online_pipeline.YOLOEDetector'):
         pipeline = OnlinePipeline(config)
         
         # Verify it was instantiated
-        assert pipeline.config.get("dataset.name") == "test"
+        assert pipeline.config.dataset.name == "test"
         
         # Verify graph is empty
         assert len(pipeline.graph.nodes) == 0
