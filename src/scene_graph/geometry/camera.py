@@ -7,12 +7,12 @@ import numpy as np
 @dataclass(frozen=True)
 class CameraIntrinsics:
     """Camera intrinsics (focal length and principal point)."""
-    fx: float = 525.0
-    fy: float = 525.0
-    cx: float = 319.5
-    cy: float = 239.5
-    width: int = 640
-    height: int = 480
+    fx: float
+    fy: float
+    cx: float
+    cy: float
+    width: int
+    height: int
     
     def __post_init__(self):
         if self.fx <= 0 or self.fy <= 0:
@@ -31,6 +31,9 @@ class CameraIntrinsics:
         Returns:
             (x, y, z) tuple in camera coordinate space.
         """
+        if not np.isfinite(depth_m) or depth_m <= 0:
+            raise ValueError(f"Invalid depth: {depth_m}")
+            
         x = (u - self.cx) * depth_m / self.fx
         y = (v - self.cy) * depth_m / self.fy
         z = depth_m
@@ -41,9 +44,9 @@ class CameraIntrinsics:
 class DepthModel:
     """Depth scaling model.
     
-    TUM uses a scale of 5000 (i.e. 5000 uint16 = 1.0 meters).
+    Converts raw depth units to meters.
     """
-    scale: float = 5000.0
+    scale: float
     
     def __post_init__(self):
         if self.scale <= 0:

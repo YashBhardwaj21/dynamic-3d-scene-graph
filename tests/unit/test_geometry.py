@@ -15,7 +15,7 @@ def test_camera_intrinsics_projection():
     """Regression test for central pixel projection.
     u=319.5, v=239.5, z=1.0 -> x=0, y=0, z=1
     """
-    cam = CameraIntrinsics(fx=525.0, fy=525.0, cx=319.5, cy=239.5)
+    cam = CameraIntrinsics(fx=525.0, fy=525.0, cx=319.5, cy=239.5, width=640, height=480)
     x, y, z = cam.pixel_to_camera(319.5, 239.5, 1.0)
     assert x == pytest.approx(0.0)
     assert y == pytest.approx(0.0)

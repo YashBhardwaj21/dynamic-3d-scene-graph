@@ -30,21 +30,20 @@ def test_depth_model_custom_scale():
 def test_camera_intrinsics_validation():
     """Verify CameraIntrinsics rejects invalid values."""
     with pytest.raises(ValueError, match="must be > 0"):
-        CameraIntrinsics(fx=-5.0, fy=525.0, cx=319.5, cy=239.5)
+        CameraIntrinsics(fx=-5.0, fy=525.0, cx=319.5, cy=239.5, width=640, height=480)
         
     with pytest.raises(ValueError, match="must be > 0"):
-        CameraIntrinsics(fx=525.0, fy=0.0, cx=319.5, cy=239.5)
+        CameraIntrinsics(fx=525.0, fy=0.0, cx=319.5, cy=239.5, width=640, height=480)
         
     with pytest.raises(ValueError, match="must be > 0"):
-        CameraIntrinsics(width=0)
+        CameraIntrinsics(fx=525.0, fy=525.0, cx=319.5, cy=239.5, width=0, height=480)
         
     with pytest.raises(ValueError, match="must be > 0"):
-        CameraIntrinsics(height=-480)
+        CameraIntrinsics(fx=525.0, fy=525.0, cx=319.5, cy=239.5, width=640, height=-480)
         
 def test_depth_model_validation():
     """Verify DepthModel rejects invalid scale."""
-    with pytest.raises(ValueError, match="must be > 0"):
-        DepthModel(scale=0.0)
-        
-    with pytest.raises(ValueError, match="must be > 0"):
+    with pytest.raises(ValueError, match="Scale must be > 0"):
+        DepthModel(scale=0)
+    with pytest.raises(ValueError, match="Scale must be > 0"):
         DepthModel(scale=-1000.0)

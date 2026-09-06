@@ -2,9 +2,8 @@
 
 from scene_graph.geometry.camera import CameraIntrinsics, DepthModel
 from scene_graph.geometry.point_cloud import (
-    compute_object_aabb_world,
-    compute_object_points_world,
-    compute_object_robust_center_world,
+    ObjectGeometry,
+    compute_object_geometry,
 )
 from scene_graph.geometry.reference_frame import (
     RelationReferenceFrame,
@@ -24,9 +23,8 @@ __all__ = [
     "quaternion_to_matrix",
     "pose_to_transform",
     "transform_points",
-    "compute_object_points_world",
-    "compute_object_robust_center_world",
-    "compute_object_aabb_world",
+    "ObjectGeometry",
+    "compute_object_geometry",
     "RelationReferenceFrame",
     "estimate_support_plane_normal",
     "compute_alignment_transform",

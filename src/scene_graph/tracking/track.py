@@ -24,6 +24,7 @@ class Track:
     detection_confidence: float
     track_observation_ratio: float
     recent_observations: deque
+    velocity_world: np.ndarray | None = None
     position_uncertainty: float | None = None
     
     # Store the actual object instances (e.g. Observation) over time if needed

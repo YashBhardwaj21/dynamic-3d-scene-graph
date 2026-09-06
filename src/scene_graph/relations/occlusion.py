@@ -10,14 +10,20 @@ from scene_graph.relations.evidence import RelationEvidence
 class OcclusionRelationModule(RelationModule):
     """Computes OCCLUDING relation based on mask overlap and depth values."""
     
-    def __init__(self, min_mask_overlap_ratio: float = 0.05, 
+    def __init__(self, config=None, min_mask_overlap_ratio: float = 0.05, 
                  min_depth_order_ratio: float = 0.8,
                  min_valid_depth_samples: int = 10,
                  depth_margin: float = 0.02):
-        self.min_mask_overlap_ratio = min_mask_overlap_ratio
-        self.min_depth_order_ratio = min_depth_order_ratio
-        self.min_valid_depth_samples = min_valid_depth_samples
-        self.depth_margin = depth_margin
+        if config is not None:
+            self.min_mask_overlap_ratio = config.get("relations.occlusion.min_mask_overlap_ratio", min_mask_overlap_ratio)
+            self.min_depth_order_ratio = config.get("relations.occlusion.min_depth_order_ratio", min_depth_order_ratio)
+            self.min_valid_depth_samples = config.get("relations.occlusion.min_valid_depth_samples", min_valid_depth_samples)
+            self.depth_margin = config.get("relations.occlusion.depth_margin", depth_margin)
+        else:
+            self.min_mask_overlap_ratio = min_mask_overlap_ratio
+            self.min_depth_order_ratio = min_depth_order_ratio
+            self.min_valid_depth_samples = min_valid_depth_samples
+            self.depth_margin = depth_margin
         
     def predicates(self) -> List[str]:
         return ["OCCLUDING"]
@@ -117,6 +123,7 @@ class OcclusionRelationModule(RelationModule):
                 frame_index=context.frame_index,
                 timestamp=context.timestamp,
                 value=mean_depth_B - mean_depth_A,
+                result=EvidenceResult.SUPPORTED,
                 threshold=self.depth_margin,
                 confidence=1.0,
                 reference_frame="camera",

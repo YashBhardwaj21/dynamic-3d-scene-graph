@@ -17,22 +17,24 @@ def derive_inverse_evidence(evidence: RelationEvidence) -> RelationEvidence:
     """Derive the inverse relation evidence (e.g. A ON B -> B UNDER A)."""
     if evidence.predicate in INVERSE:
         inv_predicate = INVERSE[evidence.predicate]
+        inverse_pred = INVERSE[evidence.predicate]
     elif evidence.predicate in SYMMETRIC:
-        inv_predicate = evidence.predicate
+        inverse_pred = evidence.predicate
     else:
         raise ValueError(f"Unknown inverse for predicate: {evidence.predicate}")
         
     return RelationEvidence(
-        predicate=inv_predicate,
+        predicate=inverse_pred,
         subject_id=evidence.object_id,
         object_id=evidence.subject_id,
         frame_index=evidence.frame_index,
         timestamp=evidence.timestamp,
+        result=evidence.result,
         value=evidence.value,
         threshold=evidence.threshold,
         confidence=evidence.confidence,
         reference_frame=evidence.reference_frame,
-        evidence_type=evidence.evidence_type,
+        evidence_type=f"inverse_{evidence.evidence_type}",
         details=evidence.details.copy()
     )
 

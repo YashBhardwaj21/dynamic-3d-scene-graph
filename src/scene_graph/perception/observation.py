@@ -98,6 +98,10 @@ class Observation:
     bbox_max_world: Optional[np.ndarray] = None   # (3,)
     valid_point_count: int = 0
     
+    # Geometry status
+    geometry_status: str = "VALID"
+    geometry_error: Optional[str] = None
+    
     # Optional path to heavy point cloud data if serialized
     point_cloud_ref: Optional[str] = None
     

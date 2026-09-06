@@ -10,9 +10,13 @@ from scene_graph.relations.evidence import RelationEvidence, EvidenceResult
 class DistanceRelationModule(RelationModule):
     """Computes NEAR and FAR relations based on centroid distance."""
     
-    def __init__(self, near_threshold: float = 0.40, far_threshold: float = 1.50):
-        self.near_threshold = near_threshold
-        self.far_threshold = far_threshold
+    def __init__(self, config=None, near_threshold: float = 0.40, far_threshold: float = 1.50):
+        if config is not None:
+            self.near_threshold = config.get("relations.distance.near_threshold", near_threshold)
+            self.far_threshold = config.get("relations.distance.far_threshold", far_threshold)
+        else:
+            self.near_threshold = near_threshold
+            self.far_threshold = far_threshold
         
     def predicates(self) -> List[str]:
         return ["NEAR", "FAR"]
@@ -36,6 +40,7 @@ class DistanceRelationModule(RelationModule):
                 frame_index=context.frame_index,
                 timestamp=context.timestamp,
                 value=dist,
+                result=EvidenceResult.SUPPORTED,
                 threshold=self.near_threshold,
                 confidence=confidence,
                 reference_frame="world",
@@ -53,6 +58,7 @@ class DistanceRelationModule(RelationModule):
                 frame_index=context.frame_index,
                 timestamp=context.timestamp,
                 value=dist,
+                result=EvidenceResult.SUPPORTED,
                 threshold=self.far_threshold,
                 confidence=confidence,
                 reference_frame="world",

@@ -51,7 +51,7 @@ def test_distance_relations(dummy_context):
 
 
 def test_directional_relations(dummy_context):
-    module = DirectionalRelationModule(axis_margin_m=0.05)
+    module = DirectionalRelationModule(margin_x=0.05, margin_y=0.05)
     
     # LEFT_OF (dx < -0.05)
     t1 = create_track("t1", "cup", [-0.1, 0.0, 0.0])
@@ -68,7 +68,7 @@ def test_directional_relations(dummy_context):
 
 
 def test_depth_order_relations(dummy_context):
-    module = DepthOrderRelationModule(axis_margin_m=0.05)
+    module = DepthOrderRelationModule(depth_margin=0.05)
     
     # IN_FRONT_OF (dy < -0.05)
     t1 = create_track("t1", "cup", [0.0, -0.1, 0.0])

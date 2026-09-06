@@ -25,7 +25,9 @@ def test_geometry_samples_regression():
         fx=cam_data["fx"],
         fy=cam_data["fy"],
         cx=cam_data["cx"],
-        cy=cam_data["cy"]
+        cy=cam_data["cy"],
+        width=640,
+        height=480
     )
     
     for i, sample in enumerate(data["samples"]):

@@ -6,8 +6,8 @@ dataset:
   
 # Process entire sequence
 sequence:
-  start_frame: 1
-  end_frame: 613
+  start_frame: 0
+  end_frame: 612
 
 # Optional: specifically for V4 comparison evaluation
 evaluation_window: [100, 300]

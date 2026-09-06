@@ -17,8 +17,8 @@ class FramePacket:
     """
     frame_index: int            # original RGB stream index
     timestamp: float            # RGB timestamp
-    rgb: np.ndarray             # (480, 640, 3) uint8 RGB format
-    depth: Optional[np.ndarray] # (480, 640) uint16
+    rgb: np.ndarray             # HxWx3 uint8 RGB format
+    depth: Optional[np.ndarray] # HxW raw depth units
     pose: Optional[np.ndarray]  # (4, 4) world_T_camera
     has_depth: bool
     has_pose: bool

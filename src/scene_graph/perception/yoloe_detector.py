@@ -12,10 +12,7 @@ except ImportError:
 
 from scene_graph.data.frame_packet import FramePacket
 from scene_graph.geometry.camera import CameraIntrinsics, DepthModel
-from scene_graph.geometry.point_cloud import (
-    compute_object_robust_center_world,
-    compute_object_aabb_world
-)
+from scene_graph.geometry.point_cloud import compute_object_geometry
 from scene_graph.perception.detector_base import DetectorInterface
 from scene_graph.perception.observation import Observation, encode_mask_rle
 
@@ -62,11 +59,21 @@ class YOLOEDetector(DetectorInterface):
                 
             try:
                 self.model.set_classes(list(self.allowed_classes))
-            except (AttributeError, AssertionError):
-                print("Warning: Model does not support set_classes() or wrong architecture. Operating in closed-vocabulary mode.")
+            except (AttributeError, AssertionError) as e:
+                raise RuntimeError(
+                    f"Model {self.model_path} does not support set_classes() or has wrong architecture. "
+                    f"Cannot filter by requested vocabulary. Error: {e}"
+                ) from e
                 
         self.intrinsics = intrinsics or CameraIntrinsics()
         self.depth_model = depth_model or DepthModel()
+        
+        # Get geometry parameters from config if provided, else defaults
+        # We assume scene_graph.config.SceneGraphConfig was loaded if passed, 
+        # but the class signature here only takes intrinsics/depth_model.
+        # We will use defaults matching the 20-step plan unless configured.
+        self.min_valid_points = 30
+        self.depth_outlier_band_m = 0.10
         
         # Internal sequential ID counter
         self._obs_counter = 1
@@ -125,27 +132,44 @@ class YOLOEDetector(DetectorInterface):
                 mask_rle = encode_mask_rle(mask_np)
                 
             # 3. Compute 3D Geometry
+            centroid_camera = None
             centroid_world = None
             bbox_min_world = None
             bbox_max_world = None
             valid_point_count = 0
+            geometry_status = "VALID"
+            geometry_error = None
             
             if mask_np is not None and depth_m is not None and packet.has_pose:
                 try:
-                    centroid_world = compute_object_robust_center_world(
-                        mask_np, depth_m, self.intrinsics, packet.pose
+                    obj_geo = compute_object_geometry(
+                        mask_np, depth_m, self.intrinsics, packet.pose,
+                        min_valid_points=self.min_valid_points,
+                        depth_outlier_band_m=self.depth_outlier_band_m
                     )
-                    aabb = compute_object_aabb_world(
-                        mask_np, depth_m, self.intrinsics, packet.pose
-                    )
-                    if aabb is not None:
-                        bbox_min_world, bbox_max_world = aabb
-                        
-                    z_m = depth_m[mask_np]
-                    valid_z = z_m[np.isfinite(z_m) & (z_m > 0)]
-                    valid_point_count = len(valid_z)
-                except ValueError:
-                    pass
+                    
+                    if obj_geo is not None:
+                        centroid_camera = obj_geo.robust_center_camera
+                        centroid_world = obj_geo.robust_center_world
+                        bbox_min_world = obj_geo.aabb_min_world
+                        bbox_max_world = obj_geo.aabb_max_world
+                        valid_point_count = obj_geo.valid_point_count
+                    else:
+                        geometry_status = "INSUFFICIENT_DEPTH"
+                        geometry_error = f"Valid depth points below threshold ({self.min_valid_points})"
+                except Exception as e:
+                    geometry_status = "INVALID_GEOMETRY"
+                    geometry_error = str(e)
+            else:
+                if mask_np is None:
+                    geometry_status = "NO_DEPTH" # really NO_MASK but observation relies on depth
+                    geometry_error = "Mask missing"
+                elif depth_m is None:
+                    geometry_status = "NO_DEPTH"
+                    geometry_error = "Depth image missing"
+                elif not packet.has_pose:
+                    geometry_status = "NO_POSE"
+                    geometry_error = "Pose missing"
                     
             obs = Observation(
                 obs_id=self._generate_obs_id(),
@@ -155,11 +179,13 @@ class YOLOEDetector(DetectorInterface):
                 confidence=conf,
                 bbox_xyxy=xyxy,
                 mask_rle=mask_rle,
-                centroid_camera=None,
+                centroid_camera=centroid_camera,
                 centroid_world=centroid_world,
                 bbox_min_world=bbox_min_world,
                 bbox_max_world=bbox_max_world,
-                valid_point_count=valid_point_count
+                valid_point_count=valid_point_count,
+                geometry_status=geometry_status,
+                geometry_error=geometry_error
             )
             observations.append(obs)
             

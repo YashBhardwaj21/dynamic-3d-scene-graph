@@ -67,6 +67,11 @@ def transform_points(T: np.ndarray, points_camera: np.ndarray) -> np.ndarray:
     Returns:
         Nx3 numpy array of points in world coordinates.
     """
+    if T.shape != (4, 4):
+        raise ValueError(f"Transform matrix must be 4x4, got {T.shape}")
+    if points_camera.ndim != 2 or points_camera.shape[1] != 3:
+        raise ValueError(f"Points must be Nx3, got {points_camera.shape}")
+        
     if len(points_camera) == 0:
         return np.empty((0, 3), dtype=np.float64)
         

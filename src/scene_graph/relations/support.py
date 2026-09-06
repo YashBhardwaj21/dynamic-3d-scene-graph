@@ -10,9 +10,13 @@ from scene_graph.relations.evidence import RelationEvidence
 class SupportRelationModule(RelationModule):
     """Computes ON relation based on plane fitting and distance."""
     
-    def __init__(self, plane_residual_m: float = 0.02, min_support_overlap: float = 0.1):
-        self.plane_residual_m = plane_residual_m
-        self.min_support_overlap = min_support_overlap
+    def __init__(self, config=None, plane_residual_m: float = 0.02, min_support_overlap: float = 0.1):
+        if config is not None:
+            self.plane_residual_m = config.get("relations.support.plane_residual_m", plane_residual_m)
+            self.min_support_overlap = config.get("relations.support.min_support_overlap", min_support_overlap)
+        else:
+            self.plane_residual_m = plane_residual_m
+            self.min_support_overlap = min_support_overlap
         
     def predicates(self) -> List[str]:
         return ["ON"]
@@ -82,6 +86,7 @@ class SupportRelationModule(RelationModule):
                         frame_index=context.frame_index,
                         timestamp=context.timestamp,
                         value=bottom_distance,
+                        result=EvidenceResult.SUPPORTED,
                         threshold=self.plane_residual_m,
                         confidence=confidence,
                         reference_frame="world",

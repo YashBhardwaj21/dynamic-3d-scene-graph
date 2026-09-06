@@ -43,3 +43,7 @@ vocabularies:
 sync:
   rgb_depth_max_dt: 0.02
   rgb_pose_max_dt: 0.02
+
+geometry:
+  min_valid_points: 30
+  depth_outlier_band_m: 0.10

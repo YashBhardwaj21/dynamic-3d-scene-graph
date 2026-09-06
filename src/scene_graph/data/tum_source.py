@@ -4,11 +4,12 @@ import cv2
 
 from scene_graph.config import SceneGraphConfig
 from scene_graph.data.frame_packet import FramePacket
+from scene_graph.data.frame_source import FrameSource
 from scene_graph.data.tum_loader import TUMLoader
 from scene_graph.data.synchronization import associate
 
 
-class TUMReplaySource:
+class TUMReplaySource(FrameSource):
     """A causal source for TUM RGB-D sequences.
     
     Yields FramePackets one by one, ensuring the downstream pipeline
@@ -49,6 +50,12 @@ class TUMReplaySource:
         self.start_idx = 0 if start_frame is None else start_frame
         self._end_idx = len(self.rgb_entries) - 1 if end_frame is None else end_frame
         self.end_idx = min(self._end_idx, len(self.rgb_entries) - 1)
+
+        if not (0 <= self.start_idx <= self.end_idx < len(self.rgb_entries)):
+            raise ValueError(
+                f"Invalid sequence bounds: start_frame={self.start_idx}, "
+                f"end_frame={self.end_idx}, total_rgb_frames={len(self.rgb_entries)}"
+            )
         
     def __iter__(self) -> Iterator[FramePacket]:
         """Yield frame packets one at a time."""

@@ -4,14 +4,17 @@ from typing import List
 from scene_graph.tracking.track import Track
 from scene_graph.relations.base import RelationModule
 from scene_graph.relations.context import FrameContext
-from scene_graph.relations.evidence import RelationEvidence
+from scene_graph.relations.evidence import RelationEvidence, EvidenceResult
 
 
 class ContainmentRelationModule(RelationModule):
     """Computes INSIDE relation based on point cloud containment."""
     
-    def __init__(self, min_inside_ratio: float = 0.5):
-        self.min_inside_ratio = min_inside_ratio
+    def __init__(self, config=None, min_containment_ratio: float = 0.5):
+        if config is not None:
+            self.min_containment_ratio = config.get("relations.containment.min_containment_ratio", min_containment_ratio)
+        else:
+            self.min_containment_ratio = min_containment_ratio
         
     def predicates(self) -> List[str]:
         return ["INSIDE"]
@@ -39,20 +42,24 @@ class ContainmentRelationModule(RelationModule):
         inside_count = np.sum(inside_mask)
         
         if len(pts) > 0:
-            ratio = inside_count / len(pts)
-            if ratio >= self.min_inside_ratio:
+            overlap_ratio = inside_count / len(pts)
+            confidence = overlap_ratio
+            if overlap_ratio >= self.min_containment_ratio:
                 evidences.append(RelationEvidence(
                     predicate="INSIDE",
                     subject_id=subject.object_id,
                     object_id=object.object_id,
                     frame_index=context.frame_index,
                     timestamp=context.timestamp,
-                    value=ratio,
-                    threshold=self.min_inside_ratio,
-                    confidence=ratio,
+                    value=overlap_ratio,
+                    result=EvidenceResult.SUPPORTED,
+                    threshold=self.min_containment_ratio,
+                    confidence=confidence,
                     reference_frame="world",
-                    evidence_type="point_containment",
-                    details={"inside_ratio": float(ratio)}
+                    evidence_type="volume_overlap",
+                    details={
+                        "containment_ratio": float(overlap_ratio)
+                    }
                 ))
                 
         return evidences

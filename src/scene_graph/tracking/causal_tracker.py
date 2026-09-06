@@ -17,6 +17,9 @@ class CausalTracker(TrackerInterface):
         self.config = config
         
         self.association_threshold_m = self.config.get("tracking.association_threshold_m", 0.25)
+        self.distance_weight = self.config.get("tracking.distance_weight", 1.0)
+        self.velocity_weight = self.config.get("tracking.velocity_weight", 0.0)
+        
         self.max_missing_frames = self.config.get("tracking.max_missing_frames", 5)
         self.min_hits_to_confirm = self.config.get("tracking.min_hits_to_confirm", 3)
         self.velocity_history_min = self.config.get("tracking.velocity_history_min", 3)
@@ -62,15 +65,13 @@ class CausalTracker(TrackerInterface):
         """Predict the location of tracks at the current frame."""
         predictions = {}
         for track_id, track in self.tracks.items():
-            # For now, constant position model unless we have enough history for velocity
-            if len(track.recent_observations) >= self.velocity_history_min:
-                # Basic velocity estimation (last - oldest) / dt
-                # Using simple position differences if timestamps are uniform
-                # To keep it causal and simple, we'll stick to a basic EMA or constant position
-                pass 
-            
-            predictions[track_id] = np.copy(track.centroid_world)
-            
+            if track.velocity_world is not None and track.recent_observations:
+                # We assume frame rate is roughly constant, dt is approximated by 1 frame.
+                # A more rigorous implementation would use timestamps.
+                predictions[track_id] = track.centroid_world + track.velocity_world
+            else:
+                predictions[track_id] = np.copy(track.centroid_world)
+                
         return predictions
 
     def _associate(self, observations: List[Observation], predictions: Dict[str, np.ndarray]) -> Tuple[List[Tuple[int, str]], List[int], List[str]]:
@@ -99,7 +100,17 @@ class CausalTracker(TrackerInterface):
                 
                 # Distance must be within threshold
                 if dist <= self.association_threshold_m:
-                    cost_matrix[i, j] = dist
+                    cost = self.distance_weight * dist
+                    
+                    if track.velocity_world is not None and self.velocity_weight > 0:
+                        # Estimate implied velocity of observation relative to track's last position
+                        # Since we don't have dt easily accessible here, we just use frame difference
+                        # as 1.
+                        implied_vel = obs.centroid_world - track.centroid_world
+                        vel_diff = np.linalg.norm(implied_vel - track.velocity_world)
+                        cost += self.velocity_weight * vel_diff
+                        
+                    cost_matrix[i, j] = cost
                     
         # Apply Hungarian algorithm
         # Linear sum assignment minimizes the total cost
@@ -122,6 +133,17 @@ class CausalTracker(TrackerInterface):
         track = self.tracks[track_id]
         old_state = track.state
         
+        # Velocity estimation (Exponential Moving Average)
+        if len(track.recent_observations) > 0:
+            last_obs = track.recent_observations[-1]
+            dt = obs.timestamp - last_obs.timestamp
+            if dt > 0 and obs.centroid_world is not None and last_obs.centroid_world is not None:
+                inst_vel = (obs.centroid_world - last_obs.centroid_world) / dt
+                if track.velocity_world is None:
+                    track.velocity_world = inst_vel
+                else:
+                    track.velocity_world = 0.8 * track.velocity_world + 0.2 * inst_vel
+
         track.centroid_world = np.copy(obs.centroid_world)
         track.last_observed_frame = frame_index
         track.observation_count += 1
