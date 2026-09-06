@@ -129,9 +129,7 @@ class CausalTracker(TrackerInterface):
             dt = timestamp - track.last_timestamp
 
             if dt < 0.0:
-                raise ValueError(
-                    f"Non-monotonic timestamp for track {track_id}: {timestamp} < {track.last_timestamp}"
-                )
+                raise ValueError(f"Non-monotonic timestamp for track {track_id}: {timestamp} < {track.last_timestamp}")
 
             predicted_state = copy.deepcopy(track.kalman_state)
             predicted_state.predict(dt, self.q_std)
@@ -179,9 +177,7 @@ class CausalTracker(TrackerInterface):
                     continue
 
                 try:
-                    mahalanobis_sq = float(
-                        innovation @ np.linalg.solve(innovation_covariance, innovation)
-                    )
+                    mahalanobis_sq = float(innovation @ np.linalg.solve(innovation_covariance, innovation))
                 except np.linalg.LinAlgError:
                     continue
 
@@ -198,16 +194,26 @@ class CausalTracker(TrackerInterface):
                 if np.isfinite(cost):
                     cost_matrix[obs_idx, track_idx] = cost
 
-        if not np.isfinite(cost_matrix).any():
+        finite_mask = np.isfinite(cost_matrix)
+
+        if not finite_mask.any():
             return [], list(range(len(observations))), track_ids
 
-        row_indices, col_indices = linear_sum_assignment(cost_matrix)
+        feasible_observations = np.flatnonzero(finite_mask.any(axis=1))
+        feasible_tracks = np.flatnonzero(finite_mask.any(axis=0))
+
+        feasible_cost_matrix = cost_matrix[np.ix_(feasible_observations, feasible_tracks)]
+
+        row_indices, col_indices = linear_sum_assignment(feasible_cost_matrix)
 
         matched: List[Tuple[int, str]] = []
         unmatched_obs = set(range(len(observations)))
         unmatched_tracks = set(track_ids)
 
-        for row, col in zip(row_indices, col_indices):
+        for local_row, local_col in zip(row_indices, col_indices):
+            row = int(feasible_observations[local_row])
+            col = int(feasible_tracks[local_col])
+
             if not np.isfinite(cost_matrix[row, col]):
                 continue
 
@@ -238,9 +244,7 @@ class CausalTracker(TrackerInterface):
             dt = timestamp - track.last_timestamp
 
             if dt < 0.0:
-                raise ValueError(
-                    f"Non-monotonic timestamp for track {track_id}: {timestamp} < {track.last_timestamp}"
-                )
+                raise ValueError(f"Non-monotonic timestamp for track {track_id}: {timestamp} < {track.last_timestamp}")
 
             updated_state = copy.deepcopy(track.kalman_state)
             updated_state.predict(dt, self.q_std)
@@ -289,9 +293,7 @@ class CausalTracker(TrackerInterface):
         missing_seconds = timestamp - track.last_timestamp
 
         if missing_seconds < 0.0:
-            raise ValueError(
-                f"Non-monotonic timestamp for track {track_id}: {timestamp} < {track.last_timestamp}"
-            )
+            raise ValueError(f"Non-monotonic timestamp for track {track_id}: {timestamp} < {track.last_timestamp}")
 
         if missing_seconds >= self.max_missing_seconds:
             track.state = TrackState.LOST
@@ -343,7 +345,11 @@ class CausalTracker(TrackerInterface):
             self.history.record_observation(track_id, observation)
 
     def _cleanup_lost_tracks(self) -> None:
-        lost_track_ids = [track_id for track_id, track in self.tracks.items() if track.state == TrackState.LOST]
+        lost_track_ids = [
+            track_id
+            for track_id, track in self.tracks.items()
+            if track.state == TrackState.LOST
+        ]
 
         for track_id in lost_track_ids:
             del self.tracks[track_id]
