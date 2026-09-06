@@ -1,0 +1,45 @@
+# default.yaml
+# Frozen parameters for the dynamic 3D scene graph
+
+tracking:
+  association_method: hungarian
+  association_threshold_m: 0.25
+  max_missing_frames: 5
+  min_hits_to_confirm: 3
+  velocity_history_min: 3
+
+temporal:
+  object:
+    min_hits_to_confirm: 3
+    max_missing_frames: 5
+  relation:
+    confirm_frames: 3           # consecutive admissible evidence frames
+    max_missing_frames: 2       # before LOST
+
+detector:
+  type: yoloe
+  confidence: 0.40
+  image_size: 640
+  device: auto
+  mode: controlled
+  vocabulary: v4_11
+
+vocabularies:
+  v4_11:
+    name: v4_11
+    classes:
+      - monitor
+      - computer
+      - keyboard
+      - mouse
+      - telephone
+      - book
+      - cup
+      - pen
+      - paper
+      - desk
+      - table
+
+sync:
+  rgb_depth_max_dt: 0.02
+  rgb_pose_max_dt: 0.02

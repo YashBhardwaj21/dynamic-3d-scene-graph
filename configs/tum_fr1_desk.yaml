@@ -1,0 +1,26 @@
+# tum_fr1_desk.yaml
+dataset:
+  type: tum_rgbd
+  name: TUM Freiburg1 Desk
+  root: data/raw/rgbd_dataset_freiburg1_desk
+  
+# Process entire sequence
+sequence:
+  start_frame: 1
+  end_frame: 613
+
+# Optional: specifically for V4 comparison evaluation
+evaluation_window: [100, 300]
+
+camera:
+  fx: 525.0
+  fy: 525.0
+  cx: 319.5
+  cy: 239.5
+  width: 640
+  height: 480
+
+depth:
+  scale: 5000.0
+
+pose_source: tum_groundtruth
