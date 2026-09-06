@@ -22,10 +22,10 @@ class TUMReplaySource(FrameSource):
     ):
         self.config = config
         
-        dataset_root = self.config.get("dataset.root")
-        if not dataset_root:
-            raise ValueError("Config missing dataset.root")
+        if self.config.dataset is None:
+            raise ValueError("Config missing dataset")
             
+        dataset_root = self.config.dataset.root
         self.loader = TUMLoader(dataset_root)
         
         self.rgb_entries = self.loader.load_rgb()
@@ -37,18 +37,20 @@ class TUMReplaySource(FrameSource):
         depth_timestamps = [e.timestamp for e in self.depth_entries]
         pose_timestamps = [e.timestamp for e in self.pose_entries]
         
-        rgb_depth_max_dt = self.config.get("sync.rgb_depth_max_dt", 0.02)
-        rgb_pose_max_dt = self.config.get("sync.rgb_pose_max_dt", 0.02)
+        rgb_depth_max_dt = self.config.sync.rgb_depth_max_dt
+        rgb_pose_max_dt = self.config.sync.rgb_pose_max_dt
         
         # Associate
         self.rgb_to_depth = dict(associate(rgb_timestamps, depth_timestamps, rgb_depth_max_dt))
         self.rgb_to_pose = dict(associate(rgb_timestamps, pose_timestamps, rgb_pose_max_dt))
         
-        start_frame = self.config.get("sequence.start_frame")
-        end_frame = self.config.get("sequence.end_frame")
-        
-        self.start_idx = 0 if start_frame is None else start_frame
-        self._end_idx = len(self.rgb_entries) - 1 if end_frame is None else end_frame
+        if self.config.sequence is None:
+            self.start_idx = 0
+            self._end_idx = len(self.rgb_entries) - 1
+        else:
+            self.start_idx = self.config.sequence.start_frame
+            self._end_idx = len(self.rgb_entries) - 1 if self.config.sequence.end_frame is None else self.config.sequence.end_frame
+            
         self.end_idx = min(self._end_idx, len(self.rgb_entries) - 1)
 
         if not (0 <= self.start_idx <= self.end_idx < len(self.rgb_entries)):
@@ -59,6 +61,22 @@ class TUMReplaySource(FrameSource):
         
     def __iter__(self) -> Iterator[FramePacket]:
         """Yield frame packets one at a time."""
+        
+        camera_model = {}
+        if self.config.camera is not None:
+            camera_model = {
+                "fx": self.config.camera.fx,
+                "fy": self.config.camera.fy,
+                "cx": self.config.camera.cx,
+                "cy": self.config.camera.cy,
+                "width": self.config.camera.width,
+                "height": self.config.camera.height
+            }
+            
+        depth_scale = 1.0
+        if self.config.depth is not None:
+            depth_scale = self.config.depth.scale
+            
         for frame_idx in range(self.start_idx, self.end_idx + 1):
             rgb_entry = self.rgb_entries[frame_idx]
             
@@ -93,9 +111,9 @@ class TUMReplaySource(FrameSource):
                 timestamp=rgb_entry.timestamp,
                 rgb=rgb_np,
                 depth=depth_np,
-                pose=pose_np,
-                has_depth=has_depth,
-                has_pose=has_pose
+                world_T_camera=pose_np,
+                camera_model=camera_model,
+                metadata={"depth_scale": depth_scale}
             )
             
             yield packet

@@ -16,9 +16,9 @@ temporal:
     confirm_frames: 3           # consecutive admissible evidence frames
     max_missing_frames: 2       # before LOST
 
-detector:
+perception:
   type: yoloe
-  confidence: 0.40
+  confidence_threshold: 0.40
   image_size: 640
   device: auto
   mode: controlled

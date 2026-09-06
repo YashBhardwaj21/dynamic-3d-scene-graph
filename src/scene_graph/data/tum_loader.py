@@ -77,39 +77,8 @@ class PoseEntry:
 
     def as_transform_matrix(self) -> np.ndarray:
         """Convert translation and quaternion to a 4x4 SE(3) transformation matrix."""
-        # Normalize quaternion to avoid numerical drift
-        q = np.array([self.qx, self.qy, self.qz, self.qw], dtype=np.float64)
-        norm = np.linalg.norm(q)
-        if norm > 0:
-            q = q / norm
-        qx, qy, qz, qw = q
-
-        # Rotation matrix from quaternion (standard Hamilton convention)
-        R = np.array(
-            [
-                [
-                    1.0 - 2.0 * (qy * qy + qz * qz),
-                    2.0 * (qx * qy - qz * qw),
-                    2.0 * (qx * qz + qy * qw),
-                ],
-                [
-                    2.0 * (qx * qy + qz * qw),
-                    1.0 - 2.0 * (qx * qx + qz * qz),
-                    2.0 * (qy * qz - qx * qw),
-                ],
-                [
-                    2.0 * (qx * qz - qy * qw),
-                    2.0 * (qy * qz + qx * qw),
-                    1.0 - 2.0 * (qx * qx + qy * qy),
-                ],
-            ],
-            dtype=np.float64,
-        )
-
-        T = np.eye(4, dtype=np.float64)
-        T[:3, :3] = R
-        T[:3, 3] = [self.tx, self.ty, self.tz]
-        return T
+        from scene_graph.geometry.transforms import pose_to_transform
+        return pose_to_transform(self.tx, self.ty, self.tz, self.qx, self.qy, self.qz, self.qw)
 
 
 def parse_file_list(file_path: Union[str, Path]) -> List[List[str]]:
