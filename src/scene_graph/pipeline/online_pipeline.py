@@ -1,5 +1,5 @@
 from scene_graph.config import SceneGraphConfig
-from scene_graph.data.tum_source import FramePacket
+from scene_graph.data.frame_packet import FramePacket
 from scene_graph.perception.yoloe_detector import YOLOEDetector
 from scene_graph.pipeline.pipeline_core import SceneGraphPipeline
 
@@ -32,9 +32,9 @@ class OnlinePipeline:
             
         allowed_classes = None
         if config.perception.classes:
-            allowed_classes = set(config.perception.classes)
+            allowed_classes = tuple(config.perception.classes)
         elif config.perception.vocabulary and config.vocabularies and config.perception.vocabulary in config.vocabularies:
-            allowed_classes = set(config.vocabularies[config.perception.vocabulary].classes)
+            allowed_classes = tuple(config.vocabularies[config.perception.vocabulary].classes)
             
         if not allowed_classes:
             raise ValueError("No classes provided for open-vocabulary detector. Set perception.classes or a valid perception.vocabulary.")

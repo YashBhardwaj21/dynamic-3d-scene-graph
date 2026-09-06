@@ -4,14 +4,14 @@ from typing import List
 import numpy as np
 
 from scene_graph.config import SceneGraphConfig
-from scene_graph.data.tum_source import FramePacket
+from scene_graph.data.frame_packet import FramePacket
 from scene_graph.perception.observation import Observation
 from scene_graph.tracking.causal_tracker import CausalTracker
 from scene_graph.temporal.object_state import ObjectStateMachine
 from scene_graph.temporal.relation_state import RelationStateMachine
 from scene_graph.graph.temporal_graph import TemporalSceneGraph
 from scene_graph.relations.registry import RelationRegistry
-from scene_graph.relations.inverse_algebra import derive_inverse_evidence
+from scene_graph.relations.inverse_algebra import derive_inverse_evidence, SYMMETRIC
 
 # Core Relation Modules
 from scene_graph.relations.distance import DistanceRelationModule
@@ -21,7 +21,8 @@ from scene_graph.relations.containment import ContainmentRelationModule
 from scene_graph.relations.depth_order import DepthOrderRelationModule
 from scene_graph.relations.occlusion import OcclusionRelationModule
 
-from scene_graph.geometry.reference_frame import RelationReferenceFrame, CameraFrame
+from scene_graph.geometry.reference_frame import CameraFrame
+from scene_graph.geometry.reference_frame_provider import ReferenceFrameProvider
 from scene_graph.relations.context import FrameContext, ObservationGeometry
 
 
@@ -54,7 +55,9 @@ class SceneGraphPipeline:
         # 3. Graph
         self.graph = TemporalSceneGraph()
         
-        self.global_relation_frame = None
+        # 4. Reference frame from dataset convention (NOT first camera pose)
+        dataset_type = config.dataset.type if config.dataset else "tum_rgbd"
+        self.reference_frame_provider = ReferenceFrameProvider(dataset_type=dataset_type)
         
     def _register_modules(self):
         # Register all core relation modules
@@ -116,13 +119,10 @@ class SceneGraphPipeline:
         if packet.world_T_camera is not None:
             try:
                 camera_frame = CameraFrame.from_camera_pose(packet.world_T_camera)
-                if self.global_relation_frame is None:
-                    # Initialize using gravity and heading from first camera pose
-                    self.global_relation_frame = RelationReferenceFrame.from_gravity_and_heading(
-                        origin_world=camera_frame.origin_world,
-                        up_axis_world=np.array([0.0, 0.0, 1.0]), 
-                        heading_world=camera_frame.depth_axis_world
-                    )
+                # Global relation frame from dataset convention, frozen for the sequence
+                global_relation_frame = self.reference_frame_provider.get_frame(
+                    origin_world=camera_frame.origin_world
+                )
                 
                 from scene_graph.geometry.camera import CameraIntrinsics
                 if packet.camera_model and "fx" in packet.camera_model:
@@ -135,7 +135,7 @@ class SceneGraphPipeline:
                     timestamp=packet.timestamp,
                     intrinsics=intrinsics,
                     world_T_camera=packet.world_T_camera,
-                    reference_frame=self.global_relation_frame,
+                    reference_frame=global_relation_frame,
                     camera_frame=camera_frame,
                     depth_image=packet.depth,
                     observation_geometry=observation_geometry
@@ -148,7 +148,6 @@ class SceneGraphPipeline:
                 # For asymmetric predicates (ON->UNDER, LEFT_OF->RIGHT_OF, etc.),
                 # derive the inverse. For symmetric predicates (NEAR, FAR),
                 # the same evidence applies to the swapped pair directly.
-                from scene_graph.relations.inverse_algebra import SYMMETRIC
                 all_evidences = []
                 for ev in raw_evidences:
                     all_evidences.append(ev)
