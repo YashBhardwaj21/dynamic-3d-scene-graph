@@ -16,8 +16,8 @@ def main():
     parser.add_argument("--max_frames", type=int, default=None, help="Stop after N frames")
     args = parser.parse_args()
 
-    # Load config
-    config = SceneGraphConfig.from_files(args.config)
+    # Load config with defaults
+    config = SceneGraphConfig.from_files("configs/default.yaml", args.config)
     
     # Initialize pipeline
     pipeline = OnlinePipeline(config)
@@ -60,9 +60,38 @@ def main():
     print("\nReplay finished.")
     
     if query_engine:
-        print("\nFinal State Summary:")
-        for edge in query_engine.graph.get_active_edges():
-            print(f"  {edge.subject_id} {edge.predicate} {edge.object_id}")
+        print("\n" + "="*50)
+        print("FINAL SCENE GRAPH REPORT")
+        print("="*50)
+        
+        active_nodes = query_engine.graph.get_active_nodes()
+        active_edges = query_engine.graph.get_active_edges()
+        
+        print(f"\n1. OBJECTS ({len(active_nodes)} active):")
+        node_map = {}
+        for node in active_nodes:
+            track = node.track
+            node_map[track.object_id] = track.class_name
+            age = track.last_observed_frame - track.first_observed_frame
+            print(f"  - {track.object_id} [{track.class_name.upper()}] (tracked for {age} frames, conf: {track.detection_confidence:.2f})")
+            
+        print(f"\n2. RELATIONS ({len(active_edges)} active):")
+        # Group relations by predicate for cleaner reading
+        from collections import defaultdict
+        grouped_edges = defaultdict(list)
+        for edge in active_edges:
+            subj_cls = node_map.get(edge.subject_id, "unknown")
+            obj_cls = node_map.get(edge.object_id, "unknown")
+            grouped_edges[edge.predicate].append(f"{subj_cls}({edge.subject_id}) -> {obj_cls}({edge.object_id})")
+            
+        for pred, items in sorted(grouped_edges.items()):
+            print(f"  [{pred}]: {len(items)} relationships")
+            for item in items[:10]: # Print up to 10 per category to avoid spam
+                print(f"      {item}")
+            if len(items) > 10:
+                print(f"      ... and {len(items) - 10} more")
+                
+        print("\n" + "="*50)
 
 
 if __name__ == "__main__":

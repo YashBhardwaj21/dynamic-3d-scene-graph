@@ -5,9 +5,9 @@ from scene_graph.config import SceneGraphConfig
 from scene_graph.data.frame_packet import FramePacket
 from scene_graph.perception.yoloe_detector import YOLOEDetector
 from scene_graph.tracking.causal_tracker import CausalTracker
-from scene_graph.geometry import compute_object_geometry
 from scene_graph.relations.context import FrameContext
 from scene_graph.relations.registry import RelationRegistry
+from scene_graph.geometry.reference_frame import RelationReferenceFrame
 from scene_graph.relations.distance import DistanceRelationModule
 from scene_graph.relations.support import SupportRelationModule
 from scene_graph.relations.directional import DirectionalRelationModule
@@ -31,12 +31,37 @@ class OnlinePipeline:
         self.config = config
         
         # 1. Perception
-        # Resolve path
-        model_path = config.get("perception.model_path", "models/yolov8n-seg.pt")
-        self.observer = YOLOEDetector(
+        # Set up detector
+        model_path = config.perception.model_path
+        
+        intrinsics = None
+        depth_model = None
+        if config.camera:
+            from scene_graph.geometry.camera import CameraIntrinsics
+            intrinsics = CameraIntrinsics(
+                fx=config.camera.fx, fy=config.camera.fy,
+                cx=config.camera.cx, cy=config.camera.cy,
+                width=config.camera.width, height=config.camera.height
+            )
+        if config.depth:
+            from scene_graph.geometry.camera import DepthModel
+            depth_model = DepthModel(scale=config.depth.scale)
+            
+        allowed_classes = None
+        if config.perception.classes:
+            allowed_classes = set(config.perception.classes)
+        elif config.perception.vocabulary and config.vocabularies and config.perception.vocabulary in config.vocabularies:
+            allowed_classes = set(config.vocabularies[config.perception.vocabulary].classes)
+            
+        if not allowed_classes:
+            raise ValueError("No classes provided for open-vocabulary detector. Set perception.classes or a valid perception.vocabulary.")
+            
+        self.detector = YOLOEDetector(
             model_path=model_path,
-            confidence_threshold=config.get("perception.confidence_threshold", 0.3),
-            allowed_classes=set(config.get("perception.classes", []))
+            confidence_threshold=config.perception.confidence_threshold,
+            allowed_classes=allowed_classes,
+            intrinsics=intrinsics,
+            depth_model=depth_model
         )
         
         # 2. Tracking
@@ -48,13 +73,13 @@ class OnlinePipeline:
         self.registry = RelationRegistry(config)
         self._register_modules()
         
-        # 5. Temporal States
+        # Temporal state machines
         self.object_state_machine = ObjectStateMachine(
-            hysteresis_frames=config.get("temporal.object.hysteresis_frames", 5)
+            hysteresis_frames=config.temporal.object.max_missing_frames
         )
         self.relation_state_machine = RelationStateMachine(
-            confirmation_frames=config.get("temporal.relation.confirmation_frames", 3),
-            missing_frames=config.get("temporal.relation.missing_frames", 2)
+            confirmation_frames=config.temporal.relation.confirm_frames,
+            missing_frames=config.temporal.relation.max_missing_frames
         )
         
         # 6. Graph
@@ -75,7 +100,7 @@ class OnlinePipeline:
         start_time = time.time()
         
         # 1. Observations
-        observations = self.observer.detect(packet)
+        observations = self.detector.detect(packet)
         
         # 2. Tracking
         tracks = self.tracker.update(
@@ -107,52 +132,80 @@ class OnlinePipeline:
         # To simplify, we will just pass the depth image and rely on the track's centroid
         # If geometry requires masks, we need `track.recent_observations[-1]`.
         
+        # But wait, observation_geometry is now computed inside ObservationSource (YOLOEDetector)
+        # and attached to Observation. We don't need to recompute it here!
+        # `obs.centroid_world`, `obs.bbox_min_world`, etc. are already available.
+        from scene_graph.relations.context import ObservationGeometry
         observation_geometry = {}
         for track in active_tracks:
             if not track.recent_observations:
                 continue
                 
             obs = track.recent_observations[-1]
-            # Verify this observation is from current frame
-            if obs.frame_index == packet.frame_index:
-                geo = compute_object_geometry(
-                    observation=obs,
-                    depth_image=packet.depth,
-                    intrinsics=packet.intrinsics,
-                    world_T_camera=packet.world_T_camera,
-                    reference_frame="world"
+            if obs.frame_index == packet.frame_index and obs.geometry_status == "VALID":
+                geo = ObservationGeometry(
+                    obs_id=obs.obs_id,
+                    track_id=track.object_id,
+                    centroid_world=obs.centroid_world,
+                    bbox_min_world=obs.bbox_min_world,
+                    bbox_max_world=obs.bbox_max_world,
+                    points_world=None,
+                    points_camera=None,
+                    mask=None,
+                    valid_point_count=obs.valid_point_count
                 )
-                if geo:
-                    observation_geometry[track.object_id] = geo
+                observation_geometry[track.object_id] = geo
                     
-        # 5. Relation Context
-        context = FrameContext(
-            frame_index=packet.frame_index,
-            timestamp=packet.timestamp,
-            intrinsics=packet.intrinsics,
-            world_T_camera=packet.world_T_camera,
-            reference_frame="world",
-            depth_image=packet.depth,
-            observation_geometry=observation_geometry
-        )
-        
-        # 6. Compute Evidences
-        raw_evidences = self.registry.compute_all(active_tracks, context)
-        
-        # 7. Apply Inverse Algebra
-        all_evidences = []
-        for ev in raw_evidences:
-            all_evidences.append(ev)
-            all_evidences.append(derive_inverse_evidence(ev))
+        # 5. Build FrameContext for relations
+        # If we don't have a valid camera pose, we cannot compute relations
+        if packet.world_T_camera is None:
+            # We can still track, but we abort relations and geometry requiring world coordinates
+            # Wait, tracking already requires world coordinates in our causal_tracker.
+            # So if pose is None, we actually should have skipped or just maintained state.
+            pass
             
-        # 8. Relation States
-        relation_states = self.relation_state_machine.update(
-            evidences=all_evidences,
-            frame_index=packet.frame_index
-        )
-        
-        # Update graph edges
-        self.graph.update_edges(all_evidences, relation_states)
+        if packet.world_T_camera is not None:
+            try:
+                reference_frame = RelationReferenceFrame.from_camera_pose(packet.world_T_camera)
+                
+                # Assuming intrinsics can be constructed from the camera_model dict
+                # For this demo, let's mock it if it's a dict
+                from scene_graph.geometry.camera import CameraIntrinsics
+                if packet.camera_model and "fx" in packet.camera_model:
+                    intrinsics = CameraIntrinsics(**packet.camera_model)
+                else:
+                    intrinsics = CameraIntrinsics(525.0, 525.0, 319.5, 239.5, 640, 480)
+                    
+                context = FrameContext(
+                    frame_index=packet.frame_index,
+                    timestamp=packet.timestamp,
+                    intrinsics=intrinsics,
+                    world_T_camera=packet.world_T_camera,
+                    reference_frame=reference_frame,
+                    depth_image=packet.depth,
+                    observation_geometry=observation_geometry
+                )
+                
+                # 6. Compute Evidences
+                raw_evidences = self.registry.compute_all(active_tracks, context)
+                
+                # 7. Apply Inverse Algebra
+                all_evidences = []
+                for ev in raw_evidences:
+                    all_evidences.append(ev)
+                    all_evidences.append(derive_inverse_evidence(ev))
+                    
+                # 8. Relation States
+                relation_states = self.relation_state_machine.update(
+                    evidences=all_evidences,
+                    frame_index=packet.frame_index
+                )
+                
+                # Update graph edges
+                self.graph.update_edges(all_evidences, relation_states)
+            except ValueError as e:
+                # Invalid transform
+                pass
         
         # Update graph metadata
         self.graph.current_frame_index = packet.frame_index

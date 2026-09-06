@@ -35,7 +35,7 @@ def main():
     # 1. Load config
     config = SceneGraphConfig.from_files("configs/default.yaml", args.config)
     
-    seq_dir = Path(config.get("dataset.root", ""))
+    seq_dir = Path(config.dataset.root)
     if not seq_dir.is_dir():
         print(f"Dataset directory not found: {seq_dir}")
         return
@@ -43,9 +43,9 @@ def main():
     out_dir = Path(args.out_dir)
     
     # Vocabulary Definitions
-    vocab_config = config.get(f"vocabularies.{config.get('detector.vocabulary', 'v4_11')}")
+    vocab_config = config.vocabularies.get(config.perception.vocabulary)
     if args.mode == "discovery":
-        vocab_config = config.get("vocabularies.expanded")
+        vocab_config = config.vocabularies.get("expanded")
         
     obs_dir_name = "observations_controlled" if args.mode == "controlled" else "observations_discovery"
     obs_dir = out_dir / obs_dir_name
@@ -53,14 +53,14 @@ def main():
     
     # 2. Setup Camera and Loader
     intrinsics = CameraIntrinsics(
-        fx=config.get("camera.fx", 525.0),
-        fy=config.get("camera.fy", 525.0),
-        cx=config.get("camera.cx", 319.5),
-        cy=config.get("camera.cy", 239.5),
-        width=config.get("camera.width", 640),
-        height=config.get("camera.height", 480)
+        fx=config.camera.fx,
+        fy=config.camera.fy,
+        cx=config.camera.cx,
+        cy=config.camera.cy,
+        width=config.camera.width,
+        height=config.camera.height
     )
-    depth_model = DepthModel(scale=config.get("depth.scale", 5000.0))
+    depth_model = DepthModel(scale=config.depth.scale)
     
     print(f"Initializing TUMReplaySource for {seq_dir}...")
     source = TUMReplaySource(config)
@@ -68,7 +68,7 @@ def main():
     print(f"Source will yield {total_frames} packets.")
     
     # 3. Setup Detector
-    model_path = config.get("detector.checkpoint", "models/yoloe/yoloe-26m-seg.pt")
+    model_path = config.perception.model_path
     if args.mode == "discovery":
         model_path = "models/yoloe/yoloe-26m-seg-pf.pt"
         
@@ -76,8 +76,8 @@ def main():
     try:
         detector = YOLOEDetector(
             model_path=model_path,
-            confidence_threshold=config.get("detector.confidence", 0.40),
-            allowed_classes=set(vocab_config["classes"]),
+            confidence_threshold=config.perception.confidence_threshold,
+            allowed_classes=set(vocab_config.classes) if vocab_config else set(),
             intrinsics=intrinsics,
             depth_model=depth_model
         )
@@ -158,7 +158,7 @@ def main():
     metadata_json = out_dir / "metadata.json"
     
     metadata = {
-        "dataset": config.get("dataset.name", "unknown"),
+        "dataset": config.dataset.name,
         "total_frames": total_frames,
         "chunk_size": args.chunk_size,
         "chunks": chunk_files,
