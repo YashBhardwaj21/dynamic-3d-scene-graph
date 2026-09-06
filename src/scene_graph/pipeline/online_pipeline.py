@@ -1,4 +1,5 @@
 import time
+import logging
 from typing import List, Dict, Optional
 
 from scene_graph.config import SceneGraphConfig
@@ -149,9 +150,9 @@ class OnlinePipeline:
                     centroid_world=obs.centroid_world,
                     bbox_min_world=obs.bbox_min_world,
                     bbox_max_world=obs.bbox_max_world,
-                    points_world=None,
-                    points_camera=None,
-                    mask=None,
+                    points_world=obs.object_geometry.points_world if obs.object_geometry else None,
+                    points_camera=obs.object_geometry.points_camera if obs.object_geometry else None,
+                    mask=obs.get_mask(),
                     valid_point_count=obs.valid_point_count
                 )
                 observation_geometry[track.object_id] = geo
@@ -174,7 +175,7 @@ class OnlinePipeline:
                 if packet.camera_model and "fx" in packet.camera_model:
                     intrinsics = CameraIntrinsics(**packet.camera_model)
                 else:
-                    intrinsics = CameraIntrinsics(525.0, 525.0, 319.5, 239.5, 640, 480)
+                    raise ValueError(f"Frame {packet.frame_index} missing required 'camera_model' with intrinsics.")
                     
                 context = FrameContext(
                     frame_index=packet.frame_index,
@@ -204,8 +205,7 @@ class OnlinePipeline:
                 # Update graph edges
                 self.graph.update_edges(all_evidences, relation_states)
             except ValueError as e:
-                # Invalid transform
-                pass
+                logging.warning(f"Frame {packet.frame_index} invalid: {e}")
         
         # Update graph metadata
         self.graph.current_frame_index = packet.frame_index

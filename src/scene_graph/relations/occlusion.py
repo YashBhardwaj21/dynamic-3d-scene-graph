@@ -66,6 +66,20 @@ class OcclusionRelationModule(RelationModule):
         # 3. If overlap ratio < threshold -> no evidence
         overlap_ratio = overlap_count / min(size_A, size_B)
         if overlap_ratio < self.min_mask_overlap_ratio:
+            evidences.append(RelationEvidence(
+                predicate="OCCLUDING",
+                subject_id=subject.object_id,
+                object_id=object.object_id,
+                frame_index=context.frame_index,
+                timestamp=context.timestamp,
+                value=overlap_ratio,
+                result=EvidenceResult.CONTRADICTED,
+                threshold=self.min_mask_overlap_ratio,
+                confidence=1.0,
+                reference_frame="camera",
+                evidence_type="mask_occlusion",
+                details={"overlap_ratio": float(overlap_ratio)}
+            ))
             return evidences
             
         # 4. Extract depth values at overlapping pixels
@@ -112,8 +126,6 @@ class OcclusionRelationModule(RelationModule):
         mean_overlap_depth = np.median(valid_overlap)
         
         # If the overlap depth is much closer to A than B, A is occluding B
-        # i.e., A is in front of B
-        # Let's just check if mean_depth_A is significantly smaller than mean_depth_B
         if mean_depth_A < mean_depth_B - self.depth_margin:
             # A is occluding B
             evidences.append(RelationEvidence(
@@ -124,6 +136,24 @@ class OcclusionRelationModule(RelationModule):
                 timestamp=context.timestamp,
                 value=mean_depth_B - mean_depth_A,
                 result=EvidenceResult.SUPPORTED,
+                threshold=self.depth_margin,
+                confidence=1.0,
+                reference_frame="camera",
+                evidence_type="mask_occlusion",
+                details={
+                    "overlap_ratio": float(overlap_ratio),
+                    "depth_diff": float(mean_depth_B - mean_depth_A)
+                }
+            ))
+        else:
+            evidences.append(RelationEvidence(
+                predicate="OCCLUDING",
+                subject_id=subject.object_id,
+                object_id=object.object_id,
+                frame_index=context.frame_index,
+                timestamp=context.timestamp,
+                value=mean_depth_B - mean_depth_A,
+                result=EvidenceResult.CONTRADICTED,
                 threshold=self.depth_margin,
                 confidence=1.0,
                 reference_frame="camera",

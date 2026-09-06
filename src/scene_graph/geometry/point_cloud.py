@@ -85,11 +85,11 @@ def compute_object_geometry(
     # Transform to world coordinates
     points_world = transform_points(pose, points_camera)
     
-    # Compute centers and AABB
+    # Compute centers and robust AABB using percentiles to reject outliers
     center_camera = np.median(points_camera, axis=0)
     center_world = np.median(points_world, axis=0)
-    aabb_min = np.min(points_world, axis=0)
-    aabb_max = np.max(points_world, axis=0)
+    aabb_min = np.percentile(points_world, 2, axis=0)
+    aabb_max = np.percentile(points_world, 98, axis=0)
     
     return ObjectGeometry(
         points_camera=points_camera,

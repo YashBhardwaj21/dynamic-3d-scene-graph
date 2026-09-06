@@ -5,6 +5,8 @@ import sys
 from scene_graph.config import SceneGraphConfig
 from scene_graph.data.tum_source import TUMReplaySource
 from scene_graph.pipeline.online_pipeline import OnlinePipeline
+from scene_graph.temporal.relation_state import RelationState
+from scene_graph.graph.participation_state import GraphParticipationState
 from scene_graph.graph.query import QueryEngine
 
 
@@ -61,36 +63,43 @@ def main():
     
     if query_engine:
         print("\n" + "="*50)
-        print("FINAL SCENE GRAPH REPORT")
+        print(f"FRAME {query_engine.graph.current_frame_index}")
         print("="*50)
         
         active_nodes = query_engine.graph.get_active_nodes()
-        active_edges = query_engine.graph.get_active_edges()
+        all_edges = query_engine.graph.edges.values()
         
-        print(f"\n1. OBJECTS ({len(active_nodes)} active):")
+        active_edges = [e for e in all_edges if e.is_active]
+        uncertain_edges = [e for e in all_edges if e.participation == GraphParticipationState.ACTIVE and e.state != RelationState.SUPPORTED]
+        
+        print(f"\nOBJECTS ({len(active_nodes)})")
         node_map = {}
         for node in active_nodes:
             track = node.track
             node_map[track.object_id] = track.class_name
-            age = track.last_observed_frame - track.first_observed_frame
-            print(f"  - {track.object_id} [{track.class_name.upper()}] (tracked for {age} frames, conf: {track.detection_confidence:.2f})")
+            print(f"  {track.object_id}  {track.class_name.upper()}")
+            print(f"      state: {node.state.value.upper()}")
+            print(f"      confidence: {track.detection_confidence:.2f}\n")
             
-        print(f"\n2. RELATIONS ({len(active_edges)} active):")
-        # Group relations by predicate for cleaner reading
-        from collections import defaultdict
-        grouped_edges = defaultdict(list)
-        for edge in active_edges:
+        print(f"ACTIVE RELATIONS ({len(active_edges)})")
+        # Deduplicate and format cleanly
+        for edge in sorted(active_edges, key=lambda e: (e.predicate, e.subject_id, e.object_id)):
             subj_cls = node_map.get(edge.subject_id, "unknown")
             obj_cls = node_map.get(edge.object_id, "unknown")
-            grouped_edges[edge.predicate].append(f"{subj_cls}({edge.subject_id}) -> {obj_cls}({edge.object_id})")
+            print(f"  {subj_cls} --{edge.predicate}--> {obj_cls}")
             
-        for pred, items in sorted(grouped_edges.items()):
-            print(f"  [{pred}]: {len(items)} relationships")
-            for item in items[:10]: # Print up to 10 per category to avoid spam
-                print(f"      {item}")
-            if len(items) > 10:
-                print(f"      ... and {len(items) - 10} more")
-                
+        print(f"\nTEMPORALLY UNCERTAIN ({len(uncertain_edges)})")
+        for edge in sorted(uncertain_edges, key=lambda e: (e.predicate, e.subject_id, e.object_id)):
+            subj_cls = node_map.get(edge.subject_id, "unknown")
+            obj_cls = node_map.get(edge.object_id, "unknown")
+            print(f"  {subj_cls} --{edge.predicate}--> {obj_cls}")
+            print(f"      state: {edge.state.value.upper()}")
+            print(f"      last_confirmed_frame: {edge.latest_evidence.frame_index if edge.latest_evidence else 'N/A'}\n")
+            
+        print("GRAPH SUMMARY")
+        print(f"  nodes: {len(active_nodes)}")
+        print(f"  active edges: {len(active_edges)}")
+        print(f"  uncertain edges: {len(uncertain_edges)}")
         print("\n" + "="*50)
 
 

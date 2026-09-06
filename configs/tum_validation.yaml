@@ -1,25 +1,41 @@
-data:
-  dataset_dir: "data/tum/rgbd_dataset_freiburg3_long_office_household"
-  sequence: "freiburg3_long_office_household"
-  sync_threshold: 0.02
-  depth_scale: 5000.0
+dataset:
+  type: "tum_rgbd"
+  name: "freiburg3_long_office_household"
+  root: "data/tum/rgbd_dataset_freiburg3_long_office_household"
+
+depth:
+  scale: 5000.0
+
+camera:
+  fx: 535.4
+  fy: 539.2
+  cx: 320.1
+  cy: 247.6
+  width: 640
+  height: 480
+
+sync:
+  rgb_depth_max_dt: 0.02
+  rgb_pose_max_dt: 0.02
 
 perception:
-  detector: "yoloe_26m"
+  type: "yoloe"
+  model_path: "models/yoloe-26m-seg.pt"
   confidence_threshold: 0.3
   classes: ["monitor", "computer", "keyboard", "mouse", "telephone", "book", "cup", "pen", "paper", "bottle", "desk", "table"]
 
 tracking:
-  distance_threshold: 0.3
-  velocity_weight: 0.5
-  max_missing: 10
+  association_method: "hungarian"
+  association_threshold_m: 0.3
+  max_missing_frames: 10
 
 temporal:
   object:
-    hysteresis_frames: 3
+    min_hits_to_confirm: 3
+    max_missing_frames: 5
   relation:
-    confirmation_frames: 2
-    missing_frames: 2
+    confirm_frames: 2
+    max_missing_frames: 2
 
 roles:
   support_surface: ["desk", "table"]

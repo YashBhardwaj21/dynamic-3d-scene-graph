@@ -150,11 +150,11 @@ class SceneGraphConfig(BaseModel):
     sync: Optional[SyncConfig] = Field(default_factory=SyncConfig)
     geometry: Optional[GeometryConfig] = Field(default_factory=GeometryConfig)
     perception: Optional[PerceptionConfig] = Field(default_factory=PerceptionConfig)
-    vocabularies: Optional[Dict[str, VocabularyConfig]] = None
     tracking: Optional[TrackingConfig] = Field(default_factory=TrackingConfig)
     temporal: Optional[TemporalConfig] = Field(default_factory=TemporalConfig)
     relations: Optional[RelationConfig] = Field(default_factory=RelationConfig)
     roles: Optional[RolesConfig] = Field(default_factory=RolesConfig)
+    vocabularies: Optional[Dict[str, VocabularyConfig]] = None
     evaluation_window: Optional[Tuple[int, int]] = None
     
     @classmethod

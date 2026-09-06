@@ -4,6 +4,8 @@ from dataclasses import dataclass, field
 from typing import Dict, Any, Optional
 import numpy as np
 
+from scene_graph.geometry.point_cloud import ObjectGeometry
+
 
 def encode_mask_rle(mask: np.ndarray) -> Dict[str, Any]:
     """Encode a 2D boolean or uint8 mask to Run-Length Encoding (RLE).
@@ -104,6 +106,9 @@ class Observation:
     
     # Optional path to heavy point cloud data if serialized
     point_cloud_ref: Optional[str] = None
+    
+    # Reference to full heavy geometry computed for this observation
+    object_geometry: Optional[ObjectGeometry] = None
     
     def get_mask(self) -> Optional[np.ndarray]:
         """Decode and return the boolean mask if available."""

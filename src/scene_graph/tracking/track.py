@@ -26,6 +26,8 @@ class Track:
     last_timestamp: float
     recent_observations: deque
     velocity_world: np.ndarray | None = None
+    position_covariance_world: np.ndarray | None = None
+    size_world: np.ndarray | None = None
     
     # Store the actual object instances (e.g. Observation) over time if needed
     # internally by tracker, bounded by the deque.

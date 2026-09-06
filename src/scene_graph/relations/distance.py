@@ -1,5 +1,6 @@
 import numpy as np
-from typing import List
+import numpy as np
+from typing import List, Tuple
 
 from scene_graph.tracking.track import Track
 from scene_graph.relations.base import RelationModule
@@ -21,14 +22,42 @@ class DistanceRelationModule(RelationModule):
     def predicates(self) -> List[str]:
         return ["NEAR", "FAR"]
         
+    def compute_pairs(self, pairs: List[Tuple[Track, Track]], context: FrameContext) -> List[RelationEvidence]:
+        evidences = []
+        # Filter for canonical pairs since distance is symmetric
+        canonical_pairs = []
+        for subj, obj in pairs:
+            if subj.object_id < obj.object_id:
+                canonical_pairs.append((subj, obj))
+                
+        for subj, obj in canonical_pairs:
+            evidences.extend(self.compute(subj, obj, context))
+            
+        return evidences
+        
     def compute(self, subject: Track, object: Track, context: FrameContext) -> List[RelationEvidence]:
         evidences = []
         
-        # Check if both have geometry
-        if subject.centroid_world is None or object.centroid_world is None:
-            return evidences
+        # Check if both have observation geometry for AABB
+        if subject.object_id not in context.observation_geometry or object.object_id not in context.observation_geometry:
+            # Fallback to centroids if full geometry is missing
+            if subject.centroid_world is None or object.centroid_world is None:
+                return evidences
+            dist = np.linalg.norm(subject.centroid_world - object.centroid_world)
+            evidence_type = "centroid_distance"
+        else:
+            subj_geo = context.observation_geometry[subject.object_id]
+            obj_geo = context.observation_geometry[object.object_id]
             
-        dist = np.linalg.norm(subject.centroid_world - object.centroid_world)
+            # AABB to AABB distance
+            # Distance is zero if they intersect, else Euclidean distance between closest edges
+            min_diff = np.maximum(subj_geo.bbox_min_world - obj_geo.bbox_max_world, 0)
+            max_diff = np.maximum(obj_geo.bbox_min_world - subj_geo.bbox_max_world, 0)
+            
+            # For each dimension, the distance is max(0, min(A)-max(B), min(B)-max(A))
+            dist_sq = np.sum(np.square(np.maximum(min_diff, max_diff)))
+            dist = np.sqrt(dist_sq)
+            evidence_type = "aabb_distance"
         
         # NEAR
         if dist < self.near_threshold:
@@ -44,7 +73,23 @@ class DistanceRelationModule(RelationModule):
                 threshold=self.near_threshold,
                 confidence=confidence,
                 reference_frame="world",
-                evidence_type="centroid_distance",
+                evidence_type=evidence_type,
+                details={"distance_m": float(dist)}
+            ))
+            
+            # Emitting CONTRADICTED for FAR ensures the state machine sees it's explicitly not FAR
+            evidences.append(RelationEvidence(
+                predicate="FAR",
+                subject_id=subject.object_id,
+                object_id=object.object_id,
+                frame_index=context.frame_index,
+                timestamp=context.timestamp,
+                value=dist,
+                result=EvidenceResult.CONTRADICTED,
+                threshold=self.far_threshold,
+                confidence=confidence,
+                reference_frame="world",
+                evidence_type=evidence_type,
                 details={"distance_m": float(dist)}
             ))
             
@@ -62,7 +107,22 @@ class DistanceRelationModule(RelationModule):
                 threshold=self.far_threshold,
                 confidence=confidence,
                 reference_frame="world",
-                evidence_type="centroid_distance",
+                evidence_type=evidence_type,
+                details={"distance_m": float(dist)}
+            ))
+            
+            evidences.append(RelationEvidence(
+                predicate="NEAR",
+                subject_id=subject.object_id,
+                object_id=object.object_id,
+                frame_index=context.frame_index,
+                timestamp=context.timestamp,
+                value=dist,
+                result=EvidenceResult.CONTRADICTED,
+                threshold=self.near_threshold,
+                confidence=confidence,
+                reference_frame="world",
+                evidence_type=evidence_type,
                 details={"distance_m": float(dist)}
             ))
             

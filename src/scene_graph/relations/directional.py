@@ -19,63 +19,94 @@ class DirectionalRelationModule(RelationModule):
             self.margin_y = margin_y
         
     def predicates(self) -> List[str]:
-        return ["LEFT_OF", "RIGHT_OF", "ABOVE", "BELOW"]
+        return ["LEFT_OF", "ABOVE"]
         
     def compute(self, subject: Track, object: Track, context: FrameContext) -> List[RelationEvidence]:
         evidences = []
         
-        if subject.centroid_world is None or object.centroid_world is None:
+        subj_geo = context.observation_geometry.get(subject.object_id)
+        obj_geo = context.observation_geometry.get(object.object_id)
+        
+        if not subj_geo or not obj_geo or subj_geo.points_world is None or obj_geo.points_world is None:
             return evidences
             
-        # Vector from object to subject
-        delta = subject.centroid_world - object.centroid_world
+        # Project points onto reference frame axes
+        # Horizontal (LEFT_OF) -> looking from camera, horizontal axis points RIGHT
+        # A is LEFT of B if A's max right extent is less than B's min right extent.
+        subj_x = np.dot(subj_geo.points_world, context.reference_frame.horizontal_axis_world)
+        obj_x = np.dot(obj_geo.points_world, context.reference_frame.horizontal_axis_world)
         
-        # Project onto reference frame axes
-        dx = np.dot(delta, context.reference_frame.horizontal_axis_world)
-        dy = np.dot(delta, context.reference_frame.up_axis_world)
+        gap_x = np.percentile(obj_x, 5) - np.percentile(subj_x, 95)
         
-        # Horizontal (LEFT_OF / RIGHT_OF)
-        # dx > 0 means subject is RIGHT of object
-        # dx < 0 means subject is LEFT of object
-        abs_dx = abs(dx)
-        if abs_dx > self.margin_x:
-            confidence = min(1.0, (abs_dx - self.margin_x) / self.margin_x)
-            predicate = "RIGHT_OF" if dx > 0 else "LEFT_OF"
+        if gap_x > self.margin_x:
+            confidence = min(1.0, (gap_x - self.margin_x) / self.margin_x)
             evidences.append(RelationEvidence(
-                predicate=predicate,
+                predicate="LEFT_OF",
                 subject_id=subject.object_id,
                 object_id=object.object_id,
                 frame_index=context.frame_index,
                 timestamp=context.timestamp,
-                value=abs_dx,
+                value=gap_x,
                 result=EvidenceResult.SUPPORTED,
                 threshold=self.margin_x,
                 confidence=confidence,
                 reference_frame="reference_frame",
-                evidence_type="centroid_directional",
-                details={"dx": float(dx)}
+                evidence_type="extent_directional",
+                details={"gap_x": float(gap_x)}
             ))
-            
-        # Vertical (ABOVE / BELOW)
-        # dy > 0 means subject is ABOVE object
-        # dy < 0 means subject is BELOW object
-        abs_dy = abs(dy)
-        if abs_dy > self.margin_y:
-            confidence = min(1.0, (abs_dy - self.margin_y) / self.margin_y)
-            predicate = "ABOVE" if dy > 0 else "BELOW"
+        else:
             evidences.append(RelationEvidence(
-                predicate=predicate,
+                predicate="LEFT_OF",
                 subject_id=subject.object_id,
                 object_id=object.object_id,
                 frame_index=context.frame_index,
                 timestamp=context.timestamp,
-                value=abs_dy,
+                value=gap_x,
+                result=EvidenceResult.CONTRADICTED,
+                threshold=self.margin_x,
+                confidence=1.0,
+                reference_frame="reference_frame",
+                evidence_type="extent_directional",
+                details={"gap_x": float(gap_x)}
+            ))
+            
+        # Vertical (ABOVE)
+        # A is ABOVE B if A's min y extent is greater than B's max y extent
+        subj_y = np.dot(subj_geo.points_world, context.reference_frame.up_axis_world)
+        obj_y = np.dot(obj_geo.points_world, context.reference_frame.up_axis_world)
+        
+        gap_y = np.percentile(subj_y, 5) - np.percentile(obj_y, 95)
+        
+        if gap_y > self.margin_y:
+            confidence = min(1.0, (gap_y - self.margin_y) / self.margin_y)
+            evidences.append(RelationEvidence(
+                predicate="ABOVE",
+                subject_id=subject.object_id,
+                object_id=object.object_id,
+                frame_index=context.frame_index,
+                timestamp=context.timestamp,
+                value=gap_y,
                 result=EvidenceResult.SUPPORTED,
                 threshold=self.margin_y,
                 confidence=confidence,
                 reference_frame="reference_frame",
-                evidence_type="centroid_directional",
-                details={"dy": float(dy)}
+                evidence_type="extent_directional",
+                details={"gap_y": float(gap_y)}
+            ))
+        else:
+            evidences.append(RelationEvidence(
+                predicate="ABOVE",
+                subject_id=subject.object_id,
+                object_id=object.object_id,
+                frame_index=context.frame_index,
+                timestamp=context.timestamp,
+                value=gap_y,
+                result=EvidenceResult.CONTRADICTED,
+                threshold=self.margin_y,
+                confidence=1.0,
+                reference_frame="reference_frame",
+                evidence_type="extent_directional",
+                details={"gap_y": float(gap_y)}
             ))
             
         return evidences

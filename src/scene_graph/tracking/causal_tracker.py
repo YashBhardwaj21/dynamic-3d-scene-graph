@@ -18,10 +18,9 @@ class CausalTracker(TrackerInterface):
         
         self.association_threshold_m = self.config.tracking.association_threshold_m
         
-        # Velocity weight isn't in config strictly, so we default to 0 if we want to remove it
-        # or we just keep it if it's there. Actually I'll use 0.0 for now, or add it to config.
-        self.distance_weight = 1.0
-        self.velocity_weight = 0.0
+        self.distance_weight = getattr(self.config.tracking, 'distance_weight', 1.0)
+        self.velocity_weight = getattr(self.config.tracking, 'velocity_weight', 0.5)
+        self.size_weight = getattr(self.config.tracking, 'size_weight', 1.0)
         
         self.max_missing_frames = self.config.tracking.max_missing_frames
         self.min_hits_to_confirm = self.config.tracking.min_hits_to_confirm
@@ -66,19 +65,30 @@ class CausalTracker(TrackerInterface):
         # Return non-lost tracks
         return list(self.tracks.values())
 
-    def _predict_tracks(self, timestamp: float) -> Dict[str, np.ndarray]:
-        """Predict the location of tracks at the current frame."""
+    def _predict_tracks(self, timestamp: float) -> Dict[str, Tuple[np.ndarray, np.ndarray]]:
+        """Predict the location and covariance of tracks at the current frame."""
         predictions = {}
         for track_id, track in self.tracks.items():
+            dt = timestamp - track.last_timestamp
+            
+            # Predict Position
             if track.velocity_world is not None and track.recent_observations:
-                dt = timestamp - track.last_timestamp
-                predictions[track_id] = track.centroid_world + track.velocity_world * dt
+                pred_pos = track.centroid_world + track.velocity_world * dt
             else:
-                predictions[track_id] = np.copy(track.centroid_world)
+                pred_pos = np.copy(track.centroid_world)
+                
+            # Predict Covariance
+            if track.position_covariance_world is not None:
+                process_noise = np.eye(3) * 0.1 * dt
+                pred_cov = track.position_covariance_world + process_noise
+            else:
+                pred_cov = np.eye(3) * 1.0
+                
+            predictions[track_id] = (pred_pos, pred_cov)
                 
         return predictions
 
-    def _associate(self, observations: List[Observation], predictions: Dict[str, np.ndarray], timestamp: float) -> Tuple[List[Tuple[int, str]], List[int], List[str]]:
+    def _associate(self, observations: List[Observation], predictions: Dict[str, Tuple[np.ndarray, np.ndarray]], timestamp: float) -> Tuple[List[Tuple[int, str]], List[int], List[str]]:
         """Associate observations to predicted track positions."""
         track_ids = list(self.tracks.keys())
         
@@ -92,6 +102,13 @@ class CausalTracker(TrackerInterface):
             if obs.centroid_world is None:
                 continue # Cannot associate observations without 3D geometry
                 
+            # Estimate size
+            obs_size = None
+            if getattr(obs, 'object_geometry', None):
+                obs_size = obs.object_geometry.bbox_max_world - obs.object_geometry.bbox_min_world
+            elif obs.bbox_max_world is not None and obs.bbox_min_world is not None:
+                obs_size = obs.bbox_max_world - obs.bbox_min_world
+                
             for j, track_id in enumerate(track_ids):
                 track = self.tracks[track_id]
                 
@@ -99,11 +116,19 @@ class CausalTracker(TrackerInterface):
                 if obs.class_name != track.class_name:
                     continue
                     
-                predicted_pos = predictions[track_id]
-                dist = np.linalg.norm(obs.centroid_world - predicted_pos)
+                pred_pos, pred_cov = predictions[track_id]
+                diff = obs.centroid_world - pred_pos
+                dist = np.linalg.norm(diff)
                 
-                # Distance must be within threshold
-                if dist <= self.association_threshold_m:
+                try:
+                    cov_inv = np.linalg.inv(pred_cov)
+                    mahalanobis_sq = diff.T @ cov_inv @ diff
+                except np.linalg.LinAlgError:
+                    mahalanobis_sq = dist * dist / 0.1
+                
+                # Distance must be within Euclidean threshold OR Mahalanobis Chi-Sq threshold
+                # Chi-sq 99.9% for 3 DOF is 16.27
+                if dist <= self.association_threshold_m or mahalanobis_sq <= 16.27:
                     cost = self.distance_weight * dist
                     
                     if track.velocity_world is not None and self.velocity_weight > 0:
@@ -113,6 +138,10 @@ class CausalTracker(TrackerInterface):
                             implied_vel = (obs.centroid_world - track.centroid_world) / dt
                             vel_diff = np.linalg.norm(implied_vel - track.velocity_world)
                             cost += self.velocity_weight * vel_diff
+                            
+                    if self.size_weight > 0 and obs_size is not None and track.size_world is not None:
+                        size_diff = np.linalg.norm(obs_size - track.size_world)
+                        cost += self.size_weight * size_diff
                         
                     cost_matrix[i, j] = cost
                     
@@ -147,6 +176,26 @@ class CausalTracker(TrackerInterface):
                     track.velocity_world = inst_vel
                 else:
                     track.velocity_world = 0.8 * track.velocity_world + 0.2 * inst_vel
+
+        # Simple EMA for covariance
+        obs_noise = np.eye(3) * 0.05
+        if track.position_covariance_world is None:
+            track.position_covariance_world = obs_noise
+        else:
+            track.position_covariance_world = 0.8 * track.position_covariance_world + 0.2 * obs_noise
+            
+        # Update Size
+        obs_size = None
+        if getattr(obs, 'object_geometry', None):
+            obs_size = obs.object_geometry.bbox_max_world - obs.object_geometry.bbox_min_world
+        elif obs.bbox_max_world is not None and obs.bbox_min_world is not None:
+            obs_size = obs.bbox_max_world - obs.bbox_min_world
+            
+        if obs_size is not None:
+            if track.size_world is None:
+                track.size_world = obs_size
+            else:
+                track.size_world = 0.8 * track.size_world + 0.2 * obs_size
 
         track.centroid_world = np.copy(obs.centroid_world)
         track.last_observed_frame = frame_index

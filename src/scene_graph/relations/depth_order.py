@@ -17,39 +17,54 @@ class DepthOrderRelationModule(RelationModule):
             self.depth_margin = depth_margin
         
     def predicates(self) -> List[str]:
-        return ["IN_FRONT_OF", "BEHIND"]
+        return ["IN_FRONT_OF"]
         
     def compute(self, subject: Track, object: Track, context: FrameContext) -> List[RelationEvidence]:
         evidences = []
         
-        if subject.centroid_world is None or object.centroid_world is None:
+        subj_geo = context.observation_geometry.get(subject.object_id)
+        obj_geo = context.observation_geometry.get(object.object_id)
+        
+        if not subj_geo or not obj_geo or subj_geo.points_world is None or obj_geo.points_world is None:
             return evidences
             
-        # Vector from object to subject
-        delta = subject.centroid_world - object.centroid_world
+        # Project onto reference frame depth axis (forward is positive, so higher means further away)
+        # A is IN_FRONT_OF B if A's furthest point is closer than B's closest point.
+        subj_z = np.dot(subj_geo.points_world, context.reference_frame.depth_axis_world)
+        obj_z = np.dot(obj_geo.points_world, context.reference_frame.depth_axis_world)
         
-        # Project onto reference frame depth axis (forward is positive)
-        # dz > 0 means subject is further away (BEHIND object)
-        # dz < 0 means subject is closer (IN_FRONT_OF object)
-        dz = np.dot(delta, context.reference_frame.depth_axis_world)
-        abs_dz = abs(dz)
+        gap_z = np.percentile(obj_z, 5) - np.percentile(subj_z, 95)
         
-        if abs_dz > self.depth_margin:
-            confidence = min(1.0, (abs_dz - self.depth_margin) / self.depth_margin)
-            predicate = "BEHIND" if dz > 0 else "IN_FRONT_OF"
+        if gap_z > self.depth_margin:
+            confidence = min(1.0, (gap_z - self.depth_margin) / self.depth_margin)
             evidences.append(RelationEvidence(
-                predicate=predicate,
+                predicate="IN_FRONT_OF",
                 subject_id=subject.object_id,
                 object_id=object.object_id,
                 frame_index=context.frame_index,
                 timestamp=context.timestamp,
-                value=abs_dz,
+                value=gap_z,
                 result=EvidenceResult.SUPPORTED,
                 threshold=self.depth_margin,
                 confidence=confidence,
                 reference_frame="reference_frame",
-                evidence_type="centroid_directional",
-                details={"dz": float(dz)}
+                evidence_type="extent_directional",
+                details={"gap_z": float(gap_z)}
+            ))
+        else:
+            evidences.append(RelationEvidence(
+                predicate="IN_FRONT_OF",
+                subject_id=subject.object_id,
+                object_id=object.object_id,
+                frame_index=context.frame_index,
+                timestamp=context.timestamp,
+                value=gap_z,
+                result=EvidenceResult.CONTRADICTED,
+                threshold=self.depth_margin,
+                confidence=1.0,
+                reference_frame="reference_frame",
+                evidence_type="extent_directional",
+                details={"gap_z": float(gap_z)}
             ))
             
         return evidences

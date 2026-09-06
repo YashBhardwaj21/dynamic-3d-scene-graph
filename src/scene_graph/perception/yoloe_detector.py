@@ -132,6 +132,7 @@ class YOLOEDetector(ObservationProducer):
             valid_point_count = 0
             geometry_status = GeometryStatus.VALID.value
             geometry_error = None
+            object_geometry = None
             
             if mask_np is not None and depth_m is not None and packet.world_T_camera is not None:
                 try:
@@ -148,12 +149,14 @@ class YOLOEDetector(ObservationProducer):
                         bbox_max_world = obj_geo.bbox_max_world
                         valid_point_count = obj_geo.valid_point_count
                         geometry_status = obj_geo.status.value
+                        object_geometry = obj_geo
                     else:
                         geometry_status = obj_geo.status.value
                         if obj_geo.status == GeometryStatus.INSUFFICIENT_DEPTH:
                             geometry_error = f"Valid depth points below threshold ({self.min_valid_points})"
                         else:
                             geometry_error = "Unknown geometry error"
+                        object_geometry = obj_geo
                 except Exception as e:
                     geometry_status = GeometryStatus.INVALID_GEOMETRY.value
                     geometry_error = str(e)
@@ -182,7 +185,8 @@ class YOLOEDetector(ObservationProducer):
                 bbox_max_world=bbox_max_world,
                 valid_point_count=valid_point_count,
                 geometry_status=geometry_status,
-                geometry_error=geometry_error
+                geometry_error=geometry_error,
+                object_geometry=object_geometry
             )
             observations.append(obs)
             

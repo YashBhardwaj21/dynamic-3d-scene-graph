@@ -17,7 +17,7 @@ class ContainmentRelationModule(RelationModule):
             self.min_containment_ratio = min_containment_ratio
         
     def predicates(self) -> List[str]:
-        return ["INSIDE", "CONTAINING"]
+        return ["INSIDE"]
         
     def compute(self, subject: Track, object: Track, context: FrameContext) -> List[RelationEvidence]:
         evidences = []
@@ -57,9 +57,22 @@ class ContainmentRelationModule(RelationModule):
                     confidence=confidence,
                     reference_frame="world",
                     evidence_type="volume_overlap",
-                    details={
-                        "containment_ratio": float(overlap_ratio)
-                    }
+                    details={"containment_ratio": float(overlap_ratio)}
+                ))
+            else:
+                evidences.append(RelationEvidence(
+                    predicate="INSIDE",
+                    subject_id=subject.object_id,
+                    object_id=object.object_id,
+                    frame_index=context.frame_index,
+                    timestamp=context.timestamp,
+                    value=overlap_ratio,
+                    result=EvidenceResult.CONTRADICTED,
+                    threshold=self.min_containment_ratio,
+                    confidence=1.0 - confidence,
+                    reference_frame="world",
+                    evidence_type="volume_overlap",
+                    details={"containment_ratio": float(overlap_ratio)}
                 ))
                 
         return evidences

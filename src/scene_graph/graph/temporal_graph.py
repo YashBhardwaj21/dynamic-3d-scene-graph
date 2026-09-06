@@ -78,9 +78,9 @@ class TemporalSceneGraph:
                     participation=GraphParticipationState.ACTIVE
                 )
                 
-        # Cleanup: instead of deleting, mark CONTRADICTED as REMOVED
+        # Cleanup: instead of deleting, mark CONTRADICTED or NOT_APPLICABLE as REMOVED
         for key, state in list(relation_states.items()):
-            if state == RelationState.CONTRADICTED and key in self.edges:
+            if state in (RelationState.CONTRADICTED, RelationState.NOT_APPLICABLE) and key in self.edges:
                 self.edges[key].participation = GraphParticipationState.REMOVED
 
     def _mark_edges_historical(self, node_id: str):

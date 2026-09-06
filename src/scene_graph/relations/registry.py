@@ -53,16 +53,16 @@ class RelationRegistry:
                 if predicate not in ALLOWED_PREDICATES:
                     raise ValueError(f"Module {module.__class__.__name__} provided an invalid predicate '{predicate}' not in the 14-predicate contract.")
             
-            # Find all admissible pairs for this module (admissible for at least one predicate)
+            # Find all admissible pairs for this module (admissible for at least one of its predicates)
             module_admissible_pairs = set()
             for predicate in module.predicates():
                 module_admissible_pairs.update(self._filter_admissible(candidate_pairs, predicate))
                 
-            for subj, obj in module_admissible_pairs:
-                evidences = module.compute(subj, obj, context)
-                for ev in evidences:
-                    if ev.predicate not in ALLOWED_PREDICATES:
-                        raise ValueError(f"Module {module.__class__.__name__} emitted evidence for invalid predicate '{ev.predicate}'.")
-                all_evidences.extend(evidences)
+            # Dispatch all admissible pairs to the module at once
+            evidences = module.compute_pairs(list(module_admissible_pairs), context)
+            for ev in evidences:
+                if ev.predicate not in ALLOWED_PREDICATES:
+                    raise ValueError(f"Module {module.__class__.__name__} emitted evidence for invalid predicate '{ev.predicate}'.")
+            all_evidences.extend(evidences)
                 
         return all_evidences
