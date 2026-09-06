@@ -18,9 +18,9 @@ class CausalTracker(TrackerInterface):
         
         self.association_threshold_m = self.config.tracking.association_threshold_m
         
-        self.distance_weight = getattr(self.config.tracking, 'distance_weight', 1.0)
-        self.velocity_weight = getattr(self.config.tracking, 'velocity_weight', 0.5)
-        self.size_weight = getattr(self.config.tracking, 'size_weight', 1.0)
+        self.distance_weight = self.config.tracking.distance_weight
+        self.velocity_weight = self.config.tracking.velocity_weight
+        self.size_weight = self.config.tracking.size_weight
         
         self.max_missing_frames = self.config.tracking.max_missing_frames
         self.min_hits_to_confirm = self.config.tracking.min_hits_to_confirm

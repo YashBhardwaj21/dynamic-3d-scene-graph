@@ -91,10 +91,10 @@ class YOLOEDetector(ObservationProducer):
         if result.boxes is None or len(result.boxes) == 0:
             return observations
             
-        # Get depth array if available
+        # Get depth array if available (now assumed to be metric meters)
         depth_m = None
         if packet.depth is not None:
-            depth_m = self.depth_model.depth_to_meters(packet.depth)
+            depth_m = packet.depth
             
         for i, box in enumerate(result.boxes):
             # 1. Parse Box
@@ -183,6 +183,8 @@ class YOLOEDetector(ObservationProducer):
                 centroid_world=centroid_world,
                 bbox_min_world=bbox_min_world,
                 bbox_max_world=bbox_max_world,
+                depth_stats=object_geometry.depth_stats if object_geometry else None,
+                points_world_sampled=object_geometry.points_world_sampled if object_geometry else None,
                 valid_point_count=valid_point_count,
                 geometry_status=geometry_status,
                 geometry_error=geometry_error,

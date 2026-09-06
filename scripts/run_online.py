@@ -2,7 +2,7 @@ import argparse
 import time
 import sys
 
-from scene_graph.config import SceneGraphConfig
+from scene_graph.config import load_config
 from scene_graph.data.tum_source import TUMReplaySource
 from scene_graph.pipeline.online_pipeline import OnlinePipeline
 from scene_graph.temporal.relation_state import RelationState
@@ -19,7 +19,7 @@ def main():
     args = parser.parse_args()
 
     # Load config with defaults
-    config = SceneGraphConfig.from_files("configs/default.yaml", args.config)
+    config = load_config(args.config)
     
     # Initialize pipeline
     pipeline = OnlinePipeline(config)

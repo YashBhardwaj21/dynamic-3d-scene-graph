@@ -3,7 +3,7 @@ from typing import Dict, Optional
 import numpy as np
 
 from scene_graph.geometry.camera import CameraIntrinsics
-from scene_graph.geometry.reference_frame import RelationReferenceFrame
+from scene_graph.geometry.reference_frame import RelationReferenceFrame, CameraFrame
 
 
 @dataclass
@@ -14,9 +14,11 @@ class ObservationGeometry:
     centroid_world: np.ndarray
     bbox_min_world: np.ndarray
     bbox_max_world: np.ndarray
-    points_world: Optional[np.ndarray]  # (N, 3) — only when mask available
+    depth_stats: Optional[Dict[str, float]]
+    points_world_sampled: Optional[np.ndarray]
+    points_world: Optional[np.ndarray]  # (N, 3) 
     points_camera: Optional[np.ndarray]
-    mask: Optional[np.ndarray]          # (H, W) bool — decoded from RLE
+    mask: Optional[np.ndarray]          # (H, W) bool
     valid_point_count: int
 
 
@@ -27,5 +29,6 @@ class FrameContext:
     intrinsics: CameraIntrinsics
     world_T_camera: np.ndarray
     reference_frame: RelationReferenceFrame
+    camera_frame: CameraFrame
     depth_image: Optional[np.ndarray]
     observation_geometry: Dict[str, ObservationGeometry]

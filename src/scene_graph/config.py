@@ -14,7 +14,7 @@ class DatasetConfig(BaseModel):
     @classmethod
     def validate_root(cls, v: Path) -> Path:
         if not v.exists() or not v.is_dir():
-            pass
+            raise ValueError(f"Dataset root does not exist or is not a directory: {v}")
         return v
 
 class SequenceConfig(BaseModel):
@@ -78,6 +78,9 @@ class TrackingConfig(BaseModel):
     max_missing_frames: int = Field(5, ge=0)
     min_hits_to_confirm: int = Field(3, ge=1)
     velocity_history_min: int = Field(3, ge=1)
+    distance_weight: float = Field(1.0, ge=0)
+    velocity_weight: float = Field(0.5, ge=0)
+    size_weight: float = Field(1.0, ge=0)
 
 class ObjectTemporalConfig(BaseModel):
     model_config = ConfigDict(extra='forbid')
@@ -180,3 +183,11 @@ class SceneGraphConfig(BaseModel):
         # Ensure we don't blow up if some old field exists or if pose_source is present
         # Pydantic by default allows extra fields (unless model_config is set)
         return cls.model_validate(base_dict)
+
+
+def load_config(path: str | Path) -> SceneGraphConfig:
+    """Load a configuration file layered on top of default.yaml."""
+    return SceneGraphConfig.from_files(
+        base_path="configs/default.yaml",
+        override_path=path
+    )

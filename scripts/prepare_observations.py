@@ -126,6 +126,8 @@ def main():
                 "centroid_world": convert_for_json(obs.centroid_world),
                 "bbox_min_world": convert_for_json(obs.bbox_min_world),
                 "bbox_max_world": convert_for_json(obs.bbox_max_world),
+                "depth_stats": obs.depth_stats,
+                "points_world_sampled": convert_for_json(obs.points_world_sampled),
                 "valid_point_count": obs.valid_point_count,
                 "point_cloud_ref": obs.point_cloud_ref
             }

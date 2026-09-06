@@ -5,7 +5,7 @@ from typing import Dict, Any, Optional
 
 class EvidenceResult(Enum):
     SUPPORTED = "supported"           # geometry confirms relation
-    NOT_SUPPORTED = "not_supported"   # geometry denies relation
+    CONTRADICTED = "contradicted"     # geometry denies relation
     NOT_APPLICABLE = "not_applicable" # inadmissible pair
     INSUFFICIENT_DEPTH = "insufficient_depth"
     INSUFFICIENT_GEOMETRY = "insufficient_geometry"
@@ -19,7 +19,7 @@ class RelationEvidence:
     object_id: str              # "track_0001"
     frame_index: int
     timestamp: float
-    result: EvidenceResult      # e.g., SUPPORTED, NOT_SUPPORTED
+    result: EvidenceResult      # e.g., SUPPORTED, CONTRADICTED
     value: Optional[float]      # 0.008 (plane distance)
     threshold: Optional[float]  # 0.02
     confidence: float           # [0,1] evidence strength, NOT calibrated probability

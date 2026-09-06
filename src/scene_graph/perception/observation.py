@@ -93,11 +93,13 @@ class Observation:
     # Mask is stored as RLE for ultralytics-independence and efficient JSON serialization
     mask_rle: Optional[Dict[str, Any]]
     
-    # 3D geometry cached per observation
+    # 3. Geometry cached per observation
     centroid_camera: Optional[np.ndarray] = None  # (3,)
     centroid_world: Optional[np.ndarray] = None   # (3,)
     bbox_min_world: Optional[np.ndarray] = None   # (3,)
     bbox_max_world: Optional[np.ndarray] = None   # (3,)
+    depth_stats: Optional[Dict[str, float]] = None
+    points_world_sampled: Optional[np.ndarray] = None
     valid_point_count: int = 0
     
     # Geometry status

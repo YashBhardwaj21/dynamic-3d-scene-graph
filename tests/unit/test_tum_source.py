@@ -7,10 +7,12 @@ from scene_graph.data.tum_source import TUMReplaySource
 
 
 @pytest.fixture
-def mock_config():
+def mock_config(tmp_path):
+    dataset_dir = tmp_path / "fake_dataset_dir"
+    dataset_dir.mkdir()
     config_dict = {
         "dataset": {
-            "root": "fake_dataset_dir",
+            "root": str(dataset_dir),
             "type": "tum_rgbd"
         },
         "sequence": {

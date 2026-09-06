@@ -7,7 +7,7 @@ from scene_graph.geometry.transforms import transform_points
 
 
 from dataclasses import dataclass
-from typing import Optional, Tuple
+from typing import Optional, Tuple, Dict
 from enum import Enum
 
 class GeometryStatus(str, Enum):
@@ -22,10 +22,12 @@ class ObjectGeometry:
     """Cached per-observation geometry."""
     points_camera: Optional[np.ndarray] = None
     points_world: Optional[np.ndarray] = None
+    points_world_sampled: Optional[np.ndarray] = None
     centroid_camera: Optional[np.ndarray] = None
     centroid_world: Optional[np.ndarray] = None
     bbox_min_world: Optional[np.ndarray] = None
     bbox_max_world: Optional[np.ndarray] = None
+    depth_stats: Optional[Dict[str, float]] = None
     valid_point_count: int = 0
     status: GeometryStatus = GeometryStatus.VALID
 
@@ -91,13 +93,32 @@ def compute_object_geometry(
     aabb_min = np.percentile(points_world, 2, axis=0)
     aabb_max = np.percentile(points_world, 98, axis=0)
     
+    # Compute depth statistics
+    depth_stats = {
+        "median": float(np.median(z_filt)),
+        "p05": float(np.percentile(z_filt, 5)),
+        "p25": float(np.percentile(z_filt, 25)),
+        "p75": float(np.percentile(z_filt, 75)),
+        "p95": float(np.percentile(z_filt, 95))
+    }
+    
+    # Create downsampled point cloud for storage (e.g. 500 points)
+    max_samples = 500
+    if len(points_world) > max_samples:
+        indices = np.random.choice(len(points_world), max_samples, replace=False)
+        points_world_sampled = points_world[indices]
+    else:
+        points_world_sampled = points_world
+    
     return ObjectGeometry(
         points_camera=points_camera,
         points_world=points_world,
+        points_world_sampled=points_world_sampled,
         centroid_camera=center_camera,
         centroid_world=center_world,
         bbox_min_world=aabb_min,
         bbox_max_world=aabb_max,
+        depth_stats=depth_stats,
         valid_point_count=len(points_world),
         status=GeometryStatus.VALID
     )

@@ -16,7 +16,6 @@ SYMMETRIC = {"NEAR", "FAR"}
 def derive_inverse_evidence(evidence: RelationEvidence) -> RelationEvidence:
     """Derive the inverse relation evidence (e.g. A ON B -> B UNDER A)."""
     if evidence.predicate in INVERSE:
-        inv_predicate = INVERSE[evidence.predicate]
         inverse_pred = INVERSE[evidence.predicate]
     elif evidence.predicate in SYMMETRIC:
         inverse_pred = evidence.predicate

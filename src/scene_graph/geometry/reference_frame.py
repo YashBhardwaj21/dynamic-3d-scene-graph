@@ -34,30 +34,65 @@ class RelationReferenceFrame:
             raise ValueError("Horizontal and depth axes must be orthogonal")
 
     @classmethod
-    def from_camera_pose(cls, world_T_camera: np.ndarray) -> "RelationReferenceFrame":
-        """Construct a reference frame from a camera pose matrix.
+    def from_gravity_and_heading(
+        cls,
+        origin_world: np.ndarray,
+        up_axis_world: np.ndarray,
+        heading_world: np.ndarray,
+    ) -> "RelationReferenceFrame":
+        """Construct a fixed global reference frame from gravity and heading.
         
-        Assumes OpenCV camera convention: X right, Y down, Z forward.
-        For relations, we often want 'up' to be negative Y camera, 
-        'right' to be positive X camera, and 'depth' to be positive Z camera.
+        This normalizes the up vector, projects the heading onto the horizontal
+        plane, and derives orthogonal axes to freeze the relation frame for the sequence.
         """
-        from scene_graph.geometry.transforms import validate_se3_transform
-        validate_se3_transform(world_T_camera)
+        up = up_axis_world / np.linalg.norm(up_axis_world)
         
+        # Project heading onto horizontal plane (orthogonal to up)
+        # v_proj = v - (v . up) * up
+        heading = heading_world - np.dot(heading_world, up) * up
+        if np.linalg.norm(heading) < 1e-6:
+            # Fallback if heading is parallel to up
+            # Choose an arbitrary orthogonal vector
+            arbitrary = np.array([1.0, 0.0, 0.0]) if abs(up[0]) < 0.9 else np.array([0.0, 1.0, 0.0])
+            heading = arbitrary - np.dot(arbitrary, up) * up
+            
+        depth = heading / np.linalg.norm(heading)
+        
+        # Right is up x depth
+        right = np.cross(up, depth)
+        right = right / np.linalg.norm(right)
+        
+        return cls(
+            origin_world=origin_world,
+            up_axis_world=up,
+            horizontal_axis_world=right,
+            depth_axis_world=depth
+        )
+
+
+@dataclass
+class CameraFrame:
+    """A dynamic camera-relative reference frame for occlusion checking."""
+    origin_world: np.ndarray        # (3,)
+    up_axis_world: np.ndarray       # (3,)
+    horizontal_axis_world: np.ndarray # (3,)
+    depth_axis_world: np.ndarray    # (3,)
+    
+    @classmethod
+    def from_camera_pose(cls, world_T_camera: np.ndarray) -> "CameraFrame":
         R = world_T_camera[:3, :3]
         T = world_T_camera[:3, 3]
         
-        # Camera axes in world coordinates
-        # R columns are the camera axes expressed in world coordinates
-        cam_x = R[:, 0]  # Right
-        cam_y = R[:, 1]  # Down
-        cam_z = R[:, 2]  # Forward
+        # OpenCV convention: X right, Y down, Z forward
+        cam_x = R[:, 0]
+        cam_y = R[:, 1]
+        cam_z = R[:, 2]
         
         return cls(
             origin_world=T,
-            up_axis_world=-cam_y,         # 'Up' is negative camera Y
-            horizontal_axis_world=cam_x,  # 'Right' is positive camera X
-            depth_axis_world=cam_z        # 'Depth' is positive camera Z
+            up_axis_world=-cam_y,
+            horizontal_axis_world=cam_x,
+            depth_axis_world=cam_z
         )
 
 

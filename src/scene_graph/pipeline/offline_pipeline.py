@@ -1,4 +1,5 @@
-from scene_graph.pipeline.pipeline_core import PipelineCore
+from scene_graph.config import SceneGraphConfig
+from scene_graph.pipeline.pipeline_core import SceneGraphPipeline
 
 
 class OfflinePipeline:
@@ -8,15 +9,17 @@ class OfflinePipeline:
     all configurations consume the exact same observation inputs.
     """
     
-    def __init__(self, config):
+    def __init__(self, config: SceneGraphConfig):
         self.config = config
-        self.core = PipelineCore(config)
-        # In offline mode, the core's detector should be the StoredObservationLoader
+        self.core = SceneGraphPipeline(config)
         
     def process_sequence(self, source):
-        """Process an entire stream of frames/observations."""
+        """Process an entire stream of frames/observations.
+        
+        Assumes source produces (FramePacket, List[Observation]) tuples.
+        """
         states = []
-        for frame_packet in source:
-            state = self.core.update(frame_packet)
+        for frame_packet, observations in source:
+            state = self.core.update(frame_packet, observations)
             states.append(state)
         return states
