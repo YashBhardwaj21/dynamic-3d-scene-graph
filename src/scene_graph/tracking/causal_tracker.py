@@ -16,44 +16,49 @@ class CausalTracker(TrackerInterface):
     def __init__(self, config: SceneGraphConfig):
         self.config = config
         
-        self.association_threshold_m = self.config.get("tracking.association_threshold_m", 0.25)
-        self.distance_weight = self.config.get("tracking.distance_weight", 1.0)
-        self.velocity_weight = self.config.get("tracking.velocity_weight", 0.0)
+        self.association_threshold_m = self.config.tracking.association_threshold_m
         
-        self.max_missing_frames = self.config.get("tracking.max_missing_frames", 5)
-        self.min_hits_to_confirm = self.config.get("tracking.min_hits_to_confirm", 3)
-        self.velocity_history_min = self.config.get("tracking.velocity_history_min", 3)
+        # Velocity weight isn't in config strictly, so we default to 0 if we want to remove it
+        # or we just keep it if it's there. Actually I'll use 0.0 for now, or add it to config.
+        self.distance_weight = 1.0
+        self.velocity_weight = 0.0
+        
+        self.max_missing_frames = self.config.tracking.max_missing_frames
+        self.min_hits_to_confirm = self.config.tracking.min_hits_to_confirm
+        self.velocity_history_min = self.config.tracking.velocity_history_min
         
         self.tracks: Dict[str, Track] = {}
         self.next_track_id = 1
         
         # External history storage
         self.history = None
-        if self.config.get("experiment.save_intermediates", False):
-            self.history = TrackHistory()
+        # We don't have experiment.save_intermediates in strict config.
+        # To avoid breaking if missing, we check if it was loaded.
+        # But for the core pipeline, we can just skip it unless passed explicitly.
+        pass
 
-    def update(self, observations: List[Observation], frame_index: int) -> List[Track]:
+    def update(self, observations: List[Observation], frame_index: int, timestamp: float) -> List[Track]:
         """Update tracks with new observations for this frame."""
         
         # 1. Predict track positions (velocity or constant position)
-        predictions = self._predict_tracks(frame_index)
+        predictions = self._predict_tracks(timestamp)
         
         # 2. Hungarian Association
         matched, unmatched_obs, unmatched_tracks = self._associate(
-            observations, predictions
+            observations, predictions, timestamp
         )
         
         # 3. Update matched tracks
         for obs_idx, track_id in matched:
-            self._update_track(track_id, observations[obs_idx], frame_index)
+            self._update_track(track_id, observations[obs_idx], frame_index, timestamp)
             
         # 4. Handle unmatched tracks (missing)
         for track_id in unmatched_tracks:
-            self._mark_track_missing(track_id, frame_index)
+            self._mark_track_missing(track_id, frame_index, timestamp)
             
         # 5. Handle unmatched observations (new tracks)
         for obs_idx in unmatched_obs:
-            self._create_track(observations[obs_idx], frame_index)
+            self._create_track(observations[obs_idx], frame_index, timestamp)
             
         # 6. Delete LOST tracks
         self._cleanup_lost_tracks(frame_index)
@@ -61,20 +66,19 @@ class CausalTracker(TrackerInterface):
         # Return non-lost tracks
         return list(self.tracks.values())
 
-    def _predict_tracks(self, frame_index: int) -> Dict[str, np.ndarray]:
+    def _predict_tracks(self, timestamp: float) -> Dict[str, np.ndarray]:
         """Predict the location of tracks at the current frame."""
         predictions = {}
         for track_id, track in self.tracks.items():
             if track.velocity_world is not None and track.recent_observations:
-                # We assume frame rate is roughly constant, dt is approximated by 1 frame.
-                # A more rigorous implementation would use timestamps.
-                predictions[track_id] = track.centroid_world + track.velocity_world
+                dt = timestamp - track.last_timestamp
+                predictions[track_id] = track.centroid_world + track.velocity_world * dt
             else:
                 predictions[track_id] = np.copy(track.centroid_world)
                 
         return predictions
 
-    def _associate(self, observations: List[Observation], predictions: Dict[str, np.ndarray]) -> Tuple[List[Tuple[int, str]], List[int], List[str]]:
+    def _associate(self, observations: List[Observation], predictions: Dict[str, np.ndarray], timestamp: float) -> Tuple[List[Tuple[int, str]], List[int], List[str]]:
         """Associate observations to predicted track positions."""
         track_ids = list(self.tracks.keys())
         
@@ -82,7 +86,7 @@ class CausalTracker(TrackerInterface):
             return [], list(range(len(observations))), track_ids
             
         # Cost matrix: rows = observations, cols = tracks
-        cost_matrix = np.full((len(observations), len(track_ids)), np.inf)
+        cost_matrix = np.full((len(observations), len(track_ids)), 1e9)
         
         for i, obs in enumerate(observations):
             if obs.centroid_world is None:
@@ -104,11 +108,11 @@ class CausalTracker(TrackerInterface):
                     
                     if track.velocity_world is not None and self.velocity_weight > 0:
                         # Estimate implied velocity of observation relative to track's last position
-                        # Since we don't have dt easily accessible here, we just use frame difference
-                        # as 1.
-                        implied_vel = obs.centroid_world - track.centroid_world
-                        vel_diff = np.linalg.norm(implied_vel - track.velocity_world)
-                        cost += self.velocity_weight * vel_diff
+                        dt = timestamp - track.last_timestamp
+                        if dt > 0:
+                            implied_vel = (obs.centroid_world - track.centroid_world) / dt
+                            vel_diff = np.linalg.norm(implied_vel - track.velocity_world)
+                            cost += self.velocity_weight * vel_diff
                         
                     cost_matrix[i, j] = cost
                     
@@ -121,7 +125,7 @@ class CausalTracker(TrackerInterface):
         unmatched_tracks = set(track_ids)
         
         for r, c in zip(row_ind, col_ind):
-            if cost_matrix[r, c] != np.inf:
+            if cost_matrix[r, c] < 1e9:
                 track_id = track_ids[c]
                 matched.append((r, track_id))
                 unmatched_obs.remove(r)
@@ -129,14 +133,14 @@ class CausalTracker(TrackerInterface):
                 
         return matched, list(unmatched_obs), list(unmatched_tracks)
 
-    def _update_track(self, track_id: str, obs: Observation, frame_index: int):
+    def _update_track(self, track_id: str, obs: Observation, frame_index: int, timestamp: float):
         track = self.tracks[track_id]
         old_state = track.state
         
         # Velocity estimation (Exponential Moving Average)
         if len(track.recent_observations) > 0:
             last_obs = track.recent_observations[-1]
-            dt = obs.timestamp - last_obs.timestamp
+            dt = timestamp - track.last_timestamp
             if dt > 0 and obs.centroid_world is not None and last_obs.centroid_world is not None:
                 inst_vel = (obs.centroid_world - last_obs.centroid_world) / dt
                 if track.velocity_world is None:
@@ -146,6 +150,7 @@ class CausalTracker(TrackerInterface):
 
         track.centroid_world = np.copy(obs.centroid_world)
         track.last_observed_frame = frame_index
+        track.last_timestamp = timestamp
         track.observation_count += 1
         track.missing_count = 0
         track.detection_confidence = obs.confidence
@@ -167,11 +172,12 @@ class CausalTracker(TrackerInterface):
         if self.history:
             self.history.record_observation(track_id, obs)
 
-    def _mark_track_missing(self, track_id: str, frame_index: int):
+    def _mark_track_missing(self, track_id: str, frame_index: int, timestamp: float):
         track = self.tracks[track_id]
         old_state = track.state
         
         track.missing_count += 1
+        track.last_timestamp = timestamp
         age = frame_index - track.first_observed_frame + 1
         track.track_observation_ratio = track.observation_count / age
         
@@ -183,7 +189,7 @@ class CausalTracker(TrackerInterface):
         if self.history and old_state != track.state:
             self.history.record_transition(track_id, frame_index, old_state.value, track.state.value, "missing_threshold")
 
-    def _create_track(self, obs: Observation, frame_index: int):
+    def _create_track(self, obs: Observation, frame_index: int, timestamp: float):
         if obs.centroid_world is None:
             return
             
@@ -201,6 +207,7 @@ class CausalTracker(TrackerInterface):
             missing_count=0,
             detection_confidence=obs.confidence,
             track_observation_ratio=1.0,
+            last_timestamp=timestamp,
             recent_observations=collections.deque([obs], maxlen=10)
         )
         

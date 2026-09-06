@@ -4,6 +4,7 @@ from scene_graph.graph.node import GraphNode
 from scene_graph.graph.edge import GraphEdge
 from scene_graph.temporal.object_state import ObjectState
 from scene_graph.temporal.relation_state import RelationState
+from scene_graph.graph.participation_state import GraphParticipationState
 
 
 class TemporalSceneGraph:
@@ -23,14 +24,14 @@ class TemporalSceneGraph:
         """Update the set of nodes in the graph based on tracks and states."""
         # Add or update nodes
         for track in tracks:
-            state = object_states.get(track.object_id, ObjectState.REMOVED)
+            state = object_states.get(track.object_id, ObjectState.UNKNOWN)
             
             if track.object_id in self.nodes:
                 # Update existing
                 node = self.nodes[track.object_id]
                 node.track = track
                 node.state = state
-            elif state != ObjectState.REMOVED:
+            elif state != ObjectState.UNKNOWN:
                 # Add new
                 self.nodes[track.object_id] = GraphNode(
                     object_id=track.object_id,
@@ -39,12 +40,12 @@ class TemporalSceneGraph:
                     state=state
                 )
                 
-        # Remove nodes that are fully REMOVED
+        # Instead of deleting UNKNOWN nodes, we mark them as REMOVED
         for obj_id, state in list(object_states.items()):
-            if state == ObjectState.REMOVED and obj_id in self.nodes:
-                del self.nodes[obj_id]
-                # Also remove all edges connected to this node
-                self._remove_edges_for_node(obj_id)
+            if state == ObjectState.UNKNOWN and obj_id in self.nodes:
+                self.nodes[obj_id].participation = GraphParticipationState.REMOVED
+                # Also mark all edges connected to this node as REMOVED
+                self._mark_edges_historical(obj_id)
 
     def update_edges(self, evidences: list, relation_states: Dict[Tuple[str, str, str], RelationState]):
         """Update the set of edges in the graph based on evidence and states."""
@@ -67,27 +68,25 @@ class TemporalSceneGraph:
                 edge.state = state
                 if key in latest_ev:
                     edge.latest_evidence = latest_ev[key]
-            elif state != RelationState.LOST and key in latest_ev:
+            elif state != RelationState.CONTRADICTED and key in latest_ev:
                 self.edges[key] = GraphEdge(
                     predicate=predicate,
                     subject_id=subject_id,
                     object_id=object_id,
                     state=state,
-                    latest_evidence=latest_ev[key]
+                    latest_evidence=latest_ev[key],
+                    participation=GraphParticipationState.ACTIVE
                 )
                 
-        # Cleanup LOST edges
+        # Cleanup: instead of deleting, mark CONTRADICTED as REMOVED
         for key, state in list(relation_states.items()):
-            if state == RelationState.LOST and key in self.edges:
-                del self.edges[key]
+            if state == RelationState.CONTRADICTED and key in self.edges:
+                self.edges[key].participation = GraphParticipationState.REMOVED
 
-    def _remove_edges_for_node(self, node_id: str):
-        keys_to_remove = [
-            k for k in self.edges.keys() 
-            if k[0] == node_id or k[1] == node_id
-        ]
-        for k in keys_to_remove:
-            del self.edges[k]
+    def _mark_edges_historical(self, node_id: str):
+        for k, edge in self.edges.items():
+            if k[0] == node_id or k[1] == node_id:
+                edge.participation = GraphParticipationState.REMOVED
 
     def get_active_nodes(self) -> List[GraphNode]:
         """Return all STABLE nodes."""

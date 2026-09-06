@@ -5,9 +5,9 @@ from scene_graph.tracking.track import Track, TrackState
 
 
 class ObjectState(Enum):
+    UNKNOWN = "unknown"
     STABLE = "stable"
     UNSTABLE = "unstable"
-    REMOVED = "removed"
 
 
 class ObjectStateMachine:
@@ -58,8 +58,8 @@ class ObjectStateMachine:
             if current_state == ObjectState.STABLE and self.missing_counters[obj_id] > self.hysteresis_frames:
                 self.states[obj_id] = ObjectState.UNSTABLE
         elif track.state == TrackState.LOST:
-            self.states[obj_id] = ObjectState.REMOVED
+            self.states[obj_id] = ObjectState.UNKNOWN
 
     def _handle_missing(self, obj_id: str):
         # The tracker dropped the track entirely
-        self.states[obj_id] = ObjectState.REMOVED
+        self.states[obj_id] = ObjectState.UNKNOWN

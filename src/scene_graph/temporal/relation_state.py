@@ -5,9 +5,10 @@ from scene_graph.relations.evidence import RelationEvidence, EvidenceResult
 
 
 class RelationState(Enum):
-    UNCONFIRMED = "unconfirmed"
-    CONFIRMED = "confirmed"
-    LOST = "lost"
+    SUPPORTED = "supported"
+    CONTRADICTED = "contradicted"
+    UNKNOWN = "unknown"
+    NOT_APPLICABLE = "not_applicable"
 
 
 class RelationStateMachine:
@@ -44,30 +45,28 @@ class RelationStateMachine:
         # 2. Add new relations
         for key in supported_keys:
             if key not in self.states:
-                self.states[key] = RelationState.UNCONFIRMED
+                self.states[key] = RelationState.UNKNOWN
                 self.support_counters[key] = 1
                 self.missing_counters[key] = 0
                 if self.confirmation_frames <= 1:
-                    self.states[key] = RelationState.CONFIRMED
+                    self.states[key] = RelationState.SUPPORTED
                     
         return self.states
 
     def _update_supported(self, key: Tuple[str, str, str]):
         self.missing_counters[key] = 0
-        if self.states[key] == RelationState.UNCONFIRMED:
+        if self.states[key] in (RelationState.UNKNOWN, RelationState.CONTRADICTED):
             self.support_counters[key] += 1
             if self.support_counters[key] >= self.confirmation_frames:
-                self.states[key] = RelationState.CONFIRMED
-        elif self.states[key] == RelationState.LOST:
-            # Re-discovering a lost relation starts the confirmation process over
-            self.states[key] = RelationState.UNCONFIRMED
+                self.states[key] = RelationState.SUPPORTED
+        elif self.states[key] == RelationState.NOT_APPLICABLE:
+            self.states[key] = RelationState.UNKNOWN
             self.support_counters[key] = 1
 
     def _update_missing(self, key: Tuple[str, str, str]):
-        if self.states[key] == RelationState.CONFIRMED:
+        if self.states[key] == RelationState.SUPPORTED:
             self.missing_counters[key] += 1
             if self.missing_counters[key] > self.missing_frames:
-                self.states[key] = RelationState.LOST
-        elif self.states[key] == RelationState.UNCONFIRMED:
-            # If it was never confirmed and goes missing, we just drop it (LOST) immediately
-            self.states[key] = RelationState.LOST
+                self.states[key] = RelationState.CONTRADICTED
+        elif self.states[key] == RelationState.UNKNOWN:
+            self.states[key] = RelationState.NOT_APPLICABLE
