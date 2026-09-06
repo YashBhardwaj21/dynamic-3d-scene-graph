@@ -12,14 +12,14 @@ class DirectionalRelationModule(RelationModule):
     
     def __init__(self, config=None, margin_x: float = 0.05, margin_y: float = 0.05):
         if config is not None:
-            self.margin_x = config.get("relations.directional.margin_x", margin_x)
-            self.margin_y = config.get("relations.directional.margin_y", margin_y)
+            self.margin_x = config.relations.directional.margin_x
+            self.margin_y = config.relations.directional.margin_y
         else:
             self.margin_x = margin_x
             self.margin_y = margin_y
         
     def predicates(self) -> List[str]:
-        return ["LEFT_OF", "ABOVE"]
+        return ["LEFT_OF", "RIGHT_OF", "ABOVE", "BELOW"]
         
     def compute(self, subject: Track, object: Track, context: FrameContext) -> List[RelationEvidence]:
         evidences = []
@@ -27,19 +27,22 @@ class DirectionalRelationModule(RelationModule):
         if subject.centroid_world is None or object.centroid_world is None:
             return evidences
             
-        # Transform centroids into the relation reference frame
-        # Actually, let's assume centroid_world is already aligned to the reference frame for simplicity
-        # (This depends on where we applied the alignment transform. For now, assume it's aligned to world Z-up)
+        # Vector from object to subject
+        delta = subject.centroid_world - object.centroid_world
         
-        # LEFT_OF
-        # Assuming X is horizontal right (so subject X < object X means subject is left of object)
-        dx = subject.centroid_world[0] - object.centroid_world[0]
+        # Project onto reference frame axes
+        dx = np.dot(delta, context.reference_frame.horizontal_axis_world)
+        dy = np.dot(delta, context.reference_frame.up_axis_world)
+        
+        # Horizontal (LEFT_OF / RIGHT_OF)
+        # dx > 0 means subject is RIGHT of object
+        # dx < 0 means subject is LEFT of object
         abs_dx = abs(dx)
-        
-        if dx < -self.margin_x:
+        if abs_dx > self.margin_x:
             confidence = min(1.0, (abs_dx - self.margin_x) / self.margin_x)
+            predicate = "RIGHT_OF" if dx > 0 else "LEFT_OF"
             evidences.append(RelationEvidence(
-                predicate="LEFT_OF",
+                predicate=predicate,
                 subject_id=subject.object_id,
                 object_id=object.object_id,
                 frame_index=context.frame_index,
@@ -48,30 +51,31 @@ class DirectionalRelationModule(RelationModule):
                 result=EvidenceResult.SUPPORTED,
                 threshold=self.margin_x,
                 confidence=confidence,
-                reference_frame="camera",
-                evidence_type="camera_x_distance",
-                details={"delta_x": float(dx)}
+                reference_frame="reference_frame",
+                evidence_type="centroid_directional",
+                details={"dx": float(dx)}
             ))
             
-        # ABOVE
-        # Assuming Z is gravity up (so subject Z > object Z means subject is above object)
-        dz = subject.centroid_world[2] - object.centroid_world[2]
-        
-        if dz > self.margin_y:
-            confidence = min(1.0, (dz - self.margin_y) / self.margin_y)
+        # Vertical (ABOVE / BELOW)
+        # dy > 0 means subject is ABOVE object
+        # dy < 0 means subject is BELOW object
+        abs_dy = abs(dy)
+        if abs_dy > self.margin_y:
+            confidence = min(1.0, (abs_dy - self.margin_y) / self.margin_y)
+            predicate = "ABOVE" if dy > 0 else "BELOW"
             evidences.append(RelationEvidence(
-                predicate="ABOVE",
+                predicate=predicate,
                 subject_id=subject.object_id,
                 object_id=object.object_id,
                 frame_index=context.frame_index,
                 timestamp=context.timestamp,
-                value=dz,
+                value=abs_dy,
                 result=EvidenceResult.SUPPORTED,
                 threshold=self.margin_y,
                 confidence=confidence,
-                reference_frame="world",
+                reference_frame="reference_frame",
                 evidence_type="centroid_directional",
-                details={"dz": float(dz)}
+                details={"dy": float(dy)}
             ))
             
         return evidences

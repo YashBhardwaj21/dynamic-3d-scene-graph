@@ -12,12 +12,12 @@ class DepthOrderRelationModule(RelationModule):
     
     def __init__(self, config=None, depth_margin: float = 0.1):
         if config is not None:
-            self.depth_margin = config.get("relations.depth_order.depth_margin", depth_margin)
+            self.depth_margin = config.relations.depth_order.depth_margin
         else:
             self.depth_margin = depth_margin
         
     def predicates(self) -> List[str]:
-        return ["IN_FRONT_OF"]
+        return ["IN_FRONT_OF", "BEHIND"]
         
     def compute(self, subject: Track, object: Track, context: FrameContext) -> List[RelationEvidence]:
         evidences = []
@@ -25,26 +25,31 @@ class DepthOrderRelationModule(RelationModule):
         if subject.centroid_world is None or object.centroid_world is None:
             return evidences
             
-        # Assuming Y is the depth axis in the reference frame 
-        # (Y > 0 is deeper into the scene, Y=0 is front)
-        # So subject Y < object Y means subject is in front of object
-        diff_z = subject.centroid_world[1] - object.centroid_world[1]
+        # Vector from object to subject
+        delta = subject.centroid_world - object.centroid_world
         
-        if diff_z < -self.depth_margin:
-            confidence = min(1.0, (abs(diff_z) - self.depth_margin) / self.depth_margin)
+        # Project onto reference frame depth axis (forward is positive)
+        # dz > 0 means subject is further away (BEHIND object)
+        # dz < 0 means subject is closer (IN_FRONT_OF object)
+        dz = np.dot(delta, context.reference_frame.depth_axis_world)
+        abs_dz = abs(dz)
+        
+        if abs_dz > self.depth_margin:
+            confidence = min(1.0, (abs_dz - self.depth_margin) / self.depth_margin)
+            predicate = "BEHIND" if dz > 0 else "IN_FRONT_OF"
             evidences.append(RelationEvidence(
-                predicate="IN_FRONT_OF",
+                predicate=predicate,
                 subject_id=subject.object_id,
                 object_id=object.object_id,
                 frame_index=context.frame_index,
                 timestamp=context.timestamp,
-                value=diff_z,
+                value=abs_dz,
                 result=EvidenceResult.SUPPORTED,
                 threshold=self.depth_margin,
                 confidence=confidence,
-                reference_frame="camera",
-                evidence_type="camera_z_distance",
-                details={"delta_z": float(diff_z)}
+                reference_frame="reference_frame",
+                evidence_type="centroid_directional",
+                details={"dz": float(dz)}
             ))
             
         return evidences

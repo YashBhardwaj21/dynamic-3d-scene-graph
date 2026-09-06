@@ -12,12 +12,12 @@ class ContainmentRelationModule(RelationModule):
     
     def __init__(self, config=None, min_containment_ratio: float = 0.5):
         if config is not None:
-            self.min_containment_ratio = config.get("relations.containment.min_containment_ratio", min_containment_ratio)
+            self.min_containment_ratio = config.relations.containment.min_containment_ratio
         else:
             self.min_containment_ratio = min_containment_ratio
         
     def predicates(self) -> List[str]:
-        return ["INSIDE"]
+        return ["INSIDE", "CONTAINING"]
         
     def compute(self, subject: Track, object: Track, context: FrameContext) -> List[RelationEvidence]:
         evidences = []

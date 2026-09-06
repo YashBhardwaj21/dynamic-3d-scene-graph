@@ -12,8 +12,8 @@ class SupportRelationModule(RelationModule):
     
     def __init__(self, config=None, plane_residual_m: float = 0.02, min_support_overlap: float = 0.1):
         if config is not None:
-            self.plane_residual_m = config.get("relations.support.plane_residual_m", plane_residual_m)
-            self.min_support_overlap = config.get("relations.support.min_support_overlap", min_support_overlap)
+            self.plane_residual_m = config.relations.support.plane_residual_m
+            self.min_support_overlap = config.relations.support.min_support_overlap
         else:
             self.plane_residual_m = plane_residual_m
             self.min_support_overlap = min_support_overlap
@@ -52,21 +52,36 @@ class SupportRelationModule(RelationModule):
         # Given we have `ObservationGeometry`, we can just use B's centroid and the reference frame's up vector 
         # for a basic check, or compute actual distance to B's points.
         
-        # Using a highly simplified but robust proxy for ON:
-        # 1. Subject's minimum Z must be close to Object's maximum Z (in gravity-aligned world frame)
-        # 2. Subject's XY footprint must overlap Object's XY footprint
+        # Using reference frame's up_axis_world
+        up = context.reference_frame.up_axis_world
         
-        subj_min_z = subj_geo.bbox_min_world[2]
-        obj_max_z = obj_geo.bbox_max_world[2]
+        # To find vertical extents, we could project all 8 corners of the AABB
+        # or use points if available. We'll project the centroid and use AABB extents approximately.
+        # But for exactness, if points are missing we return empty above.
+        # So we can project points_world onto the up vector.
+        subj_z_points = np.dot(subj_geo.points_world, up)
+        obj_z_points = np.dot(obj_geo.points_world, up)
+        
+        subj_min_z = np.min(subj_z_points)
+        obj_max_z = np.max(obj_z_points)
         
         bottom_distance = subj_min_z - obj_max_z
         
         if abs(bottom_distance) <= self.plane_residual_m:
-            # Check overlap in XY
-            subj_min_xy = subj_geo.bbox_min_world[:2]
-            subj_max_xy = subj_geo.bbox_max_world[:2]
-            obj_min_xy = obj_geo.bbox_min_world[:2]
-            obj_max_xy = obj_geo.bbox_max_world[:2]
+            # Check overlap in horizontal plane (perpendicular to UP)
+            # We project points onto a 2D plane defined by horizontal_axis and depth_axis
+            horiz = context.reference_frame.horizontal_axis_world
+            depth = context.reference_frame.depth_axis_world
+            
+            subj_h = np.dot(subj_geo.points_world, horiz)
+            subj_d = np.dot(subj_geo.points_world, depth)
+            obj_h = np.dot(obj_geo.points_world, horiz)
+            obj_d = np.dot(obj_geo.points_world, depth)
+            
+            subj_min_xy = np.array([np.min(subj_h), np.min(subj_d)])
+            subj_max_xy = np.array([np.max(subj_h), np.max(subj_d)])
+            obj_min_xy = np.array([np.min(obj_h), np.min(obj_d)])
+            obj_max_xy = np.array([np.max(obj_h), np.max(obj_d)])
             
             overlap_min = np.maximum(subj_min_xy, obj_min_xy)
             overlap_max = np.minimum(subj_max_xy, obj_max_xy)
@@ -89,7 +104,7 @@ class SupportRelationModule(RelationModule):
                         result=EvidenceResult.SUPPORTED,
                         threshold=self.plane_residual_m,
                         confidence=confidence,
-                        reference_frame="world",
+                        reference_frame="reference_frame",
                         evidence_type="support_plane",
                         details={
                             "plane_residual": float(bottom_distance),

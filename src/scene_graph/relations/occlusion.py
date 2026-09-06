@@ -15,10 +15,10 @@ class OcclusionRelationModule(RelationModule):
                  min_valid_depth_samples: int = 10,
                  depth_margin: float = 0.02):
         if config is not None:
-            self.min_mask_overlap_ratio = config.get("relations.occlusion.min_mask_overlap_ratio", min_mask_overlap_ratio)
-            self.min_depth_order_ratio = config.get("relations.occlusion.min_depth_order_ratio", min_depth_order_ratio)
-            self.min_valid_depth_samples = config.get("relations.occlusion.min_valid_depth_samples", min_valid_depth_samples)
-            self.depth_margin = config.get("relations.occlusion.depth_margin", depth_margin)
+            self.min_mask_overlap_ratio = config.relations.occlusion.min_mask_overlap_ratio
+            self.min_depth_order_ratio = config.relations.occlusion.min_depth_order_ratio
+            self.min_valid_depth_samples = config.relations.occlusion.min_valid_depth_samples
+            self.depth_margin = config.relations.occlusion.depth_margin
         else:
             self.min_mask_overlap_ratio = min_mask_overlap_ratio
             self.min_depth_order_ratio = min_depth_order_ratio

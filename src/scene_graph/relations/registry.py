@@ -8,6 +8,10 @@ from scene_graph.relations.evidence import RelationEvidence
 from scene_graph.relations.admissibility import AdmissibilityFilter
 
 
+from scene_graph.relations.inverse_algebra import INVERSE, SYMMETRIC
+
+ALLOWED_PREDICATES = frozenset(INVERSE.keys()) | frozenset(SYMMETRIC)
+
 class RelationRegistry:
     """Config-driven declarative registry for relation modules."""
     
@@ -22,9 +26,8 @@ class RelationRegistry:
         
     def _generate_candidate_pairs(self, tracks: List[Track]) -> List[Tuple[Track, Track]]:
         """Generate all possible valid object pairs."""
-        # Only evaluate pairs where both tracks are ACTIVE or TEMPORARILY_UNOBSERVED
-        valid_states = {TrackState.ACTIVE, TrackState.TEMPORARILY_UNOBSERVED}
-        valid_tracks = [t for t in tracks if t.state in valid_states]
+        # Only evaluate pairs where both tracks are CONFIRMED
+        valid_tracks = [t for t in tracks if t.state == TrackState.ACTIVE]
         
         pairs = []
         for i, subj in enumerate(valid_tracks):
@@ -47,21 +50,19 @@ class RelationRegistry:
         
         for module in self._modules:
             for predicate in module.predicates():
-                admissible_pairs = self._filter_admissible(candidate_pairs, predicate)
-                
-                # Compute only for admissible pairs
-                # (Some modules might compute multiple predicates at once, 
-                #  so we pass the pair if it's admissible for ANY of its predicates)
-                
-            # Actually, the module itself might compute multiple predicates simultaneously.
-            # We will pass all candidate pairs that are admissible for AT LEAST ONE 
-            # predicate of this module.
+                if predicate not in ALLOWED_PREDICATES:
+                    raise ValueError(f"Module {module.__class__.__name__} provided an invalid predicate '{predicate}' not in the 14-predicate contract.")
+            
+            # Find all admissible pairs for this module (admissible for at least one predicate)
             module_admissible_pairs = set()
             for predicate in module.predicates():
                 module_admissible_pairs.update(self._filter_admissible(candidate_pairs, predicate))
                 
             for subj, obj in module_admissible_pairs:
                 evidences = module.compute(subj, obj, context)
+                for ev in evidences:
+                    if ev.predicate not in ALLOWED_PREDICATES:
+                        raise ValueError(f"Module {module.__class__.__name__} emitted evidence for invalid predicate '{ev.predicate}'.")
                 all_evidences.extend(evidences)
                 
         return all_evidences
