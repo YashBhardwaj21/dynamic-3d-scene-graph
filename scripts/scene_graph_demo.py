@@ -34,9 +34,9 @@ RELATION_FAMILIES = {
 }
 
 RELATION_COLORS = {
-    "ON": (58, 205, 166), "UNDER": (58, 205, 166),
+    "ON": (62, 205, 165), "UNDER": (62, 205, 165),
     "INSIDE": (112, 170, 242), "CONTAINING": (112, 170, 242),
-    "NEAR": (193, 145, 249), "FAR": (145, 155, 170),
+    "NEAR": (190, 145, 248), "FAR": (145, 155, 170),
     "LEFT_OF": (252, 188, 88), "RIGHT_OF": (252, 188, 88),
     "ABOVE": (252, 188, 88), "BELOW": (252, 188, 88),
     "IN_FRONT_OF": (98, 211, 242), "BEHIND": (98, 211, 242),
@@ -60,17 +60,18 @@ def inject_css() -> None:
     st.markdown(
         """
         <style>
-        .stApp{background:#0b0f14;color:#e8edf2}
-        .block-container{max-width:1500px;padding-top:1.1rem;padding-bottom:1.5rem}
-        .hero-title{font-size:2rem;font-weight:700;letter-spacing:-.035em}
-        .hero-subtitle{color:#8d99a6;font-size:.9rem;margin:.15rem 0 1rem}
-        .metric-card{background:#121821;border:1px solid #202a35;border-radius:12px;padding:.7rem .85rem;min-height:72px}
-        .metric-label{color:#7f8b97;font-size:.68rem;text-transform:uppercase;letter-spacing:.08em}
-        .metric-value{color:#f2f5f8;font-size:1.35rem;font-weight:650;margin-top:.12rem}
-        .section-title{font-size:.78rem;color:#8995a3;text-transform:uppercase;letter-spacing:.08em;margin:.25rem 0 .65rem}
-        .object-card{background:#131a23;border:1px solid #26313d;border-radius:10px;padding:.65rem .7rem;margin-bottom:.5rem}
-        .small-muted{color:#788492;font-size:.74rem}
-        div[data-testid="stDataFrame"]{border:1px solid #202a35;border-radius:10px;overflow:hidden}
+        .stApp{background:#0a0e13;color:#e9eef3}
+        .block-container{max-width:1500px;padding-top:.55rem;padding-bottom:1.25rem}
+        .hero-title{font-size:2rem;font-weight:720;letter-spacing:-.035em;line-height:1.05}
+        .hero-subtitle{color:#8995a2;font-size:.88rem;margin:.2rem 0 .85rem}
+        .metric-card{background:#111720;border:1px solid #202a35;border-radius:11px;padding:.65rem .8rem;min-height:68px}
+        .metric-label{color:#778493;font-size:.66rem;text-transform:uppercase;letter-spacing:.09em}
+        .metric-value{color:#f3f6f9;font-size:1.3rem;font-weight:680;margin-top:.12rem}
+        .section-title{font-size:.74rem;color:#83909d;text-transform:uppercase;letter-spacing:.09em;margin:.15rem 0 .55rem}
+        .object-card{background:#121922;border:1px solid #25313e;border-radius:10px;padding:.58rem .68rem;margin-bottom:.45rem}
+        .relation-line{background:#0d131a;border:1px solid #202a34;border-radius:7px;padding:.34rem .45rem;margin-top:.3rem;font-size:.78rem}
+        .small-muted{color:#768392;font-size:.72rem}
+        div[data-testid="stDataFrame"]{border:1px solid #202a35;border-radius:9px;overflow:hidden}
         </style>
         """,
         unsafe_allow_html=True,
@@ -86,27 +87,37 @@ def relation_color(predicate: str) -> tuple[int, int, int]:
     return RELATION_COLORS.get(predicate, (215, 220, 225))
 
 
-def latest_observation(node: Any, frame_index: int) -> Any | None:
-    observations = node.track.recent_observations
+def latest_observation(node: Any, frame_index: int | None = None) -> Any | None:
+    observations = getattr(node.track, "recent_observations", None)
     if not observations:
         return None
     observation = observations[-1]
-    return observation if observation.frame_index == frame_index else None
+    if frame_index is None or observation.frame_index == frame_index:
+        return observation
+    return None
 
 
-def current_frame_edges(graph: Any, frame_index: int) -> list[Any]:
-    edges = []
-    for edge in graph.get_active_edges():
-        evidence = edge.latest_evidence
-        if evidence is None or evidence.frame_index != frame_index:
-            continue
-        if evidence.result != EvidenceResult.SUPPORTED:
-            continue
-        edges.append(edge)
-    return edges
+def current_frame_edges(graph: Any, frame_index: int | None = None) -> list[Any]:
+    if frame_index is None:
+        frame_index = getattr(graph, "current_frame_index", None)
+    if frame_index is None:
+        return []
+    return [
+        edge for edge in graph.get_active_edges()
+        if edge.latest_evidence is not None
+        and edge.latest_evidence.frame_index == frame_index
+        and edge.latest_evidence.result == EvidenceResult.SUPPORTED
+    ]
 
 
-def _choose_directional_edge(edges: list[Any], family: str, graph: Any, frame_index: int) -> Any:
+def _edge_pair_key(edge: Any) -> frozenset[str]:
+    return frozenset((edge.subject_id, edge.object_id))
+
+
+def _pick_display_edge(edges: list[Any], family: str, graph: Any, frame_index: int | None) -> Any:
+    if len(edges) == 1:
+        return edges[0]
+
     nodes = {node.object_id: node for node in graph.get_active_nodes()}
     subject = nodes.get(edges[0].subject_id)
     object_ = nodes.get(edges[0].object_id)
@@ -116,65 +127,57 @@ def _choose_directional_edge(edges: list[Any], family: str, graph: Any, frame_in
         object_obs = latest_observation(object_, frame_index)
 
         if subject_obs is not None and object_obs is not None:
-            sx1, sy1, sx2, sy2 = np.asarray(subject_obs.bbox_xyxy, dtype=float)
-            ox1, oy1, ox2, oy2 = np.asarray(object_obs.bbox_xyxy, dtype=float)
-            subject_cx, subject_cy = (sx1 + sx2) * 0.5, (sy1 + sy2) * 0.5
-            object_cx, object_cy = (ox1 + ox2) * 0.5, (oy1 + oy2) * 0.5
+            sb = np.asarray(subject_obs.bbox_xyxy, dtype=float)
+            ob = np.asarray(object_obs.bbox_xyxy, dtype=float)
+            sc = ((sb[0] + sb[2]) * .5, (sb[1] + sb[3]) * .5)
+            oc = ((ob[0] + ob[2]) * .5, (ob[1] + ob[3]) * .5)
 
             if family == "horizontal":
-                desired = "RIGHT_OF" if subject_cx > object_cx else "LEFT_OF"
+                desired = "RIGHT_OF" if sc[0] > oc[0] else "LEFT_OF"
                 matches = [edge for edge in edges if edge.predicate == desired]
                 if matches:
                     return matches[0]
 
             if family == "vertical":
-                desired = "ABOVE" if subject_cy < object_cy else "BELOW"
+                desired = "ABOVE" if sc[1] < oc[1] else "BELOW"
                 matches = [edge for edge in edges if edge.predicate == desired]
                 if matches:
                     return matches[0]
 
-    preferences = {
+    preference = {
         "support": ["ON", "UNDER"],
         "containment": ["INSIDE", "CONTAINING"],
-        "occlusion": ["OCCLUDING", "OCCLUDED_BY"],
         "depth": ["IN_FRONT_OF", "BEHIND"],
+        "occlusion": ["OCCLUDING", "OCCLUDED_BY"],
     }
 
-    for predicate in preferences.get(family, []):
+    for predicate in preference.get(family, []):
         matches = [edge for edge in edges if edge.predicate == predicate]
         if matches:
             return matches[0]
 
-    return edges[0]
+    return max(edges, key=lambda edge: float(edge.latest_evidence.confidence))
 
 
-def display_edges(graph: Any, frame_index: int) -> list[Any]:
+def display_edges(graph: Any, frame_index: int | None = None) -> list[Any]:
     grouped: dict[tuple[frozenset[str], str], list[Any]] = {}
-
     for edge in current_frame_edges(graph, frame_index):
         family = RELATION_FAMILIES.get(edge.predicate, edge.predicate)
-        key = (frozenset((edge.subject_id, edge.object_id)), family)
-        grouped.setdefault(key, []).append(edge)
+        grouped.setdefault((_edge_pair_key(edge), family), []).append(edge)
 
     selected = [
-        _choose_directional_edge(edges, family, graph, frame_index)
+        _pick_display_edge(edges, family, graph, frame_index)
         for (_, family), edges in grouped.items()
     ]
-
-    return sorted(
-        selected,
-        key=lambda edge: (edge.subject_id, edge.predicate, edge.object_id),
-    )
+    return sorted(selected, key=lambda edge: (edge.subject_id, edge.predicate, edge.object_id))
 
 
-def node_rows(graph: Any, frame_index: int) -> list[dict[str, Any]]:
+def node_rows(graph: Any, frame_index: int | None = None) -> list[dict[str, Any]]:
     rows = []
-
     for node in graph.get_active_nodes():
         observation = latest_observation(node, frame_index)
         if observation is None:
             continue
-
         track = node.track
         rows.append({
             "track_id": node.object_id,
@@ -183,33 +186,27 @@ def node_rows(graph: Any, frame_index: int) -> list[dict[str, Any]]:
             "confidence": round(float(track.detection_confidence), 3),
             "observations": int(track.observation_count),
         })
-
     return sorted(rows, key=lambda row: row["track_id"])
 
 
-def edge_rows(graph: Any, frame_index: int) -> list[dict[str, Any]]:
+def edge_rows(graph: Any, frame_index: int | None = None) -> list[dict[str, Any]]:
     rows = []
-
     for edge in display_edges(graph, frame_index):
         subject = graph.nodes.get(edge.subject_id)
         object_ = graph.nodes.get(edge.object_id)
-
-        if subject is None or object_ is None:
-            continue
-
         evidence = edge.latest_evidence
-
+        if subject is None or object_ is None or evidence is None:
+            continue
         rows.append({
             "subject_id": edge.subject_id,
             "subject": subject.class_name,
             "predicate": edge.predicate,
             "object_id": edge.object_id,
             "object": object_.class_name,
-            "confidence": round(float(evidence.confidence), 3) if evidence else None,
-            "frame": evidence.frame_index if evidence else frame_index,
-            "evidence": evidence.evidence_type if evidence else None,
+            "confidence": round(float(evidence.confidence), 3),
+            "frame": evidence.frame_index,
+            "evidence": evidence.evidence_type,
         })
-
     return rows
 
 
@@ -239,7 +236,7 @@ def clamp_bbox(bbox: np.ndarray, width: int, height: int) -> tuple[int, int, int
 
 def bbox_center(bbox: tuple[int, int, int, int]) -> tuple[float, float]:
     x1, y1, x2, y2 = bbox
-    return (0.5 * (x1 + x2), 0.5 * (y1 + y2))
+    return ((x1 + x2) * .5, (y1 + y2) * .5)
 
 
 def bbox_boundary_point(bbox: tuple[int, int, int, int], target: tuple[float, float]) -> tuple[int, int]:
@@ -251,19 +248,16 @@ def bbox_boundary_point(bbox: tuple[int, int, int, int], target: tuple[float, fl
         return int(cx), int(cy)
 
     candidates = []
-
     if dx > 0:
         candidates.append(((x2 - cx) / dx, x2, cy + (x2 - cx) * dy / dx))
     elif dx < 0:
         candidates.append(((x1 - cx) / dx, x1, cy + (x1 - cx) * dy / dx))
-
     if dy > 0:
         candidates.append(((y2 - cy) / dy, cx + (y2 - cy) * dx / dy, y2))
     elif dy < 0:
         candidates.append(((y1 - cy) / dy, cx + (y1 - cy) * dx / dy, y1))
 
     candidates = [item for item in candidates if item[0] > 0]
-
     if not candidates:
         return int(cx), int(cy)
 
@@ -271,30 +265,29 @@ def bbox_boundary_point(bbox: tuple[int, int, int, int], target: tuple[float, fl
     return int(x), int(y)
 
 
-def draw_mask(image: np.ndarray, mask: np.ndarray, color: tuple[int, int, int], alpha: float = 0.13) -> np.ndarray:
+def draw_mask(image: np.ndarray, mask: np.ndarray, color: tuple[int, int, int], alpha: float = .12) -> np.ndarray:
     if mask.shape[:2] != image.shape[:2]:
         return image
-
     overlay = image.copy()
     overlay[mask.astype(bool)] = np.asarray(color, dtype=np.uint8)
     return cv2.addWeighted(overlay, alpha, image, 1.0 - alpha, 0.0)
 
 
-def draw_label(image: np.ndarray, text: str, origin: tuple[int, int], background: tuple[int, int, int], scale: float = 0.42) -> None:
+def draw_label(image: np.ndarray, text: str, origin: tuple[int, int], background: tuple[int, int, int], scale: float = .40) -> None:
     font = cv2.FONT_HERSHEY_SIMPLEX
     (tw, th), _ = cv2.getTextSize(text, font, scale, 1)
-
     x = max(3, min(origin[0], image.shape[1] - tw - 8))
     y = max(th + 8, min(origin[1], image.shape[0] - 3))
-
     cv2.rectangle(image, (x, y - th - 7), (x + tw + 7, y + 3), background, -1, cv2.LINE_AA)
-    cv2.putText(image, text, (x + 3, y - 3), font, scale, (12, 16, 21), 1, cv2.LINE_AA)
+    cv2.putText(image, text, (x + 3, y - 3), font, scale, (10, 14, 19), 1, cv2.LINE_AA)
 
 
-def render_rgb_scene(rgb: np.ndarray, graph: Any, frame_index: int, predicate_filter: str = "ALL") -> np.ndarray:
+def render_rgb_scene(rgb: np.ndarray, graph: Any, frame_index: int | None = None, predicate_filter: str = "ALL") -> np.ndarray:
+    if frame_index is None:
+        frame_index = getattr(graph, "current_frame_index", None)
+
     canvas = rgb.copy()
     height, width = canvas.shape[:2]
-
     nodes = {}
     boxes: dict[str, tuple[int, int, int, int]] = {}
 
@@ -302,21 +295,17 @@ def render_rgb_scene(rgb: np.ndarray, graph: Any, frame_index: int, predicate_fi
         observation = latest_observation(node, frame_index)
         if observation is None:
             continue
-
         node_id = node.object_id
         nodes[node_id] = node
         boxes[node_id] = clamp_bbox(observation.bbox_xyxy, width, height)
-
         try:
             mask = observation.get_mask()
         except Exception:
             mask = None
-
         if mask is not None:
             canvas = draw_mask(canvas, mask, track_color(node_id))
 
     edges = display_edges(graph, frame_index)
-
     if predicate_filter != "ALL":
         edges = [edge for edge in edges if edge.predicate == predicate_filter]
 
@@ -324,28 +313,23 @@ def render_rgb_scene(rgb: np.ndarray, graph: Any, frame_index: int, predicate_fi
         if edge.subject_id not in boxes or edge.object_id not in boxes:
             continue
 
-        subject_box = boxes[edge.subject_id]
-        object_box = boxes[edge.object_id]
-        start = bbox_boundary_point(subject_box, bbox_center(object_box))
-        end = bbox_boundary_point(object_box, bbox_center(subject_box))
+        sb = boxes[edge.subject_id]
+        ob = boxes[edge.object_id]
+        start = bbox_boundary_point(sb, bbox_center(ob))
+        end = bbox_boundary_point(ob, bbox_center(sb))
         color = relation_color(edge.predicate)
 
         if edge.predicate in ARROW_RELATIONS:
-            cv2.arrowedLine(canvas, start, end, color, 2, cv2.LINE_AA, tipLength=0.08)
+            cv2.arrowedLine(canvas, start, end, color, 2, cv2.LINE_AA, tipLength=.075)
         else:
             cv2.line(canvas, start, end, color, 2, cv2.LINE_AA)
 
-        midpoint = (
-            int((start[0] + end[0]) * 0.5),
-            int((start[1] + end[1]) * 0.5) - 5,
-        )
-
-        draw_label(canvas, edge.predicate, midpoint, color)
+        midpoint = (int((start[0] + end[0]) * .5), int((start[1] + end[1]) * .5) - 4)
+        draw_label(canvas, edge.predicate, midpoint, color, .37)
 
     for node_id, node in sorted(nodes.items()):
         x1, y1, x2, y2 = boxes[node_id]
         color = track_color(node_id)
-
         cv2.rectangle(canvas, (x1, y1), (x2, y2), color, 2, cv2.LINE_AA)
         draw_label(canvas, f"{node.class_name.upper()} · #{node_id.split('_')[-1]}", (x1, max(20, y1 - 5)), color)
 
@@ -361,34 +345,20 @@ def render_current_graph(graph: Any, frame_index: int) -> None:
     edges = display_edges(graph, frame_index)
 
     if not nodes:
-        st.info("No stable objects at this frame.")
+        st.info("No stable tracked objects at this frame.")
         return
 
     for node_id in sorted(nodes):
         node = nodes[node_id]
-
-        st.markdown(
-            f"**{node.class_name.upper()} · #{node_id.split('_')[-1]}**  \n"
-            f"<span class='small-muted'>{node_id} · {node.state.value} · {node.track.detection_confidence:.2f}</span>",
-            unsafe_allow_html=True,
-        )
-
+        st.markdown(f"**{node.class_name.upper()} · #{node_id.split('_')[-1]}**")
+        st.caption(f"{node_id} · {node.state.value} · confidence {node.track.detection_confidence:.2f}")
         outgoing = [edge for edge in edges if edge.subject_id == node_id]
-
-        if outgoing:
-            for edge in outgoing:
-                target = nodes.get(edge.object_id)
-                target_text = (
-                    f"{target.class_name.upper()} · #{edge.object_id.split('_')[-1]}"
-                    if target is not None
-                    else edge.object_id
-                )
-                confidence = float(edge.latest_evidence.confidence) if edge.latest_evidence else 0.0
-                st.write(f"↳ {edge.predicate} → {target_text} · {confidence:.2f}")
-        else:
-            st.caption("No supported outgoing relation.")
-
-        st.write("")
+        for edge in outgoing:
+            target = nodes.get(edge.object_id)
+            if target is None:
+                continue
+            confidence = float(edge.latest_evidence.confidence) if edge.latest_evidence else 0.0
+            st.write(f"↳ {edge.predicate} → {target.class_name.upper()} · #{edge.object_id.split('_')[-1]} · {confidence:.2f}")
 
 
 class CurrentFrameGraphView:
@@ -405,84 +375,72 @@ class CurrentFrameGraphView:
         ]
 
     def get_active_edges(self) -> list[Any]:
-        return current_frame_edges(self.graph, self.frame_index)
+        return display_edges(self.graph, self.frame_index)
 
+
+
+class CurrentFrameGraphView:
+    def __init__(self, graph: Any, frame_index: int):
+        self.graph = graph
+        self.frame_index = frame_index
+        self.nodes = graph.nodes
+        self.history = graph.history
+
+    def get_active_nodes(self) -> list[Any]:
+        return [node for node in self.graph.get_active_nodes() if latest_observation(node, self.frame_index) is not None]
+
+    def get_active_edges(self) -> list[Any]:
+        return display_edges(self.graph, self.frame_index)
 
 def render_query_panel(graph: Any, frame_index: int) -> None:
     frame_graph = CurrentFrameGraphView(graph, frame_index)
-    engine = QueryEngine(frame_graph)
     nodes = frame_graph.get_active_nodes()
 
     if not nodes:
-        st.info("No stable objects are available for a current-frame query.")
+        st.info("No stable objects are available for current-frame queries.")
         return
 
+    engine = QueryEngine(frame_graph)
     lookup = {node.object_id: node for node in nodes}
     object_ids = sorted(lookup)
     predicates = sorted({edge.predicate for edge in frame_graph.get_active_edges()})
 
-    query_type = st.radio(
-        "Query",
-        ["What does…", "What is…", "Between two objects"],
-        horizontal=True,
-    )
+    query_type = st.radio("Query", ["What does…", "What is…", "Between two objects"], horizontal=True)
 
     if query_type == "What does…":
-        subject_id = st.selectbox(
-            "Subject",
-            object_ids,
-            format_func=lambda value: f"{lookup[value].class_name.upper()} · {value}",
-        )
+        subject_id = st.selectbox("Subject", object_ids, format_func=lambda value: f"{lookup[value].class_name.upper()} · {value}")
         predicate = st.selectbox("Relation", predicates or ["ON"])
         results = engine.what_does(subject_id, predicate)
-
         if results:
             for node in results:
                 st.success(f"{subject_id} → {predicate} → {node.class_name.upper()} · {node.object_id}")
         else:
-            st.info("No supported relation for this frame.")
+            st.info("No supported relation at this frame.")
 
     elif query_type == "What is…":
         predicate = st.selectbox("Relation", predicates or ["ON"])
-        object_id = st.selectbox(
-            "Object",
-            object_ids,
-            format_func=lambda value: f"{lookup[value].class_name.upper()} · {value}",
-        )
+        object_id = st.selectbox("Object", object_ids, format_func=lambda value: f"{lookup[value].class_name.upper()} · {value}")
         results = engine.what_is(predicate, object_id)
-
         if results:
             for node in results:
                 st.success(f"{node.class_name.upper()} · {node.object_id} → {predicate} → {object_id}")
         else:
-            st.info("No supported relation for this frame.")
+            st.info("No supported relation at this frame.")
 
     else:
-        subject_id = st.selectbox(
-            "Subject",
-            object_ids,
-            key="between_subject",
-            format_func=lambda value: f"{lookup[value].class_name.upper()} · {value}",
-        )
+        subject_id = st.selectbox("Subject", object_ids, key="between_subject", format_func=lambda value: f"{lookup[value].class_name.upper()} · {value}")
         object_options = [value for value in object_ids if value != subject_id]
-
         if not object_options:
-            st.info("At least two active objects are required.")
+            st.info("At least two objects are required.")
             return
-
-        object_id = st.selectbox(
-            "Object",
-            object_options,
-            format_func=lambda value: f"{lookup[value].class_name.upper()} · {value}",
-        )
+        object_id = st.selectbox("Object", object_options, format_func=lambda value: f"{lookup[value].class_name.upper()} · {value}")
         results = engine.get_relations_between(subject_id, object_id)
-
         if results:
             for edge in results:
                 confidence = float(edge.latest_evidence.confidence) if edge.latest_evidence else 0.0
                 st.success(f"{subject_id} → {edge.predicate} → {object_id} · {confidence:.2f}")
         else:
-            st.info("No supported relation for this frame.")
+            st.info("No supported relation at this frame.")
 
 
 @dataclass
@@ -494,6 +452,8 @@ class DemoRuntime:
     packet: Any | None = None
     graph: Any | None = None
     fps: float = 0.0
+    frames_processed: int = 0
+    warmup_frames: int = 0
 
     @classmethod
     def create(cls, config_path: str) -> "DemoRuntime":
@@ -514,7 +474,19 @@ class DemoRuntime:
         self.packet = packet
         self.graph = graph
         self.fps = 1.0 / elapsed if elapsed > 0 else 0.0
+        self.frames_processed += 1
         return True
+
+    def warm_start(self, max_frames: int = 8) -> bool:
+        for _ in range(max_frames):
+            if not self.step():
+                return self.graph is not None
+            if self.packet is not None and self.graph is not None:
+                if node_rows(self.graph, self.packet.frame_index) and current_frame_edges(self.graph, self.packet.frame_index):
+                    self.warmup_frames += self.frames_processed
+                    return True
+        self.warmup_frames += self.frames_processed
+        return self.graph is not None
 
     def reset(self) -> None:
         config = load_config(self.config_path)
@@ -524,281 +496,159 @@ class DemoRuntime:
         self.packet = None
         self.graph = None
         self.fps = 0.0
+        self.frames_processed = 0
+        self.warmup_frames = 0
 
 
 def main() -> None:
-    st.set_page_config(
-        page_title="Dynamic 3D Scene Graph",
-        page_icon="◆",
-        layout="wide",
-        initial_sidebar_state="expanded",
-    )
-
+    st.set_page_config(page_title="Dynamic 3D Scene Graph", page_icon="◆", layout="wide", initial_sidebar_state="expanded")
     inject_css()
 
     if "runtime" not in st.session_state:
-        st.session_state.runtime = DemoRuntime.create(
-            "configs/tum_fr1_desk.yaml"
-        )
+        st.session_state.runtime = DemoRuntime.create("configs/tum_fr1_desk.yaml")
+        st.session_state.started = False
 
     runtime: DemoRuntime = st.session_state.runtime
 
     st.markdown(
         "<div class='hero-title'>Dynamic 3D Scene Graph</div>"
-        "<div class='hero-subtitle'>"
-        "RGB-D scene understanding · causal tracking · spatial relations · temporal graph"
-        "</div>",
+        "<div class='hero-subtitle'>RGB-D scene understanding · causal tracking · spatial relations · temporal graph</div>",
         unsafe_allow_html=True,
     )
 
     with st.sidebar:
-        st.markdown("### Demo control")
-
-        config_path = st.text_input(
-            "Configuration",
-            runtime.config_path,
-        )
+        st.markdown("### Demo")
+        config_path = st.text_input("Configuration", runtime.config_path)
 
         if config_path != runtime.config_path:
-            try:
-                st.session_state.runtime = DemoRuntime.create(config_path)
-                st.rerun()
-            except Exception as exc:
-                st.error(f"Configuration error: {exc}")
-
-        reset_col, next_col = st.columns(2)
-
-        reset_clicked = reset_col.button(
-            "Reset",
-            use_container_width=True,
-        )
-
-        next_clicked = next_col.button(
-            "Next frame",
-            use_container_width=True,
-        )
-
-        relation_filter = st.selectbox(
-            "RGB relation overlay",
-            PREDICATES,
-        )
-
-        if reset_clicked:
-            runtime.reset()
+            st.session_state.runtime = DemoRuntime.create(config_path)
+            st.session_state.started = False
             st.rerun()
 
-        if next_clicked:
-            try:
-                if not runtime.step():
-                    st.warning("End of configured replay.")
-            except Exception as exc:
-                st.error(f"Pipeline error: {exc}")
-                return
+        reset_clicked, next_clicked = st.columns(2)
+        reset = reset_clicked.button("Reset", use_container_width=True)
+        advance = next_clicked.button("Next frame", use_container_width=True)
 
-        st.markdown("---")
-        st.caption(
-            "Replay uses the configured TUM sequence. "
-            "The Scene view shows only relations supported by evidence from the current frame."
-        )
+        relation_filter = st.selectbox("RGB relation overlay", PREDICATES, index=0)
+
+        if reset:
+            runtime.reset()
+            st.session_state.started = False
+            st.rerun()
+
+    if not st.session_state.started:
+        with st.spinner("Initializing scene graph and finding first useful frame…"):
+            runtime.warm_start(max_frames=8)
+        st.session_state.started = True
+
+    if advance:
+        try:
+            if not runtime.step():
+                st.warning("End of configured replay.")
+        except Exception as exc:
+            st.error(f"Pipeline error: {exc}")
+            return
 
     if runtime.packet is None or runtime.graph is None:
-        st.info("Press **Next frame** to start the replay.")
+        st.info("No frame available from the configured replay.")
         return
 
-    graph = runtime.graph
     frame_index = runtime.packet.frame_index
+    graph = runtime.graph
     objects = node_rows(graph, frame_index)
     visible_edges = display_edges(graph, frame_index)
-    all_current_edges = current_frame_edges(graph, frame_index)
     events = history_rows(graph)
 
-    metrics = st.columns(5)
     metric_values = [
         ("FRAME", frame_index),
         ("OBJECTS", len(objects)),
         ("RELATIONS", len(visible_edges)),
         ("EVENTS", len(events)),
-        ("PIPELINE FPS", f"{runtime.fps:.2f}"),
+        ("FPS", f"{runtime.fps:.2f}"),
     ]
-
-    for column, (label, value) in zip(metrics, metric_values):
-        column.markdown(
-            f"<div class='metric-card'><div class='metric-label'>{label}</div>"
-            f"<div class='metric-value'>{value}</div></div>",
+    cols = st.columns(5)
+    for col, (label, value) in zip(cols, metric_values):
+        col.markdown(
+            f"<div class='metric-card'><div class='metric-label'>{label}</div><div class='metric-value'>{value}</div></div>",
             unsafe_allow_html=True,
         )
 
     st.write("")
-
-    scene_tab, graph_tab, query_tab, history_tab = st.tabs(
-        ["Scene", "Graph", "Queries", "History"]
-    )
+    scene_tab, query_tab, history_tab = st.tabs(["Scene", "Queries", "History"])
 
     with scene_tab:
-        scene_col, graph_col = st.columns([1.75, 1.0], gap="large")
+        scene_col, graph_col = st.columns([1.8, 1.0], gap="large")
 
         with scene_col:
-            st.markdown(
-                "<div class='section-title'>Current RGB frame · current-frame relations only</div>",
-                unsafe_allow_html=True,
-            )
-
+            st.markdown("<div class='section-title'>RGB scene · current-frame graph</div>", unsafe_allow_html=True)
             st.image(
-                render_rgb_scene(
-                    runtime.packet.rgb,
-                    graph,
-                    frame_index,
-                    relation_filter,
-                ),
+                render_rgb_scene(runtime.packet.rgb, graph, frame_index, relation_filter),
                 use_container_width=True,
             )
-
-            st.caption(
-                f"Frame {frame_index} · t={runtime.packet.timestamp:.3f}s · "
-                f"{len(visible_edges)} visible relation(s)"
-            )
+            st.caption(f"Frame {frame_index} · {len(visible_edges)} current-frame supported relation(s)")
 
         with graph_col:
-            st.markdown(
-                "<div class='section-title'>Current semantic graph</div>",
-                unsafe_allow_html=True,
-            )
+            st.markdown("<div class='section-title'>Current semantic graph</div>", unsafe_allow_html=True)
             render_current_graph(graph, frame_index)
 
         objects_col, relations_col = st.columns(2, gap="large")
 
         with objects_col:
-            st.markdown(
-                "<div class='section-title'>Tracked objects</div>",
-                unsafe_allow_html=True,
-            )
+            st.markdown("<div class='section-title'>Tracked objects</div>", unsafe_allow_html=True)
             st.dataframe(
-                as_dataframe(
-                    objects,
-                    ["track_id", "class", "state", "confidence", "observations"],
-                ),
+                as_dataframe(objects, ["track_id", "class", "state", "confidence", "observations"]),
                 hide_index=True,
                 use_container_width=True,
             )
 
         with relations_col:
-            st.markdown(
-                "<div class='section-title'>Current-frame relations</div>",
-                unsafe_allow_html=True,
-            )
-            relation_data = edge_rows(graph, frame_index)
+            st.markdown("<div class='section-title'>Current-frame relations</div>", unsafe_allow_html=True)
             st.dataframe(
                 as_dataframe(
-                    relation_data,
-                    [
-                        "subject_id",
-                        "subject",
-                        "predicate",
-                        "object_id",
-                        "object",
-                        "confidence",
-                        "frame",
-                        "evidence",
-                    ],
+                    edge_rows(graph, frame_index),
+                    ["subject_id", "subject", "predicate", "object_id", "object", "confidence", "frame", "evidence"],
                 ),
                 hide_index=True,
                 use_container_width=True,
             )
-
-    with graph_tab:
-        graph_col, evidence_col = st.columns([1.25, 1.0], gap="large")
-
-        with graph_col:
-            st.markdown(
-                "<div class='section-title'>Relations supported at this frame</div>",
-                unsafe_allow_html=True,
-            )
-
-            relation_data = edge_rows(graph, frame_index)
-
-            if relation_data:
-                for row in relation_data:
-                    st.markdown(
-                        f"**{row['subject'].upper()} · {row['subject_id']}** "
-                        f"→ **{row['predicate']}** → "
-                        f"**{row['object'].upper()} · {row['object_id']}**  \n"
-                        f"<span class='small-muted'>"
-                        f"confidence {row['confidence']:.2f} · frame {row['frame']}"
-                        f"</span>",
-                        unsafe_allow_html=True,
-                    )
-                    st.write("")
-            else:
-                st.info("No supported relations at this frame.")
-
-        with evidence_col:
-            st.markdown(
-                "<div class='section-title'>Relation evidence</div>",
-                unsafe_allow_html=True,
-            )
-
-            if visible_edges:
-                labels = [
-                    f"{edge.subject_id} → {edge.predicate} → {edge.object_id}"
-                    for edge in visible_edges
-                ]
-
-                selected = st.selectbox("Relation", labels)
-                edge = visible_edges[labels.index(selected)]
-                evidence = edge.latest_evidence
-
-                if evidence is not None:
-                    st.json({
-                        "predicate": evidence.predicate,
-                        "subject_id": evidence.subject_id,
-                        "object_id": evidence.object_id,
-                        "frame_index": evidence.frame_index,
-                        "timestamp": evidence.timestamp,
-                        "result": evidence.result.value,
-                        "value": evidence.value,
-                        "threshold": evidence.threshold,
-                        "confidence": evidence.confidence,
-                        "reference_frame": (
-                            evidence.reference_frame.value
-                            if hasattr(evidence.reference_frame, "value")
-                            else str(evidence.reference_frame)
-                        ),
-                        "evidence_type": evidence.evidence_type,
-                        "details": evidence.details,
-                    })
-            else:
-                st.info("No current-frame evidence.")
 
     with query_tab:
-        st.markdown(
-            "<div class='section-title'>Query the current-frame graph</div>",
-            unsafe_allow_html=True,
-        )
+        st.markdown("<div class='section-title'>Query the current-frame graph</div>", unsafe_allow_html=True)
         render_query_panel(graph, frame_index)
 
+        st.markdown("<div class='section-title'>Selected relation evidence</div>", unsafe_allow_html=True)
+        if visible_edges:
+            labels = [f"{edge.subject_id} → {edge.predicate} → {edge.object_id}" for edge in visible_edges]
+            selected = st.selectbox("Relation", labels)
+            edge = visible_edges[labels.index(selected)]
+            evidence = edge.latest_evidence
+            if evidence is not None:
+                st.json({
+                    "predicate": evidence.predicate,
+                    "subject_id": evidence.subject_id,
+                    "object_id": evidence.object_id,
+                    "frame_index": evidence.frame_index,
+                    "result": evidence.result.value,
+                    "confidence": evidence.confidence,
+                    "evidence_type": evidence.evidence_type,
+                    "details": evidence.details,
+                })
+        else:
+            st.info("No current-frame supported relation evidence.")
+
     with history_tab:
-        history_col, changes_col = st.columns([1.7, 1.0], gap="large")
+        history_col, recent_col = st.columns([1.7, 1.0], gap="large")
 
         with history_col:
-            st.markdown(
-                "<div class='section-title'>Graph history</div>",
-                unsafe_allow_html=True,
-            )
+            st.markdown("<div class='section-title'>Graph event history</div>", unsafe_allow_html=True)
             st.dataframe(
-                as_dataframe(
-                    events[-50:],
-                    ["frame", "event", "subject", "predicate", "object"],
-                ),
+                as_dataframe(events[-75:], ["frame", "event", "subject", "predicate", "object"]),
                 hide_index=True,
                 use_container_width=True,
             )
 
-        with changes_col:
-            st.markdown(
-                "<div class='section-title'>Recent changes</div>",
-                unsafe_allow_html=True,
-            )
-
+        with recent_col:
+            st.markdown("<div class='section-title'>Recent changes</div>", unsafe_allow_html=True)
             for row in reversed(events[-12:]):
                 st.write(
                     f"#{row['frame']} · {row['event']} · "
@@ -807,8 +657,8 @@ def main() -> None:
 
     st.caption(
         f"TUM Freiburg1 Desk · frame {frame_index} · "
-        f"{len(objects)} visible objects · "
-        f"{len(all_current_edges)} current-frame supported evidence edges · "
+        f"{len(objects)} visible tracked object(s) · "
+        f"{len(visible_edges)} current-frame relation(s) · "
         f"{len(events)} total graph events"
     )
 
