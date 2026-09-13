@@ -6,20 +6,54 @@ from typing import Optional, Union
 from scene_graph.config import SceneGraphConfig
 
 
+import os
+
+
 def resolve_path(path: Union[str, Path]) -> Path:
-    """Resolve relative paths with respect to repository root if not found locally."""
-    p = Path(path)
+    """Resolve relative or absolute paths with respect to repository root if not found locally."""
+    expanded = os.path.expanduser(os.path.expandvars(str(path)))
+    p = Path(expanded)
+    if p.is_absolute() and p.exists():
+        return p.resolve()
+
+    # 1. Check relative to current working directory
     if p.exists():
         return p.resolve()
-    
-    # Check parent paths for repo root containing configs/
+
+    # 2. Check relative to scene_graph package repository root
+    try:
+        import scene_graph
+        sg_root = Path(scene_graph.__file__).resolve().parent.parent.parent
+        candidate = sg_root / p
+        if candidate.exists():
+            return candidate.resolve()
+    except Exception:
+        pass
+
+    # 3. Walk up from __file__ looking for target path or repository root with configs/
     current = Path(__file__).resolve().parent
-    for _ in range(5):
+    while current != current.parent:
         candidate = current / p
         if candidate.exists():
             return candidate.resolve()
+        if (current / "configs" / "default.yaml").exists():
+            candidate = current / p
+            if candidate.exists():
+                return candidate.resolve()
         current = current.parent
-        
+
+    # 4. Walk up from current working directory
+    current = Path.cwd().resolve()
+    while current != current.parent:
+        candidate = current / p
+        if candidate.exists():
+            return candidate.resolve()
+        if (current / "configs" / "default.yaml").exists():
+            candidate = current / p
+            if candidate.exists():
+                return candidate.resolve()
+        current = current.parent
+
     return p.resolve()
 
 

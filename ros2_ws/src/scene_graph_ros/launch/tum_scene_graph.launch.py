@@ -68,6 +68,18 @@ def generate_launch_description():
         description="Camera optical coordinate frame ID (X right, Y down, Z forward)",
     )
 
+    queue_size_arg = DeclareLaunchArgument(
+        "queue_size",
+        default_value="64",
+        description="Maximum frames buffered in worker queue (64 for offline replay, 2 for live)",
+    )
+
+    drop_old_frames_arg = DeclareLaunchArgument(
+        "drop_old_frames",
+        default_value="false",
+        description="Whether to drop incoming frames when the queue is full (false for offline, true for live)",
+    )
+
     # 1. TUM Player Node
     tum_player_node = Node(
         package="scene_graph_ros",
@@ -99,6 +111,8 @@ def generate_launch_description():
                 "world_frame": LaunchConfiguration("world_frame"),
                 "sensor_frame": LaunchConfiguration("sensor_frame"),
                 "debug_frame_packet_only": LaunchConfiguration("debug_frame_packet_only"),
+                "queue_size": LaunchConfiguration("queue_size"),
+                "drop_old_frames": LaunchConfiguration("drop_old_frames"),
             }
         ],
     )
@@ -124,6 +138,8 @@ def generate_launch_description():
             use_rviz_arg,
             world_frame_arg,
             sensor_frame_arg,
+            queue_size_arg,
+            drop_old_frames_arg,
             tum_player_node,
             scene_graph_node,
             rviz_node,

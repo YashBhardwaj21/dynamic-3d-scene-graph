@@ -35,6 +35,11 @@ class Track:
         if self.kalman_state is not None:
             return self.kalman_state.position
         return self._initial_centroid
+
+    @property
+    def smoothed_position(self) -> np.ndarray:
+        """Alias for centroid_world (Kalman-filtered 3D position)."""
+        return self.centroid_world
         
     @property
     def velocity_world(self) -> np.ndarray | None:

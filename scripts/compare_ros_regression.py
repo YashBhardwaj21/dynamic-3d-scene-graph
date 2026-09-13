@@ -48,7 +48,7 @@ def run_baseline_test_a(config_path: str, max_frames: int = None) -> List[Dict[s
                 "class": n.track.class_name,
                 "state": n.state.value,
                 "confidence": float(n.track.detection_confidence),
-                "centroid": [float(x) for x in n.track.smoothed_position] if n.track.smoothed_position is not None else None,
+                "centroid": [float(x) for x in n.track.centroid_world] if getattr(n.track, "centroid_world", None) is not None else None,
             }
             for n in active_nodes
         ]

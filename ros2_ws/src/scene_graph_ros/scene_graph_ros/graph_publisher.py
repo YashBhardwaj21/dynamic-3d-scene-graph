@@ -73,8 +73,8 @@ class GraphPublisher:
             node_map[track.object_id] = track.class_name
 
             centroid = None
-            if track.smoothed_position is not None:
-                centroid = [float(x) for x in track.smoothed_position]
+            if getattr(track, "centroid_world", None) is not None:
+                centroid = [float(x) for x in track.centroid_world]
             elif track.recent_observations and track.recent_observations[-1].object_geometry:
                 geom = track.recent_observations[-1].object_geometry
                 if geom.centroid_world is not None:
@@ -132,8 +132,8 @@ class GraphPublisher:
             track = node.track
             centroid = None
 
-            if track.smoothed_position is not None:
-                centroid = track.smoothed_position
+            if getattr(track, "centroid_world", None) is not None:
+                centroid = track.centroid_world
             elif track.recent_observations and track.recent_observations[-1].object_geometry:
                 geom = track.recent_observations[-1].object_geometry
                 if geom.centroid_world is not None:
