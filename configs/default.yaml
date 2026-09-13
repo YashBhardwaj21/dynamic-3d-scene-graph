@@ -69,6 +69,12 @@ sync:
   rgb_pose_max_dt: 0.02
 
 
+reference_frame:
+  type: world
+  up_axis: [0.0, 0.0, 1.0]
+  heading_axis: [1.0, 0.0, 0.0]
+
+
 geometry:
   min_valid_points: 30
 

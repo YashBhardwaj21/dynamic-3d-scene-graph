@@ -110,11 +110,17 @@ class TUMReplaySource(FrameSource):
                 pose_np = self.pose_entries[p_idx].as_transform_matrix()
                 has_pose = True
                 
-            # Construct TUM global relation frame
+            # Construct global relation frame
+            up_axis = np.array([0.0, 0.0, 1.0])
+            heading_axis = np.array([1.0, 0.0, 0.0])
+            if self.config.reference_frame is not None:
+                up_axis = np.array(self.config.reference_frame.up_axis, dtype=np.float64)
+                heading_axis = np.array(self.config.reference_frame.heading_axis, dtype=np.float64)
+
             relation_frame = RelationReferenceFrame.from_gravity_and_heading(
                 origin_world=np.zeros(3),
-                up_axis_world=np.array([0.0, 0.0, 1.0]),       # Z-up in TUM world
-                heading_world=np.array([1.0, 0.0, 0.0])         # X-forward
+                up_axis_world=up_axis,
+                heading_world=heading_axis
             )
             
             packet = FramePacket(

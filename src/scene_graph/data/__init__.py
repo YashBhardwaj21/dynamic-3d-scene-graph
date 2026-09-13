@@ -1,6 +1,6 @@
 """Data loading and synchronization module."""
 
-from scene_graph.data.frame_packet import FramePacket
+from scene_graph.data.frame_packet import FramePacket, IMUSample
 from scene_graph.data.frame_source import FrameSource
 from scene_graph.data.synchronization import associate
 from scene_graph.data.tum_source import TUMReplaySource
@@ -26,6 +26,7 @@ __all__ = [
     "load_tum_groundtruth",
     "associate",
     "FramePacket",
+    "IMUSample",
     "FrameSource",
     "TUMReplaySource",
 ]

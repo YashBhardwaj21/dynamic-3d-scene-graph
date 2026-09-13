@@ -11,6 +11,20 @@ myenv/
 experiments/*/frames/
 experiments/*/logs/
 __pycache__/
+*.py[cod]
+*$py.class
+
+# Python packaging & distribution
+*.egg-info/
+.eggs/
+build/
+dist/
+
+# ROS 2 / Colcon build artifacts
+ros2_ws/build/
+ros2_ws/install/
+ros2_ws/log/
+
 # Data and Model Assets
 data/raw/
 data/processed/
@@ -22,5 +36,7 @@ runs/
 yolov8n*.pt
 yolov8s*.pt
 
-# Pytest Temp
+# Pytest Temp & Cache
 .pytest-tmp/
+.pytest_cache/
+pytest_temp/

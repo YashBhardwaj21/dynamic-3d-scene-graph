@@ -283,6 +283,14 @@ class RolesConfig(BaseModel):
     )
 
 
+class ReferenceFrameConfig(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+
+    type: str = Field("world")
+    up_axis: Tuple[float, float, float] = Field((0.0, 0.0, 1.0))
+    heading_axis: Tuple[float, float, float] = Field((1.0, 0.0, 0.0))
+
+
 class SceneGraphConfig(BaseModel):
     model_config = ConfigDict(extra="forbid")
 
@@ -293,6 +301,7 @@ class SceneGraphConfig(BaseModel):
     pose_source: Optional[str] = None
     pose: Optional[PoseConfig] = None
     sync: Optional[SyncConfig] = Field(default_factory=SyncConfig)
+    reference_frame: Optional[ReferenceFrameConfig] = Field(default_factory=ReferenceFrameConfig)
     geometry: Optional[GeometryConfig] = Field(default_factory=GeometryConfig)
     perception: Optional[PerceptionConfig] = Field(default_factory=PerceptionConfig)
     tracking: Optional[TrackingConfig] = Field(default_factory=TrackingConfig)
