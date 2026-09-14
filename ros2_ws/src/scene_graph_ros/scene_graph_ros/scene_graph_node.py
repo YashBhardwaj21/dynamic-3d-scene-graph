@@ -1,16 +1,6 @@
-"""Generic SceneGraph ROS Node.
+"""Generic SceneGraph ROS Node."""
 
-Knows only generic concepts:
-- RGB image (sensor_msgs/msg/Image)
-- Depth image (sensor_msgs/msg/Image)
-- Camera calibration (sensor_msgs/msg/CameraInfo)
-- Camera pose via TF (geometry_msgs/msg/TransformStamped: world -> camera_optical_frame)
-- Optional IMU samples (sensor_msgs/msg/Imu)
-
-Contains NO dataset-specific (TUM, RealSense, D455, etc.) logic.
-Separates ROS message ingestion from scene-graph inference using a dedicated
-worker thread and frame queue. OnlinePipeline never executes in the ROS callback.
-"""
+from __future__ import annotations
 
 import queue
 import threading
@@ -33,6 +23,7 @@ from scene_graph.data.frame_packet import FramePacket, IMUSample
 from scene_graph.geometry.camera import CameraIntrinsics, DepthModel
 from scene_graph.geometry.reference_frame import RelationReferenceFrame
 from scene_graph.pipeline.online_pipeline import OnlinePipeline
+from scene_graph.graph.snapshot import SceneGraphSnapshot, create_snapshot
 
 from scene_graph_ros.config_loader import load_scene_graph_config
 from scene_graph_ros.ros_conversions import (
@@ -50,15 +41,15 @@ class PendingFrame:
     rgb_msg: Image
     depth_msg: Image
     camera_info_msg: Optional[CameraInfo]
+    arrival_time: float
 
 
 class SceneGraphROSNode(Node):
-    """Generic ROS 2 node orchestrating online 3D scene graph generation with asynchronous worker."""
+    """ROS 2 node orchestrating online 3D scene graph generation."""
 
     def __init__(self):
         super().__init__("scene_graph_node")
 
-        # Declare parameters (all topics, frames, and queue parameters configurable)
         self.declare_parameter("rgb_topic", "/tum/rgb/image_raw")
         self.declare_parameter("depth_topic", "/tum/depth/image_raw")
         self.declare_parameter("camera_info_topic", "/tum/rgb/camera_info")
@@ -73,10 +64,12 @@ class SceneGraphROSNode(Node):
         self.declare_parameter("debug_frame_packet_only", False)
         self.declare_parameter("state_topic", "/scene_graph/state")
         self.declare_parameter("markers_topic", "/scene_graph/markers")
+        self.declare_parameter("object_cloud_topic", "/scene_graph/object_cloud")
+        self.declare_parameter("overlay_detections_topic", "/scene_graph/overlay_detections")
+        self.declare_parameter("overlay_tracks_topic", "/scene_graph/overlay_tracks")
         self.declare_parameter("queue_size", 64)
         self.declare_parameter("drop_old_frames", False)
 
-        # Read parameters
         self.rgb_topic = self.get_parameter("rgb_topic").get_parameter_value().string_value
         self.depth_topic = self.get_parameter("depth_topic").get_parameter_value().string_value
         self.camera_info_topic = self.get_parameter("camera_info_topic").get_parameter_value().string_value
@@ -91,19 +84,20 @@ class SceneGraphROSNode(Node):
         self.debug_frame_packet_only = self.get_parameter("debug_frame_packet_only").get_parameter_value().bool_value
         self.state_topic = self.get_parameter("state_topic").get_parameter_value().string_value
         self.markers_topic = self.get_parameter("markers_topic").get_parameter_value().string_value
+        self.object_cloud_topic = self.get_parameter("object_cloud_topic").get_parameter_value().string_value
+        self.overlay_detections_topic = self.get_parameter("overlay_detections_topic").get_parameter_value().string_value
+        self.overlay_tracks_topic = self.get_parameter("overlay_tracks_topic").get_parameter_value().string_value
         self.queue_size = self.get_parameter("queue_size").get_parameter_value().integer_value
         self.drop_old_frames = self.get_parameter("drop_old_frames").get_parameter_value().bool_value
 
         self.get_logger().info(f"Loading SceneGraph configuration from {self.config_path}")
         self.config: SceneGraphConfig = load_scene_graph_config(self.config_path)
 
-        # Determine depth model
         depth_scale = self.param_depth_scale
         if self.config.depth is not None and self.config.depth.scale > 0:
             depth_scale = self.config.depth.scale
         self.depth_model = DepthModel(scale=depth_scale)
 
-        # Initialize online pipeline (unless in debug isolation mode)
         if not self.debug_frame_packet_only:
             self.get_logger().info("Initializing OnlinePipeline...")
             self.pipeline = OnlinePipeline(self.config)
@@ -112,15 +106,16 @@ class SceneGraphROSNode(Node):
             self.pipeline = None
             self.get_logger().warn("Running in debug_frame_packet_only mode: Core pipeline bypassed.")
 
-        # Publisher helper
         self.graph_publisher = GraphPublisher(
             node=self,
             state_topic=self.state_topic,
             markers_topic=self.markers_topic,
+            object_cloud_topic=self.object_cloud_topic,
+            overlay_detections_topic=self.overlay_detections_topic,
+            overlay_tracks_topic=self.overlay_tracks_topic,
             world_frame=self.world_frame,
         )
 
-        # CameraInfo caching
         self.latest_camera_info: Optional[CameraInfo] = None
         self.latest_intrinsics: Optional[CameraIntrinsics] = None
         self.camera_info_sub = self.create_subscription(
@@ -130,11 +125,9 @@ class SceneGraphROSNode(Node):
             10,
         )
 
-        # TF2 listener
         self.tf_buffer = tf2_ros.Buffer()
         self.tf_listener = tf2_ros.TransformListener(self.tf_buffer, self)
 
-        # Optional IMU buffer
         self.imu_buffer: List[IMUSample] = []
         self.last_frame_timestamp: Optional[float] = None
         if self.use_imu:
@@ -145,11 +138,9 @@ class SceneGraphROSNode(Node):
                 100,
             )
 
-        # Synchronized RGB and Depth subscribers
         self.rgb_sub = message_filters.Subscriber(self, Image, self.rgb_topic)
         self.depth_sub = message_filters.Subscriber(self, Image, self.depth_topic)
 
-        # ApproximateTimeSynchronizer with configurable slop
         self.sync = message_filters.ApproximateTimeSynchronizer(
             [self.rgb_sub, self.depth_sub],
             queue_size=30,
@@ -157,12 +148,13 @@ class SceneGraphROSNode(Node):
         )
         self.sync.registerCallback(self.rgb_depth_callback)
 
-        # Frame counter & performance statistics
         self.frame_counter = 0
         self.processed_frames = 0
+        self.dropped_frames = 0
         self.processing_start_time: Optional[float] = None
+        self.last_input_time: Optional[float] = None
+        self.input_fps: float = 0.0
 
-        # Dedicated worker thread and bounded frame queue
         max_q = self.queue_size if self.queue_size > 0 else 0
         self.frame_queue = queue.Queue(maxsize=max_q)
         self.stop_event = threading.Event()
@@ -180,7 +172,9 @@ class SceneGraphROSNode(Node):
             f"  Depth: {self.depth_topic}\n"
             f"  CameraInfo: {self.camera_info_topic}\n"
             f"  TF: {self.world_frame} -> {self.sensor_frame} (max_dt={self.pose_max_dt}s)\n"
-            f"  Queue: maxsize={max_q}, drop_old_frames={self.drop_old_frames}"
+            f"  Queue: maxsize={max_q}, drop_old_frames={self.drop_old_frames}\n"
+            f"  Object Cloud: {self.object_cloud_topic}\n"
+            f"  Overlays: {self.overlay_detections_topic}, {self.overlay_tracks_topic}"
         )
 
     def camera_info_callback(self, msg: CameraInfo):
@@ -199,25 +193,41 @@ class SceneGraphROSNode(Node):
             self.imu_buffer.pop(0)
 
     def rgb_depth_callback(self, rgb_msg: Image, depth_msg: Image):
-        """Lightweight callback: copies message references to queue and returns immediately.
-        
-        TF callbacks and other ROS callbacks remain completely unblocked.
-        """
+        """Lightweight callback: copies message references to queue and returns immediately."""
+        now_wall = time.monotonic()
+        if self.last_input_time is not None:
+            dt = now_wall - self.last_input_time
+            if dt > 0:
+                inst_fps = 1.0 / dt
+                self.input_fps = 0.9 * self.input_fps + 0.1 * inst_fps if self.input_fps > 0 else inst_fps
+        self.last_input_time = now_wall
+
         pending = PendingFrame(
             rgb_msg=rgb_msg,
             depth_msg=depth_msg,
             camera_info_msg=self.latest_camera_info,
+            arrival_time=now_wall,
         )
 
         if self.drop_old_frames:
             try:
                 self.frame_queue.put_nowait(pending)
             except queue.Full:
-                self.get_logger().warning("Processing queue full; dropping incoming frame")
+                try:
+                    # Drop oldest frame to ensure fresh state
+                    _ = self.frame_queue.get_nowait()
+                    self.dropped_frames += 1
+                except queue.Empty:
+                    pass
+                try:
+                    self.frame_queue.put_nowait(pending)
+                except queue.Full:
+                    self.dropped_frames += 1
         else:
             try:
                 self.frame_queue.put(pending, timeout=0.5)
             except queue.Full:
+                self.dropped_frames += 1
                 self.get_logger().warning("Processing queue full; dropping frame")
 
     def _processing_worker(self):
@@ -236,14 +246,14 @@ class SceneGraphROSNode(Node):
                 self.frame_queue.task_done()
 
     def _process_pending_frame(self, pending: PendingFrame):
-        """Heavy processing: TF lookup, image conversion, FramePacket creation, and OnlinePipeline."""
+        t_frame_start = time.monotonic()
+
         if self.processing_start_time is None:
-            self.processing_start_time = time.monotonic()
+            self.processing_start_time = t_frame_start
 
         rgb_stamp = pending.rgb_msg.header.stamp
         rgb_timestamp = float(rgb_stamp.sec) + float(rgb_stamp.nanosec) * 1e-9
 
-        # 1. Resolve intrinsics
         intrinsics = None
         if pending.camera_info_msg is not None:
             try:
@@ -268,7 +278,7 @@ class SceneGraphROSNode(Node):
                 self.get_logger().warn("Waiting for CameraInfo before processing frames...")
                 return
 
-        # 2. Lookup camera pose via TF (TF listener remains unblocked on executor thread!)
+        t_tf_start = time.monotonic()
         world_T_camera = None
         target_time = Time(seconds=rgb_stamp.sec, nanoseconds=rgb_stamp.nanosec)
         try:
@@ -283,8 +293,8 @@ class SceneGraphROSNode(Node):
             self.get_logger().warn(
                 f"TF lookup failed for {self.world_frame} -> {self.sensor_frame} at {rgb_timestamp:.4f}: {ex}"
             )
+        tf_latency_ms = (time.monotonic() - t_tf_start) * 1000.0
 
-        # 3. Convert images to numpy arrays
         try:
             rgb_np = ros_image_to_numpy(pending.rgb_msg)
             depth_np = ros_image_to_numpy(pending.depth_msg)
@@ -292,7 +302,6 @@ class SceneGraphROSNode(Node):
             self.get_logger().error(f"Image conversion error: {e}")
             return
 
-        # 4. Windowed IMU samples in (last_ts, current_ts]
         windowed_imu = ()
         if self.use_imu and self.last_frame_timestamp is not None:
             windowed_imu = tuple(
@@ -301,7 +310,6 @@ class SceneGraphROSNode(Node):
             )
         self.last_frame_timestamp = rgb_timestamp
 
-        # 5. Construct generic relation reference frame
         up_axis = np.array([0.0, 0.0, 1.0])
         heading_axis = np.array([1.0, 0.0, 0.0])
         if self.config.reference_frame is not None:
@@ -314,7 +322,6 @@ class SceneGraphROSNode(Node):
             heading_world=heading_axis,
         )
 
-        # 6. Construct dataset-independent FramePacket
         packet = FramePacket(
             frame_index=self.frame_counter,
             timestamp=rgb_timestamp,
@@ -328,38 +335,59 @@ class SceneGraphROSNode(Node):
             metadata={"frame_id": pending.rgb_msg.header.frame_id},
         )
 
-        # Acceptance Test 2 Mode: Verify FramePacket construction without running core
         if self.debug_frame_packet_only:
             self.get_logger().info(
                 f"Frame {self.frame_counter} | "
                 f"RGB: {rgb_np.shape} | "
                 f"Depth: {depth_np.shape if depth_np is not None else 'None'} | "
                 f"Timestamp: {rgb_timestamp:.4f} | "
-                f"Pose: {'available' if world_T_camera is not None else 'missing'} | "
-                f"Intrinsics: available | "
-                f"IMU samples: {len(windowed_imu)}"
+                f"Pose: {'available' if world_T_camera is not None else 'missing'}"
             )
             self.frame_counter += 1
             self.processed_frames += 1
             return
 
-        # 7. Feed FramePacket into OnlinePipeline
+        t_infer_start = time.monotonic()
         try:
             graph = self.pipeline.update(packet)
-            self.graph_publisher.publish(graph, packet)
+            infer_latency_ms = (time.monotonic() - t_infer_start) * 1000.0
+
+            t_now = time.monotonic()
+            total_latency_ms = (t_now - pending.arrival_time) * 1000.0
+            elapsed = t_now - self.processing_start_time
+            proc_fps = (self.processed_frames + 1) / elapsed if elapsed > 0 else 0.0
+
+            snapshot = create_snapshot(
+                graph=graph,
+                packet=packet,
+                input_fps=self.input_fps,
+                processing_fps=proc_fps,
+                total_latency_ms=total_latency_ms,
+                queue_size=self.frame_queue.qsize(),
+                dropped_frames=self.dropped_frames,
+                tf_latency_ms=tf_latency_ms,
+                inference_latency_ms=infer_latency_ms,
+            )
+
+            self.graph_publisher.publish(
+                graph=graph,
+                packet=packet,
+                snapshot=snapshot,
+                observations=getattr(self.pipeline, "last_observations", None),
+            )
         except Exception as e:
             self.get_logger().error(f"Error executing scene graph pipeline on frame {self.frame_counter}: {e}")
 
         self.frame_counter += 1
         self.processed_frames += 1
 
-        # Periodic statistics logging
         if self.processed_frames % 20 == 0:
             elapsed = time.monotonic() - self.processing_start_time
             rate = self.processed_frames / elapsed if elapsed > 0 else 0.0
             self.get_logger().info(
                 f"Inference stats: processed={self.processed_frames}, "
-                f"rate={rate:.2f} Hz, queue_size={self.frame_queue.qsize()}"
+                f"rate={rate:.2f} Hz, queue_size={self.frame_queue.qsize()}, "
+                f"dropped={self.dropped_frames}"
             )
 
     def destroy_node(self):
