@@ -19,6 +19,8 @@ __pycache__/
 .eggs/
 build/
 dist/
+install/
+log/
 
 # ROS 2 / Colcon build artifacts
 ros2_ws/build/

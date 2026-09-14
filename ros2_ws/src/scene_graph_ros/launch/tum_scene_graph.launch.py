@@ -80,7 +80,18 @@ def generate_launch_description():
         description="Whether to drop incoming frames when the queue is full (false for offline, true for live)",
     )
 
-    # 1. TUM Player Node
+    publish_rate_hz_arg = DeclareLaunchArgument(
+        "publish_rate_hz",
+        default_value="2.0",
+        description="Frame publishing rate in Hz (default 2.0 Hz for smooth perception on CPU)",
+    )
+
+    loop_arg = DeclareLaunchArgument(
+        "loop",
+        default_value="true",
+        description="Whether to loop the sequence continuously",
+    )
+
     tum_player_node = Node(
         package="scene_graph_ros",
         executable="tum_player",
@@ -95,11 +106,12 @@ def generate_launch_description():
                 "end_frame": LaunchConfiguration("end_frame"),
                 "world_frame": LaunchConfiguration("world_frame"),
                 "sensor_frame": LaunchConfiguration("sensor_frame"),
+                "publish_rate_hz": LaunchConfiguration("publish_rate_hz"),
+                "loop": LaunchConfiguration("loop"),
             }
         ],
     )
 
-    # 2. SceneGraph Generic Node
     scene_graph_node = Node(
         package="scene_graph_ros",
         executable="scene_graph_node",
@@ -117,7 +129,12 @@ def generate_launch_description():
         ],
     )
 
-    # 3. RViz2 Node
+    use_viewer_arg = DeclareLaunchArgument(
+        "use_viewer",
+        default_value="false",
+        description="Whether to launch 2D live perception viewer",
+    )
+
     rviz_node = Node(
         package="rviz2",
         executable="rviz2",
@@ -125,6 +142,14 @@ def generate_launch_description():
         output="screen",
         arguments=["-d", default_rviz_config],
         condition=IfCondition(LaunchConfiguration("use_rviz")),
+    )
+
+    viewer_node = Node(
+        package="scene_graph_ros",
+        executable="live_2d_viewer",
+        name="live_2d_viewer",
+        output="screen",
+        condition=IfCondition(LaunchConfiguration("use_viewer")),
     )
 
     return LaunchDescription(
@@ -136,12 +161,18 @@ def generate_launch_description():
             end_frame_arg,
             debug_frame_packet_only_arg,
             use_rviz_arg,
+            use_viewer_arg,
             world_frame_arg,
             sensor_frame_arg,
             queue_size_arg,
             drop_old_frames_arg,
+            publish_rate_hz_arg,
+            loop_arg,
             tum_player_node,
             scene_graph_node,
             rviz_node,
+            viewer_node,
         ]
     )
+
+
