@@ -1,9 +1,4 @@
-"""2D perception overlay rendering for ROS image publishers.
-
-Renders high-quality 2D perception overlays:
-  1. Detection overlay: RGB + raw detection masks + bounding boxes + class labels + confidence
-  2. Tracking overlay: RGB + tracked object masks + track IDs + state badges + relation arrows
-"""
+"""2D perception overlay rendering for ROS image publishers."""
 
 from __future__ import annotations
 
@@ -12,16 +7,15 @@ from typing import Any, Optional, Tuple, Sequence
 import cv2
 import numpy as np
 
-# Harmonious palettes matching demo
 OBJECT_PALETTE = [
-    (82, 177, 238),   # Cyan
-    (89, 208, 164),   # Mint
-    (171, 133, 235),  # Violet
-    (239, 177, 87),   # Amber
-    (82, 193, 207),   # Teal
-    (229, 116, 150),  # Coral
-    (164, 181, 112),  # Olive
-    (133, 151, 226),  # Lavender
+    (82, 177, 238),
+    (89, 208, 164),
+    (171, 133, 235),
+    (239, 177, 87),
+    (82, 193, 207),
+    (229, 116, 150),
+    (164, 181, 112),
+    (133, 151, 226),
 ]
 
 RELATION_COLORS = {
@@ -144,7 +138,6 @@ def render_detections_overlay(
     for i, obs in enumerate(observations):
         color = OBJECT_PALETTE[i % len(OBJECT_PALETTE)]
 
-        # Mask
         try:
             mask = obs.get_mask() if hasattr(obs, "get_mask") else getattr(obs, "mask", None)
         except Exception:
@@ -153,7 +146,6 @@ def render_detections_overlay(
         if mask is not None:
             canvas = draw_mask(canvas, mask, color, alpha=0.25)
 
-        # Bbox
         bbox_xyxy = getattr(obs, "bbox_xyxy", None)
         if bbox_xyxy is not None:
             bx1, by1, bx2, by2 = clamp_bbox(bbox_xyxy, w, h)
@@ -191,7 +183,6 @@ def render_tracks_overlay(
         node_id = str(track.object_id)
         node_map[node_id] = node
 
-        # Latest observation bbox
         obs = track.recent_observations[-1] if track.recent_observations else None
         if obs is None:
             continue
@@ -204,7 +195,6 @@ def render_tracks_overlay(
         boxes[node_id] = box
         col = track_color(node_id)
 
-        # Draw mask if present
         try:
             mask = obs.get_mask() if hasattr(obs, "get_mask") else getattr(obs, "mask", None)
         except Exception:
@@ -213,7 +203,6 @@ def render_tracks_overlay(
         if mask is not None:
             canvas = draw_mask(canvas, mask, col, alpha=0.20)
 
-    # Filter relations to at most 1 primary relation per object-pair to prevent clutter
     active_edges = [e for e in graph.edges.values() if e.is_active]
     priority = {
         "ON": 10, "UNDER": 10, "INSIDE": 10, "CONTAINING": 10,
@@ -248,7 +237,6 @@ def render_tracks_overlay(
         mx, my = int((start[0] + end[0]) * 0.5), int((start[1] + end[1]) * 0.5 - 4)
         draw_label(canvas, edge.predicate, (mx, my), col, scale=0.35)
 
-    # Draw track boxes and badges on top
     for node_id, box in boxes.items():
         node = node_map[node_id]
         track = node.track

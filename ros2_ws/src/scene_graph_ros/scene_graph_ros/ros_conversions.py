@@ -121,13 +121,7 @@ def rotation_matrix_to_quaternion(R: np.ndarray) -> tuple[float, float, float, f
 
 
 def ros_image_to_numpy(msg) -> np.ndarray:
-    """Convert sensor_msgs/Image to a numpy array.
-    
-    Guarantees:
-    - RGB images are returned as (H, W, 3) uint8 in RGB channel ordering.
-    - Depth images are returned as (H, W) raw depth units (e.g. uint16 or float32)
-      WITHOUT converting to meters, preserving the core's DepthModel abstraction.
-    """
+    """Convert sensor_msgs/Image to a numpy array."""
     encoding = msg.encoding.lower()
 
     if _CV_BRIDGE is not None:
@@ -139,9 +133,8 @@ def ros_image_to_numpy(msg) -> np.ndarray:
             elif encoding in ("32fc1",):
                 return _CV_BRIDGE.imgmsg_to_cv2(msg, desired_encoding="32FC1")
         except Exception:
-            pass  # Fall back to robust pure-numpy decoding
+            pass
 
-    # Robust fallback without cv_bridge (supports mocks, stride/step padding, etc.)
     raw_data = bytes(msg.data)
     h, w = msg.height, msg.width
     step = getattr(msg, "step", None)
@@ -190,7 +183,6 @@ def numpy_to_ros_image(
     msg.is_bigendian = 0
 
     if arr.ndim == 2:
-        # Depth or mono
         channels = 1
         itemsize = arr.itemsize
     else:
@@ -207,14 +199,12 @@ def camera_info_to_intrinsics(msg: "CameraInfo") -> CameraIntrinsics:
     width = int(msg.width)
     height = int(msg.height)
 
-    # Use K matrix if populated (K = [fx, 0, cx, 0, fy, cy, 0, 0, 1])
     if len(msg.k) == 9 and msg.k[0] > 0.0:
         fx = float(msg.k[0])
         cx = float(msg.k[2])
         fy = float(msg.k[4])
         cy = float(msg.k[5])
     elif len(msg.p) == 12 and msg.p[0] > 0.0:
-        # P matrix for rectified image: [fx, 0, cx, Tx, 0, fy, cy, Ty, 0, 0, 1, 0]
         fx = float(msg.p[0])
         cx = float(msg.p[2])
         fy = float(msg.p[5])
@@ -251,21 +241,18 @@ def intrinsics_to_camera_info(
     msg.distortion_model = "plumb_bob"
     msg.d = [0.0, 0.0, 0.0, 0.0, 0.0]
 
-    # K matrix (3x3 row-major)
     msg.k = [
         intrinsics.fx, 0.0, intrinsics.cx,
         0.0, intrinsics.fy, intrinsics.cy,
         0.0, 0.0, 1.0,
     ]
 
-    # R matrix (identity)
     msg.r = [
         1.0, 0.0, 0.0,
         0.0, 1.0, 0.0,
         0.0, 0.0, 1.0,
     ]
 
-    # P matrix (3x4 row-major)
     msg.p = [
         intrinsics.fx, 0.0, intrinsics.cx, 0.0,
         0.0, intrinsics.fy, intrinsics.cy, 0.0,

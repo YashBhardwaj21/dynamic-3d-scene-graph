@@ -34,13 +34,7 @@ from scene_graph_ros.overlay_renderer import (
 
 
 class GraphPublisher:
-    """Publishes SceneGraph state to ROS 2 topics:
-      - /scene_graph/state: Structured JSON state with telemetry
-      - /scene_graph/markers: RViz 3D oriented OBBs, labels, relation arrows, camera trajectory
-      - /scene_graph/object_cloud: Segmented 3D point cloud colored per tracked object
-      - /scene_graph/overlay_detections: 2D detection overlay (masks, bboxes, conf)
-      - /scene_graph/overlay_tracks: 2D tracking overlay (track IDs, states, relation arrows)
-    """
+    """Publishes SceneGraph state to ROS topics."""
 
     def __init__(
         self,
@@ -55,7 +49,6 @@ class GraphPublisher:
         self.node = node
         self.world_frame = world_frame
 
-        # Publishers
         self.state_pub = node.create_publisher(String, state_topic, 10)
         self.markers_pub = node.create_publisher(MarkerArray, markers_topic, 10)
         self.cloud_pub = node.create_publisher(PointCloud2, object_cloud_topic, 10)
@@ -72,7 +65,7 @@ class GraphPublisher:
         snapshot: Optional[SceneGraphSnapshot] = None,
         observations: Optional[Sequence[Any]] = None,
     ):
-        """Publish all visualization and transport topics for one frame."""
+        """Publish all topics for one frame."""
         if snapshot is None:
             snapshot = create_snapshot(graph, packet)
 
@@ -82,7 +75,7 @@ class GraphPublisher:
         self.publish_overlays(graph, packet, observations)
 
     def publish_json_state(self, snapshot: SceneGraphSnapshot):
-        """Publish human-readable and machine-parseable JSON of the active scene graph."""
+        """Publish JSON representation of the active scene graph."""
         payload = {
             "frame": snapshot.frame_index,
             "timestamp": snapshot.timestamp,
@@ -138,10 +131,8 @@ class GraphPublisher:
         stamp = self.node.get_clock().now().to_msg()
         marker_id = 0
 
-        # Store positions for relation arrows
         obj_positions: Dict[str, Tuple[float, float, float]] = {}
 
-        # 1. Objects and Text Labels
         for obj in snapshot.objects:
             pos = obj.obb_center_world or obj.centroid_world
             if pos is None:
@@ -151,7 +142,6 @@ class GraphPublisher:
             r_int, g_int, b_int = track_color(obj.track_id)
             r, g, b = r_int / 255.0, g_int / 255.0, b_int / 255.0
 
-            # 3D Oriented Bounding Box (CUBE with true quaternion orientation)
             obj_marker = Marker()
             obj_marker.header.frame_id = self.world_frame
             obj_marker.header.stamp = stamp
@@ -165,7 +155,6 @@ class GraphPublisher:
             obj_marker.pose.position.y = float(pos[1])
             obj_marker.pose.position.z = float(pos[2])
 
-            # Compute orientation quaternion from obb_axes_world (if available)
             if obj.obb_axes_world is not None:
                 try:
                     axes = np.asarray(obj.obb_axes_world, dtype=np.float64)
@@ -179,7 +168,6 @@ class GraphPublisher:
             else:
                 obj_marker.pose.orientation.w = 1.0
 
-            # Extents
             if obj.obb_extents_world is not None:
                 extents = [max(0.04, float(x)) for x in obj.obb_extents_world]
             else:
@@ -196,7 +184,6 @@ class GraphPublisher:
             obj_marker.lifetime = Duration(sec=1, nanosec=0)
             marker_array.markers.append(obj_marker)
 
-            # Text label hovering above object
             text_marker = Marker()
             text_marker.header.frame_id = self.world_frame
             text_marker.header.stamp = stamp
@@ -211,7 +198,7 @@ class GraphPublisher:
             text_marker.pose.position.z = float(pos[2]) + extents[2] / 2.0 + 0.07
             text_marker.pose.orientation.w = 1.0
 
-            text_marker.scale.z = 0.07  # Text height in meters
+            text_marker.scale.z = 0.07
             text_marker.color.r = 1.0
             text_marker.color.g = 1.0
             text_marker.color.b = 1.0
@@ -221,7 +208,6 @@ class GraphPublisher:
             text_marker.lifetime = Duration(sec=1, nanosec=0)
             marker_array.markers.append(text_marker)
 
-        # 2. Relation Arrows & Labels (Deduplicated per object-pair to prevent unreadable visual clutter)
         priority = {
             "ON": 10, "UNDER": 10, "INSIDE": 10, "CONTAINING": 10,
             "ABOVE": 7, "BELOW": 7, "LEFT_OF": 6, "RIGHT_OF": 6,
@@ -248,7 +234,7 @@ class GraphPublisher:
 
                 dist = np.linalg.norm(np.array(p1) - np.array(p2))
                 if dist < 0.04:
-                    continue  # Skip overlapping centroids
+                    continue
 
                 pt1 = Point(x=float(p1[0]), y=float(p1[1]), z=float(p1[2]))
                 pt2 = Point(x=float(p2[0]), y=float(p2[1]), z=float(p2[2]))
@@ -256,7 +242,6 @@ class GraphPublisher:
                 rel_col = relation_color(rel.predicate)
                 cr, cg, cb = rel_col[0] / 255.0, rel_col[1] / 255.0, rel_col[2] / 255.0
 
-                # Directed ARROW marker from subject to object
                 arrow_marker = Marker()
                 arrow_marker.header.frame_id = self.world_frame
                 arrow_marker.header.stamp = stamp
@@ -269,9 +254,9 @@ class GraphPublisher:
                 arrow_marker.points.append(pt1)
                 arrow_marker.points.append(pt2)
 
-                arrow_marker.scale.x = 0.012  # Sleek shaft diameter
-                arrow_marker.scale.y = 0.024  # Head diameter
-                arrow_marker.scale.z = 0.035  # Head length
+                arrow_marker.scale.x = 0.012
+                arrow_marker.scale.y = 0.024
+                arrow_marker.scale.z = 0.035
 
                 arrow_marker.color.r = float(cr)
                 arrow_marker.color.g = float(cg)
@@ -280,7 +265,6 @@ class GraphPublisher:
                 arrow_marker.lifetime = Duration(sec=1, nanosec=0)
                 marker_array.markers.append(arrow_marker)
 
-                # Predicate text hovering at midpoint
                 mid_x = (p1[0] + p2[0]) * 0.5
                 mid_y = (p1[1] + p2[1]) * 0.5
                 mid_z = (p1[2] + p2[2]) * 0.5
@@ -299,7 +283,7 @@ class GraphPublisher:
                 edge_text_marker.pose.position.z = float(mid_z) + 0.05
                 edge_text_marker.pose.orientation.w = 1.0
 
-                edge_text_marker.scale.z = 0.040  # Crisp 4cm text height
+                edge_text_marker.scale.z = 0.040
                 edge_text_marker.color.r = float(cr)
                 edge_text_marker.color.g = float(cg)
                 edge_text_marker.color.b = float(cb)
@@ -308,7 +292,6 @@ class GraphPublisher:
                 edge_text_marker.lifetime = Duration(sec=1, nanosec=0)
                 marker_array.markers.append(edge_text_marker)
 
-        # 3. Camera Pose & Trajectory
         if packet.world_T_camera is not None:
             cam_pos = packet.world_T_camera[:3, 3]
             pt = Point(x=float(cam_pos[0]), y=float(cam_pos[1]), z=float(cam_pos[2]))
@@ -316,7 +299,6 @@ class GraphPublisher:
             if len(self.trajectory_points) > self.max_trajectory_len:
                 self.trajectory_points.pop(0)
 
-            # Camera sphere marker
             cam_marker = Marker()
             cam_marker.header.frame_id = self.world_frame
             cam_marker.header.stamp = stamp
@@ -337,7 +319,6 @@ class GraphPublisher:
             cam_marker.lifetime = Duration(sec=1, nanosec=0)
             marker_array.markers.append(cam_marker)
 
-            # Trajectory line strip
             traj_marker = Marker()
             traj_marker.header.frame_id = self.world_frame
             traj_marker.header.stamp = stamp
@@ -406,7 +387,6 @@ class GraphPublisher:
 
         frame_id = packet.metadata.get("frame_id", "camera_optical_frame")
 
-        # 1. Detections overlay
         try:
             det_img = render_detections_overlay(packet.rgb, observations)
             det_msg = numpy_to_ros_image(
@@ -419,7 +399,6 @@ class GraphPublisher:
         except Exception as e:
             self.node.get_logger().warn(f"Failed to render detections overlay: {e}", throttle_duration_sec=2.0)
 
-        # 2. Tracks & relations overlay
         try:
             track_img = render_tracks_overlay(packet.rgb, graph, packet.frame_index)
             track_msg = numpy_to_ros_image(
