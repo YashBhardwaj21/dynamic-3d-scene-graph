@@ -204,7 +204,20 @@ class CausalTracker(TrackerInterface):
 
         feasible_cost_matrix = cost_matrix[np.ix_(feasible_observations, feasible_tracks)]
 
-        row_indices, col_indices = linear_sum_assignment(feasible_cost_matrix)
+        # --- Robust gate penalty: replace inf with a large finite cost ---
+        # This prevents SciPy's linear_sum_assignment from raising
+        # "ValueError: cost matrix is infeasible" when the feasible sub-matrix
+        # still contains inf entries (e.g., mixed-class rows/columns).
+        feasible_finite_mask = np.isfinite(feasible_cost_matrix)
+        if feasible_finite_mask.any():
+            gate_penalty = max(2.0 * float(np.max(feasible_cost_matrix[feasible_finite_mask])), 1e5)
+        else:
+            gate_penalty = 1e5
+
+        safe_cost_matrix = feasible_cost_matrix.copy()
+        safe_cost_matrix[~feasible_finite_mask] = gate_penalty
+
+        row_indices, col_indices = linear_sum_assignment(safe_cost_matrix)
 
         matched: List[Tuple[int, str]] = []
         unmatched_obs = set(range(len(observations)))
@@ -214,6 +227,7 @@ class CausalTracker(TrackerInterface):
             row = int(feasible_observations[local_row])
             col = int(feasible_tracks[local_col])
 
+            # Post-assignment gate: discard matches that were originally infeasible
             if not np.isfinite(cost_matrix[row, col]):
                 continue
 
