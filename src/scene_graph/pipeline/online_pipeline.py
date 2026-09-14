@@ -36,8 +36,10 @@ class OnlinePipeline:
         )
 
         self.core = SceneGraphPipeline(config)
+        self.last_observations = None
 
     def update(self, packet: FramePacket):
         """Process one frame and update the scene graph."""
         observations = self.detector.detect(packet)
+        self.last_observations = observations
         return self.core.update(packet, observations)
