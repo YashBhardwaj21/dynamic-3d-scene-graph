@@ -150,8 +150,8 @@ class TestInfeasibleCostMatrix:
         obs1 = _make_obs("m1", 1, 1.0, [0.0, 0.0, 0.0], class_name="monitor")
         tracker.update([obs1], 1, 1.0)
 
-        # Frame 2: observation of a completely different class (no possible match)
-        obs2 = _make_obs("k1", 2, 1.1, [0.0, 0.0, 0.0], class_name="keyboard")
+        # Frame 2: observation far beyond spatial gate (cost matrix all inf)
+        obs2 = _make_obs("k1", 2, 1.1, [10.0, 10.0, 10.0], class_name="keyboard")
         tracks = tracker.update([obs2], 2, 1.1)
 
         # Should create a new track for keyboard, monitor should be missing

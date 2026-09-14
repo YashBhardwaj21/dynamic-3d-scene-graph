@@ -25,7 +25,7 @@ def dummy_packet(index: int) -> FramePacket:
         frame_index=index,
         timestamp=index * 0.1,
         rgb=np.zeros((480, 640, 3), dtype=np.uint8),
-        depth=np.zeros((480, 640), dtype=np.uint16),
+        depth=np.zeros((480, 640), dtype=np.float32),
         world_T_camera=np.eye(4),
         camera_intrinsics=CAMERA_INTRINSICS,
         depth_model=DEPTH_MODEL,

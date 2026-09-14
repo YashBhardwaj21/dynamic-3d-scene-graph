@@ -6,7 +6,7 @@ import numpy as np
 
 
 SPEC = importlib.util.spec_from_file_location(
-    "scene_graph_demo", Path(__file__).parents[2] / "scripts" / "scene_graph_demo.py"
+    "scene_graph_demo", Path(__file__).parents[2] / "tools" / "scene_graph_demo.py"
 )
 demo = importlib.util.module_from_spec(SPEC)
 sys.modules[SPEC.name] = demo
