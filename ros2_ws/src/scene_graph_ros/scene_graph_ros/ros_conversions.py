@@ -4,12 +4,53 @@ from typing import Optional, Union
 import numpy as np
 
 try:
-    from sensor_msgs.msg import Image, CameraInfo, Imu
+    from sensor_msgs.msg import Image, CameraInfo, Imu, PointCloud2, PointField
     from geometry_msgs.msg import TransformStamped, Transform
     from builtin_interfaces.msg import Time
     HAS_ROS2_MSGS = True
 except ImportError:
     HAS_ROS2_MSGS = False
+
+    class PointField:  # type: ignore
+        FLOAT32 = 7
+        UINT32 = 6
+        def __init__(self, name="", offset=0, datatype=0, count=1):
+            self.name = name
+            self.offset = offset
+            self.datatype = datatype
+            self.count = count
+
+    class Header:  # type: ignore
+        def __init__(self, stamp=None, frame_id=""):
+            self.stamp = stamp
+            self.frame_id = frame_id
+
+    class Time:  # type: ignore
+        def __init__(self, sec=0, nanosec=0):
+            self.sec = sec
+            self.nanosec = nanosec
+
+    class PointCloud2:  # type: ignore
+        def __init__(self):
+            self.header = Header()
+            self.height = 0
+            self.width = 0
+            self.fields = []
+            self.is_bigendian = False
+            self.point_step = 0
+            self.row_step = 0
+            self.data = b""
+            self.is_dense = True
+
+    class Image:  # type: ignore
+        def __init__(self):
+            self.header = Header()
+            self.height = 0
+            self.width = 0
+            self.encoding = ""
+            self.is_bigendian = 0
+            self.step = 0
+            self.data = b""
 
 try:
     from cv_bridge import CvBridge
@@ -138,10 +179,6 @@ def numpy_to_ros_image(
     frame_id: str,
     timestamp: float,
 ) -> "Image":
-    """Convert a numpy array (RGB or raw depth) into sensor_msgs/Image."""
-    if not HAS_ROS2_MSGS:
-        raise RuntimeError("sensor_msgs is not available in this environment")
-
     msg = Image()
     sec = int(timestamp)
     nanosec = int((timestamp - sec) * 1e9)
@@ -311,3 +348,74 @@ def imu_msg_to_sample(msg: "Imu") -> IMUSample:
         accel=accel,
         gyro=gyro,
     )
+
+
+def numpy_to_point_cloud2(
+    points: np.ndarray,
+    frame_id: str,
+    timestamp: float,
+    colors: Optional[np.ndarray] = None,
+) -> "PointCloud2":
+    msg = PointCloud2()
+    sec = int(timestamp)
+    nanosec = int((timestamp - sec) * 1e9)
+    msg.header.stamp = Time(sec=sec, nanosec=nanosec)
+    msg.header.frame_id = frame_id
+
+    n_points = int(points.shape[0]) if points is not None else 0
+    msg.height = 1
+    msg.width = n_points
+    msg.is_bigendian = False
+    msg.is_dense = True
+
+    if n_points == 0:
+        msg.fields = [
+            PointField(name="x", offset=0, datatype=PointField.FLOAT32, count=1),
+            PointField(name="y", offset=4, datatype=PointField.FLOAT32, count=1),
+            PointField(name="z", offset=8, datatype=PointField.FLOAT32, count=1),
+        ]
+        msg.point_step = 12
+        msg.row_step = 0
+        msg.data = b""
+        return msg
+
+    points_f32 = np.ascontiguousarray(points[:, :3], dtype=np.float32)
+
+    if colors is not None and colors.shape[0] == n_points:
+        msg.fields = [
+            PointField(name="x", offset=0, datatype=PointField.FLOAT32, count=1),
+            PointField(name="y", offset=4, datatype=PointField.FLOAT32, count=1),
+            PointField(name="z", offset=8, datatype=PointField.FLOAT32, count=1),
+            PointField(name="rgb", offset=12, datatype=PointField.UINT32, count=1),
+        ]
+        msg.point_step = 16
+        msg.row_step = 16 * n_points
+
+        cloud_data = np.empty(n_points, dtype=[
+            ("x", np.float32),
+            ("y", np.float32),
+            ("z", np.float32),
+            ("rgb", np.uint32),
+        ])
+        cloud_data["x"] = points_f32[:, 0]
+        cloud_data["y"] = points_f32[:, 1]
+        cloud_data["z"] = points_f32[:, 2]
+
+        c_u32 = colors.astype(np.uint32)
+        r = c_u32[:, 0]
+        g = c_u32[:, 1]
+        b = c_u32[:, 2]
+        cloud_data["rgb"] = (r << 16) | (g << 8) | b
+        msg.data = cloud_data.tobytes()
+    else:
+        msg.fields = [
+            PointField(name="x", offset=0, datatype=PointField.FLOAT32, count=1),
+            PointField(name="y", offset=4, datatype=PointField.FLOAT32, count=1),
+            PointField(name="z", offset=8, datatype=PointField.FLOAT32, count=1),
+        ]
+        msg.point_step = 12
+        msg.row_step = 12 * n_points
+        msg.data = points_f32.tobytes()
+
+    return msg
+

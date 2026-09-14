@@ -21,6 +21,8 @@ from scene_graph_ros.ros_conversions import (
     transform_to_matrix,
     camera_info_to_intrinsics,
     ros_image_to_numpy,
+    numpy_to_ros_image,
+    numpy_to_point_cloud2,
 )
 from scene_graph_ros.config_loader import load_scene_graph_config
 
@@ -219,3 +221,81 @@ def test_config_loader_deterministic():
     cfg_tum = load_scene_graph_config("configs/tum_fr1_desk.yaml")
     assert cfg_tum.camera.fx == 525.0
     assert cfg_tum.depth.scale == 5000.0
+
+
+def test_numpy_to_ros_image_roundtrip():
+    """Verify numpy_to_ros_image converts correctly and decodes back via ros_image_to_numpy."""
+    orig_rgb = np.arange(60, dtype=np.uint8).reshape((4, 5, 3))
+    msg = numpy_to_ros_image(orig_rgb, "rgb8", "camera_frame", 123.456)
+
+    assert msg.height == 4
+    assert msg.width == 5
+    assert msg.encoding == "rgb8"
+    assert msg.header.frame_id == "camera_frame"
+    assert msg.header.stamp.sec == 123
+    assert msg.step == 5 * 3
+
+    decoded = ros_image_to_numpy(msg)
+    np.testing.assert_array_equal(decoded, orig_rgb)
+
+
+def test_numpy_to_point_cloud2_xyz_only():
+    """Verify PointCloud2 construction from Nx3 xyz points."""
+    pts = np.array([
+        [1.0, 2.0, 3.0],
+        [-0.5, 1.5, 2.5],
+    ], dtype=np.float32)
+
+    msg = numpy_to_point_cloud2(pts, "world", 10.5)
+
+    assert msg.header.frame_id == "world"
+    assert msg.header.stamp.sec == 10
+    assert msg.width == 2
+    assert msg.height == 1
+    assert msg.point_step == 12
+    assert msg.row_step == 24
+    assert len(msg.fields) == 3
+    assert [f.name for f in msg.fields] == ["x", "y", "z"]
+
+    # Decode bytes back
+    unpacked = np.frombuffer(msg.data, dtype=np.float32).reshape((2, 3))
+    np.testing.assert_allclose(unpacked, pts, atol=1e-6)
+
+
+def test_numpy_to_point_cloud2_with_colors():
+    """Verify PointCloud2 construction with packed RGB."""
+    pts = np.array([
+        [0.0, 1.0, 2.0],
+    ], dtype=np.float32)
+    colors = np.array([
+        [255, 128, 64],
+    ], dtype=np.uint8)
+
+    msg = numpy_to_point_cloud2(pts, "world", 20.0, colors=colors)
+
+    assert msg.width == 1
+    assert msg.point_step == 16
+    assert len(msg.fields) == 4
+    assert [f.name for f in msg.fields] == ["x", "y", "z", "rgb"]
+
+    cloud_data = np.frombuffer(msg.data, dtype=[
+        ("x", np.float32),
+        ("y", np.float32),
+        ("z", np.float32),
+        ("rgb", np.uint32),
+    ])
+    assert pytest.approx(cloud_data["x"][0], abs=1e-6) == 0.0
+    assert pytest.approx(cloud_data["y"][0], abs=1e-6) == 1.0
+    assert pytest.approx(cloud_data["z"][0], abs=1e-6) == 2.0
+
+    expected_rgb = (255 << 16) | (128 << 8) | 64
+    assert cloud_data["rgb"][0] == expected_rgb
+
+
+def test_numpy_to_point_cloud2_empty():
+    """Verify empty PointCloud2 construction does not error."""
+    empty_pts = np.empty((0, 3), dtype=np.float32)
+    msg = numpy_to_point_cloud2(empty_pts, "world", 0.0)
+    assert msg.width == 0
+    assert msg.data == b""
+
