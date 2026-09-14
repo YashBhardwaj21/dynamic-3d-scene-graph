@@ -1,7 +1,34 @@
 """TUM RGB-D sequence player node."""
 
-import time
+import os
+import sys
 from pathlib import Path
+
+# Ensure repository root and active virtualenvs are on sys.path
+def _ensure_paths():
+    current = Path(__file__).resolve().parent
+    while current != current.parent:
+        candidate_src = current / "src"
+        if (candidate_src / "scene_graph").exists():
+            src_str = str(candidate_src)
+            if src_str not in sys.path:
+                sys.path.insert(0, src_str)
+            break
+        current = current.parent
+
+    venv = os.environ.get("VIRTUAL_ENV")
+    if venv:
+        for py_ver in ["python3.10", "python3.11", "python3.9", "python3"]:
+            sp = Path(venv) / "lib" / py_ver / "site-packages"
+            if sp.exists() and str(sp) not in sys.path:
+                sys.path.insert(0, str(sp))
+    home_myenv = Path.home() / "myenv" / "lib" / "python3.10" / "site-packages"
+    if home_myenv.exists() and str(home_myenv) not in sys.path:
+        sys.path.insert(0, str(home_myenv))
+
+_ensure_paths()
+
+import time
 from typing import Optional, List, Dict
 import cv2
 import numpy as np
@@ -112,7 +139,7 @@ class TUMPlayerNode(Node):
         self.camera_info_pub = self.create_publisher(CameraInfo, self.camera_info_topic, 10)
         self.tf_broadcaster = tf2_ros.TransformBroadcaster(self)
 
-        self.preload_frames()
+        self.frame_cache: Dict[int, Tuple[Image, Optional[Image], CameraInfo, Optional[object]]] = {}
 
         self.published_count = 0
         self.start_wall_time: Optional[float] = None
@@ -122,82 +149,65 @@ class TUMPlayerNode(Node):
 
         total_frames = self.end_frame - self.start_frame + 1
         self.get_logger().info(
-            f"TUM Player initialized: frames {self.start_frame}..{self.end_frame} ({total_frames} total), "
+            f"TUM Player ready: frames {self.start_frame}..{self.end_frame} ({total_frames} total), "
             f"target_rate={self.publish_rate_hz:.1f}Hz"
         )
 
-    def preload_frames(self):
-        """Preload selected TUM frames and construct all ROS messages in RAM."""
-        total_frames = self.end_frame - self.start_frame + 1
-        self.get_logger().info(
-            f"Preloading {total_frames} frames ({self.start_frame}..{self.end_frame}) into RAM..."
+    def get_frame_messages(self, idx: int):
+        """Fetch or lazily load and convert frame messages on demand."""
+        if idx in self.frame_cache:
+            return self.frame_cache[idx]
+
+        rgb_entry = self.rgb_entries[idx]
+        current_ts = rgb_entry.timestamp
+
+        rgb_path = str(self.loader.resolve_rgb_path(rgb_entry))
+        rgb_bgr = cv2.imread(rgb_path, cv2.IMREAD_COLOR)
+        if rgb_bgr is None:
+            raise RuntimeError(f"Failed to read RGB: {rgb_path}")
+
+        rgb_arr = cv2.cvtColor(rgb_bgr, cv2.COLOR_BGR2RGB)
+        rgb_msg = numpy_to_ros_image(
+            rgb_arr,
+            encoding="rgb8",
+            frame_id=self.sensor_frame,
+            timestamp=current_ts,
         )
-        t0 = time.monotonic()
 
-        self.rgb_msgs: List[Image] = []
-        self.depth_msgs: List[Optional[Image]] = []
-        self.camera_info_msgs: List[CameraInfo] = []
-        self.tf_msgs: List[Optional[object]] = []
-
-        for idx in range(self.start_frame, self.end_frame + 1):
-            rgb_entry = self.rgb_entries[idx]
-            current_ts = rgb_entry.timestamp
-
-            rgb_path = str(self.loader.resolve_rgb_path(rgb_entry))
-            rgb_bgr = cv2.imread(rgb_path, cv2.IMREAD_COLOR)
-            if rgb_bgr is None:
-                raise RuntimeError(f"Failed to read RGB: {rgb_path}")
-
-            rgb_arr = cv2.cvtColor(rgb_bgr, cv2.COLOR_BGR2RGB)
-            self.rgb_msgs.append(
-                numpy_to_ros_image(
-                    rgb_arr,
-                    encoding="rgb8",
-                    frame_id=self.sensor_frame,
-                    timestamp=current_ts,
-                )
-            )
-
-            depth_msg = None
-            if idx in self.rgb_to_depth:
-                d_idx = self.rgb_to_depth[idx]
-                depth_path = str(self.loader.resolve_depth_path(self.depth_entries[d_idx]))
-                depth_raw = cv2.imread(depth_path, cv2.IMREAD_ANYDEPTH)
-                if depth_raw is None:
-                    raise RuntimeError(f"Failed to read depth: {depth_path}")
-
+        depth_msg = None
+        if idx in self.rgb_to_depth:
+            d_idx = self.rgb_to_depth[idx]
+            depth_path = str(self.loader.resolve_depth_path(self.depth_entries[d_idx]))
+            depth_raw = cv2.imread(depth_path, cv2.IMREAD_ANYDEPTH)
+            if depth_raw is not None:
                 depth_msg = numpy_to_ros_image(
                     depth_raw,
                     encoding="16UC1",
                     frame_id=self.sensor_frame,
-                    timestamp=self.depth_entries[d_idx].timestamp,
-                )
-            self.depth_msgs.append(depth_msg)
-
-            self.camera_info_msgs.append(
-                intrinsics_to_camera_info(
-                    self.intrinsics,
-                    frame_id=self.sensor_frame,
                     timestamp=current_ts,
                 )
+
+        camera_info_msg = intrinsics_to_camera_info(
+            self.intrinsics,
+            frame_id=self.sensor_frame,
+            timestamp=current_ts,
+        )
+
+        tf_msg = None
+        if idx in self.rgb_to_pose:
+            p_idx = self.rgb_to_pose[idx]
+            pose_matrix = self.pose_entries[p_idx].as_transform_matrix()
+            tf_msg = matrix_to_transform_stamped(
+                pose_matrix,
+                parent_frame=self.world_frame,
+                child_frame=self.sensor_frame,
+                timestamp=current_ts,
             )
 
-            tf_msg = None
-            if idx in self.rgb_to_pose:
-                p_idx = self.rgb_to_pose[idx]
-                pose_matrix = self.pose_entries[p_idx].as_transform_matrix()
-                tf_msg = matrix_to_transform_stamped(
-                    pose_matrix,
-                    parent_frame=self.world_frame,
-                    child_frame=self.sensor_frame,
-                    timestamp=self.pose_entries[p_idx].timestamp,
-                )
-            self.tf_msgs.append(tf_msg)
-
-        duration = time.monotonic() - t0
-        self.get_logger().info(
-            f"Preloaded {len(self.rgb_msgs)} frames in {duration:.2f}s. Ready for playback."
-        )
+        cached = (rgb_msg, depth_msg, camera_info_msg, tf_msg)
+        if len(self.frame_cache) < 500:
+            self.frame_cache[idx] = cached
+        return cached
 
     def timer_callback(self):
         if self.current_idx > self.end_frame:
@@ -226,17 +236,17 @@ class TUMPlayerNode(Node):
         if self.start_wall_time is None:
             self.start_wall_time = time.monotonic()
 
-        offset = self.current_idx - self.start_frame
+        rgb_msg, depth_msg, camera_info_msg, tf_msg = self.get_frame_messages(self.current_idx)
 
-        self.rgb_pub.publish(self.rgb_msgs[offset])
+        if tf_msg is not None:
+            self.tf_broadcaster.sendTransform(tf_msg)
 
-        if self.depth_msgs[offset] is not None:
-            self.depth_pub.publish(self.depth_msgs[offset])
+        self.camera_info_pub.publish(camera_info_msg)
 
-        self.camera_info_pub.publish(self.camera_info_msgs[offset])
+        if depth_msg is not None:
+            self.depth_pub.publish(depth_msg)
 
-        if self.tf_msgs[offset] is not None:
-            self.tf_broadcaster.sendTransform(self.tf_msgs[offset])
+        self.rgb_pub.publish(rgb_msg)
 
         self.published_count += 1
 

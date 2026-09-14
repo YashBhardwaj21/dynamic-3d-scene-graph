@@ -2,6 +2,34 @@
 
 from __future__ import annotations
 
+import os
+import sys
+from pathlib import Path
+
+# Ensure repository root and active virtualenvs are on sys.path
+def _ensure_paths():
+    current = Path(__file__).resolve().parent
+    while current != current.parent:
+        candidate_src = current / "src"
+        if (candidate_src / "scene_graph").exists():
+            src_str = str(candidate_src)
+            if src_str not in sys.path:
+                sys.path.insert(0, src_str)
+            break
+        current = current.parent
+
+    venv = os.environ.get("VIRTUAL_ENV")
+    if venv:
+        for py_ver in ["python3.10", "python3.11", "python3.9", "python3"]:
+            sp = Path(venv) / "lib" / py_ver / "site-packages"
+            if sp.exists() and str(sp) not in sys.path:
+                sys.path.insert(0, str(sp))
+    home_myenv = Path.home() / "myenv" / "lib" / "python3.10" / "site-packages"
+    if home_myenv.exists() and str(home_myenv) not in sys.path:
+        sys.path.insert(0, str(home_myenv))
+
+_ensure_paths()
+
 import queue
 import threading
 import time
@@ -18,12 +46,11 @@ import message_filters
 import tf2_ros
 from tf2_ros import TransformException
 
-from scene_graph.config import SceneGraphConfig
 from scene_graph.data.frame_packet import FramePacket, IMUSample
 from scene_graph.geometry.camera import CameraIntrinsics, DepthModel
 from scene_graph.geometry.reference_frame import RelationReferenceFrame
 from scene_graph.pipeline.online_pipeline import OnlinePipeline
-from scene_graph.graph.snapshot import SceneGraphSnapshot, create_snapshot
+from scene_graph.graph.snapshot import create_snapshot
 
 from scene_graph_ros.config_loader import load_scene_graph_config
 from scene_graph_ros.ros_conversions import (
@@ -60,7 +87,7 @@ class SceneGraphROSNode(Node):
         self.declare_parameter("use_imu", False)
         self.declare_parameter("imu_topic", "/imu")
         self.declare_parameter("config_path", "configs/default.yaml")
-        self.declare_parameter("depth_scale", 5000.0)
+        self.declare_parameter("depth_scale", 1000.0)
         self.declare_parameter("debug_frame_packet_only", False)
         self.declare_parameter("state_topic", "/scene_graph/state")
         self.declare_parameter("markers_topic", "/scene_graph/markers")
@@ -96,7 +123,9 @@ class SceneGraphROSNode(Node):
         depth_scale = self.param_depth_scale
         if self.config.depth is not None and self.config.depth.scale > 0:
             depth_scale = self.config.depth.scale
-        self.depth_model = DepthModel(scale=depth_scale)
+        self.depth_scale = float(depth_scale)
+        self.depth_model = DepthModel(scale=self.depth_scale)
+        self.get_logger().info(f"Depth adapter configured: {self.depth_scale:.1f} raw units per meter")
 
         if not self.debug_frame_packet_only:
             self.get_logger().info("Initializing OnlinePipeline...")
@@ -290,17 +319,34 @@ class SceneGraphROSNode(Node):
             )
             world_T_camera = transform_to_matrix(transform_stamped)
         except TransformException as ex:
-            self.get_logger().warn(
-                f"TF lookup failed for {self.world_frame} -> {self.sensor_frame} at {rgb_timestamp:.4f}: {ex}"
-            )
+            try:
+                transform_stamped = self.tf_buffer.lookup_transform(
+                    self.world_frame,
+                    self.sensor_frame,
+                    Time(),
+                    timeout=Duration(seconds=self.pose_max_dt),
+                )
+                world_T_camera = transform_to_matrix(transform_stamped)
+            except TransformException:
+                self.get_logger().warn(
+                    f"TF lookup failed for {self.world_frame} -> {self.sensor_frame} at {rgb_timestamp:.4f}: {ex}"
+                )
         tf_latency_ms = (time.monotonic() - t_tf_start) * 1000.0
 
         try:
             rgb_np = ros_image_to_numpy(pending.rgb_msg)
-            depth_np = ros_image_to_numpy(pending.depth_msg)
+            depth_raw = ros_image_to_numpy(pending.depth_msg) if pending.depth_msg is not None else None
         except Exception as e:
             self.get_logger().error(f"Image conversion error: {e}")
             return
+
+        depth_m = None
+        if depth_raw is not None:
+            if np.issubdtype(depth_raw.dtype, np.integer):
+                scale = self.depth_scale if self.depth_scale > 0 else 1000.0
+                depth_m = depth_raw.astype(np.float32) / scale
+            else:
+                depth_m = depth_raw.astype(np.float32)
 
         windowed_imu = ()
         if self.use_imu and self.last_frame_timestamp is not None:
@@ -326,12 +372,15 @@ class SceneGraphROSNode(Node):
             frame_index=self.frame_counter,
             timestamp=rgb_timestamp,
             rgb=rgb_np,
-            depth=depth_np,
+            depth=depth_m,
             world_T_camera=world_T_camera,
             camera_intrinsics=intrinsics,
             depth_model=self.depth_model,
             relation_frame=relation_frame,
             imu_samples=windowed_imu,
+            frame_id=pending.rgb_msg.header.frame_id or self.sensor_frame,
+            optical_frame_id=pending.depth_msg.header.frame_id if pending.depth_msg else self.sensor_frame,
+            pose_source="tf" if world_T_camera is not None else "none",
             metadata={"frame_id": pending.rgb_msg.header.frame_id},
         )
 

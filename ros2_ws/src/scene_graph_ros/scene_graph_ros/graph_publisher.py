@@ -6,9 +6,8 @@ import json
 from typing import List, Dict, Optional, Tuple, Sequence, Any
 import numpy as np
 
-import rclpy
 from rclpy.node import Node
-from std_msgs.msg import String, Header
+from std_msgs.msg import String
 from geometry_msgs.msg import Point
 from visualization_msgs.msg import Marker, MarkerArray
 from sensor_msgs.msg import Image, PointCloud2
@@ -29,12 +28,17 @@ from scene_graph_ros.overlay_renderer import (
     render_tracks_overlay,
     track_color,
     relation_color,
-    OBJECT_PALETTE,
 )
 
 
+try:
+    from std_srvs.srv import Trigger
+except ImportError:
+    Trigger = None
+
+
 class GraphPublisher:
-    """Publishes SceneGraph state to ROS topics."""
+    """Publishes SceneGraph state to ROS topics and provides query services."""
 
     def __init__(
         self,
@@ -57,6 +61,66 @@ class GraphPublisher:
 
         self.trajectory_points: List[Point] = []
         self.max_trajectory_len = 1000
+        self.latest_snapshot: Optional[SceneGraphSnapshot] = None
+
+        if Trigger is not None:
+            self.snapshot_srv = node.create_service(Trigger, "/scene_graph/get_snapshot", self._handle_get_snapshot)
+            self.query_objects_srv = node.create_service(Trigger, "/scene_graph/query_objects", self._handle_query_objects)
+            self.query_relations_srv = node.create_service(Trigger, "/scene_graph/query_relations", self._handle_query_relations)
+        else:
+            self.snapshot_srv = None
+            self.query_objects_srv = None
+            self.query_relations_srv = None
+
+    def query_objects(
+        self,
+        class_name: Optional[str] = None,
+        state: Optional[str] = None,
+        min_confidence: float = 0.0,
+    ) -> list:
+        if self.latest_snapshot is None:
+            return []
+        return self.latest_snapshot.query_objects(class_name=class_name, state=state, min_confidence=min_confidence)
+
+    def query_relations(
+        self,
+        subject_id: Optional[str] = None,
+        object_id: Optional[str] = None,
+        predicate: Optional[str] = None,
+        state: Optional[str] = None,
+    ) -> list:
+        if self.latest_snapshot is None:
+            return []
+        return self.latest_snapshot.query_relations(
+            subject_id=subject_id, object_id=object_id, predicate=predicate, state=state
+        )
+
+    def _handle_get_snapshot(self, request, response):
+        if self.latest_snapshot is None:
+            response.success = False
+            response.message = json.dumps({"error": "No snapshot available yet"})
+            return response
+        response.success = True
+        response.message = json.dumps(self.latest_snapshot.to_dict())
+        return response
+
+    def _handle_query_objects(self, request, response):
+        if self.latest_snapshot is None:
+            response.success = False
+            response.message = json.dumps([])
+            return response
+        response.success = True
+        response.message = json.dumps([obj.to_dict() for obj in self.latest_snapshot.objects])
+        return response
+
+    def _handle_query_relations(self, request, response):
+        if self.latest_snapshot is None:
+            response.success = False
+            response.message = json.dumps([])
+            return response
+        response.success = True
+        response.message = json.dumps([rel.to_dict() for rel in self.latest_snapshot.relations])
+        return response
 
     def publish(
         self,
@@ -68,6 +132,8 @@ class GraphPublisher:
         """Publish all topics for one frame."""
         if snapshot is None:
             snapshot = create_snapshot(graph, packet)
+
+        self.latest_snapshot = snapshot
 
         self.publish_json_state(snapshot)
         self.publish_rviz_markers(snapshot, packet)
@@ -104,6 +170,7 @@ class GraphPublisher:
                     "velocity": [round(x, 4) for x in obj.velocity_world] if obj.velocity_world else None,
                     "obb_center": [round(x, 4) for x in obj.obb_center_world] if obj.obb_center_world else None,
                     "obb_extents": [round(x, 4) for x in obj.obb_extents_world] if obj.obb_extents_world else None,
+                    "label_belief": {k: round(float(v), 3) for k, v in obj.label_belief.items()} if obj.label_belief else {},
                 }
                 for obj in snapshot.objects
             ],

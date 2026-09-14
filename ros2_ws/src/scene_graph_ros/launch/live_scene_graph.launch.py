@@ -94,6 +94,12 @@ def generate_launch_description():
         description="Drop older frames when busy to keep live processing real-time",
     )
 
+    depth_scale_arg = DeclareLaunchArgument(
+        "depth_scale",
+        default_value="1000.0",
+        description="Depth scale conversion factor (raw integer depth units per meter; 1000.0 for RealSense D455 mm, 5000.0 for TUM)",
+    )
+
     realsense_launch = IncludeLaunchDescription(
         PythonLaunchDescriptionSource(
             PathJoinSubstitution([
@@ -148,6 +154,7 @@ def generate_launch_description():
                 "rgb_topic": LaunchConfiguration("rgb_topic"),
                 "depth_topic": LaunchConfiguration("depth_topic"),
                 "camera_info_topic": LaunchConfiguration("camera_info_topic"),
+                "depth_scale": LaunchConfiguration("depth_scale"),
                 "queue_size": LaunchConfiguration("queue_size"),
                 "drop_old_frames": LaunchConfiguration("drop_old_frames"),
             }
@@ -184,6 +191,7 @@ def generate_launch_description():
         rgb_topic_arg,
         depth_topic_arg,
         camera_info_topic_arg,
+        depth_scale_arg,
         queue_size_arg,
         drop_old_frames_arg,
         realsense_launch,

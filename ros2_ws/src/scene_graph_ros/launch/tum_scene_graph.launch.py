@@ -47,7 +47,7 @@ def generate_launch_description():
     debug_frame_packet_only_arg = DeclareLaunchArgument(
         "debug_frame_packet_only",
         default_value="false",
-        description="Run in FramePacket diagnostic isolation mode (Acceptance Test 2)",
+        description="Run in FramePacket diagnostic isolation mode",
     )
 
     use_rviz_arg = DeclareLaunchArgument(
@@ -76,20 +76,26 @@ def generate_launch_description():
 
     drop_old_frames_arg = DeclareLaunchArgument(
         "drop_old_frames",
-        default_value="false",
+        default_value="true",
         description="Whether to drop incoming frames when the queue is full (false for offline, true for live)",
     )
 
     publish_rate_hz_arg = DeclareLaunchArgument(
         "publish_rate_hz",
-        default_value="2.0",
-        description="Frame publishing rate in Hz (default 2.0 Hz for smooth perception on CPU)",
+        default_value="1.0",
+        description="Frame publishing rate in Hz (default 1.0 Hz for smooth perception on CPU)",
     )
 
     loop_arg = DeclareLaunchArgument(
         "loop",
         default_value="true",
         description="Whether to loop the sequence continuously",
+    )
+
+    depth_scale_arg = DeclareLaunchArgument(
+        "depth_scale",
+        default_value="5000.0",
+        description="Depth scale conversion factor (raw integer depth units per meter; 5000.0 for TUM)",
     )
 
     tum_player_node = Node(
@@ -122,6 +128,7 @@ def generate_launch_description():
                 "config_path": LaunchConfiguration("config_path"),
                 "world_frame": LaunchConfiguration("world_frame"),
                 "sensor_frame": LaunchConfiguration("sensor_frame"),
+                "depth_scale": LaunchConfiguration("depth_scale"),
                 "debug_frame_packet_only": LaunchConfiguration("debug_frame_packet_only"),
                 "queue_size": LaunchConfiguration("queue_size"),
                 "drop_old_frames": LaunchConfiguration("drop_old_frames"),
@@ -131,7 +138,7 @@ def generate_launch_description():
 
     use_viewer_arg = DeclareLaunchArgument(
         "use_viewer",
-        default_value="false",
+        default_value="true",
         description="Whether to launch 2D live perception viewer",
     )
 
@@ -164,6 +171,7 @@ def generate_launch_description():
             use_viewer_arg,
             world_frame_arg,
             sensor_frame_arg,
+            depth_scale_arg,
             queue_size_arg,
             drop_old_frames_arg,
             publish_rate_hz_arg,
@@ -174,5 +182,3 @@ def generate_launch_description():
             viewer_node,
         ]
     )
-
-

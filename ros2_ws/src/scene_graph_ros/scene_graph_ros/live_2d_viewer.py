@@ -5,9 +5,33 @@ from __future__ import annotations
 import json
 import os
 import sys
+from pathlib import Path
 from typing import Optional
 import cv2
 import numpy as np
+
+def _ensure_paths():
+    current = Path(__file__).resolve().parent
+    while current != current.parent:
+        candidate_src = current / "src"
+        if (candidate_src / "scene_graph").exists():
+            src_str = str(candidate_src)
+            if src_str not in sys.path:
+                sys.path.insert(0, src_str)
+            break
+        current = current.parent
+
+    venv = os.environ.get("VIRTUAL_ENV")
+    if venv:
+        for py_ver in ["python3.10", "python3.11", "python3.9", "python3"]:
+            sp = Path(venv) / "lib" / py_ver / "site-packages"
+            if sp.exists() and str(sp) not in sys.path:
+                sys.path.insert(0, str(sp))
+    home_myenv = Path.home() / "myenv" / "lib" / "python3.10" / "site-packages"
+    if home_myenv.exists() and str(home_myenv) not in sys.path:
+        sys.path.insert(0, str(home_myenv))
+
+_ensure_paths()
 
 import rclpy
 from rclpy.node import Node
