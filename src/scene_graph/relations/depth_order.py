@@ -6,7 +6,11 @@ from scene_graph.config import SceneGraphConfig
 from scene_graph.tracking.track import Track
 from scene_graph.relations.base import RelationModule
 from scene_graph.relations.context import FrameContext
-from scene_graph.relations.evidence import RelationEvidence, EvidenceResult
+from scene_graph.relations.evidence import (
+    RelationEvidence,
+    EvidenceResult,
+    ReferenceFrameType,
+)
 
 
 class DepthOrderRelationModule(RelationModule):
@@ -116,7 +120,7 @@ class DepthOrderRelationModule(RelationModule):
                 value=float(separation),
                 threshold=float(required_separation),
                 confidence=confidence,
-                reference_frame="reference_frame",
+                reference_frame=ReferenceFrameType.CAMERA,
                 evidence_type="uncertainty_aware_centroid_depth",
                 details={
                     "separation_m": float(separation),

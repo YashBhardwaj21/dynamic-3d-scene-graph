@@ -4,6 +4,7 @@ import numpy as np
 
 from scene_graph.geometry.camera import CameraIntrinsics
 from scene_graph.geometry.transforms import transform_points
+from scene_graph.geometry.noise_model import DepthNoiseModel, IsotropicNoiseModel
 
 
 from dataclasses import dataclass
@@ -45,7 +46,9 @@ def compute_object_geometry(
     pose: np.ndarray,
     min_valid_points: int = 30,
     mad_k: float = 3.5,
-    voxel_size_m: float = 0.005
+    voxel_size_m: float = 0.005,
+    measurement_noise_std_m: float = 0.01,
+    noise_model: Optional[DepthNoiseModel] = None,
 ) -> ObjectGeometry | None:
     """Compute robust 3D geometry for an object, mitigating background leakage.
     
@@ -57,6 +60,7 @@ def compute_object_geometry(
         min_valid_points: Minimum number of valid points required.
         mad_k: Number of robust sigmas for MAD outlier rejection.
         voxel_size_m: Voxel size for downsampling.
+        measurement_noise_std_m: Sensor measurement noise standard deviation in meters.
         
     Returns:
         ObjectGeometry (or None if totally invalid input)
@@ -66,16 +70,18 @@ def compute_object_geometry(
     if mask.shape != depth_m.shape:
         raise ValueError(f"Shape mismatch: mask {mask.shape} != depth {depth_m.shape}")
         
-    # Extract valid depth pixels within the mask
-    valid_depth_mask = (mask > 0) & (depth_m > 0) & np.isfinite(depth_m)
-    v, u = np.where(valid_depth_mask)
+    # Valid depth mask
+    valid_depth = (depth_m > 0) & np.isfinite(depth_m)
+    combined_mask = (mask > 0) & valid_depth
     
-    if len(u) < min_valid_points:
+    if np.sum(combined_mask) < min_valid_points:
         return ObjectGeometry(status=GeometryStatus.INSUFFICIENT_DEPTH)
         
-    z_m = depth_m[valid_depth_mask].astype(np.float64)
+    # Extract coordinates
+    v, u = np.where(combined_mask)
+    z_m = depth_m[v, u]
     
-    # Depth-robust extraction policy (MAD)
+    # Robust depth filtering using Median Absolute Deviation (MAD)
     median = np.median(z_m)
     mad = np.median(np.abs(z_m - median))
     sigma_robust = 1.4826 * mad
@@ -108,7 +114,12 @@ def compute_object_geometry(
     else:
         Sigma_P = np.zeros((3, 3))
         
-    Sigma_sensor = np.eye(3) * (0.01 ** 2)
+    if noise_model is not None:
+        Sigma_sensor = noise_model.estimate_covariance(
+            points_camera, intrinsics, R_world_camera=pose[:3, :3]
+        )
+    else:
+        Sigma_sensor = np.eye(3) * (float(measurement_noise_std_m) ** 2)
     Sigma_c = Sigma_P / N + Sigma_sensor
     
     # Percentile AABB

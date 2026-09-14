@@ -1,38 +1,32 @@
 from scene_graph.config import SceneGraphConfig
 from scene_graph.data.frame_packet import FramePacket
-from scene_graph.perception.yoloe_detector import YOLOEDetector
+from scene_graph.perception.yoloe_detector import YOLOEDetector, PerceptionMode
 from scene_graph.pipeline.pipeline_core import SceneGraphPipeline
 
 
 class OnlinePipeline:
-    """Online pipeline combining YOLOE perception with scene-graph processing."""
+    """Online pipeline combining open-vocabulary YOLOE perception with scene-graph processing."""
 
     def __init__(self, config: SceneGraphConfig):
         self.config = config
 
-        allowed_classes = None
+        mode_str = getattr(config.perception, "mode", None)
+        prompts = getattr(config.perception, "prompts", None) or getattr(config.perception, "classes", None)
+        if mode_str is None:
+            mode = PerceptionMode.TEXT_PROMPT if prompts else PerceptionMode.PROMPT_FREE
+        else:
+            mode = PerceptionMode.from_str(mode_str)
 
-        if config.perception.classes:
-            allowed_classes = tuple(config.perception.classes)
-        elif (
-            config.perception.vocabulary
-            and config.vocabularies
-            and config.perception.vocabulary in config.vocabularies
-        ):
-            allowed_classes = tuple(
-                config.vocabularies[config.perception.vocabulary].classes
-            )
-
-        if not allowed_classes:
-            raise ValueError(
-                "No classes provided for detector. "
-                "Set perception.classes or a valid perception.vocabulary."
-            )
+        model_path = getattr(config.perception, "model", None) or getattr(config.perception, "model_path", "models/yoloe-26m-seg.pt")
+        image_size = getattr(config.perception, "image_size", 480)
 
         self.detector = YOLOEDetector(
-            model_path=config.perception.model_path,
+            model_path=model_path,
             confidence_threshold=config.perception.confidence_threshold,
-            allowed_classes=allowed_classes,
+            mode=mode,
+            text_prompts=list(prompts) if prompts else None,
+            device=getattr(config.perception, "device", "auto"),
+            image_size=image_size,
         )
 
         self.core = SceneGraphPipeline(config)

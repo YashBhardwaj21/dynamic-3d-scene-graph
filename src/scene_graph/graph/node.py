@@ -19,5 +19,9 @@ class GraphNode:
     
     @property
     def is_active(self) -> bool:
-        """Returns True if the object is currently stable and actively participating in the scene."""
-        return self.participation == GraphParticipationState.ACTIVE and self.state == ObjectState.STABLE
+        """Returns True if the object is currently active in the scene (stable or temporarily unobserved)."""
+        return self.participation == GraphParticipationState.ACTIVE and self.state in (
+            ObjectState.STABLE,
+            ObjectState.UNSTABLE,
+        )
+

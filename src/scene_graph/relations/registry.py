@@ -1,4 +1,4 @@
-from typing import List, Tuple
+from typing import List, Tuple, Optional
 
 from scene_graph.config import SceneGraphConfig
 from scene_graph.tracking.track import Track, TrackState
@@ -45,6 +45,7 @@ class RelationRegistry:
         self,
         pairs: List[Tuple[Track, Track]],
         predicate: str,
+        context: Optional[FrameContext] = None,
     ) -> List[Tuple[Track, Track]]:
         return [
             (subject, object_)
@@ -53,6 +54,7 @@ class RelationRegistry:
                 predicate,
                 subject,
                 object_,
+                context=context,
             )
         ]
 
@@ -86,6 +88,7 @@ class RelationRegistry:
                     self._filter_admissible(
                         candidate_pairs,
                         predicate,
+                        context=context,
                     )
                 )
 

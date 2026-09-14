@@ -11,7 +11,7 @@ from __future__ import annotations
 
 from dataclasses import dataclass
 from pathlib import Path
-from typing import List, Sequence, Union
+from typing import List, Union
 import numpy as np
 
 

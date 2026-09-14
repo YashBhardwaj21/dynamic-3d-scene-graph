@@ -9,6 +9,7 @@ from scene_graph.relations.context import FrameContext
 from scene_graph.relations.evidence import (
     RelationEvidence,
     EvidenceResult,
+    ReferenceFrameType,
 )
 
 
@@ -163,7 +164,7 @@ class DirectionalRelationModule(RelationModule):
             value=float(separation),
             threshold=float(required_separation),
             confidence=confidence,
-            reference_frame="reference_frame",
+            reference_frame=getattr(context.reference_frame, "frame_type", ReferenceFrameType.WORLD),
             evidence_type="uncertainty_aware_centroid_direction",
             details={
                 "separation_m": float(separation),

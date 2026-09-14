@@ -40,28 +40,11 @@ temporal:
 
 perception:
   type: yoloe
+  mode: prompt_free
+  model: models/yoloe-26m-seg-pf.pt
   confidence_threshold: 0.40
   image_size: 640
   device: auto
-  mode: controlled
-  vocabulary: v4_11
-
-
-vocabularies:
-  v4_11:
-    name: v4_11
-    classes:
-      - monitor
-      - computer
-      - keyboard
-      - mouse
-      - telephone
-      - book
-      - cup
-      - pen
-      - paper
-      - desk
-      - table
 
 
 sync:

@@ -52,6 +52,18 @@ class DepthConfig(BaseModel):
     scale: float = Field(..., gt=0)
 
 
+class SensorConfig(BaseModel):
+    model_config = ConfigDict(extra="allow")
+
+    name: str = Field("generic")
+    depth_scale_units_per_meter: float = Field(1000.0, gt=0)
+    measurement_model: str = Field("isotropic")
+    baseline_m: float = Field(0.095, gt=0)
+    subpixel_disparity_std: float = Field(0.1, gt=0)
+    pixel_noise_std: float = Field(0.5, gt=0)
+    isotropic_std_m: float = Field(0.01, gt=0)
+
+
 class PoseConfig(BaseModel):
     model_config = ConfigDict(extra="forbid")
 
@@ -107,13 +119,15 @@ class PerceptionConfig(BaseModel):
     model_config = ConfigDict(extra="forbid")
 
     type: str = Field("yoloe")
-    model_path: str = Field("models/yoloe-26m-seg.pt")
+    model: str = Field("models/yoloe-26m-seg-pf.pt")
+    model_path: Optional[str] = Field(None)
     confidence_threshold: float = Field(0.40, ge=0.0, le=1.0)
     image_size: int = Field(640, gt=0)
     device: str = Field("auto")
-    mode: str = Field("controlled")
-    vocabulary: str = Field("v4_11")
+    mode: str = Field("prompt_free")
+    prompts: Optional[Tuple[str, ...]] = None
     classes: Tuple[str, ...] = Field(default_factory=tuple)
+    vocabulary: Optional[str] = None
 
 
 class TrackingConfirmationConfig(BaseModel):
@@ -300,6 +314,7 @@ class SceneGraphConfig(BaseModel):
     depth: Optional[DepthConfig] = None
     pose_source: Optional[str] = None
     pose: Optional[PoseConfig] = None
+    sensor: Optional[SensorConfig] = Field(default_factory=SensorConfig)
     sync: Optional[SyncConfig] = Field(default_factory=SyncConfig)
     reference_frame: Optional[ReferenceFrameConfig] = Field(default_factory=ReferenceFrameConfig)
     geometry: Optional[GeometryConfig] = Field(default_factory=GeometryConfig)
@@ -314,8 +329,19 @@ class SceneGraphConfig(BaseModel):
     @classmethod
     def from_files(cls, base_path: str | Path, override_path: str | Path | None = None) -> "SceneGraphConfig":
 
+        def resolve_file(p_raw: str | Path) -> Path:
+            p = Path(p_raw)
+            if p.exists():
+                return p
+            repo_root = Path(__file__).resolve().parent.parent.parent
+            candidate = repo_root / p
+            if candidate.exists():
+                return candidate
+            return p
+
         def load_yaml(path: str | Path) -> dict:
-            with open(path, "r") as file:
+            resolved = resolve_file(path)
+            with open(resolved, "r") as file:
                 return yaml.safe_load(file) or {}
 
         def merge_dicts(base: dict, override: dict) -> dict:
@@ -336,6 +362,7 @@ class SceneGraphConfig(BaseModel):
             base_dict = merge_dicts(base_dict, override_dict)
 
         return cls.model_validate(base_dict)
+
 
 
 def load_config(path: str | Path) -> SceneGraphConfig:

@@ -1,4 +1,4 @@
-from typing import Dict, List, Tuple
+from typing import Dict, List, Tuple, Optional
 
 from scene_graph.graph.node import GraphNode
 from scene_graph.graph.edge import GraphEdge
@@ -18,12 +18,12 @@ class TemporalSceneGraph:
     marked as REMOVED.
     """
     
-    def __init__(self):
+    def __init__(self, history_maxlen: int = 1000, history_dump_file: Optional[str] = None):
         self.nodes: Dict[str, GraphNode] = {}
         # Key: (subject_id, object_id, predicate) -> GraphEdge
         self.edges: Dict[Tuple[str, str, str], GraphEdge] = {}
         
-        self.history = GraphHistory()
+        self.history = GraphHistory(maxlen=history_maxlen, dump_file=history_dump_file)
         
         self.current_frame_index: int = -1
         self.current_timestamp: float = -1.0

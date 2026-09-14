@@ -1,8 +1,7 @@
 from __future__ import annotations
 
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 from typing import Optional
-
 import numpy as np
 
 from scene_graph.graph.temporal_graph import TemporalSceneGraph
@@ -26,6 +25,26 @@ class ObjectSnapshot:
     obb_extents_world: Optional[tuple[float, float, float]]
     bbox_min_world: Optional[tuple[float, float, float]]
     bbox_max_world: Optional[tuple[float, float, float]]
+    label_belief: dict[str, float] = field(default_factory=dict)
+
+    def to_dict(self) -> dict:
+        return {
+            "track_id": self.track_id,
+            "class_name": self.class_name,
+            "state": self.state,
+            "object_state": self.object_state,
+            "confidence": float(self.confidence),
+            "observation_count": int(self.observation_count),
+            "missing_count": int(self.missing_count),
+            "centroid_world": list(self.centroid_world) if self.centroid_world else None,
+            "velocity_world": list(self.velocity_world) if self.velocity_world else None,
+            "obb_center_world": list(self.obb_center_world) if self.obb_center_world else None,
+            "obb_axes_world": [list(row) for row in self.obb_axes_world] if self.obb_axes_world else None,
+            "obb_extents_world": list(self.obb_extents_world) if self.obb_extents_world else None,
+            "bbox_min_world": list(self.bbox_min_world) if self.bbox_min_world else None,
+            "bbox_max_world": list(self.bbox_max_world) if self.bbox_max_world else None,
+            "label_belief": dict(self.label_belief),
+        }
 
 
 @dataclass(frozen=True)
@@ -37,6 +56,17 @@ class RelationSnapshot:
     object_class: str
     state: str
     confidence: float
+
+    def to_dict(self) -> dict:
+        return {
+            "subject_id": self.subject_id,
+            "subject_class": self.subject_class,
+            "predicate": self.predicate,
+            "object_id": self.object_id,
+            "object_class": self.object_class,
+            "state": self.state,
+            "confidence": float(self.confidence),
+        }
 
 
 @dataclass(frozen=True)
@@ -56,6 +86,24 @@ class TelemetrySnapshot:
     tracking_latency_ms: float = 0.0
     relation_latency_ms: float = 0.0
 
+    def to_dict(self) -> dict:
+        return {
+            "frame_index": self.frame_index,
+            "timestamp": self.timestamp,
+            "input_fps": self.input_fps,
+            "processing_fps": self.processing_fps,
+            "total_latency_ms": self.total_latency_ms,
+            "queue_size": self.queue_size,
+            "dropped_frames": self.dropped_frames,
+            "active_objects": self.active_objects,
+            "active_relations": self.active_relations,
+            "tf_latency_ms": self.tf_latency_ms,
+            "inference_latency_ms": self.inference_latency_ms,
+            "geometry_latency_ms": self.geometry_latency_ms,
+            "tracking_latency_ms": self.tracking_latency_ms,
+            "relation_latency_ms": self.relation_latency_ms,
+        }
+
 
 @dataclass(frozen=True)
 class SceneGraphSnapshot:
@@ -65,6 +113,53 @@ class SceneGraphSnapshot:
     objects: tuple[ObjectSnapshot, ...]
     relations: tuple[RelationSnapshot, ...]
     telemetry: TelemetrySnapshot
+
+    def query_objects(
+        self,
+        class_name: Optional[str] = None,
+        state: Optional[str] = None,
+        min_confidence: float = 0.0,
+    ) -> list[ObjectSnapshot]:
+        results = []
+        for obj in self.objects:
+            if class_name is not None and obj.class_name != class_name:
+                continue
+            if state is not None and obj.state != state and obj.object_state != state:
+                continue
+            if obj.confidence < min_confidence:
+                continue
+            results.append(obj)
+        return results
+
+    def query_relations(
+        self,
+        subject_id: Optional[str] = None,
+        object_id: Optional[str] = None,
+        predicate: Optional[str] = None,
+        state: Optional[str] = None,
+    ) -> list[RelationSnapshot]:
+        results = []
+        for rel in self.relations:
+            if subject_id is not None and rel.subject_id != subject_id:
+                continue
+            if object_id is not None and rel.object_id != object_id:
+                continue
+            if predicate is not None and rel.predicate != predicate:
+                continue
+            if state is not None and rel.state != state:
+                continue
+            results.append(rel)
+        return results
+
+    def to_dict(self) -> dict:
+        return {
+            "frame_index": self.frame_index,
+            "timestamp": self.timestamp,
+            "world_T_camera": [list(row) for row in self.world_T_camera] if self.world_T_camera else None,
+            "objects": [obj.to_dict() for obj in self.objects],
+            "relations": [rel.to_dict() for rel in self.relations],
+            "telemetry": self.telemetry.to_dict(),
+        }
 
 
 def _ndarray_to_tuple3(arr) -> Optional[tuple[float, float, float]]:
@@ -130,6 +225,12 @@ def create_snapshot(
         if track.velocity_world is not None:
             velocity = _ndarray_to_tuple3(track.velocity_world)
 
+        label_belief = getattr(track, "label_belief", {})
+        if isinstance(label_belief, dict):
+            label_belief_dict = {str(k): float(v) for k, v in label_belief.items()}
+        else:
+            label_belief_dict = {}
+
         objects.append(ObjectSnapshot(
             track_id=track.object_id,
             class_name=track.class_name,
@@ -145,6 +246,7 @@ def create_snapshot(
             obb_extents_world=obb_extents,
             bbox_min_world=bbox_min,
             bbox_max_world=bbox_max,
+            label_belief=label_belief_dict,
         ))
 
     relations: list[RelationSnapshot] = []

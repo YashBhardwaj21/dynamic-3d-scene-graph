@@ -29,12 +29,45 @@ class Track:
     recent_observations: deque
     kalman_state: KalmanState | None = None
     size_world: np.ndarray | None = None
-    
+    label_belief: dict[str, float] = field(default_factory=dict)
+
+    def __post_init__(self):
+        if not self.label_belief and self.class_name:
+            self.label_belief[self.class_name] = 1.0
+
+    @property
+    def primary_label(self) -> str:
+        """Top-1 label derived from accumulated label belief."""
+        if self.label_belief:
+            return max(self.label_belief.items(), key=lambda item: item[1])[0]
+        return self.class_name
+
+    def update_label_belief(self, observed_label: str, confidence: float, decay: float = 0.95):
+        """Update label belief distribution with exponential decay.
+        
+        Example: track_0017 semantic: cup: 0.63, mug: 0.31, bottle: 0.06
+        """
+        total = 0.0
+        for k in list(self.label_belief.keys()):
+            self.label_belief[k] *= decay
+            total += self.label_belief[k]
+
+        weight = max(float(confidence), 0.05)
+        self.label_belief[observed_label] = self.label_belief.get(observed_label, 0.0) + weight
+        total += weight
+
+        if total > 0:
+            for k in list(self.label_belief.keys()):
+                self.label_belief[k] /= total
+
+        self.class_name = self.primary_label
+
     @property
     def centroid_world(self) -> np.ndarray:
         if self.kalman_state is not None:
             return self.kalman_state.position
         return self._initial_centroid
+
 
     @property
     def smoothed_position(self) -> np.ndarray:

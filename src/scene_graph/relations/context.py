@@ -10,6 +10,9 @@ from scene_graph.geometry.reference_frame import (
 )
 
 
+from scene_graph.geometry.provenance import GeometrySource
+
+
 @dataclass
 class ObservationGeometry:
     """Cached per-observation. Computed ONCE, consumed by all relation modules."""
@@ -25,10 +28,12 @@ class ObservationGeometry:
     points_camera: Optional[np.ndarray]
     mask: Optional[np.ndarray]
     valid_point_count: int
+    geometry_source: GeometrySource = GeometrySource.OBSERVED
     position_covariance_world: Optional[np.ndarray] = None
     obb_center_world: Optional[np.ndarray] = None
     obb_axes_world: Optional[np.ndarray] = None
     obb_extents_world: Optional[np.ndarray] = None
+
 
 
 @dataclass

@@ -1,7 +1,12 @@
-"""Reference frame definition and gravity alignment verification."""
-
 from dataclasses import dataclass
+from enum import Enum
+from typing import Optional
 import numpy as np
+
+
+class ReferenceFrameType(Enum):
+    WORLD = "world"
+    CAMERA = "camera"
 
 
 @dataclass
@@ -15,6 +20,7 @@ class RelationReferenceFrame:
     up_axis_world: np.ndarray       # (3,) Unit vector for 'up' (positive Y in camera frame, usually)
     horizontal_axis_world: np.ndarray # (3,) Unit vector for 'right' (positive X in camera frame)
     depth_axis_world: np.ndarray    # (3,) Unit vector for 'depth' (positive Z in camera frame)
+    frame_type: ReferenceFrameType = ReferenceFrameType.WORLD
     
     def __post_init__(self):
         # Validate unit vectors
@@ -32,6 +38,48 @@ class RelationReferenceFrame:
             raise ValueError("Up and depth axes must be orthogonal")
         if not np.isclose(np.dot(self.horizontal_axis_world, self.depth_axis_world), 0.0, atol=1e-4):
             raise ValueError("Horizontal and depth axes must be orthogonal")
+
+    @classmethod
+    def create(
+        cls,
+        mode: str,
+        world_T_camera: np.ndarray,
+        gravity_vector: Optional[np.ndarray] = None,
+        initial_heading: Optional[np.ndarray] = None,
+    ) -> "RelationReferenceFrame":
+        """Factory creating RelationReferenceFrame for CAMERA, MAP, or GRAVITY modes."""
+        mode_lower = str(mode).lower()
+        if mode_lower == "camera":
+            R = world_T_camera[:3, :3]
+            T = world_T_camera[:3, 3]
+            cam_x = R[:, 0]
+            cam_y = R[:, 1]
+            cam_z = R[:, 2]
+            return cls(
+                origin_world=T,
+                up_axis_world=-cam_y / np.linalg.norm(cam_y),
+                horizontal_axis_world=cam_x / np.linalg.norm(cam_x),
+                depth_axis_world=cam_z / np.linalg.norm(cam_z),
+                frame_type=ReferenceFrameType.CAMERA,
+            )
+        elif mode_lower == "gravity":
+            up = gravity_vector if gravity_vector is not None else np.array([0.0, 0.0, 1.0])
+            heading = initial_heading if initial_heading is not None else np.array([1.0, 0.0, 0.0])
+            frame = cls.from_gravity_and_heading(
+                origin_world=world_T_camera[:3, 3],
+                up_axis_world=up,
+                heading_world=heading,
+            )
+            object.__setattr__(frame, "frame_type", ReferenceFrameType.WORLD)
+            return frame
+        else:  # "map" or "world"
+            return cls(
+                origin_world=np.zeros(3, dtype=np.float64),
+                up_axis_world=np.array([0.0, 0.0, 1.0], dtype=np.float64),
+                horizontal_axis_world=np.array([1.0, 0.0, 0.0], dtype=np.float64),
+                depth_axis_world=np.array([0.0, 1.0, 0.0], dtype=np.float64),
+                frame_type=ReferenceFrameType.WORLD,
+            )
 
     @classmethod
     def from_gravity_and_heading(

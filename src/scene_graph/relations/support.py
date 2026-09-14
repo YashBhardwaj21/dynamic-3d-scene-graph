@@ -1,4 +1,4 @@
-from typing import List
+from typing import Dict, List, Optional, Tuple
 
 import numpy as np
 
@@ -8,6 +8,7 @@ from scene_graph.relations.base import RelationModule
 from scene_graph.relations.context import FrameContext
 from scene_graph.relations.evidence import RelationEvidence, EvidenceResult, ReferenceFrameType
 from scene_graph.geometry.plane import fit_plane_ransac
+from scene_graph.geometry.spatial_surface import SurfaceManager
 
 
 class SupportRelationModule(RelationModule):
@@ -63,6 +64,10 @@ class SupportRelationModule(RelationModule):
         if self.plane_random_seed < 0:
             raise ValueError("Plane RANSAC random_seed must be non-negative.")
 
+        self.surface_manager = SurfaceManager()
+        self._plane_cache: Dict[Tuple[str, int], Tuple[np.ndarray, float, np.ndarray, Any]] = {}
+        self._last_frame_index: Optional[int] = None
+
     def predicates(self) -> List[str]:
         return ["ON"]
 
@@ -88,7 +93,7 @@ class SupportRelationModule(RelationModule):
         if subject_points is None or support_points is None:
             return []
 
-        if len(subject_points) == 0 or len(support_points) < self.min_plane_points:
+        if len(subject_points) == 0:
             return []
 
         up_axis = self._get_axis(context.reference_frame, "up_axis_world")
@@ -96,52 +101,78 @@ class SupportRelationModule(RelationModule):
         if up_axis is None:
             return []
 
-        rng = np.random.default_rng(self.plane_random_seed)
+        if self._last_frame_index != context.frame_index:
+            self._plane_cache.clear()
+            self._last_frame_index = context.frame_index
 
-        plane = fit_plane_ransac(
-            support_points,
-            distance_threshold=self.plane_residual_m,
-            max_iterations=self.plane_max_iterations,
-            min_inliers=self.plane_min_inliers,
-            rng=rng,
-        )
-
-        if plane is None:
-            return []
-
-        if len(plane.inlier_mask) != len(support_points):
-            return []
-
-        if plane.residual_mean > self.plane_residual_m:
-            return []
-
-        support_plane_points = support_points[plane.inlier_mask]
-
-        if len(support_plane_points) < self.min_plane_points:
-            return []
-
-        normal = np.asarray(plane.normal, dtype=np.float64)
-
-        if normal.shape != (3,) or not np.isfinite(normal).all():
-            return []
-
-        normal_norm = float(np.linalg.norm(normal))
-
-        if normal_norm <= np.finfo(float).eps:
-            return []
-
-        normal /= normal_norm
-
-        alignment = float(np.dot(normal, up_axis))
-
-        if abs(alignment) < self.min_plane_alignment_cosine:
-            return []
-
-        if alignment < 0.0:
-            normal = -normal
-            plane_distance = -float(plane.distance)
+        cache_key = (object_.object_id, context.frame_index)
+        if cache_key in self._plane_cache:
+            normal, plane_distance, support_plane_points, plane = self._plane_cache[cache_key]
         else:
-            plane_distance = float(plane.distance)
+            normal = None
+            plane_distance = None
+            support_plane_points = None
+            plane = None
+
+            if support_points is not None and len(support_points) >= self.min_plane_points:
+                rng = np.random.default_rng(self.plane_random_seed)
+
+                plane = fit_plane_ransac(
+                    support_points,
+                    distance_threshold=self.plane_residual_m,
+                    max_iterations=self.plane_max_iterations,
+                    min_inliers=self.plane_min_inliers,
+                    rng=rng,
+                )
+
+                if (
+                    plane is not None
+                    and len(plane.inlier_mask) == len(support_points)
+                    and plane.residual_mean <= self.plane_residual_m
+                ):
+                    cand_plane_points = support_points[plane.inlier_mask]
+                    if len(cand_plane_points) >= self.min_plane_points:
+                        cand_normal = np.asarray(plane.normal, dtype=np.float64)
+                        if cand_normal.shape == (3,) and np.isfinite(cand_normal).all():
+                            normal_norm = float(np.linalg.norm(cand_normal))
+                            if normal_norm > np.finfo(float).eps:
+                                cand_normal /= normal_norm
+                                alignment = float(np.dot(cand_normal, up_axis))
+                                if abs(alignment) >= self.min_plane_alignment_cosine:
+                                    if alignment < 0.0:
+                                        normal = -cand_normal
+                                        plane_distance = -float(plane.distance)
+                                    else:
+                                        normal = cand_normal
+                                        plane_distance = float(plane.distance)
+                                    support_plane_points = cand_plane_points
+                                    self.surface_manager.register_or_update(
+                                        object_.object_id,
+                                        normal,
+                                        plane_distance,
+                                        support_plane_points,
+                                        context.timestamp,
+                                    )
+
+            # Fallback to persistent surface if current RANSAC fit was not available
+            if normal is None or plane_distance is None or support_plane_points is None:
+                surf = self.surface_manager.get_surface(
+                    object_.object_id,
+                    context.timestamp,
+                    max_age_s=2.0,
+                )
+                if surf is not None and surf.plane_points is not None:
+                    normal = surf.normal
+                    plane_distance = surf.distance
+                    support_plane_points = surf.plane_points
+
+            if normal is not None and plane_distance is not None and support_plane_points is not None:
+                self._plane_cache[cache_key] = (normal, plane_distance, support_plane_points, plane)
+
+        if normal is None or plane_distance is None or support_plane_points is None:
+            return []
+
+
 
         subject_heights = subject_points @ normal + plane_distance
 
@@ -219,15 +250,15 @@ class SupportRelationModule(RelationModule):
                     "contact_distance_m": contact_distance,
                     "contact_density": float(contact_density),
                     "support_overlap": float(overlap_ratio),
-                    "plane_residual_mean": float(plane.residual_mean),
-                    "plane_residual_std": float(plane.residual_std),
-                    "plane_alignment_cosine": float(abs(alignment)),
+                    "plane_residual_mean": float(plane.residual_mean) if plane is not None else 0.0,
+                    "plane_residual_std": float(plane.residual_std) if plane is not None else 0.0,
+                    "plane_alignment_cosine": float(abs(np.dot(normal, up_axis))),
                     "plane_normal": normal.tolist(),
                     "plane_distance": float(plane_distance),
                     "subject_lower_height_m": lower_height,
                     "subject_upper_height_m": upper_height,
                     "subject_point_count": int(len(subject_points)),
-                    "support_point_count": int(len(support_points)),
+                    "support_point_count": int(len(support_points)) if support_points is not None else 0,
                     "support_plane_point_count": int(len(support_plane_points)),
                     "contact_point_count": contact_point_count,
                     "plane_ransac_max_iterations": self.plane_max_iterations,
@@ -288,6 +319,11 @@ class SupportRelationModule(RelationModule):
 
         plane_u = up_axis - np.dot(up_axis, normal) * normal
         u_norm = float(np.linalg.norm(plane_u))
+
+        if u_norm <= np.finfo(float).eps:
+            candidate = np.array([1.0, 0.0, 0.0]) if abs(normal[0]) < 0.9 else np.array([0.0, 1.0, 0.0])
+            plane_u = candidate - np.dot(candidate, normal) * normal
+            u_norm = float(np.linalg.norm(plane_u))
 
         if u_norm <= np.finfo(float).eps:
             return None

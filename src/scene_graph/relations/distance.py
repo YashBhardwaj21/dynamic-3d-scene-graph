@@ -1,4 +1,4 @@
-from typing import List, Tuple
+from typing import Dict, List, Tuple
 
 import numpy as np
 from scipy.spatial import cKDTree
@@ -7,7 +7,11 @@ from scene_graph.config import SceneGraphConfig
 from scene_graph.tracking.track import Track
 from scene_graph.relations.base import RelationModule
 from scene_graph.relations.context import FrameContext
-from scene_graph.relations.evidence import RelationEvidence, EvidenceResult
+from scene_graph.relations.evidence import (
+    RelationEvidence,
+    EvidenceResult,
+    ReferenceFrameType,
+)
 
 
 class DistanceRelationModule(RelationModule):
@@ -32,6 +36,9 @@ class DistanceRelationModule(RelationModule):
 
         if self.near_threshold >= self.far_threshold:
             raise ValueError("near_threshold must be smaller than far_threshold.")
+
+        self._tree_cache: Dict[Tuple[str, int], cKDTree] = {}
+        self._last_frame_index: Optional[int] = None
 
     def predicates(self) -> List[str]:
         return ["NEAR", "FAR"]
@@ -66,7 +73,16 @@ class DistanceRelationModule(RelationModule):
         if len(subject_points) == 0 or len(object_points) == 0:
             return []
 
-        tree = cKDTree(object_points)
+        if self._last_frame_index != context.frame_index:
+            self._tree_cache.clear()
+            self._last_frame_index = context.frame_index
+
+        cache_key = (object_.object_id, context.frame_index)
+        tree = self._tree_cache.get(cache_key)
+        if tree is None:
+            tree = cKDTree(object_points)
+            self._tree_cache[cache_key] = tree
+
         distances, _ = tree.query(subject_points, k=1)
 
         if distances.size == 0:
@@ -101,7 +117,7 @@ class DistanceRelationModule(RelationModule):
                 value=distance_m,
                 threshold=threshold,
                 confidence=confidence,
-                reference_frame="world",
+                reference_frame=ReferenceFrameType.WORLD,
                 evidence_type="point_cloud_surface_distance",
                 details={
                     "distance_m": distance_m,

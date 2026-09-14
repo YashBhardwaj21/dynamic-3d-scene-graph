@@ -22,7 +22,9 @@ pose_source: tum_groundtruth
 
 perception:
   model_path: models/yoloe-26m-seg.pt
-  confidence_threshold: 0.40
+  mode: text
+  confidence_threshold: 0.25
+  image_size: 480
   classes:
     - monitor
     - computer

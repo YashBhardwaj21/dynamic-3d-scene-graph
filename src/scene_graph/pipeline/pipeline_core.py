@@ -8,7 +8,6 @@ from scene_graph.temporal.object_state import ObjectStateMachine
 from scene_graph.temporal.relation_state import RelationStateMachine
 from scene_graph.graph.temporal_graph import TemporalSceneGraph
 from scene_graph.relations.registry import RelationRegistry
-from scene_graph.relations.inverse_algebra import derive_inverse_evidence
 
 from scene_graph.relations.distance import DistanceRelationModule
 from scene_graph.relations.support import SupportRelationModule
@@ -18,12 +17,14 @@ from scene_graph.relations.depth_order import DepthOrderRelationModule
 from scene_graph.relations.occlusion import OcclusionRelationModule
 
 from scene_graph.geometry.point_cloud import (
-    ObjectGeometry,
     GeometryStatus,
     compute_object_geometry,
 )
+from scene_graph.geometry.noise_model import create_noise_model_from_config
 from scene_graph.geometry.reference_frame import CameraFrame
 from scene_graph.relations.context import FrameContext, ObservationGeometry
+from scene_graph.geometry.provenance import GeometrySource
+from scene_graph.tracking.track import TrackState
 
 
 class SceneGraphPipeline:
@@ -39,6 +40,7 @@ class SceneGraphPipeline:
             raise ValueError("Temporal relation configuration is required.")
 
         self.config = config
+        self.noise_model = create_noise_model_from_config(config)
         self.tracker = CausalTracker(config)
 
         self.registry = RelationRegistry(config)
@@ -99,6 +101,8 @@ class SceneGraphPipeline:
                 min_valid_points=geometry_config.min_valid_points,
                 mad_k=geometry_config.robust_depth.k,
                 voxel_size_m=geometry_config.downsampling.voxel_size_m,
+                measurement_noise_std_m=geometry_config.measurement_noise_std_m,
+                noise_model=self.noise_model,
             )
 
     @staticmethod
@@ -115,40 +119,90 @@ class SceneGraphPipeline:
 
             observation = track.recent_observations[-1]
 
-            if observation.frame_index != frame_index:
-                continue
+            if observation.frame_index == frame_index:
+                object_geometry = observation.object_geometry
 
-            object_geometry = observation.object_geometry
+                if (
+                    object_geometry is None
+                    or object_geometry.status != GeometryStatus.VALID
+                ):
+                    continue
 
-            if (
-                object_geometry is None
-                or object_geometry.status != GeometryStatus.VALID
-            ):
-                continue
+                geometry[track.object_id] = ObservationGeometry(
+                    obs_id=observation.obs_id,
+                    track_id=track.object_id,
+                    centroid_world=object_geometry.centroid_world,
+                    position_covariance_world=(
+                        object_geometry.position_covariance_world
+                    ),
+                    bbox_min_world=object_geometry.bbox_min_world,
+                    bbox_max_world=object_geometry.bbox_max_world,
+                    obb_center_world=object_geometry.obb_center_world,
+                    obb_axes_world=object_geometry.obb_axes_world,
+                    obb_extents_world=object_geometry.obb_extents_world,
+                    depth_stats=object_geometry.depth_stats,
+                    points_world_sampled=(
+                        object_geometry.points_world_sampled
+                    ),
+                    points_world=object_geometry.points_world,
+                    points_camera=object_geometry.points_camera,
+                    mask=observation.get_mask(),
+                    valid_point_count=object_geometry.valid_point_count,
+                    geometry_source=GeometrySource.OBSERVED,
+                )
+            else:
+                # Synthesize PREDICTED geometry for active unobserved track
+                if track.missing_count > 0 and track.state != TrackState.LOST:
+                    last_geom = observation.object_geometry
+                    centroid = track.centroid_world
+                    cov = track.position_covariance_world
+                    if cov is None and last_geom is not None:
+                        cov = last_geom.position_covariance_world
 
-            geometry[track.object_id] = ObservationGeometry(
-                obs_id=observation.obs_id,
-                track_id=track.object_id,
-                centroid_world=object_geometry.centroid_world,
-                position_covariance_world=(
-                    object_geometry.position_covariance_world
-                ),
-                bbox_min_world=object_geometry.bbox_min_world,
-                bbox_max_world=object_geometry.bbox_max_world,
-                obb_center_world=object_geometry.obb_center_world,
-                obb_axes_world=object_geometry.obb_axes_world,
-                obb_extents_world=object_geometry.obb_extents_world,
-                depth_stats=object_geometry.depth_stats,
-                points_world_sampled=(
-                    object_geometry.points_world_sampled
-                ),
-                points_world=object_geometry.points_world,
-                points_camera=object_geometry.points_camera,
-                mask=observation.get_mask(),
-                valid_point_count=object_geometry.valid_point_count,
-            )
+                    bbox_min = None
+                    bbox_max = None
+                    obb_center = None
+                    obb_axes = None
+                    obb_extents = None
+                    points_world = None
+                    points_sampled = None
+
+                    if last_geom is not None and last_geom.status == GeometryStatus.VALID:
+                        delta_pos = centroid - last_geom.centroid_world
+                        if last_geom.bbox_min_world is not None:
+                            bbox_min = last_geom.bbox_min_world + delta_pos
+                        if last_geom.bbox_max_world is not None:
+                            bbox_max = last_geom.bbox_max_world + delta_pos
+                        if last_geom.obb_center_world is not None:
+                            obb_center = last_geom.obb_center_world + delta_pos
+                        obb_axes = last_geom.obb_axes_world
+                        obb_extents = last_geom.obb_extents_world
+                        if last_geom.points_world is not None:
+                            points_world = last_geom.points_world + delta_pos
+                        if last_geom.points_world_sampled is not None:
+                            points_sampled = last_geom.points_world_sampled + delta_pos
+
+                    geometry[track.object_id] = ObservationGeometry(
+                        obs_id=f"{observation.obs_id}_pred",
+                        track_id=track.object_id,
+                        centroid_world=centroid,
+                        position_covariance_world=cov,
+                        bbox_min_world=bbox_min,
+                        bbox_max_world=bbox_max,
+                        obb_center_world=obb_center,
+                        obb_axes_world=obb_axes,
+                        obb_extents_world=obb_extents,
+                        points_world=points_world,
+                        points_world_sampled=points_sampled,
+                        points_camera=None,
+                        mask=None,
+                        depth_stats=last_geom.depth_stats if last_geom is not None else None,
+                        valid_point_count=last_geom.valid_point_count if last_geom is not None else 0,
+                        geometry_source=GeometrySource.PREDICTED,
+                    )
 
         return geometry
+
 
     def update(
         self,
@@ -158,16 +212,7 @@ class SceneGraphPipeline:
 
         self.graph.current_frame_index = packet.frame_index
         self.graph.current_timestamp = packet.timestamp
-
-        depth_m = None
-
-        if packet.depth is not None:
-            if packet.depth_model is None:
-                raise ValueError(
-                    f"Frame {packet.frame_index} has depth but no depth model."
-                )
-
-            depth_m = packet.depth_model.depth_to_meters(packet.depth)
+        depth_m = packet.depth
 
         self._compute_geometry(
             packet=packet,

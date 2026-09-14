@@ -98,8 +98,11 @@ class TUMReplaySource(FrameSource):
                 depth_path = str(self.loader.resolve_depth_path(self.depth_entries[d_idx]))
                 depth_raw = cv2.imread(depth_path, cv2.IMREAD_ANYDEPTH)
                 if depth_raw is not None:
-                    # Keep as raw depth
-                    depth_np = depth_raw
+                    if depth_model is not None:
+                        depth_np = depth_model.depth_to_meters(depth_raw)
+                    else:
+                        scale = self.config.depth.scale if self.config.depth is not None else 5000.0
+                        depth_np = depth_raw.astype(np.float32) / scale
                     has_depth = True
                 
             # Get Pose Matrix if matched (Optional)
@@ -132,6 +135,9 @@ class TUMReplaySource(FrameSource):
                 camera_intrinsics=camera_intrinsics,
                 depth_model=depth_model,
                 relation_frame=relation_frame,
+                frame_id="camera_color_optical_frame",
+                optical_frame_id="camera_depth_optical_frame",
+                pose_source="groundtruth",
                 metadata={}
             )
             

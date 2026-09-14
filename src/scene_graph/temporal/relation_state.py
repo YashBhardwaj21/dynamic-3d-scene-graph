@@ -176,16 +176,8 @@ class RelationStateMachine:
         keys_to_remove: List[RelationKey] = []
 
         for key in all_keys:
-            subject_id, object_id, _ = key
-
-            if active_object_ids is not None and (
-                subject_id not in active_object_ids
-                or object_id not in active_object_ids
-            ):
-                keys_to_remove.append(key)
-                continue
-
             self._apply_decay(key, timestamp)
+
 
             evidence = frame_evidence.get(key)
 

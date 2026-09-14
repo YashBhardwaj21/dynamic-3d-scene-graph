@@ -1,5 +1,5 @@
-from collections import deque
 import copy
+from collections import deque
 from typing import Dict, List, Optional, Tuple
 
 import numpy as np
@@ -161,9 +161,6 @@ class CausalTracker(TrackerInterface):
             for track_idx, track_id in enumerate(track_ids):
                 track = self.tracks[track_id]
 
-                if observation.class_name != track.class_name:
-                    continue
-
                 predicted_position, predicted_covariance = predictions[track_id]
                 innovation = centroid - predicted_position
                 distance = float(np.linalg.norm(innovation))
@@ -190,6 +187,11 @@ class CausalTracker(TrackerInterface):
                     size_scale = max(float(np.linalg.norm(track.size_world)), np.finfo(float).eps)
                     normalized_size_error = float(np.linalg.norm(observation_size - track.size_world) / size_scale)
                     cost += self.size_weight * normalized_size_error
+
+                # Soft semantic consistency cost (class name is metadata, not physical identity)
+                if observation.class_name != track.class_name:
+                    prob = track.label_belief.get(observation.class_name, 0.0) if hasattr(track, "label_belief") else 0.0
+                    cost += 1.5 * (1.0 - prob)
 
                 if np.isfinite(cost):
                     cost_matrix[obs_idx, track_idx] = cost
@@ -274,6 +276,9 @@ class CausalTracker(TrackerInterface):
         track.observation_count += 1
         track.missing_count = 0
         track.detection_confidence = float(observation.confidence)
+
+        if hasattr(track, "update_label_belief"):
+            track.update_label_belief(observation.class_name, observation.confidence)
 
         age = frame_index - track.first_observed_frame + 1
         track.track_observation_ratio = track.observation_count / max(age, 1)

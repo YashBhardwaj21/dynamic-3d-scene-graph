@@ -7,6 +7,7 @@ from scene_graph.tracking.track import Track
 from scene_graph.relations.base import RelationModule
 from scene_graph.relations.context import FrameContext
 from scene_graph.relations.evidence import RelationEvidence, EvidenceResult, ReferenceFrameType
+from scene_graph.geometry.provenance import GeometrySource
 
 
 class OcclusionRelationModule(RelationModule):
@@ -57,6 +58,12 @@ class OcclusionRelationModule(RelationModule):
         object_geometry = context.observation_geometry.get(object_.object_id)
 
         if subject_geometry is None or object_geometry is None:
+            return []
+
+        if (
+            subject_geometry.geometry_source != GeometrySource.OBSERVED
+            or object_geometry.geometry_source != GeometrySource.OBSERVED
+        ):
             return []
 
         if subject_geometry.mask is None or object_geometry.mask is None:
