@@ -41,9 +41,9 @@ temporal:
 perception:
   type: yoloe
   mode: prompt_free
-  model: models/yoloe-26m-seg-pf.pt
-  confidence_threshold: 0.40
-  image_size: 640
+  model: models/yoloe-26s-seg-pf.pt
+  confidence_threshold: 0.25
+  image_size: 480
   device: auto
 
 
@@ -77,6 +77,8 @@ geometry:
 
 
 relations:
+  predicted_geometry_confidence_scale: 0.5
+
   distance:
     near_threshold: 0.50
     far_threshold: 1.50

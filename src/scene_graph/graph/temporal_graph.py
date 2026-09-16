@@ -1,4 +1,4 @@
-from typing import Dict, List, Tuple, Optional
+from typing import Dict, List, Tuple, Optional, Any
 
 from scene_graph.graph.node import GraphNode
 from scene_graph.graph.edge import GraphEdge
@@ -7,6 +7,7 @@ from scene_graph.temporal.relation_state import RelationState
 from scene_graph.graph.participation_state import GraphParticipationState
 from scene_graph.graph.event import GraphEvent, GraphEventType
 from scene_graph.graph.graph_history import GraphHistory
+from scene_graph.tracking.track import TrackState
 
 
 class TemporalSceneGraph:
@@ -22,53 +23,93 @@ class TemporalSceneGraph:
         self.nodes: Dict[str, GraphNode] = {}
         # Key: (subject_id, object_id, predicate) -> GraphEdge
         self.edges: Dict[Tuple[str, str, str], GraphEdge] = {}
+        self.spatial_contexts: Dict[str, Any] = {}
         
         self.history = GraphHistory(maxlen=history_maxlen, dump_file=history_dump_file)
         
         self.current_frame_index: int = -1
         self.current_timestamp: float = -1.0
 
+    def update_contexts(self, contexts: Dict[str, Any], membership: Dict[str, str]):
+        """Update spatial contexts and node context membership."""
+        self.spatial_contexts = contexts
+        anchor_ids = {
+            ctx.anchor_track_id
+            for ctx in contexts.values()
+            if getattr(ctx, "anchor_track_id", None) is not None
+        }
+        for obj_id, node in self.nodes.items():
+            if obj_id in membership:
+                node.spatial_context_id = membership[obj_id]
+            node.is_spatial_anchor = (obj_id in anchor_ids)
+
     def update_nodes(self, tracks: list, object_states: Dict[str, ObjectState]):
         """Update the set of nodes in the graph based on tracks and states."""
-        # Add or update nodes
+        current_active_ids = set()
+
+        # Add or update nodes based on explicit tracker lifecycle policy
         for track in tracks:
+            # CANDIDATE tracks are unconfirmed and do not enter the world model
+            if track.state == TrackState.CANDIDATE:
+                continue
+
             state = object_states.get(track.object_id, ObjectState.UNKNOWN)
-            
-            if track.object_id in self.nodes:
-                # Update existing
-                node = self.nodes[track.object_id]
-                node.track = track
-                node.state = state
-                # Reactivate if it was removed but is now stable again
-                if state == ObjectState.STABLE and node.participation == GraphParticipationState.REMOVED:
+
+            if track.state in (TrackState.ACTIVE, TrackState.TEMPORARILY_UNOBSERVED):
+                current_active_ids.add(track.object_id)
+                is_obs = (track.state == TrackState.ACTIVE)
+
+                if track.object_id in self.nodes:
+                    node = self.nodes[track.object_id]
+                    node.track = track
+                    node.state = state
                     node.participation = GraphParticipationState.ACTIVE
-                elif state == ObjectState.UNKNOWN:
+                    node.attributes["observed"] = is_obs
+                    node.attributes["visibility"] = "observed" if is_obs else "predicted"
+                else:
+                    self.nodes[track.object_id] = GraphNode(
+                        object_id=track.object_id,
+                        class_name=track.class_name,
+                        track=track,
+                        state=state,
+                        participation=GraphParticipationState.ACTIVE,
+                        attributes={
+                            "observed": is_obs,
+                            "visibility": "observed" if is_obs else "predicted",
+                        },
+                    )
+                    self.history.add_event(GraphEvent(
+                        event_type=GraphEventType.NODE_ADDED,
+                        timestamp=self.current_timestamp,
+                        frame_index=self.current_frame_index,
+                        subject_id=track.object_id,
+                    ))
+
+            elif track.state == TrackState.LOST:
+                if track.object_id in self.nodes:
+                    node = self.nodes[track.object_id]
+                    node.track = track
+                    node.state = state
+                    if node.participation != GraphParticipationState.REMOVED:
+                        node.participation = GraphParticipationState.REMOVED
+                        self.history.add_event(GraphEvent(
+                            event_type=GraphEventType.NODE_REMOVED,
+                            timestamp=self.current_timestamp,
+                            frame_index=self.current_frame_index,
+                            subject_id=track.object_id,
+                        ))
+                    self._remove_edges_for_node(track.object_id)
+
+        # Retire any nodes that are no longer in tracks or marked LOST
+        for obj_id, node in self.nodes.items():
+            if obj_id not in current_active_ids:
+                if node.participation != GraphParticipationState.REMOVED:
                     node.participation = GraphParticipationState.REMOVED
-            elif state != ObjectState.UNKNOWN:
-                # Add new
-                self.nodes[track.object_id] = GraphNode(
-                    object_id=track.object_id,
-                    class_name=track.class_name,
-                    track=track,
-                    state=state
-                )
-                self.history.add_event(GraphEvent(
-                    event_type=GraphEventType.NODE_ADDED,
-                    timestamp=self.current_timestamp,
-                    frame_index=self.current_frame_index,
-                    subject_id=track.object_id
-                ))
-                
-        # Mark UNKNOWN nodes as REMOVED and cascade to edges
-        for obj_id, state in list(object_states.items()):
-            if state == ObjectState.UNKNOWN and obj_id in self.nodes:
-                if self.nodes[obj_id].participation != GraphParticipationState.REMOVED:
-                    self.nodes[obj_id].participation = GraphParticipationState.REMOVED
                     self.history.add_event(GraphEvent(
                         event_type=GraphEventType.NODE_REMOVED,
                         timestamp=self.current_timestamp,
                         frame_index=self.current_frame_index,
-                        subject_id=obj_id
+                        subject_id=obj_id,
                     ))
                 self._remove_edges_for_node(obj_id)
 

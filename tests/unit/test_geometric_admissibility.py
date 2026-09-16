@@ -76,16 +76,40 @@ def test_non_overlapping_horizontal_rejected():
     assert filter_.is_admissible("ON", cup, slab) is False
 
 
-def test_semantic_score_modifier_is_soft():
-    """Asserts semantic modifier returns soft bonuses without hard-blocking."""
+def test_open_vocabulary_purely_geometric():
+    """Asserts unknown or novel class names are evaluated purely on physical geometry."""
     config = SceneGraphConfig.from_files("configs/default.yaml")
     filter_ = AdmissibilityFilter(config)
 
-    cup = make_track("cup_1", "cup", centroid=[0.0, 0.0, 0.6], size=[0.1, 0.1, 0.1])
+    # Completely novel labels not in any pre-defined category
+    novel_surface = make_track("surf_1", "robot_charging_pad", centroid=[0.0, 0.0, 0.5], size=[1.0, 1.0, 0.1])
+    novel_object = make_track("obj_1", "sensor_dongle", centroid=[0.0, 0.0, 0.62], size=[0.1, 0.1, 0.14])
+
+    assert filter_.is_admissible("ON", novel_object, novel_surface) is True
+    assert filter_.is_admissible("UNDER", novel_surface, novel_object) is True
+
+
+def test_missing_geometry_rejected():
+    """Asserts that missing geometry causes ON admissibility to return False."""
+    config = SceneGraphConfig.from_files("configs/default.yaml")
+    filter_ = AdmissibilityFilter(config)
+
+    track_no_geom = Track(
+        object_id="no_geom_1",
+        class_name="cup",
+        state=TrackState.ACTIVE,
+        _initial_centroid=None,
+        last_observed_frame=0,
+        first_observed_frame=0,
+        observation_count=1,
+        missing_count=0,
+        detection_confidence=0.9,
+        track_observation_ratio=1.0,
+        last_timestamp=0.0,
+        recent_observations=deque(),
+        size_world=None,
+    )
     table = make_track("table_1", "table", centroid=[0.0, 0.0, 0.5], size=[1.0, 1.0, 0.1])
 
-    bonus = filter_.semantic_score_modifier("ON", cup, table)
-    assert bonus > 0.0
-
-    penalty = filter_.semantic_score_modifier("ON", table, cup)
-    assert penalty < 0.0
+    assert filter_.is_admissible("ON", track_no_geom, table) is False
+    assert filter_.is_admissible("ON", table, track_no_geom) is False

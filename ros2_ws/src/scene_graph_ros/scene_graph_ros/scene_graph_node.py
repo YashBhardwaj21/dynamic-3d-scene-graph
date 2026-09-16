@@ -333,6 +333,18 @@ class SceneGraphROSNode(Node):
                 )
         tf_latency_ms = (time.monotonic() - t_tf_start) * 1000.0
 
+        pose_source = "tf"
+        if world_T_camera is None:
+            # Fallback to camera frame (Identity pose) so 3D lifting, bounding box
+            # estimation, tracking, and spatial scene graph relations operate seamlessly
+            # even when SLAM/TF is unavailable or uninitialized.
+            world_T_camera = np.eye(4, dtype=np.float64)
+            pose_source = "camera_frame_fallback"
+            self.get_logger().warn(
+                f"TF unavailable for {self.world_frame} -> {self.sensor_frame}; operating in camera frame.",
+                throttle_duration_sec=5.0,
+            )
+
         try:
             rgb_np = ros_image_to_numpy(pending.rgb_msg)
             depth_raw = ros_image_to_numpy(pending.depth_msg) if pending.depth_msg is not None else None
@@ -356,17 +368,16 @@ class SceneGraphROSNode(Node):
             )
         self.last_frame_timestamp = rgb_timestamp
 
-        up_axis = np.array([0.0, 0.0, 1.0])
-        heading_axis = np.array([1.0, 0.0, 0.0])
-        if self.config.reference_frame is not None:
-            up_axis = np.array(self.config.reference_frame.up_axis, dtype=np.float64)
-            heading_axis = np.array(self.config.reference_frame.heading_axis, dtype=np.float64)
-
-        relation_frame = RelationReferenceFrame.from_gravity_and_heading(
-            origin_world=np.zeros(3),
-            up_axis_world=up_axis,
-            heading_world=heading_axis,
-        )
+        if pose_source == "camera_frame_fallback" or (self.config.reference_frame and self.config.reference_frame.type == "camera"):
+            relation_frame = RelationReferenceFrame.create("camera", world_T_camera)
+        else:
+            up_axis = np.array(self.config.reference_frame.up_axis, dtype=np.float64) if self.config.reference_frame else np.array([0.0, 0.0, 1.0])
+            heading_axis = np.array(self.config.reference_frame.heading_axis, dtype=np.float64) if self.config.reference_frame else np.array([1.0, 0.0, 0.0])
+            relation_frame = RelationReferenceFrame.from_gravity_and_heading(
+                origin_world=np.zeros(3),
+                up_axis_world=up_axis,
+                heading_world=heading_axis,
+            )
 
         packet = FramePacket(
             frame_index=self.frame_counter,
@@ -380,7 +391,7 @@ class SceneGraphROSNode(Node):
             imu_samples=windowed_imu,
             frame_id=pending.rgb_msg.header.frame_id or self.sensor_frame,
             optical_frame_id=pending.depth_msg.header.frame_id if pending.depth_msg else self.sensor_frame,
-            pose_source="tf" if world_T_camera is not None else "none",
+            pose_source=pose_source,
             metadata={"frame_id": pending.rgb_msg.header.frame_id},
         )
 

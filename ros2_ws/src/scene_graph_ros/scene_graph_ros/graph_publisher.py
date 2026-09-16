@@ -200,6 +200,46 @@ class GraphPublisher:
 
         obj_positions: Dict[str, Tuple[float, float, float]] = {}
 
+        # 1. Spatial Context Regions (Translucent bounding boxes)
+        for cid, ctx in getattr(snapshot, "spatial_contexts", {}).items():
+            if cid == "world":
+                continue
+            b_min = ctx.get("bbox_min")
+            b_max = ctx.get("bbox_max")
+            if b_min and b_max:
+                ctx_marker = Marker()
+                ctx_marker.header.frame_id = self.world_frame
+                ctx_marker.header.stamp = stamp
+                ctx_marker.ns = "spatial_contexts"
+                ctx_marker.id = marker_id
+                marker_id += 1
+                ctx_marker.type = Marker.CUBE
+                ctx_marker.action = Marker.ADD
+
+                cx = (b_min[0] + b_max[0]) * 0.5
+                cy = (b_min[1] + b_max[1]) * 0.5
+                cz = (b_min[2] + b_max[2]) * 0.5
+                sx = max(0.2, b_max[0] - b_min[0])
+                sy = max(0.2, b_max[1] - b_min[1])
+                sz = max(0.1, b_max[2] - b_min[2])
+
+                ctx_marker.pose.position.x = float(cx)
+                ctx_marker.pose.position.y = float(cy)
+                ctx_marker.pose.position.z = float(cz)
+                ctx_marker.pose.orientation.w = 1.0
+
+                ctx_marker.scale.x = float(sx)
+                ctx_marker.scale.y = float(sy)
+                ctx_marker.scale.z = float(sz)
+
+                ctx_marker.color.r = 0.35
+                ctx_marker.color.g = 0.55
+                ctx_marker.color.b = 0.75
+                ctx_marker.color.a = 0.15
+                ctx_marker.lifetime = Duration(sec=1, nanosec=0)
+                marker_array.markers.append(ctx_marker)
+
+        # 2. Objects and Labels
         for obj in snapshot.objects:
             pos = obj.obb_center_world or obj.centroid_world
             if pos is None:
@@ -247,7 +287,9 @@ class GraphPublisher:
             obj_marker.color.r = float(r)
             obj_marker.color.g = float(g)
             obj_marker.color.b = float(b)
-            obj_marker.color.a = 0.70
+            # Anchors have subtle translucent appearance; child objects are solid
+            is_anchor = getattr(obj, "is_spatial_anchor", False)
+            obj_marker.color.a = 0.25 if is_anchor else 0.80
             obj_marker.lifetime = Duration(sec=1, nanosec=0)
             marker_array.markers.append(obj_marker)
 
@@ -271,27 +313,75 @@ class GraphPublisher:
             text_marker.color.b = 1.0
             text_marker.color.a = 1.0
             short_id = obj.track_id[-4:] if len(obj.track_id) >= 4 else obj.track_id
-            text_marker.text = f"{obj.class_name} #{short_id} [{obj.object_state}]"
+            if is_anchor:
+                text_marker.text = f"{obj.class_name.upper()} #{short_id} [ANCHOR]"
+            elif getattr(obj, "spatial_context_id", "world") != "world":
+                text_marker.text = f"{obj.class_name.upper()} #{short_id} [on DESK]"
+            else:
+                text_marker.text = f"{obj.class_name.upper()} #{short_id} [{obj.object_state}]"
             text_marker.lifetime = Duration(sec=1, nanosec=0)
             marker_array.markers.append(text_marker)
 
+        # 3. Relations: Vertical Structural Connectors & Sibling Directional Arrows
         priority = {
-            "ON": 10, "UNDER": 10, "INSIDE": 10, "CONTAINING": 10,
-            "ABOVE": 7, "BELOW": 7, "LEFT_OF": 6, "RIGHT_OF": 6,
-            "IN_FRONT_OF": 5, "BEHIND": 5,
-            "NEAR": 2, "FAR": 1,
+            "ON": 10, "SUPPORTED_BY": 10, "INSIDE": 9,
+            "OCCLUDING": 8, "TOUCHING": 7, "NEAR": 6,
+            "LEFT_OF": 5, "RIGHT_OF": 5, "ABOVE": 4, "IN_FRONT_OF": 4,
         }
-        grouped_rels: Dict[frozenset[str], list] = {}
-        for rel in snapshot.relations:
-            key = frozenset((rel.subject_id, rel.object_id))
-            grouped_rels.setdefault(key, []).append(rel)
 
-        display_relations = [
-            max(rels, key=lambda r: (priority.get(r.predicate, 0), r.confidence))
-            for rels in grouped_rels.values()
+        anchor_ids = {
+            obj.track_id for obj in snapshot.objects if getattr(obj, "is_spatial_anchor", False)
+        }
+
+        structural_rels = [
+            r for r in snapshot.relations if r.predicate in ("ON", "SUPPORTED_BY", "INSIDE")
+        ]
+        sibling_rels = [
+            r for r in snapshot.relations
+            if r.predicate not in ("ON", "SUPPORTED_BY", "INSIDE")
+            and r.subject_id not in anchor_ids
+            and r.object_id not in anchor_ids
         ]
 
-        for rel in display_relations:
+        # 3a. Thin vertical connector lines for structural relations
+        for rel in structural_rels:
+            sub_id = rel.subject_id
+            obj_id = rel.object_id
+            if sub_id in obj_positions and obj_id in obj_positions:
+                p_sub = obj_positions[sub_id]
+                p_obj = obj_positions[obj_id]
+
+                line_marker = Marker()
+                line_marker.header.frame_id = self.world_frame
+                line_marker.header.stamp = stamp
+                line_marker.ns = "structural_connectors"
+                line_marker.id = marker_id
+                marker_id += 1
+                line_marker.type = Marker.LINE_LIST
+                line_marker.action = Marker.ADD
+
+                line_marker.scale.x = 0.015  # Thin vertical line
+                line_marker.color.r = 0.2
+                line_marker.color.g = 0.8
+                line_marker.color.b = 0.6
+                line_marker.color.a = 0.85
+                line_marker.lifetime = Duration(sec=1, nanosec=0)
+
+                # From subject base to object top
+                pt_top = Point(x=float(p_sub[0]), y=float(p_sub[1]), z=float(p_sub[2]))
+                pt_bot = Point(x=float(p_sub[0]), y=float(p_sub[1]), z=float(p_obj[2]))
+                line_marker.points.append(pt_top)
+                line_marker.points.append(pt_bot)
+                marker_array.markers.append(line_marker)
+
+        # 3b. Sibling directional & proximity relations (ranked and capped to top 8)
+        ranked_sibling_rels = sorted(
+            sibling_rels,
+            key=lambda r: (priority.get(r.predicate, 0), r.confidence),
+            reverse=True,
+        )[:8]
+
+        for rel in ranked_sibling_rels:
             sub_id = rel.subject_id
             obj_id = rel.object_id
 

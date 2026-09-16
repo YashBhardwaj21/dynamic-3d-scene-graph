@@ -25,6 +25,8 @@ class ObjectSnapshot:
     obb_extents_world: Optional[tuple[float, float, float]]
     bbox_min_world: Optional[tuple[float, float, float]]
     bbox_max_world: Optional[tuple[float, float, float]]
+    spatial_context_id: str = "world"
+    is_spatial_anchor: bool = False
     label_belief: dict[str, float] = field(default_factory=dict)
 
     def to_dict(self) -> dict:
@@ -36,6 +38,8 @@ class ObjectSnapshot:
             "confidence": float(self.confidence),
             "observation_count": int(self.observation_count),
             "missing_count": int(self.missing_count),
+            "spatial_context_id": self.spatial_context_id,
+            "is_spatial_anchor": self.is_spatial_anchor,
             "centroid_world": list(self.centroid_world) if self.centroid_world else None,
             "velocity_world": list(self.velocity_world) if self.velocity_world else None,
             "obb_center_world": list(self.obb_center_world) if self.obb_center_world else None,
@@ -113,6 +117,7 @@ class SceneGraphSnapshot:
     objects: tuple[ObjectSnapshot, ...]
     relations: tuple[RelationSnapshot, ...]
     telemetry: TelemetrySnapshot
+    spatial_contexts: dict = field(default_factory=dict)
 
     def query_objects(
         self,
@@ -158,6 +163,7 @@ class SceneGraphSnapshot:
             "world_T_camera": [list(row) for row in self.world_T_camera] if self.world_T_camera else None,
             "objects": [obj.to_dict() for obj in self.objects],
             "relations": [rel.to_dict() for rel in self.relations],
+            "spatial_contexts": self.spatial_contexts,
             "telemetry": self.telemetry.to_dict(),
         }
 
@@ -246,6 +252,8 @@ def create_snapshot(
             obb_extents_world=obb_extents,
             bbox_min_world=bbox_min,
             bbox_max_world=bbox_max,
+            spatial_context_id=getattr(node, "spatial_context_id", "world"),
+            is_spatial_anchor=getattr(node, "is_spatial_anchor", False),
             label_belief=label_belief_dict,
         ))
 
@@ -284,6 +292,18 @@ def create_snapshot(
 
     world_T_camera = _ndarray_to_matrix(packet.world_T_camera)
 
+    contexts_dict = {}
+    for cid, ctx in getattr(graph, "spatial_contexts", {}).items():
+        contexts_dict[cid] = {
+            "context_id": ctx.context_id,
+            "parent_context_id": ctx.parent_context_id,
+            "anchor_track_id": ctx.anchor_track_id,
+            "level": ctx.level,
+            "member_track_ids": list(ctx.member_track_ids),
+            "bbox_min": list(ctx.bounding_box_min) if getattr(ctx, "bounding_box_min", None) is not None else None,
+            "bbox_max": list(ctx.bounding_box_max) if getattr(ctx, "bounding_box_max", None) is not None else None,
+        }
+
     return SceneGraphSnapshot(
         frame_index=packet.frame_index,
         timestamp=packet.timestamp,
@@ -291,4 +311,5 @@ def create_snapshot(
         objects=tuple(objects),
         relations=tuple(relations),
         telemetry=telemetry,
+        spatial_contexts=contexts_dict,
     )

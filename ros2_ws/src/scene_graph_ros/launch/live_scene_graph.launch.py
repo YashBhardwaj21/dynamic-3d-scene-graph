@@ -6,7 +6,7 @@ import os
 from ament_index_python.packages import get_package_share_directory
 from launch import LaunchDescription
 from launch.actions import DeclareLaunchArgument, IncludeLaunchDescription
-from launch.conditions import IfCondition
+from launch.conditions import IfCondition, UnlessCondition
 from launch.launch_description_sources import PythonLaunchDescriptionSource
 from launch.substitutions import LaunchConfiguration, PathJoinSubstitution
 from launch_ros.actions import Node
@@ -16,15 +16,15 @@ def generate_launch_description():
     pkg_share = get_package_share_directory("scene_graph_ros")
     default_rviz_config = os.path.join(pkg_share, "rviz", "scene_graph.rviz")
 
-    use_realsense_arg = DeclareLaunchArgument(
-        "use_realsense",
+    use_bridge_arg = DeclareLaunchArgument(
+        "use_bridge",
         default_value="true",
-        description="Whether to launch realsense2_camera driver",
+        description="Whether to launch D455 TCP receiver bridge node",
     )
 
     use_rtabmap_arg = DeclareLaunchArgument(
         "use_rtabmap",
-        default_value="true",
+        default_value="false",
         description="Whether to launch RTAB-Map RGB-D visual odometry & SLAM",
     )
 
@@ -54,8 +54,8 @@ def generate_launch_description():
 
     world_frame_arg = DeclareLaunchArgument(
         "world_frame",
-        default_value="map",
-        description="Global map reference frame (map from RTAB-Map or world)",
+        default_value="world",
+        description="Global map reference frame (world or map from RTAB-Map)",
     )
 
     sensor_frame_arg = DeclareLaunchArgument(
@@ -100,24 +100,25 @@ def generate_launch_description():
         description="Depth scale conversion factor (raw integer depth units per meter; 1000.0 for RealSense D455 mm, 5000.0 for TUM)",
     )
 
-    realsense_launch = IncludeLaunchDescription(
-        PythonLaunchDescriptionSource(
-            PathJoinSubstitution([
-                get_package_share_directory("realsense2_camera"),
-                "launch",
-                "rs_launch.py",
-            ])
-        ),
-        launch_arguments={
-            "enable_color": "true",
-            "enable_depth": "true",
-            "align_depth.enable": "true",
-            "enable_gyro": "false",
-            "enable_accel": "false",
-            "rgb_camera.profile": "640x480x30",
-            "depth_module.profile": "640x480x30",
-        }.items(),
-        condition=IfCondition(LaunchConfiguration("use_realsense")),
+    d455_bridge_node = Node(
+        package="d455_bridge",
+        executable="d455_receiver",
+        name="d455_receiver",
+        output="screen",
+        condition=IfCondition(LaunchConfiguration("use_bridge")),
+    )
+
+    static_tf_node = Node(
+        package="tf2_ros",
+        executable="static_transform_publisher",
+        name="static_map_to_camera",
+        arguments=[
+            "--x", "0", "--y", "0", "--z", "0",
+            "--roll", "0", "--pitch", "0", "--yaw", "0",
+            "--frame-id", LaunchConfiguration("world_frame"),
+            "--child-frame-id", LaunchConfiguration("sensor_frame"),
+        ],
+        condition=UnlessCondition(LaunchConfiguration("use_rtabmap")),
     )
 
     rtabmap_launch = IncludeLaunchDescription(
@@ -132,7 +133,7 @@ def generate_launch_description():
             "rgb_topic": LaunchConfiguration("rgb_topic"),
             "depth_topic": LaunchConfiguration("depth_topic"),
             "camera_info_topic": LaunchConfiguration("camera_info_topic"),
-            "frame_id": "camera_link",
+            "frame_id": LaunchConfiguration("sensor_frame"),
             "approx_sync": "true",
             "wait_imu_to_init": "false",
             "rtabmap_viz": "false",
@@ -180,7 +181,7 @@ def generate_launch_description():
     )
 
     return LaunchDescription([
-        use_realsense_arg,
+        use_bridge_arg,
         use_rtabmap_arg,
         use_scenegraph_arg,
         use_rviz_arg,
@@ -194,7 +195,8 @@ def generate_launch_description():
         depth_scale_arg,
         queue_size_arg,
         drop_old_frames_arg,
-        realsense_launch,
+        d455_bridge_node,
+        static_tf_node,
         rtabmap_launch,
         scene_graph_node,
         rviz_node,

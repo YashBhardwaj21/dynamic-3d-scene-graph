@@ -16,8 +16,11 @@ from scene_graph.relations.containment import ContainmentRelationModule
 from scene_graph.relations.depth_order import DepthOrderRelationModule
 from scene_graph.relations.occlusion import OcclusionRelationModule
 
+from scene_graph.relations.inverse_algebra import derive_inverse_evidence
+
 from scene_graph.geometry.point_cloud import (
     GeometryStatus,
+    ObjectGeometry,
     compute_object_geometry,
 )
 from scene_graph.geometry.noise_model import create_noise_model_from_config
@@ -231,72 +234,75 @@ class SceneGraphPipeline:
             frame_index=packet.frame_index,
         )
 
+        # 1. Relation inference operating directly from tracker tracks
+        relation_tracks = [
+            track
+            for track in tracks
+            if track.state in (
+                TrackState.ACTIVE,
+                TrackState.TEMPORARILY_UNOBSERVED,
+            )
+        ]
+
+        all_evidences = []
+        relation_states = {}
+
+        if relation_tracks and packet.world_T_camera is not None:
+            if packet.relation_frame is None:
+                raise ValueError(
+                    f"Frame {packet.frame_index} is missing relation reference frame."
+                )
+
+            observation_geometry = self._build_observation_geometry(
+                relation_tracks,
+                packet.frame_index,
+            )
+
+            if observation_geometry:
+                context = FrameContext(
+                    frame_index=packet.frame_index,
+                    timestamp=packet.timestamp,
+                    intrinsics=packet.camera_intrinsics,
+                    world_T_camera=packet.world_T_camera,
+                    reference_frame=packet.relation_frame,
+                    camera_frame=CameraFrame.from_camera_pose(
+                        packet.world_T_camera
+                    ),
+                    depth_image=depth_m,
+                    observation_geometry=observation_geometry,
+                )
+
+                raw_evidences = self.registry.compute_all(
+                    relation_tracks,
+                    context,
+                )
+
+                # World model maintains canonical edges only; inverse derivation happens in query layer
+                all_evidences.extend(raw_evidences)
+
+                relation_object_ids = {
+                    track.object_id
+                    for track in relation_tracks
+                }
+
+                relation_states = self.relation_state_machine.update(
+                    evidences=all_evidences,
+                    frame_index=packet.frame_index,
+                    timestamp=packet.timestamp,
+                    active_object_ids=relation_object_ids,
+                )
+
+        # 2. Graph projection: Update persistent world model (nodes and edges)
         self.graph.update_nodes(
             tracks,
             object_states,
         )
 
-        active_tracks = [
-            node.track
-            for node in self.graph.get_active_nodes()
-        ]
-
-        if not active_tracks:
-            return self.graph
-
-        observation_geometry = self._build_observation_geometry(
-            active_tracks,
-            packet.frame_index,
-        )
-
-        if not observation_geometry:
-            return self.graph
-
-        if packet.world_T_camera is None:
-            return self.graph
-
-        if packet.relation_frame is None:
-            raise ValueError(
-                f"Frame {packet.frame_index} is missing relation reference frame."
+        if getattr(self.registry, "last_contexts", None):
+            self.graph.update_contexts(
+                self.registry.last_contexts,
+                self.registry.last_membership,
             )
-
-        context = FrameContext(
-            frame_index=packet.frame_index,
-            timestamp=packet.timestamp,
-            intrinsics=packet.camera_intrinsics,
-            world_T_camera=packet.world_T_camera,
-            reference_frame=packet.relation_frame,
-            camera_frame=CameraFrame.from_camera_pose(
-                packet.world_T_camera
-            ),
-            depth_image=depth_m,
-            observation_geometry=observation_geometry,
-        )
-
-        raw_evidences = self.registry.compute_all(
-            active_tracks,
-            context,
-        )
-
-        all_evidences = []
-
-        for evidence in raw_evidences:
-            all_evidences.append(evidence)
-            inverse_evidence = derive_inverse_evidence(evidence)
-            if inverse_evidence is not None:
-                all_evidences.append(inverse_evidence)
-
-        active_object_ids = {
-            track.object_id
-            for track in active_tracks
-        }
-
-        relation_states = self.relation_state_machine.update(
-            evidences=all_evidences,
-            frame_index=packet.frame_index,
-            timestamp=packet.timestamp,
-            active_object_ids=active_object_ids,
-        )
 
         self.graph.update_edges(
             evidences=all_evidences,

@@ -20,7 +20,6 @@ setup(
     maintainer_email="user@example.com",
     description="ROS 2 transport layer for Dynamic 3D Scene Graph",
     license="Apache-2.0",
-    tests_require=["pytest"],
     entry_points={
         "console_scripts": [
             "scene_graph_node = scene_graph_ros.scene_graph_node:main",

@@ -11,12 +11,10 @@ ALLOWED_PREDICATES = frozenset(INVERSE) | frozenset(SYMMETRIC)
 
 
 class AdmissibilityFilter:
-    """Evaluates geometric admissibility of candidate object pairs for relations.
-    
-    Replaces static class-name whitelists with physical geometric witnesses:
-    - Support (ON): checks relative vertical height, horizontal projection overlap, and contact clearance.
-    - Containment (INSIDE): checks bounding volume containment and size disparity.
-    - Semantic labels provide optional soft score bonuses, never an admission gate.
+    """Evaluate whether object pairs are geometrically admissible for relations.
+
+    Admissibility is based on physical geometry and the configured reference frame.
+    Semantic detector labels are metadata and do not affect admission.
     """
 
     def __init__(self, config: SceneGraphConfig):
@@ -26,24 +24,6 @@ class AdmissibilityFilter:
             if config.relations and config.relations.support
             else 0.08
         )
-        self.support_bonus_classes = {"table", "desk", "counter", "shelf", "bench", "floor", "stand"}
-        self.support_penalty_classes = {"cup", "pen", "fork", "mouse", "apple", "phone"}
-
-    def get_role(self, class_name: str) -> str:
-        """Deprecated class role lookup retained for backwards compatibility."""
-        if class_name in self.support_bonus_classes:
-            return "support_surface"
-        return "ordinary_object"
-
-    def semantic_score_modifier(self, predicate: str, subject: Track, object_: Track) -> float:
-        """Optional soft score modifier based on semantic priors."""
-        if predicate == "ON":
-            obj_label = getattr(object_, "primary_label", object_.class_name)
-            if obj_label in self.support_bonus_classes:
-                return 0.1
-            if obj_label in self.support_penalty_classes:
-                return -0.2
-        return 0.0
 
     def _get_geometry(
         self,
@@ -124,7 +104,7 @@ class AdmissibilityFilter:
         c_B, min_B, max_B = self._get_geometry(supporter_surface, context)
 
         if c_A is None or c_B is None:
-            return True
+            return False
 
         up = self._get_up_axis(context)
 

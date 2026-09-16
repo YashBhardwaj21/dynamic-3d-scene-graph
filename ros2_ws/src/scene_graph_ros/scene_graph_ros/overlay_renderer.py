@@ -164,7 +164,7 @@ def render_tracks_overlay(
     graph: Any,
     frame_index: Optional[int] = None,
 ) -> np.ndarray:
-    """Render 2D tracks and relation overlay: RGB + track badges + state + relation arrows."""
+    """Render 2D tracks and relation overlay: RGB + context hulls + badges + sparse sibling relations."""
     if rgb is None or rgb.size == 0:
         return np.zeros((480, 640, 3), dtype=np.uint8)
 
@@ -203,27 +203,76 @@ def render_tracks_overlay(
         if mask is not None:
             canvas = draw_mask(canvas, mask, col, alpha=0.20)
 
+    spatial_contexts = getattr(graph, "spatial_contexts", {})
+
+    # 1. Render Translucent Context Hulls for Discovered Spatial Contexts
+    for cid, ctx in spatial_contexts.items():
+        if cid == "world" or not getattr(ctx, "member_track_ids", None):
+            continue
+
+        ctx_boxes = [boxes[tid] for tid in ctx.member_track_ids if tid in boxes]
+        if ctx.anchor_track_id and ctx.anchor_track_id in boxes:
+            ctx_boxes.append(boxes[ctx.anchor_track_id])
+
+        if ctx_boxes:
+            min_x = max(0, min(b[0] for b in ctx_boxes) - 10)
+            min_y = max(0, min(b[1] for b in ctx_boxes) - 10)
+            max_x = min(w - 1, max(b[2] for b in ctx_boxes) + 10)
+            max_y = min(h - 1, max(b[3] for b in ctx_boxes) + 10)
+
+            overlay = canvas.copy()
+            cv2.rectangle(overlay, (min_x, min_y), (max_x, max_y), (70, 95, 120), -1)
+            canvas = cv2.addWeighted(overlay, 0.12, canvas, 0.88, 0.0)
+            cv2.rectangle(canvas, (min_x, min_y), (max_x, max_y), (130, 170, 210), 1, cv2.LINE_AA)
+
+            anchor_node = graph.nodes.get(ctx.anchor_track_id)
+            anchor_name = anchor_node.track.class_name.upper() if anchor_node else "ANCHOR"
+            short_id = ctx.anchor_track_id[-4:] if ctx.anchor_track_id else ""
+            draw_label(
+                canvas,
+                f"{anchor_name} #{short_id} [SPATIAL CONTEXT]",
+                (min_x + 6, min_y + 16),
+                (55, 80, 105),
+                scale=0.38,
+                text_color=(235, 245, 255),
+            )
+
+    # 2. Render Structural Connectors and Sibling Relations (No Giant All-Pairs Web)
     active_edges = [e for e in graph.edges.values() if e.is_active]
     priority = {
-        "ON": 10, "UNDER": 10, "INSIDE": 10, "CONTAINING": 10,
-        "ABOVE": 7, "BELOW": 7, "LEFT_OF": 6, "RIGHT_OF": 6,
-        "IN_FRONT_OF": 5, "BEHIND": 5,
-        "NEAR": 2, "FAR": 1,
+        "ON": 10, "SUPPORTED_BY": 10, "INSIDE": 9,
+        "OCCLUDING": 8, "TOUCHING": 7, "NEAR": 6,
+        "LEFT_OF": 5, "RIGHT_OF": 5, "ABOVE": 4, "IN_FRONT_OF": 4,
     }
-    grouped: dict[frozenset[str], list[Any]] = {}
-    for edge in active_edges:
-        key = frozenset((str(edge.subject_id), str(edge.object_id)))
-        grouped.setdefault(key, []).append(edge)
 
-    display_edges = [
-        max(p_edges, key=lambda e: (
+    # Separate structural relations from sibling relations
+    structural_edges = [e for e in active_edges if e.predicate in ("ON", "SUPPORTED_BY", "INSIDE")]
+    sibling_edges = [e for e in active_edges if e.predicate not in ("ON", "SUPPORTED_BY", "INSIDE")]
+
+    # Render small vertical connectors for structural support
+    for edge in structural_edges:
+        sub_id = str(edge.subject_id)
+        obj_id = str(edge.object_id)
+        if sub_id in boxes and obj_id in boxes:
+            sub_box = boxes[sub_id]
+            obj_box = boxes[obj_id]
+            # Connect bottom of subject to top of anchor
+            p_sub = (int((sub_box[0] + sub_box[2]) * 0.5), sub_box[3])
+            p_obj = (int((sub_box[0] + sub_box[2]) * 0.5), max(obj_box[1], sub_box[3] + 4))
+            col = relation_color(edge.predicate)
+            cv2.line(canvas, p_sub, p_obj, col, 2, cv2.LINE_AA)
+
+    # Sibling relations: rank by priority and cap rendered count to preserve readability
+    ranked_sibling_edges = sorted(
+        sibling_edges,
+        key=lambda e: (
             priority.get(str(e.predicate), 0),
             float(getattr(e.latest_evidence, "confidence", 1.0) if hasattr(e, "latest_evidence") and e.latest_evidence else 1.0)
-        ))
-        for p_edges in grouped.values()
-    ]
+        ),
+        reverse=True,
+    )[:8]  # Visual cap: top 8 most salient sibling edges
 
-    for edge in display_edges:
+    for edge in ranked_sibling_edges:
         sub_id = str(edge.subject_id)
         obj_id = str(edge.object_id)
         if sub_id not in boxes or obj_id not in boxes:
@@ -237,6 +286,7 @@ def render_tracks_overlay(
         mx, my = int((start[0] + end[0]) * 0.5), int((start[1] + end[1]) * 0.5 - 4)
         draw_label(canvas, edge.predicate, (mx, my), col, scale=0.35)
 
+    # 3. Render Object Badges with Context Annotation
     for node_id, box in boxes.items():
         node = node_map[node_id]
         track = node.track
@@ -245,7 +295,26 @@ def render_tracks_overlay(
 
         cv2.rectangle(canvas, (bx1, by1), (bx2, by2), col, 2, cv2.LINE_AA)
         short_id = node_id[-4:] if len(node_id) >= 4 else node_id
-        label = f"{track.class_name.upper()} #{short_id} [{node.state.value}]"
-        draw_label(canvas, label, (bx1, max(18, by1 - 4)), col)
+
+        # Context-aware badge
+        if getattr(node, "is_spatial_anchor", False):
+            badge = f"{track.class_name.upper()} #{short_id} [ANCHOR]"
+        elif getattr(node, "spatial_context_id", "world") != "world":
+            parent_cid = node.spatial_context_id
+            parent_ctx = spatial_contexts.get(parent_cid)
+            parent_anchor = graph.nodes.get(parent_ctx.anchor_track_id) if parent_ctx and parent_ctx.anchor_track_id else None
+            p_name = parent_anchor.track.class_name.upper() if parent_anchor else "DESK"
+            badge = f"{track.class_name.upper()} #{short_id} [on {p_name}]"
+        else:
+            badge = f"{track.class_name.upper()} #{short_id} [{node.state.value}]"
+
+        draw_label(canvas, badge, (bx1, max(18, by1 - 4)), col)
+
+    # 4. Status Bar
+    n_objs = len(boxes)
+    n_ctxs = sum(1 for c in spatial_contexts.values() if getattr(c, "context_id", "") != "world")
+    n_rels = len(active_edges)
+    status_text = f"Objects: {n_objs} | Contexts: {n_ctxs} | Confirmed Relations: {n_rels}"
+    draw_label(canvas, status_text, (10, h - 10), (20, 24, 30), scale=0.42, text_color=(230, 235, 240))
 
     return canvas

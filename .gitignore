@@ -42,3 +42,7 @@ yolov8s*.pt
 .pytest-tmp/
 .pytest_cache/
 pytest_temp/
+
+# Temporary and Scratch Files
+*.part
+scratch/

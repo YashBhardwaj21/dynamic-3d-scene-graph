@@ -17,7 +17,7 @@ class OnlinePipeline:
         else:
             mode = PerceptionMode.from_str(mode_str)
 
-        model_path = getattr(config.perception, "model", None) or getattr(config.perception, "model_path", "models/yoloe-26m-seg.pt")
+        model_path = getattr(config.perception, "model_path", None) or getattr(config.perception, "model", "models/yoloe-26m-seg.pt")
         image_size = getattr(config.perception, "image_size", 480)
 
         self.detector = YOLOEDetector(

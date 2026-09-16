@@ -34,7 +34,7 @@ def test_default_config_has_no_classes_or_vocabulary():
 
 
 @patch("scene_graph.perception.yoloe_detector.Path.exists", return_value=True)
-@patch("scene_graph.perception.yoloe_detector.YOLO")
+@patch("scene_graph.perception.yoloe_detector.YOLOE")
 def test_prompt_free_initialization_without_set_classes(mock_yolo_cls, mock_exists):
     """Verify that PROMPT_FREE mode never calls set_classes() on the model checkpoint."""
     mock_model = MagicMock()
@@ -51,7 +51,7 @@ def test_prompt_free_initialization_without_set_classes(mock_yolo_cls, mock_exis
 
 
 @patch("scene_graph.perception.yoloe_detector.Path.exists", return_value=True)
-@patch("scene_graph.perception.yoloe_detector.YOLO")
+@patch("scene_graph.perception.yoloe_detector.YOLOE")
 def test_runtime_text_prompt_adaptation(mock_yolo_cls, mock_exists):
     """Verify that runtime text prompts configure set_classes() dynamically without file edits."""
     mock_model = MagicMock()
@@ -72,9 +72,9 @@ def test_runtime_text_prompt_adaptation(mock_yolo_cls, mock_exists):
 
 
 @patch("scene_graph.perception.yoloe_detector.Path.exists", return_value=True)
-@patch("scene_graph.perception.yoloe_detector.YOLO")
+@patch("scene_graph.perception.yoloe_detector.YOLOE")
 def test_visual_prompt_mode_setting(mock_yolo_cls, mock_exists):
-    """Verify setting visual exemplar prompt at runtime."""
+    """Verify setting visual exemplar prompt at runtime with valid bboxes and cls."""
     mock_model = MagicMock()
     mock_yolo_cls.return_value = mock_model
 
@@ -83,11 +83,66 @@ def test_visual_prompt_mode_setting(mock_yolo_cls, mock_exists):
         mode=PerceptionMode.PROMPT_FREE,
     )
 
-    dummy_box_exemplar = {"bbox": [10, 20, 50, 60]}
+    dummy_box_exemplar = {
+        "bboxes": np.array([[10.0, 20.0, 50.0, 60.0]], dtype=np.float32),
+        "cls": np.array([0], dtype=np.int64),
+    }
     detector.set_visual_prompt(dummy_box_exemplar)
 
     assert detector.mode == PerceptionMode.VISUAL_PROMPT
-    assert detector.current_visual_prompt == dummy_box_exemplar
+    assert np.array_equal(detector.current_visual_prompt["bboxes"], dummy_box_exemplar["bboxes"])
+    assert np.array_equal(detector.current_visual_prompt["cls"], dummy_box_exemplar["cls"])
+
+
+@patch("scene_graph.perception.yoloe_detector.Path.exists", return_value=True)
+@patch("scene_graph.perception.yoloe_detector.YOLOE")
+def test_pf_checkpoint_rejected_for_prompted_modes(mock_yolo_cls, mock_exists):
+    """Verify that -pf.pt checkpoint raises ValueError in TEXT_PROMPT or VISUAL_PROMPT mode."""
+    with pytest.raises(ValueError, match="requires a prompted YOLOE checkpoint"):
+        YOLOEDetector(
+            model_path="models/yoloe-26m-seg-pf.pt",
+            mode=PerceptionMode.TEXT_PROMPT,
+        )
+
+    with pytest.raises(ValueError, match="requires a prompted YOLOE checkpoint"):
+        YOLOEDetector(
+            model_path="models/yoloe-26m-seg-pf.pt",
+            mode=PerceptionMode.VISUAL_PROMPT,
+        )
+
+
+@patch("scene_graph.perception.yoloe_detector.Path.exists", return_value=True)
+@patch("scene_graph.perception.yoloe_detector.YOLOEVPSegPredictor")
+@patch("scene_graph.perception.yoloe_detector.YOLOE")
+def test_visual_prompt_predict_invocation(mock_yolo_cls, mock_predictor_cls, mock_exists):
+    """Verify that detect() passes visual_prompts and predictor to predict()."""
+    mock_model = MagicMock()
+    mock_model.predict.return_value = []
+    mock_yolo_cls.return_value = mock_model
+
+    detector = YOLOEDetector(
+        model_path="models/yoloe-26m-seg.pt",
+        mode=PerceptionMode.VISUAL_PROMPT,
+        visual_prompt={
+            "bboxes": np.array([[5.0, 10.0, 50.0, 60.0]], dtype=np.float32),
+            "cls": np.array([0], dtype=np.int64),
+        },
+    )
+
+    packet = FramePacket(
+        frame_index=1,
+        timestamp=0.033,
+        rgb=np.zeros((480, 640, 3), dtype=np.uint8),
+        depth=None,
+        world_T_camera=None,
+        camera_intrinsics=CameraIntrinsics(fx=525, fy=525, cx=320, cy=240, width=640, height=480),
+    )
+
+    detector.detect(packet)
+    mock_model.predict.assert_called_once()
+    _, kwargs = mock_model.predict.call_args
+    assert "visual_prompts" in kwargs
+    assert kwargs["predictor"] == mock_predictor_cls
 
 
 def test_observation_class_is_metadata():

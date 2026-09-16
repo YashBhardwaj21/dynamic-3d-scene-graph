@@ -132,6 +132,9 @@ def generate_launch_description():
                 "debug_frame_packet_only": LaunchConfiguration("debug_frame_packet_only"),
                 "queue_size": LaunchConfiguration("queue_size"),
                 "drop_old_frames": LaunchConfiguration("drop_old_frames"),
+                "rgb_topic": "/tum/rgb/image_raw",
+                "depth_topic": "/tum/depth/image_raw",
+                "camera_info_topic": "/tum/rgb/camera_info",
             }
         ],
     )

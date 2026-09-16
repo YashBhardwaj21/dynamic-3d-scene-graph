@@ -1,15 +1,16 @@
 """YOLOE Detector wrapper supporting prompt-free, text-prompt, and visual-prompt modes."""
 
 from enum import Enum
-import uuid
+from pathlib import Path
 from typing import Any, List, Optional, Tuple, Union
 import numpy as np
-from pathlib import Path
 
 try:
-    from ultralytics import YOLO
+    from ultralytics import YOLOE
+    from ultralytics.models.yolo.yoloe import YOLOEVPSegPredictor
 except ImportError:
-    YOLO = None
+    YOLOE = None
+    YOLOEVPSegPredictor = None
 
 from scene_graph.data.frame_packet import FramePacket
 from scene_graph.perception.observation_source import ObservationProducer
@@ -31,7 +32,10 @@ class PerceptionMode(Enum):
             return cls.TEXT_PROMPT
         elif v in ("visual", "visual_prompt", "exemplar"):
             return cls.VISUAL_PROMPT
-        return cls.PROMPT_FREE
+        raise ValueError(
+            f"Unsupported perception mode: {val!r}. "
+            "Expected 'prompt_free', 'text', or 'visual'."
+        )
 
 
 class YOLOEDetector(ObservationProducer):
@@ -63,16 +67,20 @@ class YOLOEDetector(ObservationProducer):
             allowed_classes: Deprecated alias for text_prompts (backward compatibility).
             image_size: Network input resolution for accelerated CPU inference (e.g. 480).
         """
-        if YOLO is None:
+        if YOLOE is None:
             raise ImportError("ultralytics package is required for YOLOEDetector.")
             
         model_path_obj = Path(model_path)
         if not model_path_obj.exists():
-            alt = Path(str(model_path).replace("-pf.pt", ".pt"))
-            if alt.exists():
-                model_path_obj = alt
+            repo_root = Path(__file__).resolve().parents[3]
+            candidate = repo_root / model_path_obj
+            if candidate.exists():
+                model_path_obj = candidate
             else:
-                raise FileNotFoundError(f"Checkpoint not found: {model_path}. Automatic downloads are disabled.")
+                raise FileNotFoundError(
+                    f"Checkpoint not found: {model_path}. "
+                    "Automatic downloads are disabled."
+                )
             
         self.model_path = str(model_path_obj)
         self.confidence_threshold = confidence_threshold
@@ -88,14 +96,25 @@ class YOLOEDetector(ObservationProducer):
         if text_prompts and self.mode == PerceptionMode.PROMPT_FREE:
             self.mode = PerceptionMode.TEXT_PROMPT
 
+        if self.mode in (
+            PerceptionMode.TEXT_PROMPT,
+            PerceptionMode.VISUAL_PROMPT,
+        ) and self.model_path.endswith("-pf.pt"):
+            raise ValueError(
+                f"{self.mode.value} mode requires a prompted YOLOE checkpoint "
+                "(*-seg.pt), not a prompt-free checkpoint (*-seg-pf.pt)."
+            )
+
         self.current_text_prompts: Optional[List[str]] = None
-        self.current_visual_prompt: Optional[Any] = visual_prompt
-        self.model = YOLO(self.model_path)
+        self.current_visual_prompt: Optional[Any] = None
+        self.model = YOLOE(self.model_path)
 
         # In PROMPT_FREE mode: do NOT call set_classes().
         # Prompt-free checkpoints reject set_classes() and use their built-in 4,585-name vocabulary.
         if self.mode == PerceptionMode.TEXT_PROMPT and text_prompts:
             self.set_text_prompts(text_prompts)
+        elif self.mode == PerceptionMode.VISUAL_PROMPT and visual_prompt is not None:
+            self.set_visual_prompt(visual_prompt)
                 
         # Internal sequential ID counter
         self._obs_counter = 1
@@ -114,9 +133,39 @@ class YOLOEDetector(ObservationProducer):
             ) from e
 
     def set_visual_prompt(self, visual_prompt: Any) -> None:
-        """Set reference exemplar for visual prompting."""
+        """Set the visual prompt used by YOLOE visual-prompt inference."""
+        if not isinstance(visual_prompt, dict):
+            raise TypeError(
+                "visual_prompt must be a dict containing 'bboxes' and 'cls'."
+            )
+        if "bboxes" not in visual_prompt or "cls" not in visual_prompt:
+            raise ValueError(
+                "visual_prompt must contain 'bboxes' and 'cls'."
+            )
+        bboxes = np.asarray(visual_prompt["bboxes"], dtype=np.float32)
+        cls = np.asarray(visual_prompt["cls"], dtype=np.int64)
+        if bboxes.ndim != 2 or bboxes.shape[1] != 4:
+            raise ValueError(
+                "visual_prompt['bboxes'] must have shape (N, 4)."
+            )
+        if cls.ndim != 1:
+            raise ValueError(
+                "visual_prompt['cls'] must have shape (N,)."
+            )
+        if len(bboxes) != len(cls):
+            raise ValueError(
+                "visual_prompt['bboxes'] and visual_prompt['cls'] "
+                "must contain the same number of entries."
+            )
+        if len(bboxes) == 0:
+            raise ValueError("visual_prompt must contain at least one example.")
+        if np.any(cls < 0):
+            raise ValueError("visual_prompt class indices must be non-negative.")
         self.mode = PerceptionMode.VISUAL_PROMPT
-        self.current_visual_prompt = visual_prompt
+        self.current_visual_prompt = {
+            "bboxes": bboxes,
+            "cls": cls,
+        }
         
     def _generate_obs_id(self) -> str:
         """Generate a sequential observation ID (e.g., obs_000001)."""
@@ -145,7 +194,26 @@ class YOLOEDetector(ObservationProducer):
 
         # Run model inference with tuned resolution
         imgsz = self.image_size if self.image_size is not None else 640
-        results = self.model(packet.rgb, imgsz=imgsz, conf=self.confidence_threshold, verbose=False)
+        if self.mode == PerceptionMode.VISUAL_PROMPT:
+            if self.current_visual_prompt is None:
+                raise RuntimeError(
+                    "VISUAL_PROMPT mode requires a visual prompt."
+                )
+            results = self.model.predict(
+                source=packet.rgb,
+                imgsz=imgsz,
+                conf=self.confidence_threshold,
+                visual_prompts=self.current_visual_prompt,
+                predictor=YOLOEVPSegPredictor,
+                verbose=False,
+            )
+        else:
+            results = self.model.predict(
+                source=packet.rgb,
+                imgsz=imgsz,
+                conf=self.confidence_threshold,
+                verbose=False,
+            )
         
         observations = []
         if not results or len(results) == 0:

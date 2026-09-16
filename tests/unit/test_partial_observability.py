@@ -193,3 +193,51 @@ def test_occlusion_module_rejects_predicted_geometry():
 
     results = module.compute(track_a, track_b, ctx)
     assert len(results) == 0
+
+
+def test_active_object_ids_filters_output_without_destroying_history():
+    """Verify active_object_ids excludes lost tracks from current output while preserving internal belief decay."""
+    config = RelationTemporalConfig(
+        confirmation_threshold=0.6,
+        contradiction_threshold=-0.5,
+        decay_per_second=0.1,
+        unknown_after_seconds=2.0,
+        lost_after_seconds=5.0,
+    )
+    machine = RelationStateMachine(config)
+
+    ev = RelationEvidence(
+        predicate="ON",
+        subject_id="obj_A",
+        object_id="obj_B",
+        frame_index=0,
+        timestamp=0.0,
+        result=EvidenceResult.SUPPORTED,
+        value=0.9,
+        threshold=0.5,
+        confidence=0.9,
+        reference_frame=ReferenceFrameType.WORLD,
+        evidence_type="support",
+        details={},
+    )
+    key = ("obj_A", "obj_B", "ON")
+
+    # Frame 0: Both active
+    states = machine.update([ev], frame_index=0, timestamp=0.0, active_object_ids={"obj_A", "obj_B"})
+    assert key in states
+    assert states[key] == RelationState.SUPPORTED
+
+    # Frame 1: obj_B is lost (only obj_A is active)
+    # Output must NOT contain the relation
+    states = machine.update([], frame_index=1, timestamp=0.5, active_object_ids={"obj_A"})
+    assert key not in states
+    # But internal belief and state must still exist and decay
+    assert key in machine.states
+    assert key in machine.beliefs
+    assert machine.beliefs[key] > 0.0
+
+    # Frame 2: obj_B reappears before timeout
+    states = machine.update([], frame_index=2, timestamp=1.0, active_object_ids={"obj_A", "obj_B"})
+    assert key in states
+    assert states[key] == RelationState.SUPPORTED
+

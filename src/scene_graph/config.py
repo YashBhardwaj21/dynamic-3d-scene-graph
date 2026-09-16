@@ -16,6 +16,10 @@ class DatasetConfig(BaseModel):
     @classmethod
     def validate_root(cls, value: Path) -> Path:
         if not value.exists() or not value.is_dir():
+            repo_root = Path(__file__).resolve().parent.parent.parent
+            candidate = repo_root / value
+            if candidate.exists() and candidate.is_dir():
+                return candidate
             raise ValueError(f"Dataset root does not exist or is not a directory: {value}")
         return value
 
@@ -214,6 +218,7 @@ class DistanceRelationConfig(BaseModel):
 
     near_threshold: float = Field(0.50, gt=0)
     far_threshold: float = Field(1.50, gt=0)
+    scale_factor: float = Field(1.5, gt=0)
 
 
 class SupportRelationConfig(BaseModel):
@@ -233,6 +238,7 @@ class DirectionalRelationConfig(BaseModel):
     margin_x: float = Field(0.1, gt=0)
     margin_y: float = Field(0.1, gt=0)
     uncertainty_sigma: float = Field(2.0, gt=0)
+    min_orthogonal_overlap_ratio: float = Field(0.15, ge=0.0, le=1.0)
 
 
 class ContainmentRelationConfig(BaseModel):
@@ -257,6 +263,22 @@ class OcclusionRelationConfig(BaseModel):
     depth_margin: float = Field(0.05, gt=0)
 
 
+class SpatialHierarchyConfig(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+
+    min_anchor_area_m2: float = Field(0.20, gt=0.0)
+    target_anchor_area_m2: float = Field(0.50, gt=0.0)
+    min_anchor_stability_ratio: float = Field(0.50, ge=0.0, le=1.0)
+    min_anchor_observations: int = Field(3, ge=1)
+    gravity_alignment_cosine: float = Field(0.80, ge=0.0, le=1.0)
+    weight_area: float = Field(0.35, ge=0.0)
+    weight_plane: float = Field(0.35, ge=0.0)
+    weight_stability: float = Field(0.15, ge=0.0)
+    weight_support: float = Field(0.15, ge=0.0)
+    anchor_score_threshold: float = Field(0.40, ge=0.0, le=1.0)
+    vertical_clearance_max_m: float = Field(0.60, gt=0.0)
+
+
 class RelationAdmissibilityRule(BaseModel):
     model_config = ConfigDict(extra="forbid")
 
@@ -267,12 +289,18 @@ class RelationAdmissibilityRule(BaseModel):
 class RelationConfig(BaseModel):
     model_config = ConfigDict(extra="forbid")
 
+    predicted_geometry_confidence_scale: float = Field(
+        0.5,
+        gt=0.0,
+        le=1.0,
+    )
     distance: DistanceRelationConfig = Field(default_factory=DistanceRelationConfig)
     support: SupportRelationConfig = Field(default_factory=SupportRelationConfig)
     directional: DirectionalRelationConfig = Field(default_factory=DirectionalRelationConfig)
     containment: ContainmentRelationConfig = Field(default_factory=ContainmentRelationConfig)
     depth_order: DepthOrderRelationConfig = Field(default_factory=DepthOrderRelationConfig)
     occlusion: OcclusionRelationConfig = Field(default_factory=OcclusionRelationConfig)
+    hierarchy: SpatialHierarchyConfig = Field(default_factory=SpatialHierarchyConfig)
     admissibility: Dict[str, RelationAdmissibilityRule] = Field(default_factory=dict)
 
 

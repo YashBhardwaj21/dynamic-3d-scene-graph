@@ -324,3 +324,79 @@ def test_depth_order_relations(
     }
 
     assert predicates["IN_FRONT_OF"] == EvidenceResult.SUPPORTED
+
+
+def test_candidate_pairs_lifecycle_boundary(config):
+    """Verify RelationRegistry candidate pairs include ACTIVE and TEMPORARILY_UNOBSERVED, but exclude LOST."""
+    from scene_graph.relations.registry import RelationRegistry
+
+    registry = RelationRegistry(config)
+
+    t_active = create_track("t_active", "cup", [0.0, 0.0, 0.0])
+    t_active.state = TrackState.ACTIVE
+
+    t_unobserved = create_track("t_unobs", "book", [1.0, 0.0, 0.0])
+    t_unobserved.state = TrackState.TEMPORARILY_UNOBSERVED
+
+    t_lost = create_track("t_lost", "bottle", [2.0, 0.0, 0.0])
+    t_lost.state = TrackState.LOST
+
+    pairs = registry._generate_candidate_pairs([t_active, t_unobserved, t_lost])
+
+    # Should contain pairs between t_active and t_unobs only (2 pairs total)
+    assert len(pairs) == 2
+    track_ids_in_pairs = {(p[0].object_id, p[1].object_id) for p in pairs}
+    assert ("t_active", "t_unobs") in track_ids_in_pairs
+    assert ("t_unobs", "t_active") in track_ids_in_pairs
+    assert not any("t_lost" in (p[0].object_id, p[1].object_id) for p in pairs)
+
+
+def test_provenance_confidence_adjustment(config, dummy_context):
+    """Verify that predicted geometry dampens relation evidence confidence."""
+    from scene_graph.relations.registry import RelationRegistry
+    from scene_graph.geometry.provenance import GeometrySource
+    from scene_graph.relations.evidence import RelationEvidence, EvidenceResult, ReferenceFrameType
+
+    registry = RelationRegistry(config)
+    scale = config.relations.predicted_geometry_confidence_scale  # 0.5 by default
+
+    t1 = create_track("t1", "cup", [0.0, 0.0, 0.0])
+    t2 = create_track("t2", "book", [0.1, 0.0, 0.0])
+
+    add_dummy_geometry(dummy_context, t1, [[0.0, 0.0, 0.0]])
+    add_dummy_geometry(dummy_context, t2, [[0.1, 0.0, 0.0]])
+
+    # Case 1: Both OBSERVED
+    dummy_context.observation_geometry["t1"].geometry_source = GeometrySource.OBSERVED
+    dummy_context.observation_geometry["t2"].geometry_source = GeometrySource.OBSERVED
+
+    base_evidence = RelationEvidence(
+        predicate="NEAR",
+        subject_id="t1",
+        object_id="t2",
+        frame_index=1,
+        timestamp=1.0,
+        result=EvidenceResult.SUPPORTED,
+        value=0.1,
+        threshold=0.5,
+        confidence=0.8,
+        reference_frame=ReferenceFrameType.WORLD,
+        evidence_type="direct",
+        details={},
+    )
+
+    ev_obs = registry._adjust_evidence_for_geometry_provenance(base_evidence, dummy_context)
+    assert ev_obs.confidence == pytest.approx(0.8)
+    assert "geometry_provenance" not in ev_obs.details
+
+    # Case 2: One PREDICTED
+    dummy_context.observation_geometry["t1"].geometry_source = GeometrySource.PREDICTED
+    ev_pred1 = registry._adjust_evidence_for_geometry_provenance(base_evidence, dummy_context)
+    assert ev_pred1.confidence == pytest.approx(0.8 * scale)
+    assert ev_pred1.details["geometry_provenance"]["predicted_endpoint_count"] == 1
+
+    # Case 3: Both PREDICTED
+    dummy_context.observation_geometry["t2"].geometry_source = GeometrySource.PREDICTED
+    ev_pred2 = registry._adjust_evidence_for_geometry_provenance(base_evidence, dummy_context)
+    assert ev_pred2.confidence == pytest.approx(0.8 * (scale ** 2))
+    assert ev_pred2.details["geometry_provenance"]["predicted_endpoint_count"] == 2

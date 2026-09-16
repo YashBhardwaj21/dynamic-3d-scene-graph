@@ -156,6 +156,21 @@ class RelationStateMachine:
 
         return RelationState.UNKNOWN
 
+    def _filter_active_relations(
+        self,
+        relation_states: Dict[RelationKey, RelationState],
+        active_object_ids: Optional[Set[str]],
+    ) -> Dict[RelationKey, RelationState]:
+        if active_object_ids is None:
+            return dict(relation_states)
+
+        return {
+            key: state
+            for key, state in relation_states.items()
+            if key[0] in active_object_ids
+            and key[1] in active_object_ids
+        }
+
     def update(
         self,
         evidences: List[RelationEvidence],
@@ -219,4 +234,7 @@ class RelationStateMachine:
         self._last_frame_index = frame_index
         self._last_timestamp = timestamp
 
-        return dict(self.states)
+        return self._filter_active_relations(
+            self.states,
+            active_object_ids,
+        )
