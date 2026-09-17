@@ -1,9 +1,9 @@
-# default.yaml
-# Frozen parameters for the dynamic 3D scene graph
+# live_d455.yaml
+# Production live configuration for Intel RealSense D455 running real-time perception
 
 tracking:
   confirmation:
-    min_hits: 3
+    min_hits: 1
 
   occlusion:
     max_missing_seconds: 5.0
@@ -13,33 +13,31 @@ tracking:
     acceleration_std_mps2: 1.0
 
   measurement:
-    position_std_m: 0.02
+    position_std_m: 0.03
 
   gating:
     chi2_probability: 0.999
 
   association:
-    max_distance_m: 0.25
+    max_distance_m: 0.45
     size_weight: 0.25
 
   history:
     observation_buffer_size: 10
 
   initialization:
-    position_variance_m2: 0.01
+    position_variance_m2: 0.02
     velocity_variance_m2s2: 1.0
-
 
 temporal:
   relation:
-    confirmation_threshold: 0.8
-    contradiction_threshold: -0.8
+    confirmation_threshold: 0.70
+    contradiction_threshold: -0.70
     decay_per_second: 0.1
-    unknown_after_seconds: 2.0
-    lost_after_seconds: 5.0
+    unknown_after_seconds: 3.0
+    lost_after_seconds: 6.0
     min_confirmation_hits: 1
     min_evidence_confidence: 0.05
-
 
 perception:
   type: yoloe
@@ -47,49 +45,38 @@ perception:
   model: models/yoloe-26s-seg-pf.pt
   confidence_threshold: 0.25
   image_size: 480
-  device: auto
-
-
-sync:
-  rgb_depth_max_dt: 0.02
-  rgb_pose_max_dt: 0.02
-
-
-reference_frame:
-  type: world
-  up_axis: [0.0, 0.0, 1.0]
-  heading_axis: [1.0, 0.0, 0.0]
-
+  device: cpu
 
 geometry:
-  min_valid_points: 30
-
+  min_valid_points: 20
+  min_depth_m: 0.20
+  max_depth_m: 6.0
+  measurement_noise_std_m: 0.03
+  spatial_outlier_sigma: 3.0
   robust_depth:
-    method: mad
-    k: 3.5
-
+    k: 2.5
   downsampling:
-    voxel_size_m: 0.005
+    voxel_size_m: 0.02
 
-  measurement_noise_std_m: 0.01
+sync:
+  rgb_depth_max_dt: 0.05
+  rgb_pose_max_dt: 0.05
 
-  plane_ransac:
-    max_iterations: 100
-    min_inliers: 3
-    random_seed: 0
-
+reference_frame:
+  type: camera
+  up_axis: [0.0, 0.0, 1.0]
 
 relations:
-  predicted_geometry_confidence_scale: 0.5
+  predicted_geometry_confidence_scale: 0.7
 
   distance:
-    near_threshold: 0.50
-    far_threshold: 1.50
+    near_threshold: 0.60
+    far_threshold: 2.00
 
   support:
     plane_residual_m: 0.05
     min_support_overlap: 0.05
-    contact_tolerance_m: 0.02
+    contact_tolerance_m: 0.06
     min_contact_density: 0.05
     min_plane_points: 10
     min_plane_alignment_cosine: 0.8
@@ -112,30 +99,30 @@ relations:
     min_valid_depth_samples: 5
     depth_margin: 0.05
 
-  admissibility:
-    "ON":
-      subject: ordinary_object
-      object: support_surface
-
-    "INSIDE":
-      subject: ordinary_object
-      object: container
-
-
 roles:
   support_surface:
     - desk
+    - office desk
     - table
+    - floor
+    - bench
 
-  container: []
+  container:
+    - box
+    - basket
+    - bin
+    - tray
 
   ordinary_object:
+    - trolley
+    - robot
+    - chair
+    - stool
     - monitor
     - computer
     - keyboard
     - mouse
-    - telephone
-    - book
+    - bottle
     - cup
-    - pen
-    - paper
+    - tool
+    - hat

@@ -33,6 +33,7 @@ class ObservationGeometry:
     obb_center_world: Optional[np.ndarray] = None
     obb_axes_world: Optional[np.ndarray] = None
     obb_extents_world: Optional[np.ndarray] = None
+    is_in_frustum: bool = True
 
 
 

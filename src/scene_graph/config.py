@@ -66,6 +66,9 @@ class SensorConfig(BaseModel):
     subpixel_disparity_std: float = Field(0.1, gt=0)
     pixel_noise_std: float = Field(0.5, gt=0)
     isotropic_std_m: float = Field(0.01, gt=0)
+    axial_noise_floor_m: float = Field(0.0, ge=0)
+    quadratic_alpha: float = Field(0.0014, ge=0)
+    quadratic_sigma_0: float = Field(0.003, gt=0)
 
 
 class PoseConfig(BaseModel):
@@ -110,6 +113,9 @@ class GeometryConfig(BaseModel):
     downsampling: DownsamplingConfig = Field(default_factory=DownsamplingConfig)
     measurement_noise_std_m: float = Field(0.01, gt=0)
     plane_ransac: PlaneRansacConfig = Field(default_factory=PlaneRansacConfig)
+    min_depth_m: float = Field(0.10, ge=0.0)
+    max_depth_m: float = Field(10.0, gt=0.0)
+    spatial_outlier_sigma: float = Field(3.0, gt=0.0)
 
 
 class VocabularyConfig(BaseModel):
@@ -132,6 +138,10 @@ class PerceptionConfig(BaseModel):
     prompts: Optional[Tuple[str, ...]] = None
     classes: Tuple[str, ...] = Field(default_factory=tuple)
     vocabulary: Optional[str] = None
+    async_mode: bool = Field(False)
+    max_queue_size: int = Field(2, ge=1)
+    frame_history_size: int = Field(60, ge=1)
+    max_detection_age_s: float = Field(0.5, gt=0)
 
 
 class TrackingConfirmationConfig(BaseModel):
@@ -144,6 +154,7 @@ class TrackingOcclusionConfig(BaseModel):
     model_config = ConfigDict(extra="forbid")
 
     max_missing_seconds: float = Field(1.0, ge=0.0)
+    max_missing_seconds_out_of_view: float = Field(5.0, ge=0.0)
 
 
 class TrackingProcessConfig(BaseModel):
@@ -205,6 +216,8 @@ class RelationTemporalConfig(BaseModel):
     decay_per_second: float = Field(0.1, ge=0)
     unknown_after_seconds: float = Field(2.0, ge=0)
     lost_after_seconds: float = Field(5.0, ge=0)
+    min_confirmation_hits: int = Field(1, ge=1)
+    min_evidence_confidence: float = Field(0.0, ge=0.0, le=1.0)
 
 
 class TemporalConfig(BaseModel):

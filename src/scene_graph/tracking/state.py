@@ -7,7 +7,7 @@ class KalmanState:
     STATE_DIMENSION = 6
     POSITION_DIMENSION = 3
 
-    def __init__(self, position: np.ndarray, initial_cov_pos: float, initial_cov_vel: float):
+    def __init__(self, position: np.ndarray, initial_cov_pos: float | np.ndarray, initial_cov_vel: float):
         position = np.asarray(position, dtype=np.float64)
 
         if position.shape != (self.POSITION_DIMENSION,):
@@ -16,9 +16,6 @@ class KalmanState:
         if not np.isfinite(position).all():
             raise ValueError("position must contain only finite values.")
 
-        if not np.isfinite(initial_cov_pos) or initial_cov_pos <= 0.0:
-            raise ValueError("initial_cov_pos must be finite and positive.")
-
         if not np.isfinite(initial_cov_vel) or initial_cov_vel <= 0.0:
             raise ValueError("initial_cov_vel must be finite and positive.")
 
@@ -26,8 +23,17 @@ class KalmanState:
         self.x[:self.POSITION_DIMENSION] = position
 
         self.P = np.zeros((self.STATE_DIMENSION, self.STATE_DIMENSION), dtype=np.float64)
-        self.P[:3, :3] = np.eye(3, dtype=np.float64) * initial_cov_pos
-        self.P[3:, 3:] = np.eye(3, dtype=np.float64) * initial_cov_vel
+        if isinstance(initial_cov_pos, (int, float)):
+            if not np.isfinite(initial_cov_pos) or initial_cov_pos <= 0.0:
+                raise ValueError("initial_cov_pos must be finite and positive.")
+            self.P[:3, :3] = np.eye(3, dtype=np.float64) * float(initial_cov_pos)
+        else:
+            cov_mat = np.asarray(initial_cov_pos, dtype=np.float64)
+            if cov_mat.shape != (3, 3):
+                raise ValueError("initial_cov_pos as a matrix must have shape (3, 3).")
+            self.P[:3, :3] = self._validate_covariance(cov_mat, "initial position covariance")
+
+        self.P[3:, 3:] = np.eye(3, dtype=np.float64) * float(initial_cov_vel)
         self.P = self._symmetrize(self.P)
 
     def predict(self, dt: float, q_std: float) -> None:

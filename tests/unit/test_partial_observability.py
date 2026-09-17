@@ -241,3 +241,295 @@ def test_active_object_ids_filters_output_without_destroying_history():
     assert key in states
     assert states[key] == RelationState.SUPPORTED
 
+
+def test_frustum_math():
+    """Verify camera frustum boundary math, clipping, and box containment."""
+    intrinsics = CameraIntrinsics(fx=500.0, fy=500.0, cx=320.0, cy=240.0, width=640, height=480)
+    world_T_cam = np.eye(4, dtype=np.float64)
+
+    # 1. Point directly in front of camera inside FOV
+    pt_in = np.array([0.0, 0.0, 2.0])
+    assert intrinsics.is_in_frustum(pt_in) is True
+    assert intrinsics.is_world_point_in_frustum(pt_in, world_T_cam) is True
+
+    # 2. Point behind camera (Z <= 0)
+    pt_behind = np.array([0.0, 0.0, -1.0])
+    assert intrinsics.is_in_frustum(pt_behind) is False
+    assert intrinsics.is_world_point_in_frustum(pt_behind, world_T_cam) is False
+
+    # 3. Point too close (Z < min_depth_m)
+    pt_too_close = np.array([0.0, 0.0, 0.05])
+    assert intrinsics.is_in_frustum(pt_too_close, min_depth_m=0.10) is False
+
+    # 4. Point too far (Z > max_depth_m)
+    pt_too_far = np.array([0.0, 0.0, 15.0])
+    assert intrinsics.is_in_frustum(pt_too_far, max_depth_m=10.0) is False
+
+    # 5. Point laterally outside horizontal FOV
+    # u = (x * 500 / 2.0) + 320 = 250*x + 320. If x = 2.0, u = 820 > 640.
+    pt_wide = np.array([2.0, 0.0, 2.0])
+    assert intrinsics.is_in_frustum(pt_wide) is False
+
+    # 6. Vectorized points check
+    pts = np.array([
+        [0.0, 0.0, 2.0],
+        [0.0, 0.0, -1.0],
+        [2.0, 0.0, 2.0],
+        [0.0, 0.0, 1.0],
+    ])
+    mask = intrinsics.points_in_frustum(pts)
+    assert np.array_equal(mask, [True, False, False, True])
+
+    # 7. Box in frustum
+    bbox_min = np.array([-0.1, -0.1, 1.9])
+    bbox_max = np.array([0.1, 0.1, 2.1])
+    assert intrinsics.is_box_in_frustum(bbox_min, bbox_max, world_T_cam) is True
+
+    bbox_behind_min = np.array([-0.1, -0.1, -3.0])
+    bbox_behind_max = np.array([0.1, 0.1, -2.0])
+    assert intrinsics.is_box_in_frustum(bbox_behind_min, bbox_behind_max, world_T_cam) is False
+
+
+def test_out_of_view_vs_occluded_lifetime():
+    """Verify that out-of-view tracks persist longer than occluded tracks inside frustum."""
+    from scene_graph.tracking.causal_tracker import CausalTracker
+    from scene_graph.ontology.entity import VisibilityState
+
+    config = SceneGraphConfig.from_files("configs/default.yaml")
+    tracker = CausalTracker(config)
+    assert tracker.max_missing_seconds == 1.0
+    assert tracker.max_missing_seconds_out_of_view >= 5.0
+
+    intrinsics = CameraIntrinsics(fx=500.0, fy=500.0, cx=320.0, cy=240.0, width=640, height=480)
+    world_T_cam = np.eye(4, dtype=np.float64)
+
+    def make_obs(centroid, class_name, obs_id):
+        geom = ObjectGeometry(
+            status=GeometryStatus.VALID,
+            centroid_world=np.asarray(centroid, dtype=np.float64),
+            position_covariance_world=np.eye(3) * 0.01,
+            bbox_min_world=np.asarray(centroid) - 0.1,
+            bbox_max_world=np.asarray(centroid) + 0.1,
+            obb_center_world=np.asarray(centroid),
+            obb_axes_world=np.eye(3),
+            obb_extents_world=np.array([0.2, 0.2, 0.2]),
+            depth_stats={"mean": float(centroid[2])},
+            points_world_sampled=np.array([centroid]),
+            points_world=np.array([centroid]),
+            points_camera=np.array([centroid]),
+            valid_point_count=50,
+        )
+        return Observation(
+            obs_id=obs_id,
+            frame_index=0,
+            timestamp=0.0,
+            class_name=class_name,
+            confidence=0.9,
+            bbox_xyxy=np.array([10.0, 10.0, 50.0, 50.0]),
+            mask_rle=encode_mask_rle(np.ones((10, 10), dtype=bool)),
+            object_geometry=geom,
+        )
+
+    # Initialize two tracks over 3 frames to CONFIRM them
+    # Obj A at [0, 0, 2.0] (in front of camera)
+    # Obj B at [0, 0, -2.0] (behind camera in world frame)
+    for fi in range(3):
+        t = fi * 0.033
+        obs_a = make_obs([0.0, 0.0, 2.0], "cup", f"obs_a_{fi}")
+        obs_b = make_obs([0.0, 0.0, -2.0], "bottle", f"obs_b_{fi}")
+        tracker.update([obs_a, obs_b], fi, t, camera_intrinsics=intrinsics, world_T_camera=world_T_cam)
+
+    assert tracker.tracks["track_0001"].state == TrackState.ACTIVE
+    assert tracker.tracks["track_0002"].state == TrackState.ACTIVE
+
+    # Frame 3 (t = 0.5s): Neither is observed
+    tracks = tracker.update([], 3, 0.5, camera_intrinsics=intrinsics, world_T_camera=world_T_cam)
+    track_a = tracker.tracks["track_0001"]
+    track_b = tracker.tracks["track_0002"]
+
+    assert track_a.state == TrackState.TEMPORARILY_UNOBSERVED
+    assert track_a.is_in_frustum is True
+    assert track_a.visibility_state == VisibilityState.OCCLUDED
+
+    assert track_b.state == TrackState.TEMPORARILY_UNOBSERVED
+    assert track_b.is_in_frustum is False
+    assert track_b.visibility_state == VisibilityState.OUT_OF_VIEW
+
+    # Frame 4 (t = 1.5s): 1.5s since last observation at t=0.066
+    # Track A is in frustum -> missing_seconds >= 1.0s -> LOST
+    # Track B is out of view -> missing_seconds < 5.0s -> STILL TEMPORARILY_UNOBSERVED!
+    tracks = tracker.update([], 4, 1.5, camera_intrinsics=intrinsics, world_T_camera=world_T_cam)
+    assert "track_0001" not in tracker.tracks or tracker.tracks["track_0001"].state == TrackState.LOST
+    assert tracker.tracks["track_0002"].state == TrackState.TEMPORARILY_UNOBSERVED
+    assert tracker.tracks["track_0002"].visibility_state == VisibilityState.OUT_OF_VIEW
+
+    # Frame 5 (t = 5.5s): missing_seconds >= 5.0s -> Track B now LOST
+    tracks = tracker.update([], 5, 5.5, camera_intrinsics=intrinsics, world_T_camera=world_T_cam)
+    assert "track_0002" not in tracker.tracks or tracker.tracks["track_0002"].state == TrackState.LOST
+
+
+def test_out_of_view_reassociation():
+    """Verify that an out-of-view object re-associates to its original track when camera turns back."""
+    from scene_graph.tracking.causal_tracker import CausalTracker
+
+    config = SceneGraphConfig.from_files("configs/default.yaml")
+    tracker = CausalTracker(config)
+
+    intrinsics = CameraIntrinsics(fx=500.0, fy=500.0, cx=320.0, cy=240.0, width=640, height=480)
+    world_T_cam_forward = np.eye(4, dtype=np.float64)
+
+    # Camera looking away: 180 deg yaw rotation
+    world_T_cam_away = np.array([
+        [-1.0,  0.0,  0.0, 0.0],
+        [ 0.0,  1.0,  0.0, 0.0],
+        [ 0.0,  0.0, -1.0, 0.0],
+        [ 0.0,  0.0,  0.0, 1.0],
+    ], dtype=np.float64)
+
+    def make_obs(centroid, obs_id):
+        geom = ObjectGeometry(
+            status=GeometryStatus.VALID,
+            centroid_world=np.asarray(centroid, dtype=np.float64),
+            position_covariance_world=np.eye(3) * 0.01,
+            bbox_min_world=np.asarray(centroid) - 0.1,
+            bbox_max_world=np.asarray(centroid) + 0.1,
+            obb_center_world=np.asarray(centroid),
+            obb_axes_world=np.eye(3),
+            obb_extents_world=np.array([0.2, 0.2, 0.2]),
+            depth_stats={"mean": float(centroid[2])},
+            points_world_sampled=np.array([centroid]),
+            points_world=np.array([centroid]),
+            points_camera=np.array([centroid]),
+            valid_point_count=50,
+        )
+        return Observation(
+            obs_id=obs_id,
+            frame_index=0,
+            timestamp=0.0,
+            class_name="cup",
+            confidence=0.9,
+            bbox_xyxy=np.array([10.0, 10.0, 50.0, 50.0]),
+            mask_rle=encode_mask_rle(np.ones((10, 10), dtype=bool)),
+            object_geometry=geom,
+        )
+
+    # 1. Observe object at [0, 0, 2.0] for 3 frames to confirm
+    for fi in range(3):
+        t = fi * 0.033
+        obs = make_obs([0.0, 0.0, 2.0], f"obs_{fi}")
+        tracker.update([obs], fi, t, camera_intrinsics=intrinsics, world_T_camera=world_T_cam_forward)
+
+    orig_track_id = "track_0001"
+    assert tracker.tracks[orig_track_id].state == TrackState.ACTIVE
+
+    # 2. Camera turns away at t = 0.5s and t = 2.0s (object is out of view for 2.0s > 1.0s)
+    tracker.update([], 3, 0.5, camera_intrinsics=intrinsics, world_T_camera=world_T_cam_away)
+    tracker.update([], 4, 2.0, camera_intrinsics=intrinsics, world_T_camera=world_T_cam_away)
+
+    assert orig_track_id in tracker.tracks
+    assert tracker.tracks[orig_track_id].state == TrackState.TEMPORARILY_UNOBSERVED
+    assert tracker.tracks[orig_track_id].is_in_frustum is False
+
+    # 3. Camera turns back at t = 2.1s and observes the object again
+    obs_reappear = make_obs([0.0, 0.0, 2.0], "obs_reappear")
+    tracks = tracker.update([obs_reappear], 5, 2.1, camera_intrinsics=intrinsics, world_T_camera=world_T_cam_forward)
+
+    # Must re-associate to orig_track_id, NOT create track_0002!
+    assert len(tracker.tracks) == 1
+    assert orig_track_id in tracker.tracks
+    assert tracker.tracks[orig_track_id].state == TrackState.ACTIVE
+    assert tracker.tracks[orig_track_id].is_in_frustum is True
+
+
+def test_pipeline_persistent_entity_out_of_view_visibility():
+    """Verify SceneGraphPipeline populates VisibilityState.OUT_OF_VIEW on nodes and entities."""
+    from scene_graph.data.frame_packet import FramePacket
+    from scene_graph.ontology.entity import VisibilityState
+
+    config = SceneGraphConfig.from_files("configs/default.yaml")
+    pipeline = SceneGraphPipeline(config)
+
+    intrinsics = CameraIntrinsics(fx=500.0, fy=500.0, cx=320.0, cy=240.0, width=640, height=480)
+    world_T_cam_forward = np.eye(4, dtype=np.float64)
+    world_T_cam_away = np.array([
+        [-1.0,  0.0,  0.0, 0.0],
+        [ 0.0,  1.0,  0.0, 0.0],
+        [ 0.0,  0.0, -1.0, 0.0],
+        [ 0.0,  0.0,  0.0, 1.0],
+    ], dtype=np.float64)
+
+    def make_packet_and_obs(frame_idx, timestamp, world_T_cam, with_obs=True):
+        pkt = FramePacket(
+            frame_index=frame_idx,
+            timestamp=timestamp,
+            rgb=np.zeros((480, 640, 3), dtype=np.uint8),
+            depth=np.ones((480, 640), dtype=np.float32) * 2.0,
+            camera_intrinsics=intrinsics,
+            world_T_camera=world_T_cam,
+            relation_frame=RelationReferenceFrame.create("map", np.eye(4)),
+        )
+        if not with_obs:
+            return pkt, []
+
+        geom = ObjectGeometry(
+            status=GeometryStatus.VALID,
+            centroid_world=np.array([0.0, 0.0, 2.0]),
+            position_covariance_world=np.eye(3) * 0.01,
+            bbox_min_world=np.array([-0.1, -0.1, 1.9]),
+            bbox_max_world=np.array([0.1, 0.1, 2.1]),
+            obb_center_world=np.array([0.0, 0.0, 2.0]),
+            obb_axes_world=np.eye(3),
+            obb_extents_world=np.array([0.2, 0.2, 0.2]),
+            depth_stats={"mean": 2.0},
+            points_world_sampled=np.array([[0.0, 0.0, 2.0]]),
+            points_world=np.array([[0.0, 0.0, 2.0]]),
+            points_camera=np.array([[0.0, 0.0, 2.0]]),
+            valid_point_count=50,
+        )
+        obs = Observation(
+            obs_id=f"obs_{frame_idx}",
+            frame_index=frame_idx,
+            timestamp=timestamp,
+            class_name="cup",
+            confidence=0.9,
+            bbox_xyxy=np.array([10.0, 10.0, 50.0, 50.0]),
+            mask_rle=encode_mask_rle(np.ones((10, 10), dtype=bool)),
+            object_geometry=geom,
+        )
+        return pkt, [obs]
+
+    # Confirm track over 3 frames
+    for fi in range(3):
+        pkt, obs_list = make_packet_and_obs(fi, fi * 0.033, world_T_cam_forward, with_obs=True)
+        graph = pipeline.update(pkt, obs_list)
+
+    assert "track_0001" in graph.nodes
+    node = graph.nodes["track_0001"]
+    assert node.attributes["visibility"] == "observed"
+    assert node.attributes["in_frustum"] is True
+    entity = node.to_persistent_entity()
+    assert entity.visibility_state == VisibilityState.VISIBLE
+
+    # Frame 3: Camera turns away, object is unobserved and out of view
+    pkt_away, obs_away = make_packet_and_obs(3, 0.20, world_T_cam_away, with_obs=False)
+    graph = pipeline.update(pkt_away, obs_away)
+
+    assert "track_0001" in graph.nodes
+    node = graph.nodes["track_0001"]
+    assert node.attributes["visibility"] == "out_of_view"
+    assert node.attributes["in_frustum"] is False
+    entity = node.to_persistent_entity()
+    assert entity.visibility_state == VisibilityState.OUT_OF_VIEW
+
+    # Frame 4: Camera turns back, but object is occluded (inside frustum, no detection)
+    pkt_back, obs_back = make_packet_and_obs(4, 0.40, world_T_cam_forward, with_obs=False)
+    graph = pipeline.update(pkt_back, obs_back)
+
+    assert "track_0001" in graph.nodes
+    node = graph.nodes["track_0001"]
+    assert node.attributes["visibility"] == "predicted"
+    assert node.attributes["visibility_state"] == "occluded"
+    assert node.attributes["in_frustum"] is True
+    entity = node.to_persistent_entity()
+    assert entity.visibility_state == VisibilityState.OCCLUDED
+

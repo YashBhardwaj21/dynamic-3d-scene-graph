@@ -112,3 +112,57 @@ def transform_points(T: np.ndarray, points_camera: np.ndarray) -> np.ndarray:
     
     # Return Nx3
     return points_world_h[:, :3]
+
+
+def optical_to_body_rotation() -> np.ndarray:
+    """Return standard 3x3 rotation from camera optical (X-right, Y-down, Z-forward)
+    to robot body frame (X-forward, Y-left, Z-up) according to ROS REP-103.
+    """
+    return np.array([
+        [0.0,  0.0,  1.0],
+        [-1.0, 0.0,  0.0],
+        [0.0, -1.0,  0.0],
+    ], dtype=np.float64)
+
+
+def body_to_optical_rotation() -> np.ndarray:
+    """Return standard 3x3 rotation from robot body frame to camera optical frame."""
+    return optical_to_body_rotation().T
+
+
+def optical_to_body_transform(t_body: np.ndarray | None = None) -> np.ndarray:
+    """Return 4x4 SE(3) transformation matrix (body_T_optical)."""
+    T = np.eye(4, dtype=np.float64)
+    T[:3, :3] = optical_to_body_rotation()
+    if t_body is not None:
+        T[:3, 3] = np.asarray(t_body, dtype=np.float64)
+    return T
+
+
+def body_to_optical_transform(t_optical: np.ndarray | None = None) -> np.ndarray:
+    """Return 4x4 SE(3) transformation matrix (optical_T_body)."""
+    T = np.eye(4, dtype=np.float64)
+    T[:3, :3] = body_to_optical_rotation()
+    if t_optical is not None:
+        T[:3, 3] = np.asarray(t_optical, dtype=np.float64)
+    return T
+
+
+def invert_se3_transform(T: np.ndarray) -> np.ndarray:
+    """Invert a 4x4 SE(3) transformation matrix using closed-form rigid inversion.
+    
+    Given T = [R, t; 0, 1], T^-1 = [R^T, -R^T * t; 0, 1].
+    """
+    validate_se3_transform(T)
+    R = T[:3, :3]
+    t = T[:3, 3]
+    T_inv = np.eye(4, dtype=np.float64)
+    T_inv[:3, :3] = R.T
+    T_inv[:3, 3] = -R.T @ t
+    return T_inv
+
+
+def transform_points_inverse(T: np.ndarray, points_world: np.ndarray) -> np.ndarray:
+    """Transform an Nx3 array of 3D points from world back to camera coordinates using T^-1."""
+    T_inv = invert_se3_transform(T)
+    return transform_points(T_inv, points_world)

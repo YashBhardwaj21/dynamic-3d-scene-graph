@@ -46,7 +46,7 @@ import message_filters
 import tf2_ros
 from tf2_ros import TransformException
 
-from scene_graph.data.frame_packet import FramePacket, IMUSample
+from scene_graph.data.frame_packet import FramePacket, IMUSample, LocalizationMode
 from scene_graph.geometry.camera import CameraIntrinsics, DepthModel
 from scene_graph.geometry.reference_frame import RelationReferenceFrame
 from scene_graph.pipeline.online_pipeline import OnlinePipeline
@@ -96,6 +96,10 @@ class SceneGraphROSNode(Node):
         self.declare_parameter("overlay_tracks_topic", "/scene_graph/overlay_tracks")
         self.declare_parameter("queue_size", 64)
         self.declare_parameter("drop_old_frames", False)
+        self.declare_parameter("localization_mode", "world")
+        self.declare_parameter("async_mode", True)
+        self.declare_parameter("min_hits", -1)
+        self.declare_parameter("max_missing_seconds", -1.0)
 
         self.rgb_topic = self.get_parameter("rgb_topic").get_parameter_value().string_value
         self.depth_topic = self.get_parameter("depth_topic").get_parameter_value().string_value
@@ -116,9 +120,22 @@ class SceneGraphROSNode(Node):
         self.overlay_tracks_topic = self.get_parameter("overlay_tracks_topic").get_parameter_value().string_value
         self.queue_size = self.get_parameter("queue_size").get_parameter_value().integer_value
         self.drop_old_frames = self.get_parameter("drop_old_frames").get_parameter_value().bool_value
+        self.localization_mode = self.get_parameter("localization_mode").get_parameter_value().string_value.lower()
+        self.async_mode = self.get_parameter("async_mode").get_parameter_value().bool_value
+        self.param_min_hits = self.get_parameter("min_hits").get_parameter_value().integer_value
+        self.param_max_missing_seconds = self.get_parameter("max_missing_seconds").get_parameter_value().double_value
+
 
         self.get_logger().info(f"Loading SceneGraph configuration from {self.config_path}")
         self.config: SceneGraphConfig = load_scene_graph_config(self.config_path)
+
+        if self.param_min_hits > 0 and self.config.tracking and self.config.tracking.confirmation:
+            self.config.tracking.confirmation.min_hits = self.param_min_hits
+            self.get_logger().info(f"Applied parameter override: tracking.confirmation.min_hits={self.param_min_hits}")
+
+        if self.param_max_missing_seconds > 0 and self.config.tracking and self.config.tracking.occlusion:
+            self.config.tracking.occlusion.max_missing_seconds = self.param_max_missing_seconds
+            self.get_logger().info(f"Applied parameter override: tracking.occlusion.max_missing_seconds={self.param_max_missing_seconds:.1f}s")
 
         depth_scale = self.param_depth_scale
         if self.config.depth is not None and self.config.depth.scale > 0:
@@ -128,8 +145,8 @@ class SceneGraphROSNode(Node):
         self.get_logger().info(f"Depth adapter configured: {self.depth_scale:.1f} raw units per meter")
 
         if not self.debug_frame_packet_only:
-            self.get_logger().info("Initializing OnlinePipeline...")
-            self.pipeline = OnlinePipeline(self.config)
+            self.get_logger().info(f"Initializing OnlinePipeline (async_mode={self.async_mode})...")
+            self.pipeline = OnlinePipeline(self.config, async_mode=self.async_mode)
             self.get_logger().info("OnlinePipeline ready.")
         else:
             self.pipeline = None
@@ -307,43 +324,67 @@ class SceneGraphROSNode(Node):
                 self.get_logger().warn("Waiting for CameraInfo before processing frames...")
                 return
 
-        t_tf_start = time.monotonic()
+        # Check depth synchronization
+        depth_timestamp = rgb_timestamp
+        if pending.depth_msg is not None:
+            depth_stamp = pending.depth_msg.header.stamp
+            depth_timestamp = float(depth_stamp.sec) + float(depth_stamp.nanosec) * 1e-9
+            depth_skew = abs(rgb_timestamp - depth_timestamp)
+            if depth_skew > self.rgb_depth_max_dt:
+                self.get_logger().warn(
+                    f"RGB-Depth desynchronization: skew={depth_skew*1000.0:.1f}ms > max={self.rgb_depth_max_dt*1000.0:.1f}ms",
+                    throttle_duration_sec=2.0,
+                )
+
         world_T_camera = None
-        target_time = Time(seconds=rgb_stamp.sec, nanoseconds=rgb_stamp.nanosec)
-        try:
-            transform_stamped = self.tf_buffer.lookup_transform(
-                self.world_frame,
-                self.sensor_frame,
-                target_time,
-                timeout=Duration(seconds=self.pose_max_dt),
-            )
-            world_T_camera = transform_to_matrix(transform_stamped)
-        except TransformException as ex:
+        pose_timestamp = None
+        pose_age = float("inf")
+        transform_valid = False
+        transform_source = "unknown"
+        tf_latency_ms = 0.0
+
+        if self.localization_mode == "camera_local":
+            world_T_camera = np.eye(4, dtype=np.float64)
+            pose_timestamp = rgb_timestamp
+            pose_age = 0.0
+            transform_valid = True
+            transform_source = "camera_local"
+            world_frame_used = self.sensor_frame
+        else:
+            # WORLD_MODE requires valid, timestamp-correct localization
+            world_frame_used = self.world_frame
+            t_tf_start = time.monotonic()
+            target_time = Time(seconds=rgb_stamp.sec, nanoseconds=rgb_stamp.nanosec)
             try:
                 transform_stamped = self.tf_buffer.lookup_transform(
                     self.world_frame,
                     self.sensor_frame,
-                    Time(),
+                    target_time,
                     timeout=Duration(seconds=self.pose_max_dt),
                 )
-                world_T_camera = transform_to_matrix(transform_stamped)
-            except TransformException:
-                self.get_logger().warn(
-                    f"TF lookup failed for {self.world_frame} -> {self.sensor_frame} at {rgb_timestamp:.4f}: {ex}"
-                )
-        tf_latency_ms = (time.monotonic() - t_tf_start) * 1000.0
+                tf_stamp = transform_stamped.header.stamp
+                pose_timestamp = float(tf_stamp.sec) + float(tf_stamp.nanosec) * 1e-9
+                pose_age = abs(rgb_timestamp - pose_timestamp)
 
-        pose_source = "tf"
-        if world_T_camera is None:
-            # Fallback to camera frame (Identity pose) so 3D lifting, bounding box
-            # estimation, tracking, and spatial scene graph relations operate seamlessly
-            # even when SLAM/TF is unavailable or uninitialized.
-            world_T_camera = np.eye(4, dtype=np.float64)
-            pose_source = "camera_frame_fallback"
-            self.get_logger().warn(
-                f"TF unavailable for {self.world_frame} -> {self.sensor_frame}; operating in camera frame.",
-                throttle_duration_sec=5.0,
-            )
+                if pose_age > self.pose_max_dt:
+                    transform_valid = False
+                    transform_source = "stale_tf"
+                    self.get_logger().warn(
+                        f"Stale TF for {self.world_frame} -> {self.sensor_frame} at {rgb_timestamp:.4f}: age={pose_age*1000.0:.1f}ms > max={self.pose_max_dt*1000.0:.1f}ms",
+                        throttle_duration_sec=2.0,
+                    )
+                else:
+                    world_T_camera = transform_to_matrix(transform_stamped)
+                    transform_valid = True
+                    transform_source = "tf_exact"
+            except TransformException as ex:
+                transform_valid = False
+                transform_source = "missing_tf"
+                self.get_logger().warn(
+                    f"TF lookup failed for {self.world_frame} -> {self.sensor_frame} at {rgb_timestamp:.4f}: {ex}. Frame marked invalid for world graph.",
+                    throttle_duration_sec=2.0,
+                )
+            tf_latency_ms = (time.monotonic() - t_tf_start) * 1000.0
 
         try:
             rgb_np = ros_image_to_numpy(pending.rgb_msg)
@@ -368,13 +409,13 @@ class SceneGraphROSNode(Node):
             )
         self.last_frame_timestamp = rgb_timestamp
 
-        if pose_source == "camera_frame_fallback" or (self.config.reference_frame and self.config.reference_frame.type == "camera"):
-            relation_frame = RelationReferenceFrame.create("camera", world_T_camera)
+        if self.localization_mode == "camera_local" or (self.config.reference_frame and self.config.reference_frame.type == "camera"):
+            relation_frame = RelationReferenceFrame.create("camera", world_T_camera if world_T_camera is not None else np.eye(4, dtype=np.float64))
         else:
             up_axis = np.array(self.config.reference_frame.up_axis, dtype=np.float64) if self.config.reference_frame else np.array([0.0, 0.0, 1.0])
             heading_axis = np.array(self.config.reference_frame.heading_axis, dtype=np.float64) if self.config.reference_frame else np.array([1.0, 0.0, 0.0])
             relation_frame = RelationReferenceFrame.from_gravity_and_heading(
-                origin_world=np.zeros(3),
+                origin_world=world_T_camera[:3, 3] if world_T_camera is not None else np.zeros(3, dtype=np.float64),
                 up_axis_world=up_axis,
                 heading_world=heading_axis,
             )
@@ -391,9 +432,19 @@ class SceneGraphROSNode(Node):
             imu_samples=windowed_imu,
             frame_id=pending.rgb_msg.header.frame_id or self.sensor_frame,
             optical_frame_id=pending.depth_msg.header.frame_id if pending.depth_msg else self.sensor_frame,
-            pose_source=pose_source,
+            pose_source=transform_source,
+            sensor_timestamp=rgb_timestamp,
+            rgb_timestamp=rgb_timestamp,
+            depth_timestamp=depth_timestamp,
+            pose_timestamp=pose_timestamp,
+            pose_age=pose_age if np.isfinite(pose_age) else 0.0,
+            world_frame=world_frame_used,
+            transform_source=transform_source,
+            transform_valid=transform_valid,
+            localization_mode=LocalizationMode.CAMERA_LOCAL_MODE if self.localization_mode == "camera_local" else LocalizationMode.WORLD_MODE,
             metadata={"frame_id": pending.rgb_msg.header.frame_id},
         )
+
 
         if self.debug_frame_packet_only:
             self.get_logger().info(
@@ -444,15 +495,19 @@ class SceneGraphROSNode(Node):
         if self.processed_frames % 20 == 0:
             elapsed = time.monotonic() - self.processing_start_time
             rate = self.processed_frames / elapsed if elapsed > 0 else 0.0
+            telem = self.pipeline.get_telemetry() if hasattr(self.pipeline, "get_telemetry") else {}
+            det_rate = telem.get("detection_rate_hz", 0.0)
+            det_lat = telem.get("last_detector_latency_ms", 0.0)
             self.get_logger().info(
-                f"Inference stats: processed={self.processed_frames}, "
-                f"rate={rate:.2f} Hz, queue_size={self.frame_queue.qsize()}, "
-                f"dropped={self.dropped_frames}"
+                f"Pipeline stats: tracking={rate:.1f} Hz, detection={det_rate:.1f} Hz (lat={det_lat:.1f}ms), "
+                f"queue_size={self.frame_queue.qsize()}, dropped={self.dropped_frames}"
             )
 
     def destroy_node(self):
         """Clean shutdown stopping worker thread before node destruction."""
         self.stop_event.set()
+        if hasattr(self, "pipeline") and self.pipeline is not None and hasattr(self.pipeline, "stop"):
+            self.pipeline.stop()
         if hasattr(self, "worker_thread") and self.worker_thread.is_alive():
             self.worker_thread.join(timeout=2.0)
         super().destroy_node()

@@ -58,6 +58,9 @@ class TemporalSceneGraph:
             if track.state in (TrackState.ACTIVE, TrackState.TEMPORARILY_UNOBSERVED):
                 current_active_ids.add(track.object_id)
                 is_obs = (track.state == TrackState.ACTIVE)
+                in_frustum = getattr(track, "is_in_frustum", True)
+                vis_str = "observed" if is_obs else ("predicted" if in_frustum else "out_of_view")
+                vis_state_str = "observed" if is_obs else ("occluded" if in_frustum else "out_of_view")
 
                 if track.object_id in self.nodes:
                     node = self.nodes[track.object_id]
@@ -65,7 +68,9 @@ class TemporalSceneGraph:
                     node.state = state
                     node.participation = GraphParticipationState.ACTIVE
                     node.attributes["observed"] = is_obs
-                    node.attributes["visibility"] = "observed" if is_obs else "predicted"
+                    node.attributes["in_frustum"] = in_frustum
+                    node.attributes["visibility"] = vis_str
+                    node.attributes["visibility_state"] = vis_state_str
                 else:
                     self.nodes[track.object_id] = GraphNode(
                         object_id=track.object_id,
@@ -75,7 +80,9 @@ class TemporalSceneGraph:
                         participation=GraphParticipationState.ACTIVE,
                         attributes={
                             "observed": is_obs,
-                            "visibility": "observed" if is_obs else "predicted",
+                            "in_frustum": in_frustum,
+                            "visibility": vis_str,
+                            "visibility_state": vis_state_str,
                         },
                     )
                     self.history.add_event(GraphEvent(
@@ -143,7 +150,7 @@ class TemporalSceneGraph:
                     self._remove_edge(key)
                 continue
             
-            if state == RelationState.SUPPORTED:
+            if state in (RelationState.SUPPORTED, RelationState.ACTIVE):
                 if key in self.edges:
                     # Update existing edge
                     edge = self.edges[key]
@@ -161,7 +168,7 @@ class TemporalSceneGraph:
                         latest_evidence=latest_ev[key],
                         participation=GraphParticipationState.ACTIVE,
                         start_time=self.current_timestamp,
-                        start_frame=self.current_frame_index
+                        start_frame=self.current_frame_index,
                     )
                     self.history.add_event(GraphEvent(
                         event_type=GraphEventType.EDGE_ADDED,
@@ -171,14 +178,24 @@ class TemporalSceneGraph:
                         object_id=object_id,
                         predicate=predicate
                     ))
-            elif state in (RelationState.CONTRADICTED, RelationState.UNKNOWN):
-                # Remove the edge entirely — the graph is current belief only
+            elif state in (RelationState.DECAYING, RelationState.WEAKENING, RelationState.OCCLUDED):
+                if key in self.edges:
+                    edge = self.edges[key]
+                    edge.state = state
+                    edge.participation = GraphParticipationState.TEMPORARILY_UNOBSERVED
+                    if key in latest_ev:
+                        edge.latest_evidence = latest_ev[key]
+            elif state == RelationState.UNKNOWN:
+                if key in self.edges:
+                    edge = self.edges[key]
+                    edge.state = state
+                    edge.participation = GraphParticipationState.TEMPORARILY_UNOBSERVED
+            elif state in (RelationState.CONTRADICTED, RelationState.TERMINATED):
+                # Contradicted or terminated relations are removed
                 if key in self.edges:
                     self._remove_edge(key)
-                # Hypothesized relations are NOT yet in the graph.
-                # They exist in the state machine but haven't earned a graph edge.
-                # If there was an old edge, remove it (the relation was contradicted
-                # and is now re-hypothesized).
+            else:
+                # Hypothesized / proposed relations have not yet earned an active graph edge
                 if key in self.edges:
                     self._remove_edge(key)
 

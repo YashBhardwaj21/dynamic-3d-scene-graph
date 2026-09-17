@@ -1,4 +1,5 @@
-from typing import List
+from typing import List, Optional
+import numpy as np
 
 from scene_graph.config import SceneGraphConfig
 from scene_graph.data.frame_packet import FramePacket
@@ -27,7 +28,8 @@ from scene_graph.geometry.noise_model import create_noise_model_from_config
 from scene_graph.geometry.reference_frame import CameraFrame
 from scene_graph.relations.context import FrameContext, ObservationGeometry
 from scene_graph.geometry.provenance import GeometrySource
-from scene_graph.tracking.track import TrackState
+from scene_graph.geometry.camera import CameraIntrinsics
+from scene_graph.tracking.track import Track, TrackState
 
 
 class SceneGraphPipeline:
@@ -78,12 +80,14 @@ class SceneGraphPipeline:
                 )
             return
 
-        if packet.world_T_camera is None:
+        if packet.world_T_camera is None or not packet.transform_valid:
+            status = GeometryStatus.STALE_POSE if getattr(packet, "transform_source", "") == "stale_tf" else GeometryStatus.NO_POSE
             for observation in observations:
                 observation.object_geometry = ObjectGeometry(
-                    status=GeometryStatus.NO_POSE
+                    status=status
                 )
             return
+
 
         geometry_config = self.config.geometry
 
@@ -106,12 +110,17 @@ class SceneGraphPipeline:
                 voxel_size_m=geometry_config.downsampling.voxel_size_m,
                 measurement_noise_std_m=geometry_config.measurement_noise_std_m,
                 noise_model=self.noise_model,
+                min_depth_m=getattr(geometry_config, "min_depth_m", 0.10),
+                max_depth_m=getattr(geometry_config, "max_depth_m", 10.0),
+                spatial_outlier_sigma=getattr(geometry_config, "spatial_outlier_sigma", 3.0),
             )
 
-    @staticmethod
     def _build_observation_geometry(
-        tracks,
+        self,
+        tracks: list[Track],
         frame_index: int,
+        intrinsics: Optional[CameraIntrinsics] = None,
+        world_T_camera: Optional[np.ndarray] = None,
     ) -> dict[str, ObservationGeometry]:
 
         geometry = {}
@@ -152,6 +161,7 @@ class SceneGraphPipeline:
                     mask=observation.get_mask(),
                     valid_point_count=object_geometry.valid_point_count,
                     geometry_source=GeometrySource.OBSERVED,
+                    is_in_frustum=True,
                 )
             else:
                 # Synthesize PREDICTED geometry for active unobserved track
@@ -185,6 +195,13 @@ class SceneGraphPipeline:
                         if last_geom.points_world_sampled is not None:
                             points_sampled = last_geom.points_world_sampled + delta_pos
 
+                    is_in_frustum = getattr(track, "is_in_frustum", True)
+                    if intrinsics is not None and world_T_camera is not None and centroid is not None:
+                        if bbox_min is not None and bbox_max is not None:
+                            is_in_frustum = bool(intrinsics.is_box_in_frustum(bbox_min, bbox_max, world_T_camera))
+                        else:
+                            is_in_frustum = bool(intrinsics.is_world_point_in_frustum(centroid, world_T_camera))
+
                     geometry[track.object_id] = ObservationGeometry(
                         obs_id=f"{observation.obs_id}_pred",
                         track_id=track.object_id,
@@ -202,6 +219,7 @@ class SceneGraphPipeline:
                         depth_stats=last_geom.depth_stats if last_geom is not None else None,
                         valid_point_count=last_geom.valid_point_count if last_geom is not None else 0,
                         geometry_source=GeometrySource.PREDICTED,
+                        is_in_frustum=is_in_frustum,
                     )
 
         return geometry
@@ -211,23 +229,46 @@ class SceneGraphPipeline:
         self,
         packet: FramePacket,
         observations: List[Observation],
+        obs_frame_index: Optional[int] = None,
+        obs_timestamp: Optional[float] = None,
+        obs_packet: Optional[FramePacket] = None,
     ) -> TemporalSceneGraph:
 
         self.graph.current_frame_index = packet.frame_index
         self.graph.current_timestamp = packet.timestamp
         depth_m = packet.depth
 
-        self._compute_geometry(
-            packet=packet,
-            observations=observations,
-            depth_m=depth_m,
-        )
+        if obs_packet is not None:
+            self._compute_geometry(
+                packet=obs_packet,
+                observations=observations,
+                depth_m=obs_packet.depth,
+            )
+        elif observations and getattr(observations[0], "object_geometry", None) is None:
+            self._compute_geometry(
+                packet=packet,
+                observations=observations,
+                depth_m=depth_m,
+            )
 
-        tracks = self.tracker.update(
-            observations=observations,
-            frame_index=packet.frame_index,
-            timestamp=packet.timestamp,
-        )
+        if obs_frame_index is not None and obs_frame_index < packet.frame_index:
+            tracks = self.tracker.update_delayed(
+                observations=observations,
+                obs_frame_index=obs_frame_index,
+                obs_timestamp=obs_timestamp if obs_timestamp is not None else packet.timestamp,
+                current_frame_index=packet.frame_index,
+                current_timestamp=packet.timestamp,
+                camera_intrinsics=packet.camera_intrinsics,
+                world_T_camera=packet.world_T_camera,
+            )
+        else:
+            tracks = self.tracker.update(
+                observations=observations,
+                frame_index=packet.frame_index,
+                timestamp=packet.timestamp,
+                camera_intrinsics=packet.camera_intrinsics,
+                world_T_camera=packet.world_T_camera,
+            )
 
         object_states = self.object_state_machine.update(
             tracks=tracks,
@@ -256,6 +297,8 @@ class SceneGraphPipeline:
             observation_geometry = self._build_observation_geometry(
                 relation_tracks,
                 packet.frame_index,
+                intrinsics=packet.camera_intrinsics,
+                world_T_camera=packet.world_T_camera,
             )
 
             if observation_geometry:

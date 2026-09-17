@@ -30,6 +30,26 @@ DATASET_CONVENTIONS = {
         "up_axis": np.array([0.0, 0.0, 1.0]),
         "heading_axis": np.array([1.0, 0.0, 0.0]),
     },
+    "d455": {
+        "up_axis": np.array([0.0, 0.0, 1.0]),      # Z-up in standard robotics world
+        "heading_axis": np.array([1.0, 0.0, 0.0]),  # X-forward
+    },
+    "realsense": {
+        "up_axis": np.array([0.0, 0.0, 1.0]),
+        "heading_axis": np.array([1.0, 0.0, 0.0]),
+    },
+    "world": {
+        "up_axis": np.array([0.0, 0.0, 1.0]),
+        "heading_axis": np.array([1.0, 0.0, 0.0]),
+    },
+    "map": {
+        "up_axis": np.array([0.0, 0.0, 1.0]),
+        "heading_axis": np.array([1.0, 0.0, 0.0]),
+    },
+    "default": {
+        "up_axis": np.array([0.0, 0.0, 1.0]),
+        "heading_axis": np.array([1.0, 0.0, 0.0]),
+    },
 }
 
 

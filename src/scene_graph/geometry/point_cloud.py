@@ -17,6 +17,8 @@ class GeometryStatus(str, Enum):
     INVALID_GEOMETRY = "INVALID_GEOMETRY"
     NO_DEPTH = "NO_DEPTH"
     NO_POSE = "NO_POSE"
+    STALE_POSE = "STALE_POSE"
+
 
 @dataclass
 class ObjectGeometry:
@@ -49,6 +51,9 @@ def compute_object_geometry(
     voxel_size_m: float = 0.005,
     measurement_noise_std_m: float = 0.01,
     noise_model: Optional[DepthNoiseModel] = None,
+    min_depth_m: float = 0.10,
+    max_depth_m: float = 10.0,
+    spatial_outlier_sigma: float = 3.0,
 ) -> ObjectGeometry | None:
     """Compute robust 3D geometry for an object, mitigating background leakage.
     
@@ -61,6 +66,10 @@ def compute_object_geometry(
         mad_k: Number of robust sigmas for MAD outlier rejection.
         voxel_size_m: Voxel size for downsampling.
         measurement_noise_std_m: Sensor measurement noise standard deviation in meters.
+        noise_model: Optional sensor noise model for covariance estimation.
+        min_depth_m: Minimum valid depth in meters (near clipping).
+        max_depth_m: Maximum valid depth in meters (far clipping).
+        spatial_outlier_sigma: Number of robust sigmas for 3D spatial outlier rejection.
         
     Returns:
         ObjectGeometry (or None if totally invalid input)
@@ -70,8 +79,13 @@ def compute_object_geometry(
     if mask.shape != depth_m.shape:
         raise ValueError(f"Shape mismatch: mask {mask.shape} != depth {depth_m.shape}")
         
-    # Valid depth mask
-    valid_depth = (depth_m > 0) & np.isfinite(depth_m)
+    # Valid depth mask (positive, finite, and strictly within sensor range)
+    valid_depth = (
+        (depth_m >= min_depth_m)
+        & (depth_m <= max_depth_m)
+        & (depth_m > 0.0)
+        & np.isfinite(depth_m)
+    )
     combined_mask = (mask > 0) & valid_depth
     
     if np.sum(combined_mask) < min_valid_points:
@@ -99,6 +113,23 @@ def compute_object_geometry(
     # Project to camera coordinates using vectorized projection
     points_camera = intrinsics.pixels_to_camera(u_filt, v_filt, z_filt)
     
+    # 3D spatial outlier filtering: reject points whose Euclidean distance
+    # from the median centroid exceeds spatial_outlier_sigma * sigma_dist
+    if len(points_camera) >= min_valid_points:
+        median_pt = np.median(points_camera, axis=0)
+        dists = np.linalg.norm(points_camera - median_pt, axis=1)
+        med_dist = np.median(dists)
+        mad_dist = np.median(np.abs(dists - med_dist))
+        sigma_dist = 1.4826 * mad_dist
+        if sigma_dist < 1e-6:
+            sigma_dist = 1e-6
+        spatial_mask = dists <= (med_dist + spatial_outlier_sigma * sigma_dist)
+        if np.sum(spatial_mask) >= min_valid_points:
+            points_camera = points_camera[spatial_mask]
+            z_filt = z_filt[spatial_mask]
+        else:
+            return ObjectGeometry(status=GeometryStatus.INSUFFICIENT_DEPTH)
+    
     # Transform to world coordinates
     points_world = transform_points(pose, points_camera)
     
@@ -111,16 +142,19 @@ def compute_object_geometry(
     centered = points_world - center_world
     if N > 1:
         Sigma_P = np.dot(centered.T, centered) / (N - 1)
+        Sigma_P = 0.5 * (Sigma_P + Sigma_P.T)
     else:
-        Sigma_P = np.zeros((3, 3))
+        Sigma_P = np.zeros((3, 3), dtype=np.float64)
         
     if noise_model is not None:
         Sigma_sensor = noise_model.estimate_covariance(
             points_camera, intrinsics, R_world_camera=pose[:3, :3]
         )
+        Sigma_sensor = 0.5 * (Sigma_sensor + Sigma_sensor.T)
     else:
-        Sigma_sensor = np.eye(3) * (float(measurement_noise_std_m) ** 2)
-    Sigma_c = Sigma_P / N + Sigma_sensor
+        Sigma_sensor = np.eye(3, dtype=np.float64) * (float(measurement_noise_std_m) ** 2)
+    Sigma_c = (Sigma_P / N) + Sigma_sensor
+    Sigma_c = 0.5 * (Sigma_c + Sigma_c.T)
     
     # Percentile AABB
     aabb_min = np.percentile(points_world, 2, axis=0)
@@ -132,6 +166,11 @@ def compute_object_geometry(
         eigenvalues, eigenvectors = np.linalg.eigh(cov)
         idx = np.argsort(eigenvalues)[::-1]
         obb_axes = eigenvectors[:, idx]
+        
+        # Enforce right-handed coordinate frame for OBB axes: det(R) == +1.0
+        if np.linalg.det(obb_axes) < 0.0:
+            obb_axes[:, 2] *= -1.0
+            
         projected = np.dot(centered, obb_axes)
         min_proj = np.min(projected, axis=0)
         max_proj = np.max(projected, axis=0)

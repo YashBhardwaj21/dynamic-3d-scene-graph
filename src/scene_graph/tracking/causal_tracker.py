@@ -1,6 +1,7 @@
 import copy
 from collections import deque
-from typing import Dict, List, Optional, Tuple
+from dataclasses import dataclass
+from typing import Dict, List, Optional, Tuple, Any
 
 import numpy as np
 from scipy.optimize import linear_sum_assignment
@@ -12,9 +13,22 @@ from scene_graph.tracking.track import Track, TrackState
 from scene_graph.tracking.tracker_base import TrackerInterface
 from scene_graph.tracking.track_history import TrackHistory
 from scene_graph.tracking.state import KalmanState
+from scene_graph.ontology.entity import VisibilityState
+from scene_graph.geometry.point_cloud import GeometryStatus
 
 
 Prediction = Tuple[np.ndarray, np.ndarray]
+
+
+@dataclass
+class TrackerCheckpoint:
+    frame_index: int
+    timestamp: float
+    tracks: Dict[str, Track]
+    next_track_id: int
+    observations: List[Observation]
+    camera_intrinsics: Optional[Any] = None
+    world_T_camera: Optional[np.ndarray] = None
 
 
 class CausalTracker(TrackerInterface):
@@ -34,6 +48,13 @@ class CausalTracker(TrackerInterface):
         self.association_threshold_m = float(tracking_config.association.max_distance_m)
         self.size_weight = float(tracking_config.association.size_weight)
         self.max_missing_seconds = float(tracking_config.occlusion.max_missing_seconds)
+        self.max_missing_seconds_out_of_view = float(
+            getattr(
+                tracking_config.occlusion,
+                "max_missing_seconds_out_of_view",
+                self.max_missing_seconds * 5.0,
+            )
+        )
         self.min_hits_to_confirm = int(tracking_config.confirmation.min_hits)
         self.q_std = float(tracking_config.process.acceleration_std_mps2)
         self.measurement_std_m = float(tracking_config.measurement.position_std_m)
@@ -50,6 +71,9 @@ class CausalTracker(TrackerInterface):
 
         if self.max_missing_seconds < 0.0:
             raise ValueError("tracking.occlusion.max_missing_seconds must be non-negative.")
+
+        if self.max_missing_seconds_out_of_view < self.max_missing_seconds:
+            raise ValueError("max_missing_seconds_out_of_view cannot be less than max_missing_seconds.")
 
         if self.min_hits_to_confirm < 1:
             raise ValueError("tracking.confirmation.min_hits must be positive.")
@@ -74,8 +98,23 @@ class CausalTracker(TrackerInterface):
         self.next_track_id = 1
         self._last_frame_index: Optional[int] = None
         self._last_timestamp: Optional[float] = None
+        self._checkpoints: deque[TrackerCheckpoint] = deque(maxlen=60)
+        self._initial_checkpoint = TrackerCheckpoint(
+            frame_index=-1,
+            timestamp=0.0,
+            tracks={},
+            next_track_id=1,
+            observations=[],
+        )
 
-    def update(self, observations: List[Observation], frame_index: int, timestamp: float) -> List[Track]:
+    def update(
+        self,
+        observations: List[Observation],
+        frame_index: int,
+        timestamp: float,
+        camera_intrinsics: Optional[Any] = None,
+        world_T_camera: Optional[np.ndarray] = None,
+    ) -> List[Track]:
         self._validate_frame(frame_index, timestamp)
 
         predictions = self._predict_tracks(timestamp)
@@ -85,15 +124,113 @@ class CausalTracker(TrackerInterface):
             self._update_track(track_id, observations[obs_idx], frame_index, timestamp)
 
         for track_id in unmatched_tracks:
-            self._mark_track_missing(track_id, frame_index, timestamp)
+            self._mark_track_missing(
+                track_id,
+                frame_index,
+                timestamp,
+                camera_intrinsics=camera_intrinsics,
+                world_T_camera=world_T_camera,
+            )
 
         for obs_idx in unmatched_obs:
-            self._create_track(observations[obs_idx], frame_index, timestamp)
+            obs = observations[obs_idx]
+            if self._is_duplicate_detection(obs):
+                continue
+            self._create_track(obs, frame_index, timestamp)
 
         self._cleanup_lost_tracks()
 
         self._last_frame_index = frame_index
         self._last_timestamp = timestamp
+
+        self._checkpoints.append(
+            TrackerCheckpoint(
+                frame_index=frame_index,
+                timestamp=timestamp,
+                tracks=copy.deepcopy(self.tracks),
+                next_track_id=self.next_track_id,
+                observations=observations,
+                camera_intrinsics=camera_intrinsics,
+                world_T_camera=world_T_camera.copy() if world_T_camera is not None else None,
+            )
+        )
+
+        return [self.tracks[track_id] for track_id in sorted(self.tracks)]
+
+    def update_delayed(
+        self,
+        observations: List[Observation],
+        obs_frame_index: int,
+        obs_timestamp: float,
+        current_frame_index: int,
+        current_timestamp: float,
+        camera_intrinsics: Optional[Any] = None,
+        world_T_camera: Optional[np.ndarray] = None,
+    ) -> List[Track]:
+        """Update tracker with delayed async observations and roll forward to current timestamp."""
+        if obs_frame_index == current_frame_index:
+            return self.update(
+                observations,
+                current_frame_index,
+                current_timestamp,
+                camera_intrinsics=camera_intrinsics,
+                world_T_camera=world_T_camera,
+            )
+
+        if obs_frame_index > current_frame_index:
+            raise ValueError(
+                f"Delayed frame index {obs_frame_index} cannot exceed current frame index {current_frame_index}"
+            )
+
+        checkpoint_list = list(self._checkpoints)
+        target_idx = None
+        for i, cp in enumerate(checkpoint_list):
+            if cp.frame_index == obs_frame_index:
+                target_idx = i
+                break
+
+        if target_idx is None:
+            return self.update(
+                observations,
+                current_frame_index,
+                current_timestamp,
+                camera_intrinsics=camera_intrinsics,
+                world_T_camera=world_T_camera,
+            )
+
+        if target_idx == 0:
+            prior_state = self._initial_checkpoint
+        else:
+            prior_state = checkpoint_list[target_idx - 1]
+
+        subsequent_frames = []
+        for i in range(target_idx, len(checkpoint_list)):
+            cp = checkpoint_list[i]
+            ci = cp.camera_intrinsics if cp.camera_intrinsics is not None else camera_intrinsics
+            wtc = cp.world_T_camera if cp.world_T_camera is not None else world_T_camera
+            if cp.frame_index == obs_frame_index:
+                subsequent_frames.append((cp.frame_index, cp.timestamp, observations, ci, wtc))
+            else:
+                subsequent_frames.append((cp.frame_index, cp.timestamp, cp.observations, ci, wtc))
+
+        self.tracks = copy.deepcopy(prior_state.tracks)
+        self.next_track_id = prior_state.next_track_id
+        self._last_frame_index = prior_state.frame_index if prior_state.frame_index >= 0 else None
+        self._last_timestamp = prior_state.timestamp if prior_state.frame_index >= 0 else None
+
+        self._checkpoints = deque(checkpoint_list[:target_idx], maxlen=self._checkpoints.maxlen)
+
+        for fi, ts, obs, ci, wtc in subsequent_frames:
+            self.update(obs, fi, ts, camera_intrinsics=ci, world_T_camera=wtc)
+
+        if self._last_frame_index is not None and current_frame_index > self._last_frame_index:
+            return self.update(
+                [],
+                current_frame_index,
+                current_timestamp,
+                camera_intrinsics=camera_intrinsics,
+                world_T_camera=world_T_camera,
+            )
 
         return [self.tracks[track_id] for track_id in sorted(self.tracks)]
 
@@ -138,6 +275,8 @@ class CausalTracker(TrackerInterface):
                 predicted_state.position,
                 predicted_state.position_covariance,
             )
+            track.predicted_centroid_world = predicted_state.position.copy()
+            track.predicted_covariance_world = predicted_state.position_covariance.copy()
 
         return predictions
 
@@ -246,9 +385,14 @@ class CausalTracker(TrackerInterface):
         measurement_covariance = self._get_measurement_covariance(observation)
 
         if track.kalman_state is None:
+            init_cov_pos = (
+                measurement_covariance
+                if measurement_covariance is not None
+                else self.initial_position_variance
+            )
             track.kalman_state = KalmanState(
                 measurement,
-                initial_cov_pos=self.initial_position_variance,
+                initial_cov_pos=init_cov_pos,
                 initial_cov_vel=self.initial_velocity_variance,
             )
         else:
@@ -273,9 +417,14 @@ class CausalTracker(TrackerInterface):
 
         track.last_observed_frame = frame_index
         track.last_timestamp = timestamp
+        track.last_observed_timestamp = timestamp
+        track.predicted_centroid_world = None
+        track.predicted_covariance_world = None
         track.observation_count += 1
         track.missing_count = 0
         track.detection_confidence = float(observation.confidence)
+        track.is_in_frustum = True
+        track.visibility_state = VisibilityState.VISIBLE
 
         if hasattr(track, "update_label_belief"):
             track.update_label_belief(observation.class_name, observation.confidence)
@@ -284,10 +433,10 @@ class CausalTracker(TrackerInterface):
         track.track_observation_ratio = track.observation_count / max(age, 1)
         track.recent_observations.append(observation)
 
-        if track.state == TrackState.CANDIDATE and track.observation_count >= self.min_hits_to_confirm:
+        if track.observation_count >= self.min_hits_to_confirm:
             track.state = TrackState.ACTIVE
         elif track.state == TrackState.TEMPORARILY_UNOBSERVED:
-            track.state = TrackState.ACTIVE
+            track.state = TrackState.CANDIDATE
 
         if self.history is not None:
             if old_state != track.state:
@@ -295,7 +444,14 @@ class CausalTracker(TrackerInterface):
 
             self.history.record_observation(track_id, observation)
 
-    def _mark_track_missing(self, track_id: str, frame_index: int, timestamp: float) -> None:
+    def _mark_track_missing(
+        self,
+        track_id: str,
+        frame_index: int,
+        timestamp: float,
+        camera_intrinsics: Optional[Any] = None,
+        world_T_camera: Optional[np.ndarray] = None,
+    ) -> None:
         track = self.tracks[track_id]
         old_state = track.state
 
@@ -309,13 +465,25 @@ class CausalTracker(TrackerInterface):
         if missing_seconds < 0.0:
             raise ValueError(f"Non-monotonic timestamp for track {track_id}: {timestamp} < {track.last_timestamp}")
 
-        if missing_seconds >= self.max_missing_seconds:
+        in_frustum = True
+        if camera_intrinsics is not None and world_T_camera is not None:
+            c_world = track.centroid_world
+            if c_world is not None:
+                in_frustum = bool(camera_intrinsics.is_world_point_in_frustum(c_world, world_T_camera))
+        track.is_in_frustum = in_frustum
+        track.visibility_state = VisibilityState.OCCLUDED if in_frustum else VisibilityState.OUT_OF_VIEW
+
+        max_missing = self.max_missing_seconds if in_frustum else self.max_missing_seconds_out_of_view
+
+        if missing_seconds >= max_missing:
             track.state = TrackState.LOST
+            track.visibility_state = VisibilityState.UNKNOWN
         elif track.state in (TrackState.ACTIVE, TrackState.CANDIDATE):
             track.state = TrackState.TEMPORARILY_UNOBSERVED
 
         if self.history is not None and old_state != track.state:
-            self.history.record_transition(track_id, frame_index, old_state.value, track.state.value, "missing_threshold")
+            reason = "missing_threshold" if in_frustum else "out_of_view_threshold"
+            self.history.record_transition(track_id, frame_index, old_state.value, track.state.value, reason)
 
     def _create_track(self, observation: Observation, frame_index: int, timestamp: float) -> None:
         measurement = self._get_observation_centroid(observation)
@@ -327,6 +495,13 @@ class CausalTracker(TrackerInterface):
         size_world = self._get_observation_size(observation)
         track_id = f"track_{self.next_track_id:04d}"
         self.next_track_id += 1
+
+        measurement_covariance = self._get_measurement_covariance(observation)
+        init_cov_pos = (
+            measurement_covariance
+            if measurement_covariance is not None
+            else self.initial_position_variance
+        )
 
         track = Track(
             object_id=track_id,
@@ -343,10 +518,13 @@ class CausalTracker(TrackerInterface):
             recent_observations=deque([observation], maxlen=observation_buffer_size),
             kalman_state=KalmanState(
                 measurement,
-                initial_cov_pos=self.initial_position_variance,
+                initial_cov_pos=init_cov_pos,
                 initial_cov_vel=self.initial_velocity_variance,
             ),
             size_world=size_world,
+            last_observed_timestamp=timestamp,
+            is_in_frustum=True,
+            visibility_state=VisibilityState.VISIBLE,
         )
 
         if self.min_hits_to_confirm <= 1:
@@ -357,6 +535,26 @@ class CausalTracker(TrackerInterface):
         if self.history is not None:
             self.history.record_transition(track_id, frame_index, "none", track.state.value, "new_track")
             self.history.record_observation(track_id, observation)
+
+    def _is_duplicate_detection(self, observation: Observation) -> bool:
+        """Check if an unmatched observation spatially duplicates an existing tracked object."""
+        meas = self._get_observation_centroid(observation)
+        if meas is None:
+            return True
+
+        dup_thresh = self.association_threshold_m * 0.75
+        for track in self.tracks.values():
+            if track.state not in (TrackState.ACTIVE, TrackState.TEMPORARILY_UNOBSERVED, TrackState.CANDIDATE):
+                continue
+            t_center = track.centroid_world
+            if t_center is None:
+                continue
+            dist = float(np.linalg.norm(meas - t_center))
+            if dist < dup_thresh:
+                belief = getattr(track, "label_belief", {})
+                if observation.class_name == track.class_name or belief.get(observation.class_name, 0.0) > 0.3:
+                    return True
+        return False
 
     def _cleanup_lost_tracks(self) -> None:
         lost_track_ids = [
@@ -389,6 +587,9 @@ class CausalTracker(TrackerInterface):
         if geometry is None:
             return None
 
+        if getattr(geometry, "status", None) not in (None, GeometryStatus.VALID):
+            return None
+
         centroid = getattr(geometry, "centroid_world", None)
 
         if centroid is None:
@@ -406,6 +607,9 @@ class CausalTracker(TrackerInterface):
         geometry = getattr(observation, "object_geometry", None)
 
         if geometry is None:
+            return None
+
+        if getattr(geometry, "status", None) not in (None, GeometryStatus.VALID):
             return None
 
         minimum = getattr(geometry, "bbox_min_world", None)

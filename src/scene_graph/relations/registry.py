@@ -175,15 +175,15 @@ class RelationRegistry:
             # Map predicates to their typed candidate pool
             cand_pairs: List[Tuple[Track, Track]] = []
             for pred in predicates:
-                if pred == "ON":
+                if pred in ("SUPPORTED_BY", "SUPPORTS", "ON", "UNDER"):
                     cand_pairs.extend(typed_candidates.get("structural", []))
-                elif pred == "INSIDE":
+                elif pred in ("INSIDE", "CONTAINS", "CONTAINING", "ATTACHED_TO"):
                     cand_pairs.extend(typed_candidates.get("containment", []))
-                elif pred in ("NEAR", "FAR"):
+                elif pred in ("NEAR", "TOUCHING", "FAR"):
                     cand_pairs.extend(typed_candidates.get("proximity", []))
-                elif pred in ("LEFT_OF", "RIGHT_OF", "ABOVE", "BELOW", "IN_FRONT_OF", "BEHIND"):
+                elif pred in ("LEFT_OF", "RIGHT_OF", "ABOVE", "BELOW", "FRONT_OF", "IN_FRONT_OF", "BEHIND"):
                     cand_pairs.extend(typed_candidates.get("directional", []))
-                elif pred in ("OCCLUDING", "OCCLUDED_BY"):
+                elif pred in ("OCCLUDES", "OCCLUDED_BY", "OCCLUDING"):
                     cand_pairs.extend(typed_candidates.get("visibility", []))
                 else:
                     cand_pairs.extend(self._generate_candidate_pairs(tracks))

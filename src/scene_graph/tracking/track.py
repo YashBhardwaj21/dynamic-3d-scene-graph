@@ -4,6 +4,7 @@ from enum import Enum
 import numpy as np
 
 from scene_graph.tracking.state import KalmanState
+from scene_graph.ontology.entity import VisibilityState
 
 
 class TrackState(Enum):
@@ -30,10 +31,17 @@ class Track:
     kalman_state: KalmanState | None = None
     size_world: np.ndarray | None = None
     label_belief: dict[str, float] = field(default_factory=dict)
+    last_observed_timestamp: float | None = None
+    predicted_centroid_world: np.ndarray | None = None
+    predicted_covariance_world: np.ndarray | None = None
+    is_in_frustum: bool = True
+    visibility_state: VisibilityState = VisibilityState.VISIBLE
 
     def __post_init__(self):
         if not self.label_belief and self.class_name:
             self.label_belief[self.class_name] = 1.0
+        if self.last_observed_timestamp is None:
+            self.last_observed_timestamp = self.last_timestamp
 
     @property
     def primary_label(self) -> str:
@@ -64,6 +72,8 @@ class Track:
 
     @property
     def centroid_world(self) -> np.ndarray:
+        if self.state == TrackState.TEMPORARILY_UNOBSERVED and self.predicted_centroid_world is not None:
+            return self.predicted_centroid_world
         if self.kalman_state is not None:
             return self.kalman_state.position
         return self._initial_centroid
@@ -82,6 +92,8 @@ class Track:
         
     @property
     def position_covariance_world(self) -> np.ndarray | None:
+        if self.state == TrackState.TEMPORARILY_UNOBSERVED and self.predicted_covariance_world is not None:
+            return self.predicted_covariance_world
         if self.kalman_state is not None:
             return self.kalman_state.position_covariance
         return None

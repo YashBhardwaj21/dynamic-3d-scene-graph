@@ -6,36 +6,35 @@ from scene_graph.relations.evidence import (
 )
 
 
+from scene_graph.ontology.relation import (
+    INVERSE_PREDICATES,
+    SYMMETRIC_PREDICATES,
+    LEGACY_PREDICATE_MAP,
+    normalize_predicate,
+    get_inverse_predicate,
+)
+
 INVERSE = {
+    **INVERSE_PREDICATES,
     "ON": "UNDER",
     "UNDER": "ON",
-    "INSIDE": "CONTAINING",
     "CONTAINING": "INSIDE",
-    "LEFT_OF": "RIGHT_OF",
-    "RIGHT_OF": "LEFT_OF",
-    "ABOVE": "BELOW",
-    "BELOW": "ABOVE",
     "IN_FRONT_OF": "BEHIND",
-    "BEHIND": "IN_FRONT_OF",
     "OCCLUDING": "OCCLUDED_BY",
-    "OCCLUDED_BY": "OCCLUDING",
 }
 
-
-SYMMETRIC = {
-    "NEAR",
-    "FAR",
-}
-
+SYMMETRIC = set(SYMMETRIC_PREDICATES) | {"FAR"}
 
 COMPLEMENTARY = {
     "LEFT_OF",
     "RIGHT_OF",
     "ABOVE",
     "BELOW",
-    "IN_FRONT_OF",
+    "FRONT_OF",
     "BEHIND",
+    "IN_FRONT_OF",
 }
+
 
 
 def derive_inverse_evidence(

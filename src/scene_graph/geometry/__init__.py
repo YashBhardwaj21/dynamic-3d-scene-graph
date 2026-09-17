@@ -17,6 +17,14 @@ from scene_graph.geometry.transforms import (
     transform_points,
 )
 
+from scene_graph.geometry.ground_plane import (
+    GroundPlaneConfig,
+    GroundPlaneExtractor,
+    GroundPlaneTracker,
+    create_ground_aligned_reference_frame,
+    compute_ground_leveling_transform,
+)
+
 __all__ = [
     "CameraIntrinsics",
     "DepthModel",
@@ -29,4 +37,9 @@ __all__ = [
     "estimate_support_plane_normal",
     "compute_alignment_transform",
     "compute_alignment_from_normal",
+    "GroundPlaneConfig",
+    "GroundPlaneExtractor",
+    "GroundPlaneTracker",
+    "create_ground_aligned_reference_frame",
+    "compute_ground_leveling_transform",
 ]

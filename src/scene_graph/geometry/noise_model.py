@@ -71,6 +71,7 @@ class StereoDepthNoiseModel(DepthNoiseModel):
         subpixel_disparity_std: float = 0.1,
         pixel_noise_std: float = 0.5,
         min_depth_m: float = 0.1,
+        axial_noise_floor_m: float = 0.0,
     ):
         if baseline_m <= 0.0:
             raise ValueError("baseline_m must be positive.")
@@ -78,11 +79,14 @@ class StereoDepthNoiseModel(DepthNoiseModel):
             raise ValueError("subpixel_disparity_std must be positive.")
         if pixel_noise_std <= 0.0:
             raise ValueError("pixel_noise_std must be positive.")
+        if axial_noise_floor_m < 0.0:
+            raise ValueError("axial_noise_floor_m must be non-negative.")
 
         self.baseline_m = float(baseline_m)
         self.subpixel_disparity_std = float(subpixel_disparity_std)
         self.pixel_noise_std = float(pixel_noise_std)
         self.min_depth_m = float(min_depth_m)
+        self.axial_noise_floor_m = float(axial_noise_floor_m)
 
     def estimate_covariance(
         self,
@@ -98,7 +102,7 @@ class StereoDepthNoiseModel(DepthNoiseModel):
         z = max(z, self.min_depth_m)
         f = float((intrinsics.fx + intrinsics.fy) / 2.0)
         
-        sigma_z = (z ** 2 / (f * self.baseline_m)) * self.subpixel_disparity_std
+        sigma_z = (z ** 2 / (f * self.baseline_m)) * self.subpixel_disparity_std + self.axial_noise_floor_m
         sigma_x = (z / intrinsics.fx) * self.pixel_noise_std
         sigma_y = (z / intrinsics.fy) * self.pixel_noise_std
         
@@ -106,8 +110,66 @@ class StereoDepthNoiseModel(DepthNoiseModel):
         
         if R_world_camera is not None:
             R = np.asarray(R_world_camera, dtype=np.float64)
-            return R @ cov_camera @ R.T
+            cov_world = R @ cov_camera @ R.T
+            return 0.5 * (cov_world + cov_world.T)
             
+        return cov_camera
+
+
+class QuadraticDepthNoiseModel(DepthNoiseModel):
+    """Parametric quadratic depth measurement noise model:
+    
+        sigma_z(z) = alpha * z^2 + sigma_0
+        sigma_x(z) = (z / fx) * pixel_noise_std
+        sigma_y(z) = (z / fy) * pixel_noise_std
+        
+    Reflecting empirical range error in RGB-D structured-light / active stereo sensors
+    (e.g., Nguyen et al. 2012, Khoshelham & Elberink 2012).
+    """
+
+    def __init__(
+        self,
+        alpha: float = 0.0014,
+        sigma_0: float = 0.003,
+        pixel_noise_std: float = 0.5,
+        min_depth_m: float = 0.1,
+    ):
+        if alpha < 0.0:
+            raise ValueError("alpha must be non-negative.")
+        if sigma_0 <= 0.0:
+            raise ValueError("sigma_0 must be positive.")
+        if pixel_noise_std <= 0.0:
+            raise ValueError("pixel_noise_std must be positive.")
+
+        self.alpha = float(alpha)
+        self.sigma_0 = float(sigma_0)
+        self.pixel_noise_std = float(pixel_noise_std)
+        self.min_depth_m = float(min_depth_m)
+
+    def estimate_covariance(
+        self,
+        points_camera: np.ndarray,
+        intrinsics: CameraIntrinsics,
+        R_world_camera: Optional[np.ndarray] = None,
+    ) -> np.ndarray:
+        if points_camera is None or len(points_camera) == 0:
+            z = 1.0
+        else:
+            z = float(np.median(points_camera[:, 2]))
+
+        z = max(z, self.min_depth_m)
+
+        sigma_z = (self.alpha * (z ** 2)) + self.sigma_0
+        sigma_x = (z / intrinsics.fx) * self.pixel_noise_std
+        sigma_y = (z / intrinsics.fy) * self.pixel_noise_std
+
+        cov_camera = np.diag([sigma_x ** 2, sigma_y ** 2, sigma_z ** 2]).astype(np.float64)
+
+        if R_world_camera is not None:
+            R = np.asarray(R_world_camera, dtype=np.float64)
+            cov_world = R @ cov_camera @ R.T
+            return 0.5 * (cov_world + cov_world.T)
+
         return cov_camera
 
 
@@ -143,6 +205,13 @@ def create_noise_model_from_config(config) -> DepthNoiseModel:
         return StereoDepthNoiseModel(
             baseline_m=sensor.baseline_m,
             subpixel_disparity_std=sensor.subpixel_disparity_std,
+            pixel_noise_std=getattr(sensor, "pixel_noise_std", 0.5),
+            axial_noise_floor_m=getattr(sensor, "axial_noise_floor_m", 0.0),
+        )
+    elif sensor.measurement_model == "quadratic":
+        return QuadraticDepthNoiseModel(
+            alpha=getattr(sensor, "quadratic_alpha", 0.0014),
+            sigma_0=getattr(sensor, "quadratic_sigma_0", 0.003),
             pixel_noise_std=getattr(sensor, "pixel_noise_std", 0.5),
         )
     else:

@@ -48,8 +48,20 @@ def generate_launch_description():
 
     config_path_arg = DeclareLaunchArgument(
         "config_path",
-        default_value="configs/default.yaml",
+        default_value="configs/live_d455.yaml",
         description="Path to SceneGraph configuration YAML",
+    )
+
+    min_hits_arg = DeclareLaunchArgument(
+        "min_hits",
+        default_value="1",
+        description="Minimum consecutive hits before promoting track to ACTIVE",
+    )
+
+    max_missing_seconds_arg = DeclareLaunchArgument(
+        "max_missing_seconds",
+        default_value="5.0",
+        description="Maximum seconds before unobserved track is declared LOST",
     )
 
     world_frame_arg = DeclareLaunchArgument(
@@ -92,6 +104,12 @@ def generate_launch_description():
         "drop_old_frames",
         default_value="true",
         description="Drop older frames when busy to keep live processing real-time",
+    )
+
+    localization_mode_arg = DeclareLaunchArgument(
+        "localization_mode",
+        default_value="camera_local",
+        description="Localization mode: 'world' (requires active TF/SLAM) or 'camera_local' (transient non-persistent frame)",
     )
 
     depth_scale_arg = DeclareLaunchArgument(
@@ -158,10 +176,14 @@ def generate_launch_description():
                 "depth_scale": LaunchConfiguration("depth_scale"),
                 "queue_size": LaunchConfiguration("queue_size"),
                 "drop_old_frames": LaunchConfiguration("drop_old_frames"),
+                "localization_mode": LaunchConfiguration("localization_mode"),
+                "min_hits": LaunchConfiguration("min_hits"),
+                "max_missing_seconds": LaunchConfiguration("max_missing_seconds"),
             }
         ],
         condition=IfCondition(LaunchConfiguration("use_scenegraph")),
     )
+
 
     rviz_node = Node(
         package="rviz2",
@@ -187,6 +209,8 @@ def generate_launch_description():
         use_rviz_arg,
         use_viewer_arg,
         config_path_arg,
+        min_hits_arg,
+        max_missing_seconds_arg,
         world_frame_arg,
         sensor_frame_arg,
         rgb_topic_arg,
@@ -195,6 +219,7 @@ def generate_launch_description():
         depth_scale_arg,
         queue_size_arg,
         drop_old_frames_arg,
+        localization_mode_arg,
         d455_bridge_node,
         static_tf_node,
         rtabmap_launch,

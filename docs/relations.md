@@ -1,21 +1,28 @@
-﻿# Relation Architecture
+# Relation Architecture
 
-## Supported Predicates
-The relation registry currently supports 14 core spatial predicates:
-1. NEAR
-2. FAR
-3. ON
-4. UNDER
-5. INSIDE
-6. CONTAINING
-7. LEFT_OF
-8. RIGHT_OF
-9. ABOVE
-10. BELOW
-11. IN_FRONT_OF
-12. BEHIND
-13. OCCLUDING
-14. OCCLUDED_BY
+## Canonical Predicates & Categories
+The scene graph adheres to an authoritative 12-predicate ontology across 3 physical categories:
+
+### 1. STRUCTURAL
+- `SUPPORTED_BY` (Query-time inverse: `SUPPORTS`)
+- `INSIDE` (Query-time inverse: `CONTAINS`)
+- `ATTACHED_TO` (Symmetric)
+
+### 2. SPATIAL
+- `NEAR` (Symmetric)
+- `TOUCHING` (Symmetric)
+- `LEFT_OF` (Inverse: `RIGHT_OF`)
+- `RIGHT_OF` (Inverse: `LEFT_OF`)
+- `ABOVE` (Inverse: `BELOW`)
+- `BELOW` (Inverse: `ABOVE`)
+- `FRONT_OF` (Inverse: `BEHIND`)
+- `BEHIND` (Inverse: `FRONT_OF`)
+
+### 3. VISIBILITY
+- `OCCLUDES` (Inverse: `OCCLUDED_BY`)
+
+Legacy aliases (`ON`, `UNDER`, `CONTAINING`, `IN_FRONT_OF`, `OCCLUDING`) are transparently normalized to their canonical counterparts.
+
 
 ## Canonical Estimators
 Primary relations are evaluated by dedicated estimators:
