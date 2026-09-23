@@ -297,5 +297,5 @@ def test_numpy_to_point_cloud2_empty():
     empty_pts = np.empty((0, 3), dtype=np.float32)
     msg = numpy_to_point_cloud2(empty_pts, "world", 0.0)
     assert msg.width == 0
-    assert msg.data == b""
+    assert bytes(msg.data) == b""
 

@@ -680,8 +680,14 @@ class GraphPublisher:
         accumulator.  The entire accumulated map is published on every call so
         RViz always shows the full growing cloud without needing Decay Time.
         """
-        if packet.depth is None or packet.rgb is None or packet.world_T_camera is None:
-            # No pose — skip accumulation but still publish whatever we have
+        is_global_valid = (
+            packet.depth is not None
+            and packet.rgb is not None
+            and packet.world_T_camera is not None
+            and getattr(packet, "transform_valid", False) is True
+        )
+        if not is_global_valid:
+            # No valid global pose (e.g. SLAM uninitialized or local fallback) — do NOT accumulate into global map
             pts, rgb = self.map_accumulator.get_cloud()
             if pts is not None:
                 cloud_msg = numpy_to_point_cloud2(

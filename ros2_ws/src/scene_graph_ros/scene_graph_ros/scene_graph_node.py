@@ -557,7 +557,7 @@ class SceneGraphROSNode(Node):
             transform_source=transform_source,
             transform_valid=transform_valid,
             localization_mode=LocalizationMode.CAMERA_LOCAL_MODE if self.localization_mode == "camera_local" else LocalizationMode.WORLD_MODE,
-            metadata={"frame_id": pending.rgb_msg.header.frame_id},
+            metadata={"frame_id": pending.rgb_msg.header.frame_id, "allow_camera_fallback": True},
         )
 
 

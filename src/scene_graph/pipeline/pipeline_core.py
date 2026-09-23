@@ -2,7 +2,7 @@ from typing import List, Optional
 import numpy as np
 
 from scene_graph.config import SceneGraphConfig
-from scene_graph.data.frame_packet import FramePacket
+from scene_graph.data.frame_packet import FramePacket, LocalizationMode
 from scene_graph.perception.observation import Observation
 from scene_graph.tracking.causal_tracker import CausalTracker
 from scene_graph.temporal.object_state import ObjectStateMachine
@@ -25,7 +25,7 @@ from scene_graph.geometry.point_cloud import (
     compute_object_geometry,
 )
 from scene_graph.geometry.noise_model import create_noise_model_from_config
-from scene_graph.geometry.reference_frame import CameraFrame
+from scene_graph.geometry.reference_frame import CameraFrame, RelationReferenceFrame
 from scene_graph.relations.context import FrameContext, ObservationGeometry
 from scene_graph.geometry.provenance import GeometrySource
 from scene_graph.geometry.camera import CameraIntrinsics
@@ -95,14 +95,23 @@ class SceneGraphPipeline:
                 )
             return
 
-        if packet.world_T_camera is None or not packet.transform_valid:
-            status = GeometryStatus.STALE_POSE if getattr(packet, "transform_source", "") == "stale_tf" else GeometryStatus.NO_POSE
+        is_global_valid = (
+            packet.world_T_camera is not None
+            and getattr(packet, "transform_valid", False) is True
+        )
+
+        allow_fallback = getattr(packet, "metadata", {}).get("allow_camera_fallback", False)
+        if not is_global_valid and packet.localization_mode == LocalizationMode.WORLD_MODE and not allow_fallback:
+            status = (
+                GeometryStatus.STALE_POSE
+                if getattr(packet, "transform_source", "") == "stale_tf"
+                else GeometryStatus.NO_POSE
+            )
             for observation in observations:
-                observation.object_geometry = ObjectGeometry(
-                    status=status
-                )
+                observation.object_geometry = ObjectGeometry(status=status)
             return
 
+        effective_pose = packet.world_T_camera if is_global_valid else np.eye(4, dtype=np.float64)
 
         geometry_config = self.config.geometry
 
@@ -115,11 +124,11 @@ class SceneGraphPipeline:
                 )
                 continue
 
-            observation.object_geometry = compute_object_geometry(
+            geom = compute_object_geometry(
                 mask=mask,
                 depth_m=depth_m,
                 intrinsics=packet.camera_intrinsics,
-                pose=packet.world_T_camera,
+                pose=effective_pose,
                 min_valid_points=geometry_config.min_valid_points,
                 mad_k=geometry_config.robust_depth.k,
                 voxel_size_m=geometry_config.downsampling.voxel_size_m,
@@ -129,6 +138,32 @@ class SceneGraphPipeline:
                 max_depth_m=getattr(geometry_config, "max_depth_m", 10.0),
                 spatial_outlier_sigma=getattr(geometry_config, "spatial_outlier_sigma", 3.0),
             )
+
+            if geom is not None and geom.status == GeometryStatus.VALID:
+                if not is_global_valid:
+                    # Camera-local fallback for local 2D/3D tracking and spatial relations.
+                    # Strictly clear world-frame coordinates so camera coordinates NEVER pollute the persistent world graph.
+                    geom.points_world = None
+                    geom.points_world_sampled = None
+                    geom.centroid_world = None
+                    geom.bbox_min_world = None
+                    geom.bbox_max_world = None
+                    geom.obb_center_world = None
+                    geom.obb_axes_world = None
+                    geom.obb_extents_world = None
+                    geom.position_covariance_world = None
+                    geom.status = (
+                        GeometryStatus.STALE_POSE
+                        if getattr(packet, "transform_source", "") == "stale_tf"
+                        else GeometryStatus.NO_POSE
+                    )
+                    setattr(geom, "frame", "camera")
+                    setattr(geom, "source", "local_fallback")
+                else:
+                    setattr(geom, "frame", "world")
+                    setattr(geom, "source", "slam")
+
+            observation.object_geometry = geom
 
     def _build_observation_geometry(
         self,
@@ -151,27 +186,40 @@ class SceneGraphPipeline:
 
                 if (
                     object_geometry is None
-                    or object_geometry.status != GeometryStatus.VALID
+                    or object_geometry.status not in (GeometryStatus.VALID, GeometryStatus.STALE_POSE, GeometryStatus.NO_POSE)
                 ):
                     continue
+
+                is_local = getattr(object_geometry, "frame", "world") == "camera" or object_geometry.centroid_world is None
+                centroid = object_geometry.centroid_camera if is_local else object_geometry.centroid_world
+                pts = object_geometry.points_camera if is_local else object_geometry.points_world
+                if centroid is None or pts is None:
+                    continue
+
+                if is_local:
+                    bbox_min = np.min(pts, axis=0)
+                    bbox_max = np.max(pts, axis=0)
+                else:
+                    bbox_min = object_geometry.bbox_min_world
+                    bbox_max = object_geometry.bbox_max_world
 
                 geometry[track.object_id] = ObservationGeometry(
                     obs_id=observation.obs_id,
                     track_id=track.object_id,
-                    centroid_world=object_geometry.centroid_world,
+                    centroid_world=centroid,
                     position_covariance_world=(
                         object_geometry.position_covariance_world
                     ),
-                    bbox_min_world=object_geometry.bbox_min_world,
-                    bbox_max_world=object_geometry.bbox_max_world,
-                    obb_center_world=object_geometry.obb_center_world,
+                    bbox_min_world=bbox_min,
+                    bbox_max_world=bbox_max,
+                    obb_center_world=object_geometry.obb_center_world if not is_local else centroid,
                     obb_axes_world=object_geometry.obb_axes_world,
                     obb_extents_world=object_geometry.obb_extents_world,
                     depth_stats=object_geometry.depth_stats,
                     points_world_sampled=(
-                        object_geometry.points_world_sampled
+                        object_geometry.points_world_sampled if not is_local else pts
                     ),
-                    points_world=object_geometry.points_world,
+                    points_world=pts,
                     points_camera=object_geometry.points_camera,
                     mask=observation.get_mask(),
                     valid_point_count=object_geometry.valid_point_count,
@@ -302,17 +350,21 @@ class SceneGraphPipeline:
         all_evidences = []
         relation_states = {}
 
-        if relation_tracks and packet.world_T_camera is not None:
-            if packet.relation_frame is None:
-                raise ValueError(
-                    f"Frame {packet.frame_index} is missing relation reference frame."
-                )
+        is_global_valid = (
+            packet.world_T_camera is not None
+            and getattr(packet, "transform_valid", False) is True
+        )
+        effective_world_T_camera = packet.world_T_camera if is_global_valid else np.eye(4, dtype=np.float64)
+        effective_relation_frame = packet.relation_frame
+        if effective_relation_frame is None or not is_global_valid:
+            effective_relation_frame = RelationReferenceFrame.create("camera", np.eye(4, dtype=np.float64))
 
+        if relation_tracks:
             observation_geometry = self._build_observation_geometry(
                 relation_tracks,
                 packet.frame_index,
                 intrinsics=packet.camera_intrinsics,
-                world_T_camera=packet.world_T_camera,
+                world_T_camera=effective_world_T_camera,
             )
 
             if observation_geometry:
@@ -320,10 +372,10 @@ class SceneGraphPipeline:
                     frame_index=packet.frame_index,
                     timestamp=packet.timestamp,
                     intrinsics=packet.camera_intrinsics,
-                    world_T_camera=packet.world_T_camera,
-                    reference_frame=packet.relation_frame,
+                    world_T_camera=effective_world_T_camera,
+                    reference_frame=effective_relation_frame,
                     camera_frame=CameraFrame.from_camera_pose(
-                        packet.world_T_camera
+                        effective_world_T_camera
                     ),
                     depth_image=depth_m,
                     observation_geometry=observation_geometry,

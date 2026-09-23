@@ -587,10 +587,13 @@ class CausalTracker(TrackerInterface):
         if geometry is None:
             return None
 
-        if getattr(geometry, "status", None) not in (None, GeometryStatus.VALID):
+        if getattr(geometry, "status", None) not in (None, GeometryStatus.VALID, GeometryStatus.STALE_POSE, GeometryStatus.NO_POSE):
             return None
 
         centroid = getattr(geometry, "centroid_world", None)
+        if centroid is None:
+            # Fallback to centroid_camera during local fallback so tracks and relations remain active
+            centroid = getattr(geometry, "centroid_camera", None)
 
         if centroid is None:
             return None
@@ -609,14 +612,19 @@ class CausalTracker(TrackerInterface):
         if geometry is None:
             return None
 
-        if getattr(geometry, "status", None) not in (None, GeometryStatus.VALID):
+        if getattr(geometry, "status", None) not in (None, GeometryStatus.VALID, GeometryStatus.STALE_POSE, GeometryStatus.NO_POSE):
             return None
 
         minimum = getattr(geometry, "bbox_min_world", None)
         maximum = getattr(geometry, "bbox_max_world", None)
 
         if minimum is None or maximum is None:
-            return None
+            pts_cam = getattr(geometry, "points_camera", None)
+            if pts_cam is not None and len(pts_cam) > 0:
+                minimum = np.min(pts_cam, axis=0)
+                maximum = np.max(pts_cam, axis=0)
+            else:
+                return None
 
         minimum = np.asarray(minimum, dtype=np.float64)
         maximum = np.asarray(maximum, dtype=np.float64)

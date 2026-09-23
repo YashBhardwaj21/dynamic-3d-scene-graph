@@ -52,12 +52,17 @@ class Live2DViewerNode(Node):
         self.declare_parameter("state_topic", "/scene_graph/state")
         self.declare_parameter("window_name", "Dynamic 3D Scene Graph - Live 2D Perception")
         self.declare_parameter("display_rate_hz", 30.0)
+        self.declare_parameter("split_windows", False)
 
         self.detections_topic = self.get_parameter("detections_topic").get_parameter_value().string_value
         self.tracks_topic = self.get_parameter("tracks_topic").get_parameter_value().string_value
         self.state_topic = self.get_parameter("state_topic").get_parameter_value().string_value
         self.window_name = self.get_parameter("window_name").get_parameter_value().string_value
+        self.split_windows = self.get_parameter("split_windows").get_parameter_value().bool_value
         display_rate = self.get_parameter("display_rate_hz").get_parameter_value().double_value
+
+        self.window_det_name = "1. YOLO 2D Perception"
+        self.window_track_name = "2. Tracks and 3D Relations"
 
         self.latest_det_img: Optional[np.ndarray] = None
         self.latest_track_img: Optional[np.ndarray] = None
@@ -91,8 +96,27 @@ class Live2DViewerNode(Node):
             10,
         )
 
+        if self.gui_available:
+            try:
+                if self.split_windows:
+                    cv2.namedWindow(self.window_det_name, cv2.WINDOW_NORMAL)
+                    cv2.namedWindow(self.window_track_name, cv2.WINDOW_NORMAL)
+                    cv2.resizeWindow(self.window_det_name, 640, 520)
+                    cv2.resizeWindow(self.window_track_name, 640, 520)
+                    cv2.moveWindow(self.window_det_name, 40, 40)
+                    cv2.moveWindow(self.window_track_name, 700, 40)
+                else:
+                    cv2.namedWindow(self.window_name, cv2.WINDOW_NORMAL)
+                    cv2.resizeWindow(self.window_name, 1280, 540)
+                    cv2.moveWindow(self.window_name, 40, 40)
+            except Exception as e:
+                self.get_logger().warn(f"Failed to initialize OpenCV windows: {e}")
+
         period = 1.0 / max(1.0, display_rate)
-        self.render_timer = self.create_timer(period, self.render_callback)
+        wall_clock = rclpy.clock.Clock(clock_type=rclpy.clock.ClockType.STEADY_TIME)
+        self.render_timer = self.create_timer(period, self.render_callback, clock=wall_clock)
+        if self.gui_available:
+            self.render_callback()
 
         self.get_logger().info(
             f"Live2DViewerNode initialized.\n"
@@ -140,6 +164,32 @@ class Live2DViewerNode(Node):
             return
 
         if self.latest_det_img is None and self.latest_track_img is None:
+            if self.split_windows:
+                p_det = np.full((520, 640, 3), 16, dtype=np.uint8)
+                self._draw_header(p_det, "1. YOLO 2D PERCEPTION (DETECTIONS & MASKS)", 0, 0, 640)
+                cv2.putText(p_det, "Waiting for perception frames...", (140, 240), cv2.FONT_HERSHEY_SIMPLEX, 0.65, (0, 220, 180), 2, cv2.LINE_AA)
+                cv2.putText(p_det, f"Subscribed: {self.detections_topic}", (140, 280), cv2.FONT_HERSHEY_SIMPLEX, 0.45, (160, 170, 180), 1, cv2.LINE_AA)
+
+                p_track = np.full((520, 640, 3), 16, dtype=np.uint8)
+                self._draw_header(p_track, "2. TRACKED OBJECTS & 3D RELATIONS", 0, 0, 640)
+                cv2.putText(p_track, "Waiting for scene graph frames...", (140, 240), cv2.FONT_HERSHEY_SIMPLEX, 0.65, (0, 220, 180), 2, cv2.LINE_AA)
+                cv2.putText(p_track, f"Subscribed: {self.tracks_topic}", (140, 280), cv2.FONT_HERSHEY_SIMPLEX, 0.45, (160, 170, 180), 1, cv2.LINE_AA)
+
+                try:
+                    cv2.imshow(self.window_det_name, p_det)
+                    cv2.imshow(self.window_track_name, p_track)
+                    cv2.waitKey(1)
+                except Exception:
+                    pass
+            else:
+                placeholder = np.full((540, 1280, 3), 16, dtype=np.uint8)
+                self._draw_header(placeholder, "DYNAMIC 3D SCENE GRAPH - 2D PERCEPTION", 0, 0, 1280)
+                cv2.putText(placeholder, "Waiting for perception frames...", (460, 260), cv2.FONT_HERSHEY_SIMPLEX, 0.8, (0, 220, 180), 2, cv2.LINE_AA)
+                try:
+                    cv2.imshow(self.window_name, placeholder)
+                    cv2.waitKey(1)
+                except Exception:
+                    pass
             return
 
         ref_img = self.latest_track_img if self.latest_track_img is not None else self.latest_det_img
@@ -196,15 +246,46 @@ class Live2DViewerNode(Node):
             cv2.LINE_AA,
         )
 
-        try:
-            cv2.imshow(self.window_name, dashboard)
-            key = cv2.waitKey(1) & 0xFF
-            if key in (27, ord("q")):
-                self.get_logger().info("Exit key pressed, shutting down viewer...")
-                rclpy.shutdown()
-        except Exception as e:
-            self.get_logger().warn(f"OpenCV GUI display error: {e}", throttle_duration_sec=5.0)
-            self.gui_available = False
+        if self.split_windows:
+            win_h = h + 32 + 42
+            # Window 1: YOLO 2D Perception
+            win_det = np.full((win_h, w, 3), 9, dtype=np.uint8)
+            self._draw_header(win_det, "1. YOLO 2D PERCEPTION (DETECTIONS & MASKS)", 0, 0, w)
+            win_det[32:32 + h, 0:w] = det_bgr
+            cv2.rectangle(win_det, (0, bar_y), (w, win_h), (16, 22, 30), -1)
+            cv2.line(win_det, (0, bar_y), (w, bar_y), (35, 45, 58), 1)
+            status_det = f"FRAME: {self.frame_index:04d}  |  INPUT: {in_fps:.1f} FPS  |  PROC: {fps:.1f} FPS  |  INFER: {infer_lat:.1f}ms"
+            cv2.putText(win_det, status_det, (14, bar_y + 26), cv2.FONT_HERSHEY_SIMPLEX, 0.48, (110, 225, 180), 1, cv2.LINE_AA)
+
+            # Window 2: Tracks and 3D Relations
+            win_track = np.full((win_h, w, 3), 9, dtype=np.uint8)
+            self._draw_header(win_track, "2. TRACKED OBJECTS & 3D RELATIONS", 0, 0, w)
+            win_track[32:32 + h, 0:w] = track_bgr
+            cv2.rectangle(win_track, (0, bar_y), (w, win_h), (16, 22, 30), -1)
+            cv2.line(win_track, (0, bar_y), (w, bar_y), (35, 45, 58), 1)
+            status_track = f"OBJECTS: {objs}  |  RELATIONS: {rels}  |  LATENCY: {lat:.1f}ms  |  QUEUE: {q}  |  DROPS: {drops}"
+            cv2.putText(win_track, status_track, (14, bar_y + 26), cv2.FONT_HERSHEY_SIMPLEX, 0.48, (110, 225, 180), 1, cv2.LINE_AA)
+
+            try:
+                cv2.imshow(self.window_det_name, win_det)
+                cv2.imshow(self.window_track_name, win_track)
+                key = cv2.waitKey(1) & 0xFF
+                if key in (27, ord("q")):
+                    self.get_logger().info("Exit key pressed, shutting down viewer...")
+                    rclpy.shutdown()
+            except Exception as e:
+                self.get_logger().warn(f"OpenCV GUI display error: {e}", throttle_duration_sec=5.0)
+                self.gui_available = False
+        else:
+            try:
+                cv2.imshow(self.window_name, dashboard)
+                key = cv2.waitKey(1) & 0xFF
+                if key in (27, ord("q")):
+                    self.get_logger().info("Exit key pressed, shutting down viewer...")
+                    rclpy.shutdown()
+            except Exception as e:
+                self.get_logger().warn(f"OpenCV GUI display error: {e}", throttle_duration_sec=5.0)
+                self.gui_available = False
 
     def destroy_node(self):
         if self.gui_available:

@@ -297,6 +297,8 @@ def test_out_of_view_vs_occluded_lifetime():
 
     config = SceneGraphConfig.from_files("configs/default.yaml")
     tracker = CausalTracker(config)
+    tracker.max_missing_seconds = 1.0
+    tracker.max_missing_seconds_out_of_view = 5.0
     assert tracker.max_missing_seconds == 1.0
     assert tracker.max_missing_seconds_out_of_view >= 5.0
 

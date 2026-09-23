@@ -1,37 +1,11 @@
-"""Launch file for TUM dataset replay with mutually exclusive localization modes.
+"""Launch TUM RGB-D replay with SLAM, ground-truth, or camera-local localization.
 
-Clock architecture
-------------------
-tum_player publishes /clock from the RGB header stamp.
-RTAB-Map, scene_graph_node, and RViz all run with use_sim_time=True via SetParameter,
-so they live entirely in the TUM timestamp domain (~1305031xxx seconds).
-tum_player does NOT use use_sim_time — its wall-clock timer drives playback.
-
-Authoritative Localization Modes
---------------------------------
-1. 'slam' (default):
-   TUM RGB-D + /clock → RTAB-Map SLAM → TF poses → SceneGraph → RViz
-   - RTAB-Map is launched.
-   - Ground-truth TF is NOT published.
-   - Static world->camera TF is NOT published.
-   - SceneGraph uses causal SLAM TF lookup (exact if available, causal past TF if processing lag).
-
-2. 'ground_truth':
-   TUM RGB-D + /clock + GT TF (from groundtruth.txt) → SceneGraph → RViz
-   - tum_player publishes ground-truth TF.
-   - RTAB-Map is NOT launched.
-   - Static world->camera TF is NOT published.
-   - SceneGraph uses exact-timestamp TF lookup.
-
-3. 'camera_local':
-   TUM RGB-D + /clock + static identity TF → SceneGraph (camera-local frame) → RViz
-   - RTAB-Map is NOT launched.
-   - Ground-truth TF is NOT published.
-   - Static identity TF is published for RViz frame resolution.
-   - SceneGraph processes objects in camera-local coordinate frame.
+tum_player uses wall time to pace playback and publishes dataset timestamps on /clock.
+RTAB-Map, SceneGraph, and RViz run with use_sim_time=True.
 """
 
 import os
+
 from ament_index_python.packages import get_package_share_directory
 from launch import LaunchDescription
 from launch.actions import (
@@ -50,10 +24,22 @@ def launch_setup(context, *args, **kwargs):
     pkg_share = get_package_share_directory("scene_graph_ros")
     default_rviz_config = os.path.join(pkg_share, "rviz", "scene_graph.rviz")
 
-    # Resolve authoritative localization mode with backward compatibility
-    raw_loc_mode = context.launch_configurations.get("localization_mode", "").strip().lower()
-    raw_use_rtabmap = context.launch_configurations.get("use_rtabmap", "").strip().lower()
-    raw_publish_gt = context.launch_configurations.get("publish_groundtruth_tf", "").strip().lower()
+    # Resolve the authoritative localization mode.
+    raw_loc_mode = (
+        context.launch_configurations.get("localization_mode", "")
+        .strip()
+        .lower()
+    )
+    raw_use_rtabmap = (
+        context.launch_configurations.get("use_rtabmap", "")
+        .strip()
+        .lower()
+    )
+    raw_publish_gt = (
+        context.launch_configurations.get("publish_groundtruth_tf", "")
+        .strip()
+        .lower()
+    )
 
     if raw_loc_mode in ("slam", "ground_truth", "camera_local"):
         resolved_mode = raw_loc_mode
@@ -66,7 +52,7 @@ def launch_setup(context, *args, **kwargs):
     else:
         resolved_mode = "slam"
 
-    # Derive mutually exclusive component flags
+    # Enable exactly one localization source.
     if resolved_mode == "slam":
         launch_rtabmap = True
         publish_gt_tf = False
@@ -79,17 +65,14 @@ def launch_setup(context, *args, **kwargs):
         publish_static_tf = False
         node_localization_mode = "ground_truth"
         use_latest_tf = False
-    else:  # camera_local
+    else:
         launch_rtabmap = False
         publish_gt_tf = False
         publish_static_tf = True
         node_localization_mode = "camera_local"
         use_latest_tf = False
 
-    # -------------------------------------------------------------------------
-    # TUM Player — does NOT use use_sim_time.
-    # Its wall-clock timer drives playback and publishes /clock for downstream nodes.
-    # -------------------------------------------------------------------------
+    # tum_player uses wall-clock pacing and publishes /clock from dataset timestamps.
     tum_player_node = Node(
         package="scene_graph_ros",
         executable="tum_player",
@@ -115,23 +98,23 @@ def launch_setup(context, *args, **kwargs):
         ],
     )
 
-    # -------------------------------------------------------------------------
-    # All downstream nodes run with use_sim_time=True via SetParameter.
-    # -------------------------------------------------------------------------
+    # Downstream nodes use the dataset clock.
     downstream_actions = [
         SetParameter(name="use_sim_time", value=True),
     ]
 
-    # Mutually exclusive TF sources:
+    # Launch one localization source.
     if launch_rtabmap:
         downstream_actions.append(
             IncludeLaunchDescription(
                 PythonLaunchDescriptionSource(
-                    PathJoinSubstitution([
-                        get_package_share_directory("rtabmap_launch"),
-                        "launch",
-                        "rtabmap.launch.py",
-                    ])
+                    PathJoinSubstitution(
+                        [
+                            get_package_share_directory("rtabmap_launch"),
+                            "launch",
+                            "rtabmap.launch.py",
+                        ]
+                    )
                 ),
                 launch_arguments={
                     "rgb_topic": "/tum/rgb/image_raw",
@@ -139,11 +122,34 @@ def launch_setup(context, *args, **kwargs):
                     "camera_info_topic": "/tum/rgb/camera_info",
                     "frame_id": LaunchConfiguration("sensor_frame"),
                     "map_frame_id": LaunchConfiguration("world_frame"),
-                    "approx_sync": "false",
+
+                    # Use bounded approximate synchronization for offline replay.
+                    "approx_sync": "true",
+                    "approx_sync_max_interval": "0.05",
+
+                    # Keep input queues bounded.
+                    "topic_queue_size": "5",
+                    "sync_queue_size": "10",
+
+                    # Do not let CPU odometry accumulate a frame backlog.
+                    "odom_always_process_most_recent_frame": "false",
+
+                    # Depth is already float32 metres.
+                    "depth_scale": "1.0",
+
                     "wait_imu_to_init": "false",
                     "use_sim_time": "true",
-                    "rtabmap_viz": "false",
+                    "rtabmap_viz": LaunchConfiguration("use_rtabmap_viz"),
                     "rviz": "false",
+                    "args": (
+                        "-d "
+                        "--Grid/CellSize 0.01 "
+                        "--Grid/VoxelSize 0.005 "
+                        "--Grid/RangeMax 4.0 "
+                        "--RGBD/LinearUpdate 0.01 "
+                        "--RGBD/AngularUpdate 0.01 "
+                        "--Rtabmap/DetectionRate 2.0"
+                    ),
                 }.items(),
             )
         )
@@ -154,15 +160,26 @@ def launch_setup(context, *args, **kwargs):
                 executable="static_transform_publisher",
                 name="static_world_to_camera",
                 arguments=[
-                    "--x", "0", "--y", "0", "--z", "0",
-                    "--roll", "0", "--pitch", "0", "--yaw", "0",
-                    "--frame-id", LaunchConfiguration("world_frame"),
-                    "--child-frame-id", LaunchConfiguration("sensor_frame"),
+                    "--x",
+                    "0",
+                    "--y",
+                    "0",
+                    "--z",
+                    "0",
+                    "--roll",
+                    "0",
+                    "--pitch",
+                    "0",
+                    "--yaw",
+                    "0",
+                    "--frame-id",
+                    LaunchConfiguration("world_frame"),
+                    "--child-frame-id",
+                    LaunchConfiguration("sensor_frame"),
                 ],
             )
         )
 
-    # SceneGraph perception node
     downstream_actions.append(
         Node(
             package="scene_graph_ros",
@@ -175,7 +192,9 @@ def launch_setup(context, *args, **kwargs):
                     "world_frame": LaunchConfiguration("world_frame"),
                     "sensor_frame": LaunchConfiguration("sensor_frame"),
                     "depth_scale": LaunchConfiguration("depth_scale"),
-                    "debug_frame_packet_only": LaunchConfiguration("debug_frame_packet_only"),
+                    "debug_frame_packet_only": LaunchConfiguration(
+                        "debug_frame_packet_only"
+                    ),
                     "queue_size": LaunchConfiguration("queue_size"),
                     "drop_old_frames": LaunchConfiguration("drop_old_frames"),
                     "localization_mode": node_localization_mode,
@@ -210,6 +229,12 @@ def launch_setup(context, *args, **kwargs):
             executable="live_2d_viewer",
             name="live_2d_viewer",
             output="screen",
+            parameters=[
+                {
+                    "use_sim_time": False,
+                    "split_windows": LaunchConfiguration("split_viewer_windows"),
+                }
+            ],
             condition=IfCondition(LaunchConfiguration("use_viewer")),
         )
     )
@@ -220,116 +245,136 @@ def launch_setup(context, *args, **kwargs):
 
 
 def generate_launch_description():
-    return LaunchDescription([
-        DeclareLaunchArgument(
-            "localization_mode",
-            default_value="slam",
-            description="Authoritative localization mode: 'slam' (RTAB-Map), 'ground_truth' (tum_player GT TF), or 'camera_local' (identity)",
-        ),
-        DeclareLaunchArgument(
-            "use_rtabmap",
-            default_value="false",
-            description="[Compatibility] True sets localization_mode to slam if localization_mode is not explicitly passed",
-        ),
-        DeclareLaunchArgument(
-            "publish_groundtruth_tf",
-            default_value="false",
-            description="[Compatibility] True sets localization_mode to ground_truth if localization_mode is not explicitly passed",
-        ),
-        DeclareLaunchArgument(
-            "config_path",
-            default_value="configs/tum_fr1_desk.yaml",
-            description="Path to SceneGraph configuration YAML",
-        ),
-        DeclareLaunchArgument(
-            "dataset_root",
-            default_value="data/raw/rgbd_dataset_freiburg1_desk",
-            description="Path to TUM RGB-D sequence directory",
-        ),
-        DeclareLaunchArgument(
-            "rate_multiplier",
-            default_value="1.0",
-            description="Playback rate multiplier",
-        ),
-        DeclareLaunchArgument(
-            "start_frame",
-            default_value="0",
-            description="Starting frame index",
-        ),
-        DeclareLaunchArgument(
-            "end_frame",
-            default_value="-1",
-            description="Ending frame index (-1 = end of sequence)",
-        ),
-        DeclareLaunchArgument(
-            "frame_stride",
-            default_value="1",
-            description="Step between published frames (1=every frame)",
-        ),
-        DeclareLaunchArgument(
-            "debug_frame_packet_only",
-            default_value="false",
-            description="Run in FramePacket diagnostic isolation mode",
-        ),
-        DeclareLaunchArgument(
-            "use_rviz",
-            default_value="true",
-            description="Whether to launch RViz2",
-        ),
-        DeclareLaunchArgument(
-            "use_viewer",
-            default_value="true",
-            description="Whether to launch 2D live perception viewer",
-        ),
-        DeclareLaunchArgument(
-            "world_frame",
-            default_value="world",
-            description="World reference frame ID",
-        ),
-        DeclareLaunchArgument(
-            "sensor_frame",
-            default_value="camera_optical_frame",
-            description="Camera optical frame ID",
-        ),
-        DeclareLaunchArgument(
-            "depth_scale",
-            default_value="5000.0",
-            description="Depth scale (raw units per metre). 5000.0 for TUM standard; 1000.0 for my_desk_sequence (D455).",
-        ),
-        DeclareLaunchArgument(
-            "queue_size",
-            default_value="5",
-            description="Max frames buffered in worker queue (keep small for SLAM to avoid latency)",
-        ),
-        DeclareLaunchArgument(
-            "drop_old_frames",
-            default_value="true",
-            description="Drop incoming frames when the queue is full (true = avoid latency buildup)",
-        ),
-        DeclareLaunchArgument(
-            "publish_rate_hz",
-            default_value="30.0",
-            description="Frame publishing rate in Hz",
-        ),
-        DeclareLaunchArgument(
-            "loop",
-            default_value="false",
-            description="Whether to loop the sequence. Must be false with SLAM (clock would rewind).",
-        ),
-        DeclareLaunchArgument(
-            "map_voxel_size_m",
-            default_value="0.02",
-            description="Voxel size (m) for growing map cloud",
-        ),
-        DeclareLaunchArgument(
-            "map_max_points",
-            default_value="500000",
-            description="Maximum points in map before voxel downsampling",
-        ),
-        DeclareLaunchArgument(
-            "map_cloud_stride",
-            default_value="4",
-            description="Subsampling stride for map cloud unprojection",
-        ),
-        OpaqueFunction(function=launch_setup),
-    ])
+    return LaunchDescription(
+        [
+            DeclareLaunchArgument(
+                "localization_mode",
+                default_value="slam",
+                description=(
+                    "Localization mode: 'slam', 'ground_truth', or 'camera_local'"
+                ),
+            ),
+            DeclareLaunchArgument(
+                "use_rtabmap",
+                default_value="false",
+                description="[Compatibility] Enable SLAM when no localization_mode is supplied",
+            ),
+            DeclareLaunchArgument(
+                "publish_groundtruth_tf",
+                default_value="false",
+                description=(
+                    "[Compatibility] Enable ground-truth TF when no "
+                    "localization_mode is supplied"
+                ),
+            ),
+            DeclareLaunchArgument(
+                "config_path",
+                default_value="configs/tum_fr1_desk.yaml",
+                description="Path to SceneGraph configuration YAML",
+            ),
+            DeclareLaunchArgument(
+                "dataset_root",
+                default_value="data/raw/rgbd_dataset_freiburg1_desk",
+                description="Path to TUM RGB-D sequence directory",
+            ),
+            DeclareLaunchArgument(
+                "rate_multiplier",
+                default_value="1.0",
+                description="Playback rate multiplier",
+            ),
+            DeclareLaunchArgument(
+                "start_frame",
+                default_value="0",
+                description="Starting frame index",
+            ),
+            DeclareLaunchArgument(
+                "end_frame",
+                default_value="-1",
+                description="Ending frame index (-1 = end of sequence)",
+            ),
+            DeclareLaunchArgument(
+                "frame_stride",
+                default_value="1",
+                description="Step between published frames",
+            ),
+            DeclareLaunchArgument(
+                "debug_frame_packet_only",
+                default_value="false",
+                description="Run FramePacket diagnostic isolation mode",
+            ),
+            DeclareLaunchArgument(
+                "use_rviz",
+                default_value="true",
+                description="Launch RViz2",
+            ),
+            DeclareLaunchArgument(
+                "use_viewer",
+                default_value="true",
+                description="Launch 2D perception viewer",
+            ),
+            DeclareLaunchArgument(
+                "split_viewer_windows",
+                default_value="true",
+                description="Split 2D viewer into two independent windows (YOLO and Tracks/Relations)",
+            ),
+            DeclareLaunchArgument(
+                "use_rtabmap_viz",
+                default_value="true",
+                description="Launch native RTAB-Map 3D visualization GUI (Window 4)",
+            ),
+            DeclareLaunchArgument(
+                "world_frame",
+                default_value="world",
+                description="World reference frame ID",
+            ),
+            DeclareLaunchArgument(
+                "sensor_frame",
+                default_value="camera_optical_frame",
+                description="Camera optical frame ID",
+            ),
+            DeclareLaunchArgument(
+                "depth_scale",
+                default_value="5000.0",
+                description=(
+                    "Raw depth units per metre: 5000.0 for TUM, "
+                    "1000.0 for D455 recordings"
+                ),
+            ),
+            DeclareLaunchArgument(
+                "queue_size",
+                default_value="5",
+                description="SceneGraph worker queue size",
+            ),
+            DeclareLaunchArgument(
+                "drop_old_frames",
+                default_value="true",
+                description="Drop queued frames when processing falls behind",
+            ),
+            DeclareLaunchArgument(
+                "publish_rate_hz",
+                default_value="2.0",
+                description="Replay input rate in Hz",
+            ),
+            DeclareLaunchArgument(
+                "loop",
+                default_value="false",
+                description="Loop playback; keep false for SLAM",
+            ),
+            DeclareLaunchArgument(
+                "map_voxel_size_m",
+                default_value="0.008",
+                description="Voxel size for the growing map cloud (0.008 = 8mm for high density)",
+            ),
+            DeclareLaunchArgument(
+                "map_max_points",
+                default_value="2000000",
+                description="Maximum accumulated map points (2 million)",
+            ),
+            DeclareLaunchArgument(
+                "map_cloud_stride",
+                default_value="2",
+                description="Pixel stride for map cloud generation (2 = 4x denser)",
+            ),
+            OpaqueFunction(function=launch_setup),
+        ]
+    )

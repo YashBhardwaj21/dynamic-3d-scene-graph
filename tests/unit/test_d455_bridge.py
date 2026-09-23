@@ -13,6 +13,14 @@ sys.path.insert(0, str(WS_ROOT / "ros2_ws" / "src" / "d455_bridge"))
 
 from d455_sender import send_packet
 from d455_bridge.d455_receiver import D455Receiver, recv_exact
+import rclpy
+
+
+@pytest.fixture(autouse=True)
+def init_rclpy():
+    if not rclpy.ok():
+        rclpy.init()
+    yield
 
 
 def create_synthetic_frame_data(width=64, height=48, skew_ms=5.0):
@@ -127,8 +135,20 @@ def test_d455_receiver_network_stream_and_parsing():
         receiver.destroy_node()
 
 
+class MockPublisher:
+    def __init__(self):
+        self.published = []
+
+    def publish(self, msg):
+        self.published.append(msg)
+
+
 def test_rgb_depth_skew_rejection():
     receiver = D455Receiver(host="127.0.0.1", port=0, queue_size=4, max_skew_ms=33.0)
+    receiver.rgb_pub = MockPublisher()
+    receiver.depth_pub = MockPublisher()
+    receiver.camera_info_pub = MockPublisher()
+    receiver.imu_pub = MockPublisher()
     try:
         header_bad, rgb_b, depth_b = create_synthetic_frame_data(16, 12, skew_ms=52.0)
         packet_bad = {
@@ -188,6 +208,10 @@ def test_bounded_queue_drops_oldest():
 
 def test_ros_message_field_fidelity():
     receiver = D455Receiver(host="127.0.0.1", port=0, queue_size=4)
+    receiver.rgb_pub = MockPublisher()
+    receiver.depth_pub = MockPublisher()
+    receiver.camera_info_pub = MockPublisher()
+    receiver.imu_pub = MockPublisher()
     try:
         header, rgb_b, depth_b = create_synthetic_frame_data(64, 48, skew_ms=4.0)
         packet = {
