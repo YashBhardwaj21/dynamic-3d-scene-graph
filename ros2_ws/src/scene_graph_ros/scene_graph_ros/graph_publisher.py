@@ -16,6 +16,7 @@ from builtin_interfaces.msg import Duration
 from scene_graph.graph.temporal_graph import TemporalSceneGraph
 from scene_graph.graph.snapshot import SceneGraphSnapshot, create_snapshot
 from scene_graph.geometry.point_cloud import GeometryStatus
+from scene_graph.geometry.transforms import transform_points
 from scene_graph.data.frame_packet import FramePacket
 
 from scene_graph_ros.ros_conversions import (
@@ -46,6 +47,9 @@ class GraphPublisher:
         state_topic: str = "/scene_graph/state",
         markers_topic: str = "/scene_graph/markers",
         object_cloud_topic: str = "/scene_graph/object_cloud",
+        scene_cloud_topic: str = "/scene_graph/scene_cloud",
+        publish_scene_cloud: bool = True,
+        scene_cloud_stride: int = 4,
         overlay_detections_topic: str = "/scene_graph/overlay_detections",
         overlay_tracks_topic: str = "/scene_graph/overlay_tracks",
         world_frame: str = "world",
@@ -56,6 +60,12 @@ class GraphPublisher:
         self.state_pub = node.create_publisher(String, state_topic, 10)
         self.markers_pub = node.create_publisher(MarkerArray, markers_topic, 10)
         self.cloud_pub = node.create_publisher(PointCloud2, object_cloud_topic, 10)
+        self.publish_scene_cloud_enabled = publish_scene_cloud
+        self.scene_cloud_stride = max(1, scene_cloud_stride)
+        if self.publish_scene_cloud_enabled:
+            self.scene_cloud_pub = node.create_publisher(PointCloud2, scene_cloud_topic, 10)
+        else:
+            self.scene_cloud_pub = None
         self.overlay_det_pub = node.create_publisher(Image, overlay_detections_topic, 10)
         self.overlay_track_pub = node.create_publisher(Image, overlay_tracks_topic, 10)
 
@@ -138,6 +148,8 @@ class GraphPublisher:
         self.publish_json_state(snapshot)
         self.publish_rviz_markers(snapshot, packet)
         self.publish_object_cloud(graph, packet)
+        if self.publish_scene_cloud_enabled:
+            self.publish_scene_cloud(packet)
         self.publish_overlays(graph, packet, observations)
 
     def publish_json_state(self, snapshot: SceneGraphSnapshot):
@@ -531,6 +543,49 @@ class GraphPublisher:
             colors=cols_concat,
         )
         self.cloud_pub.publish(cloud_msg)
+
+    def publish_scene_cloud(self, packet: FramePacket):
+        """Publish full 3D dense/subsampled point cloud of the world/environment on /scene_graph/scene_cloud."""
+        if self.scene_cloud_pub is None or packet.depth is None or packet.rgb is None:
+            return
+
+        stride = self.scene_cloud_stride
+        depth_sub = packet.depth[::stride, ::stride]
+        rgb_sub = packet.rgb[::stride, ::stride]
+
+        valid = (depth_sub >= 0.10) & (depth_sub <= 8.0) & np.isfinite(depth_sub)
+        if not np.any(valid):
+            return
+
+        v, u = np.where(valid)
+        z = depth_sub[v, u]
+        u_orig = u * stride
+        v_orig = v * stride
+
+        intrinsics = packet.camera_intrinsics
+        cx = intrinsics.cx
+        cy = intrinsics.cy
+        fx = intrinsics.fx
+        fy = intrinsics.fy
+
+        x = (u_orig - cx) * z / fx
+        y = (v_orig - cy) * z / fy
+        pts_cam = np.column_stack((x, y, z)).astype(np.float64)
+
+        if packet.world_T_camera is not None:
+            pts_world = transform_points(packet.world_T_camera, pts_cam)
+        else:
+            pts_world = pts_cam
+
+        colors = rgb_sub[v, u]
+
+        cloud_msg = numpy_to_point_cloud2(
+            points=pts_world,
+            frame_id=self.world_frame,
+            timestamp=packet.timestamp,
+            colors=colors,
+        )
+        self.scene_cloud_pub.publish(cloud_msg)
 
     def publish_overlays(
         self,

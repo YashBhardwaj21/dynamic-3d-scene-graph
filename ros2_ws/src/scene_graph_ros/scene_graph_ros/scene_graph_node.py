@@ -92,6 +92,9 @@ class SceneGraphROSNode(Node):
         self.declare_parameter("state_topic", "/scene_graph/state")
         self.declare_parameter("markers_topic", "/scene_graph/markers")
         self.declare_parameter("object_cloud_topic", "/scene_graph/object_cloud")
+        self.declare_parameter("scene_cloud_topic", "/scene_graph/scene_cloud")
+        self.declare_parameter("publish_scene_cloud", True)
+        self.declare_parameter("scene_cloud_stride", 4)
         self.declare_parameter("overlay_detections_topic", "/scene_graph/overlay_detections")
         self.declare_parameter("overlay_tracks_topic", "/scene_graph/overlay_tracks")
         self.declare_parameter("queue_size", 64)
@@ -116,6 +119,9 @@ class SceneGraphROSNode(Node):
         self.state_topic = self.get_parameter("state_topic").get_parameter_value().string_value
         self.markers_topic = self.get_parameter("markers_topic").get_parameter_value().string_value
         self.object_cloud_topic = self.get_parameter("object_cloud_topic").get_parameter_value().string_value
+        self.scene_cloud_topic = self.get_parameter("scene_cloud_topic").get_parameter_value().string_value
+        self.publish_scene_cloud = self.get_parameter("publish_scene_cloud").get_parameter_value().bool_value
+        self.scene_cloud_stride = self.get_parameter("scene_cloud_stride").get_parameter_value().integer_value
         self.overlay_detections_topic = self.get_parameter("overlay_detections_topic").get_parameter_value().string_value
         self.overlay_tracks_topic = self.get_parameter("overlay_tracks_topic").get_parameter_value().string_value
         self.queue_size = self.get_parameter("queue_size").get_parameter_value().integer_value
@@ -157,6 +163,9 @@ class SceneGraphROSNode(Node):
             state_topic=self.state_topic,
             markers_topic=self.markers_topic,
             object_cloud_topic=self.object_cloud_topic,
+            scene_cloud_topic=self.scene_cloud_topic,
+            publish_scene_cloud=self.publish_scene_cloud,
+            scene_cloud_stride=self.scene_cloud_stride,
             overlay_detections_topic=self.overlay_detections_topic,
             overlay_tracks_topic=self.overlay_tracks_topic,
             world_frame=self.world_frame,
@@ -220,6 +229,7 @@ class SceneGraphROSNode(Node):
             f"  TF: {self.world_frame} -> {self.sensor_frame} (max_dt={self.pose_max_dt}s)\n"
             f"  Queue: maxsize={max_q}, drop_old_frames={self.drop_old_frames}\n"
             f"  Object Cloud: {self.object_cloud_topic}\n"
+            f"  Scene Cloud: {self.scene_cloud_topic} (enabled={self.publish_scene_cloud}, stride={self.scene_cloud_stride})\n"
             f"  Overlays: {self.overlay_detections_topic}, {self.overlay_tracks_topic}"
         )
 

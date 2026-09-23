@@ -3,7 +3,7 @@
 
 tracking:
   confirmation:
-    min_hits: 1
+    min_hits: 5
 
   occlusion:
     max_missing_seconds: 5.0

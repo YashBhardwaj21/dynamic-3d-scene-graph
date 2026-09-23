@@ -14,7 +14,8 @@ from launch_ros.actions import Node
 
 def generate_launch_description():
     pkg_share = get_package_share_directory("scene_graph_ros")
-    default_rviz_config = os.path.join(pkg_share, "rviz", "scene_graph.rviz")
+    src_rviz = "/mnt/c/Users/Yash Bhardwaj/Desktop/perception/ros2_ws/src/scene_graph_ros/rviz/scene_graph.rviz"
+    default_rviz_config = src_rviz if os.path.exists(src_rviz) else os.path.join(pkg_share, "rviz", "scene_graph.rviz")
 
     use_bridge_arg = DeclareLaunchArgument(
         "use_bridge",
@@ -54,14 +55,26 @@ def generate_launch_description():
 
     min_hits_arg = DeclareLaunchArgument(
         "min_hits",
-        default_value="1",
+        default_value="5",
         description="Minimum consecutive hits before promoting track to ACTIVE",
     )
 
     max_missing_seconds_arg = DeclareLaunchArgument(
         "max_missing_seconds",
-        default_value="5.0",
-        description="Maximum seconds before unobserved track is declared LOST",
+        default_value="-1.0",
+        description="Maximum seconds before unobserved track is declared LOST (-1.0 to use config YAML)",
+    )
+
+    publish_scene_cloud_arg = DeclareLaunchArgument(
+        "publish_scene_cloud",
+        default_value="true",
+        description="Whether to unproject and publish the full 3D world/environment point cloud",
+    )
+
+    scene_cloud_stride_arg = DeclareLaunchArgument(
+        "scene_cloud_stride",
+        default_value="4",
+        description="Subsampling stride for full scene point cloud unprojection (4 is fast on CPU)",
     )
 
     world_frame_arg = DeclareLaunchArgument(
@@ -152,6 +165,7 @@ def generate_launch_description():
             "depth_topic": LaunchConfiguration("depth_topic"),
             "camera_info_topic": LaunchConfiguration("camera_info_topic"),
             "frame_id": LaunchConfiguration("sensor_frame"),
+            "map_frame_id": LaunchConfiguration("world_frame"),
             "approx_sync": "true",
             "wait_imu_to_init": "false",
             "rtabmap_viz": "false",
@@ -179,6 +193,8 @@ def generate_launch_description():
                 "localization_mode": LaunchConfiguration("localization_mode"),
                 "min_hits": LaunchConfiguration("min_hits"),
                 "max_missing_seconds": LaunchConfiguration("max_missing_seconds"),
+                "publish_scene_cloud": LaunchConfiguration("publish_scene_cloud"),
+                "scene_cloud_stride": LaunchConfiguration("scene_cloud_stride"),
             }
         ],
         condition=IfCondition(LaunchConfiguration("use_scenegraph")),
@@ -211,6 +227,8 @@ def generate_launch_description():
         config_path_arg,
         min_hits_arg,
         max_missing_seconds_arg,
+        publish_scene_cloud_arg,
+        scene_cloud_stride_arg,
         world_frame_arg,
         sensor_frame_arg,
         rgb_topic_arg,

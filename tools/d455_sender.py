@@ -19,24 +19,21 @@ DEFAULT_PORT = 5000
 
 
 def resolve_wsl_host(preferred_host: str, port: int) -> str:
-    """Attempt connecting to preferred host; if it fails, auto-query WSL IP on Windows."""
-    try:
-        test_sock = socket.create_connection((preferred_host, port), timeout=0.5)
-        test_sock.close()
+    """Resolve WSL host IP directly via Hyper-V virtual switch to bypass buggy wslrelay."""
+    if preferred_host not in ("127.0.0.1", "localhost"):
         return preferred_host
-    except Exception:
-        pass
 
     try:
         import subprocess
-        res = subprocess.run(["wsl", "-e", "bash", "-c", "hostname -I"], capture_output=True, text=True, timeout=2)
+        res = subprocess.run(["wsl", "-d", "Ubuntu-22.04", "hostname", "-I"], capture_output=True, text=True, timeout=2)
         if res.returncode == 0:
             ip = res.stdout.strip().split()[0]
             if ip:
-                print(f"[D455 Sender] Auto-detected WSL host at {ip}")
+                print(f"[D455 Sender] Auto-detected direct WSL2 Hyper-V IP: {ip}")
                 return ip
     except Exception:
         pass
+
     return preferred_host
 
 
@@ -214,7 +211,7 @@ def main(host: str = DEFAULT_HOST, port: int = DEFAULT_PORT):
                 continue
 
             frame_id += 1
-            if frame_id % 30 == 0:
+            if frame_id == 1 or frame_id % 30 == 0:
                 print(f"[D455 Sender] Frame {frame_id:05d} | RGB={color_data.nbytes:,}B | Depth={depth_data.nbytes:,}B | skew={dt_ms:.2f}ms | send={send_ms:.1f}ms")
 
     except KeyboardInterrupt:
