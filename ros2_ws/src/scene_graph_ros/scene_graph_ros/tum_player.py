@@ -86,6 +86,8 @@ class TUMPlayerNode(Node):
         # RTAB-Map consumes this directly so it never needs to know the depth scale.
         # Set to empty string to disable.
         self.declare_parameter("slam_depth_topic", "/tum/depth_m/image_raw")
+        # Minimum number of subscribers on rgb_topic before playback starts (e.g. 2 in SLAM mode, 1 in GT mode).
+        self.declare_parameter("min_subscribers", 1)
 
         dataset_root_param = self.get_parameter("dataset_root").get_parameter_value().string_value
         config_path_param = self.get_parameter("config_path").get_parameter_value().string_value
@@ -105,6 +107,7 @@ class TUMPlayerNode(Node):
         )
         _depth_scale_param = self.get_parameter("depth_scale").get_parameter_value().double_value
         self.slam_depth_topic = self.get_parameter("slam_depth_topic").get_parameter_value().string_value.strip()
+        self.min_subscribers = max(1, self.get_parameter("min_subscribers").get_parameter_value().integer_value)
 
         self.config = load_scene_graph_config(config_path_param)
 
@@ -176,6 +179,14 @@ class TUMPlayerNode(Node):
         # tum_player itself does NOT use use_sim_time — its timer must run on wall clock.
         self.clock_pub = self.create_publisher(Clock, "/clock", 10)
 
+        # Publish initial clock value immediately so downstream nodes with use_sim_time=True
+        # initialize their ROS time domain to the dataset timestamp without waiting.
+        if len(self.rgb_entries) > 0 and self.start_frame < len(self.rgb_entries):
+            initial_ts = self.rgb_entries[self.start_frame].timestamp
+            init_clock = Clock()
+            init_clock.clock.sec = int(initial_ts)
+            init_clock.clock.nanosec = int((initial_ts % 1.0) * 1e9)
+            self.clock_pub.publish(init_clock)
 
         # Float32 (metres) depth topic for RTAB-Map — avoids all depth-scale confusion.
         self.slam_depth_pub = None
@@ -286,9 +297,15 @@ class TUMPlayerNode(Node):
                 self.timer.cancel()
                 return
 
-        if self.published_count == 0 and self.rgb_pub.get_subscription_count() == 0:
+        if self.published_count == 0 and self.rgb_pub.get_subscription_count() < self.min_subscribers:
+            if self.current_idx <= self.end_frame:
+                wait_ts = self.rgb_entries[self.current_idx].timestamp
+                clock_msg = Clock()
+                clock_msg.clock.sec = int(wait_ts)
+                clock_msg.clock.nanosec = int((wait_ts % 1.0) * 1e9)
+                self.clock_pub.publish(clock_msg)
             self.get_logger().info(
-                "Waiting for downstream consumers (scene_graph_node) to subscribe before starting playback...",
+                f"Waiting for downstream consumers ({self.rgb_pub.get_subscription_count()}/{self.min_subscribers} subscribed to {self.rgb_topic}) before starting playback...",
                 throttle_duration_sec=3.0,
             )
             return

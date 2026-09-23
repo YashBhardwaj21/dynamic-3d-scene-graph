@@ -211,7 +211,7 @@ class SceneGraphROSNode(Node):
             10,
         )
 
-        self.tf_buffer = tf2_ros.Buffer()
+        self.tf_buffer = tf2_ros.Buffer(node=self)
         self.tf_listener = tf2_ros.TransformListener(self.tf_buffer, self)
 
         self.imu_buffer: List[IMUSample] = []
@@ -392,75 +392,51 @@ class SceneGraphROSNode(Node):
             transform_source = "camera_local"
             world_frame_used = self.sensor_frame
         else:
-            # WORLD_MODE requires valid, timestamp-correct localization
             world_frame_used = self.world_frame
             t_tf_start = time.monotonic()
+            target_time = Time(seconds=rgb_stamp.sec, nanoseconds=rgb_stamp.nanosec)
 
-            if self.use_latest_tf:
-                # SLAM backend mode: RTAB-Map / ORB-SLAM3 publish TF *after* processing
-                # the frame, so the exact image timestamp is never in the buffer yet.
-                # Use Time(0) to get the latest available transform and accept it if
-                # it is recent enough.
-                try:
-                    transform_stamped = self.tf_buffer.lookup_transform(
-                        self.world_frame,
-                        self.sensor_frame,
-                        Time(),  # latest available
-                        timeout=Duration(seconds=self.pose_max_dt),
-                    )
-                    tf_stamp = transform_stamped.header.stamp
-                    pose_timestamp = float(tf_stamp.sec) + float(tf_stamp.nanosec) * 1e-9
-                    pose_age = abs(rgb_timestamp - pose_timestamp)
+            # Determine if this mode permits causal SLAM fallback (SLAM mode or use_latest_tf=True)
+            allow_causal_slam = (self.localization_mode == "slam") or self.use_latest_tf
 
-                    # Accept the transform unless it is older than slam_pose_max_age
-                    # (0 = always accept regardless of age).
-                    if self.slam_pose_max_age > 0 and pose_age > self.slam_pose_max_age:
-                        transform_valid = False
-                        transform_source = "stale_slam_tf"
-                        self.get_logger().warn(
-                            f"Latest SLAM TF age {pose_age*1000.0:.0f}ms > max={self.slam_pose_max_age*1000.0:.0f}ms. "
-                            "SLAM backend may not have localised yet.",
-                            throttle_duration_sec=2.0,
-                        )
-                    else:
-                        world_T_camera = transform_to_matrix(transform_stamped)
-                        transform_valid = True
-                        transform_source = "slam_latest_tf"
-                except TransformException as ex:
+            # Step 1: Attempt exact or interpolated transform valid for frame timestamp T
+            exact_succeeded = False
+            try:
+                # If exact/ground-truth mode, wait up to pose_max_dt. If SLAM mode, check non-blocking (0 timeout).
+                exact_timeout = Duration(seconds=0 if allow_causal_slam else self.pose_max_dt)
+                transform_stamped = self.tf_buffer.lookup_transform(
+                    self.world_frame,
+                    self.sensor_frame,
+                    target_time,
+                    timeout=exact_timeout,
+                )
+                tf_stamp = transform_stamped.header.stamp
+                pose_timestamp = float(tf_stamp.sec) + float(tf_stamp.nanosec) * 1e-9
+                raw_age = rgb_timestamp - pose_timestamp
+
+                if raw_age < -1e-4:
                     transform_valid = False
-                    transform_source = "missing_slam_tf"
+                    transform_source = "future_tf_rejected"
                     self.get_logger().warn(
-                        f"SLAM TF lookup failed ({self.world_frame}→{self.sensor_frame}): {ex}. "
-                        "Waiting for SLAM backend to initialise.",
+                        f"TF returned future transform at frame {rgb_timestamp:.4f}: tf_ts={pose_timestamp:.4f} > frame_ts. Rejected.",
                         throttle_duration_sec=2.0,
                     )
-            else:
-                # Ground-truth / static TF mode: look up exact image timestamp.
-                target_time = Time(seconds=rgb_stamp.sec, nanoseconds=rgb_stamp.nanosec)
-                try:
-                    transform_stamped = self.tf_buffer.lookup_transform(
-                        self.world_frame,
-                        self.sensor_frame,
-                        target_time,
-                        timeout=Duration(seconds=self.pose_max_dt),
+                elif raw_age > self.pose_max_dt:
+                    transform_valid = False
+                    transform_source = "stale_tf"
+                    self.get_logger().warn(
+                        f"Stale TF for {self.world_frame} -> {self.sensor_frame} at {rgb_timestamp:.4f}: "
+                        f"age={raw_age*1000.0:.1f}ms > max={self.pose_max_dt*1000.0:.1f}ms",
+                        throttle_duration_sec=2.0,
                     )
-                    tf_stamp = transform_stamped.header.stamp
-                    pose_timestamp = float(tf_stamp.sec) + float(tf_stamp.nanosec) * 1e-9
-                    pose_age = abs(rgb_timestamp - pose_timestamp)
-
-                    if pose_age > self.pose_max_dt:
-                        transform_valid = False
-                        transform_source = "stale_tf"
-                        self.get_logger().warn(
-                            f"Stale TF for {self.world_frame} -> {self.sensor_frame} at {rgb_timestamp:.4f}: "
-                            f"age={pose_age*1000.0:.1f}ms > max={self.pose_max_dt*1000.0:.1f}ms",
-                            throttle_duration_sec=2.0,
-                        )
-                    else:
-                        world_T_camera = transform_to_matrix(transform_stamped)
-                        transform_valid = True
-                        transform_source = "tf_exact"
-                except TransformException as ex:
+                else:
+                    world_T_camera = transform_to_matrix(transform_stamped)
+                    transform_valid = True
+                    pose_age = max(0.0, raw_age)
+                    transform_source = "tf_exact"
+                    exact_succeeded = True
+            except TransformException as ex:
+                if not allow_causal_slam:
                     transform_valid = False
                     transform_source = "missing_tf"
                     self.get_logger().warn(
@@ -469,7 +445,60 @@ class SceneGraphROSNode(Node):
                         throttle_duration_sec=2.0,
                     )
 
+            # Step 2: In SLAM mode, if exact transform at T is not yet ready, use causal latest transform <= T
+            if allow_causal_slam and not exact_succeeded:
+                try:
+                    transform_stamped = self.tf_buffer.lookup_transform(
+                        self.world_frame,
+                        self.sensor_frame,
+                        Time(),  # newest transform available in buffer
+                        timeout=Duration(seconds=self.pose_max_dt),
+                    )
+                    tf_stamp = transform_stamped.header.stamp
+                    pose_timestamp = float(tf_stamp.sec) + float(tf_stamp.nanosec) * 1e-9
+
+                    # Enforce causal invariant: pose_timestamp <= rgb_timestamp (never future)
+                    if pose_timestamp > rgb_timestamp:
+                        transform_valid = False
+                        transform_source = "future_tf_rejected"
+                        pose_age = rgb_timestamp - pose_timestamp
+                        self.get_logger().warn(
+                            f"Newest SLAM TF {pose_timestamp:.4f} is in future relative to frame {rgb_timestamp:.4f} "
+                            f"(dt={pose_age*1000.0:.1f}ms). Causal policy strictly rejects future poses.",
+                            throttle_duration_sec=2.0,
+                        )
+                    else:
+                        pose_age = rgb_timestamp - pose_timestamp  # Non-negative
+                        if self.slam_pose_max_age > 0 and pose_age > self.slam_pose_max_age:
+                            transform_valid = False
+                            transform_source = "stale_slam_tf"
+                            self.get_logger().warn(
+                                f"Causal SLAM TF age {pose_age*1000.0:.0f}ms > max={self.slam_pose_max_age*1000.0:.0f}ms. "
+                                "SLAM backend may not have localised yet.",
+                                throttle_duration_sec=2.0,
+                            )
+                        else:
+                            world_T_camera = transform_to_matrix(transform_stamped)
+                            transform_valid = True
+                            transform_source = "slam_causal_tf"
+                except TransformException as ex:
+                    transform_valid = False
+                    transform_source = "missing_slam_tf"
+                    self.get_logger().warn(
+                        f"SLAM TF lookup failed ({self.world_frame}→{self.sensor_frame}): {ex}. "
+                        "Waiting for SLAM backend to initialise.",
+                        throttle_duration_sec=2.0,
+                    )
+
             tf_latency_ms = (time.monotonic() - t_tf_start) * 1000.0
+
+            if self.frame_counter % 25 == 0 or self.frame_counter < 10:
+                tf_ts_str = f"{pose_timestamp:.4f}" if pose_timestamp is not None else "None"
+                self.get_logger().info(
+                    f"Pose association [frame {self.frame_counter:04d}]: "
+                    f"frame_ts={rgb_timestamp:.4f}, tf_ts={tf_ts_str}, "
+                    f"tf_age={pose_age*1000.0:.1f}ms, source={transform_source}, valid={transform_valid}"
+                )
 
         try:
             rgb_np = ros_image_to_numpy(pending.rgb_msg)

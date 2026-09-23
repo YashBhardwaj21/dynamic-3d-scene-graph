@@ -12,6 +12,8 @@ dataset:
 depth:
   scale: 1000.0
 
+# Note: pose_source is offline evaluation metadata only; ROS runtime localization
+# is controlled explicitly by launch arguments (localization_mode: slam | ground_truth | camera_local).
 pose_source: tum_groundtruth
 
 camera:
