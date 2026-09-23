@@ -93,8 +93,12 @@ class SceneGraphROSNode(Node):
         self.declare_parameter("markers_topic", "/scene_graph/markers")
         self.declare_parameter("object_cloud_topic", "/scene_graph/object_cloud")
         self.declare_parameter("scene_cloud_topic", "/scene_graph/scene_cloud")
-        self.declare_parameter("publish_scene_cloud", True)
+        self.declare_parameter("publish_scene_cloud", False)
         self.declare_parameter("scene_cloud_stride", 4)
+        self.declare_parameter("map_cloud_topic", "/scene_graph/map_cloud")
+        self.declare_parameter("map_voxel_size_m", 0.02)
+        self.declare_parameter("map_max_points", 500000)
+        self.declare_parameter("map_cloud_stride", 4)
         self.declare_parameter("overlay_detections_topic", "/scene_graph/overlay_detections")
         self.declare_parameter("overlay_tracks_topic", "/scene_graph/overlay_tracks")
         self.declare_parameter("queue_size", 64)
@@ -103,6 +107,14 @@ class SceneGraphROSNode(Node):
         self.declare_parameter("async_mode", True)
         self.declare_parameter("min_hits", -1)
         self.declare_parameter("max_missing_seconds", -1.0)
+        # When True, TF lookup uses the *latest* available transform (Time(0)) rather
+        # than the exact image timestamp.  Required for SLAM backends (RTAB-Map, ORB-SLAM3)
+        # which publish TF *after* processing each frame, making exact-timestamp lookups
+        # always time out before the result is ready.
+        self.declare_parameter("use_latest_tf", False)
+        # Max age (seconds) of the latest TF before the frame is considered un-localized.
+        # Only used in use_latest_tf mode. 0 = disabled (accept any age).
+        self.declare_parameter("slam_pose_max_age", 2.0)
 
         self.rgb_topic = self.get_parameter("rgb_topic").get_parameter_value().string_value
         self.depth_topic = self.get_parameter("depth_topic").get_parameter_value().string_value
@@ -122,6 +134,10 @@ class SceneGraphROSNode(Node):
         self.scene_cloud_topic = self.get_parameter("scene_cloud_topic").get_parameter_value().string_value
         self.publish_scene_cloud = self.get_parameter("publish_scene_cloud").get_parameter_value().bool_value
         self.scene_cloud_stride = self.get_parameter("scene_cloud_stride").get_parameter_value().integer_value
+        self.map_cloud_topic = self.get_parameter("map_cloud_topic").get_parameter_value().string_value
+        self.map_voxel_size_m = self.get_parameter("map_voxel_size_m").get_parameter_value().double_value
+        self.map_max_points = self.get_parameter("map_max_points").get_parameter_value().integer_value
+        self.map_cloud_stride = self.get_parameter("map_cloud_stride").get_parameter_value().integer_value
         self.overlay_detections_topic = self.get_parameter("overlay_detections_topic").get_parameter_value().string_value
         self.overlay_tracks_topic = self.get_parameter("overlay_tracks_topic").get_parameter_value().string_value
         self.queue_size = self.get_parameter("queue_size").get_parameter_value().integer_value
@@ -130,6 +146,8 @@ class SceneGraphROSNode(Node):
         self.async_mode = self.get_parameter("async_mode").get_parameter_value().bool_value
         self.param_min_hits = self.get_parameter("min_hits").get_parameter_value().integer_value
         self.param_max_missing_seconds = self.get_parameter("max_missing_seconds").get_parameter_value().double_value
+        self.use_latest_tf = self.get_parameter("use_latest_tf").get_parameter_value().bool_value
+        self.slam_pose_max_age = self.get_parameter("slam_pose_max_age").get_parameter_value().double_value
 
 
         self.get_logger().info(f"Loading SceneGraph configuration from {self.config_path}")
@@ -150,6 +168,15 @@ class SceneGraphROSNode(Node):
         self.depth_model = DepthModel(scale=self.depth_scale)
         self.get_logger().info(f"Depth adapter configured: {self.depth_scale:.1f} raw units per meter")
 
+        tf_mode_str = (
+            f"SLAM/latest-TF mode (Time(0), max_age={self.slam_pose_max_age:.1f}s)"
+            if self.use_latest_tf
+            else f"exact-timestamp mode (pose_max_dt={self.pose_max_dt*1000:.0f}ms)"
+        )
+        self.get_logger().info(
+            f"Localization: mode={self.localization_mode}, TF-lookup={tf_mode_str}"
+        )
+
         if not self.debug_frame_packet_only:
             self.get_logger().info(f"Initializing OnlinePipeline (async_mode={self.async_mode})...")
             self.pipeline = OnlinePipeline(self.config, async_mode=self.async_mode)
@@ -166,6 +193,10 @@ class SceneGraphROSNode(Node):
             scene_cloud_topic=self.scene_cloud_topic,
             publish_scene_cloud=self.publish_scene_cloud,
             scene_cloud_stride=self.scene_cloud_stride,
+            map_cloud_topic=self.map_cloud_topic,
+            map_voxel_size_m=self.map_voxel_size_m,
+            map_max_points=self.map_max_points,
+            map_cloud_stride=self.map_cloud_stride,
             overlay_detections_topic=self.overlay_detections_topic,
             overlay_tracks_topic=self.overlay_tracks_topic,
             world_frame=self.world_frame,
@@ -364,36 +395,80 @@ class SceneGraphROSNode(Node):
             # WORLD_MODE requires valid, timestamp-correct localization
             world_frame_used = self.world_frame
             t_tf_start = time.monotonic()
-            target_time = Time(seconds=rgb_stamp.sec, nanoseconds=rgb_stamp.nanosec)
-            try:
-                transform_stamped = self.tf_buffer.lookup_transform(
-                    self.world_frame,
-                    self.sensor_frame,
-                    target_time,
-                    timeout=Duration(seconds=self.pose_max_dt),
-                )
-                tf_stamp = transform_stamped.header.stamp
-                pose_timestamp = float(tf_stamp.sec) + float(tf_stamp.nanosec) * 1e-9
-                pose_age = abs(rgb_timestamp - pose_timestamp)
 
-                if pose_age > self.pose_max_dt:
+            if self.use_latest_tf:
+                # SLAM backend mode: RTAB-Map / ORB-SLAM3 publish TF *after* processing
+                # the frame, so the exact image timestamp is never in the buffer yet.
+                # Use Time(0) to get the latest available transform and accept it if
+                # it is recent enough.
+                try:
+                    transform_stamped = self.tf_buffer.lookup_transform(
+                        self.world_frame,
+                        self.sensor_frame,
+                        Time(),  # latest available
+                        timeout=Duration(seconds=self.pose_max_dt),
+                    )
+                    tf_stamp = transform_stamped.header.stamp
+                    pose_timestamp = float(tf_stamp.sec) + float(tf_stamp.nanosec) * 1e-9
+                    pose_age = abs(rgb_timestamp - pose_timestamp)
+
+                    # Accept the transform unless it is older than slam_pose_max_age
+                    # (0 = always accept regardless of age).
+                    if self.slam_pose_max_age > 0 and pose_age > self.slam_pose_max_age:
+                        transform_valid = False
+                        transform_source = "stale_slam_tf"
+                        self.get_logger().warn(
+                            f"Latest SLAM TF age {pose_age*1000.0:.0f}ms > max={self.slam_pose_max_age*1000.0:.0f}ms. "
+                            "SLAM backend may not have localised yet.",
+                            throttle_duration_sec=2.0,
+                        )
+                    else:
+                        world_T_camera = transform_to_matrix(transform_stamped)
+                        transform_valid = True
+                        transform_source = "slam_latest_tf"
+                except TransformException as ex:
                     transform_valid = False
-                    transform_source = "stale_tf"
+                    transform_source = "missing_slam_tf"
                     self.get_logger().warn(
-                        f"Stale TF for {self.world_frame} -> {self.sensor_frame} at {rgb_timestamp:.4f}: age={pose_age*1000.0:.1f}ms > max={self.pose_max_dt*1000.0:.1f}ms",
+                        f"SLAM TF lookup failed ({self.world_frame}→{self.sensor_frame}): {ex}. "
+                        "Waiting for SLAM backend to initialise.",
                         throttle_duration_sec=2.0,
                     )
-                else:
-                    world_T_camera = transform_to_matrix(transform_stamped)
-                    transform_valid = True
-                    transform_source = "tf_exact"
-            except TransformException as ex:
-                transform_valid = False
-                transform_source = "missing_tf"
-                self.get_logger().warn(
-                    f"TF lookup failed for {self.world_frame} -> {self.sensor_frame} at {rgb_timestamp:.4f}: {ex}. Frame marked invalid for world graph.",
-                    throttle_duration_sec=2.0,
-                )
+            else:
+                # Ground-truth / static TF mode: look up exact image timestamp.
+                target_time = Time(seconds=rgb_stamp.sec, nanoseconds=rgb_stamp.nanosec)
+                try:
+                    transform_stamped = self.tf_buffer.lookup_transform(
+                        self.world_frame,
+                        self.sensor_frame,
+                        target_time,
+                        timeout=Duration(seconds=self.pose_max_dt),
+                    )
+                    tf_stamp = transform_stamped.header.stamp
+                    pose_timestamp = float(tf_stamp.sec) + float(tf_stamp.nanosec) * 1e-9
+                    pose_age = abs(rgb_timestamp - pose_timestamp)
+
+                    if pose_age > self.pose_max_dt:
+                        transform_valid = False
+                        transform_source = "stale_tf"
+                        self.get_logger().warn(
+                            f"Stale TF for {self.world_frame} -> {self.sensor_frame} at {rgb_timestamp:.4f}: "
+                            f"age={pose_age*1000.0:.1f}ms > max={self.pose_max_dt*1000.0:.1f}ms",
+                            throttle_duration_sec=2.0,
+                        )
+                    else:
+                        world_T_camera = transform_to_matrix(transform_stamped)
+                        transform_valid = True
+                        transform_source = "tf_exact"
+                except TransformException as ex:
+                    transform_valid = False
+                    transform_source = "missing_tf"
+                    self.get_logger().warn(
+                        f"TF lookup failed for {self.world_frame} -> {self.sensor_frame} at {rgb_timestamp:.4f}: {ex}. "
+                        "Frame marked invalid for world graph.",
+                        throttle_duration_sec=2.0,
+                    )
+
             tf_latency_ms = (time.monotonic() - t_tf_start) * 1000.0
 
         try:
@@ -402,6 +477,7 @@ class SceneGraphROSNode(Node):
         except Exception as e:
             self.get_logger().error(f"Image conversion error: {e}")
             return
+
 
         depth_m = None
         if depth_raw is not None:

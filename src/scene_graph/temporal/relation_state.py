@@ -1,3 +1,22 @@
+"""
+relation_state.py — Temporal belief state machine for scene graph relations.
+
+Canonical lifecycle::
+
+    PROPOSED  →  ACTIVE  →  DECAYING  →  OCCLUDED  →  UNKNOWN  →  TERMINATED
+                                ↘
+                           CONTRADICTED
+
+Compatibility aliases (accepted for backward-compatibility with older
+config/serialised snapshots; equality comparisons canonicalise them):
+
+    SUPPORTED   == ACTIVE
+    CONFIRMED   == ACTIVE
+    HYPOTHESIZED == PROPOSED
+    WEAKENING   == DECAYING
+    ENDED       == TERMINATED
+"""
+
 from enum import Enum
 from typing import Any, Dict, List, Optional, Set, Tuple
 
@@ -9,27 +28,55 @@ from scene_graph.relations.evidence import EvidenceResult, RelationEvidence
 
 RelationKey = Tuple[str, str, str]
 
+# Canonical alias map: maps every state value (including legacy aliases) to its
+# canonical equivalent.  Shared by RelationState.__hash__ and __eq__ so they
+# always agree.  Defined at module level because Python's Enum metaclass does
+# not reliably expose plain dict class-attributes on enum instances.
+_RELATION_STATE_CANON: dict = {
+    "active": "active",
+    "supported": "active",
+    "confirmed": "active",
+    "proposed": "proposed",
+    "hypothesized": "proposed",
+    "candidate": "proposed",
+    "decaying": "decaying",
+    "weakening": "decaying",
+    "occluded": "occluded",
+    "unknown": "unknown",
+    "contradicted": "contradicted",
+    "terminated": "terminated",
+    "ended": "terminated",
+}
+
 
 class RelationState(str, Enum):
-    """Lifecycle states for temporal relation beliefs."""
+    """Lifecycle states for temporal relation beliefs.
 
-    PROPOSED = "proposed"
-    ACTIVE = "active"
-    DECAYING = "decaying"
-    OCCLUDED = "occluded"
-    UNKNOWN = "unknown"
-    CONTRADICTED = "contradicted"
-    TERMINATED = "terminated"
+    Canonical states are ``PROPOSED``, ``ACTIVE``, ``DECAYING``, ``OCCLUDED``,
+    ``UNKNOWN``, ``CONTRADICTED``, and ``TERMINATED``.  Legacy aliases
+    (``SUPPORTED``, ``CONFIRMED``, ``HYPOTHESIZED``, ``WEAKENING``, ``ENDED``)
+    compare equal to their canonical equivalents via :meth:`__eq__`.
+    """
 
-    # Compatibility aliases
-    SUPPORTED = "supported"
-    HYPOTHESIZED = "hypothesized"
-    CONFIRMED = "confirmed"
-    WEAKENING = "weakening"
-    ENDED = "ended"
+    # ── Canonical lifecycle states ─────────────────────────────────────────
+    PROPOSED = "proposed"       # observed but not yet above confirmation threshold
+    ACTIVE = "active"           # confirmed above threshold
+    DECAYING = "decaying"       # confirmed but evidence declining
+    OCCLUDED = "occluded"       # no evidence due to occlusion (not contradicted)
+    UNKNOWN = "unknown"         # insufficient evidence to commit
+    CONTRADICTED = "contradicted"  # evidence actively refutes the relation
+    TERMINATED = "terminated"   # purged from memory after extended absence
+
+    # ── Compatibility aliases (kept for backward-compatible deserialisation) ─
+    SUPPORTED = "supported"     # alias → ACTIVE
+    CONFIRMED = "confirmed"     # alias → ACTIVE
+    HYPOTHESIZED = "hypothesized"  # alias → PROPOSED
+    WEAKENING = "weakening"     # alias → DECAYING
+    ENDED = "ended"             # alias → TERMINATED
 
     @classmethod
     def _missing_(cls, value: object) -> Optional["RelationState"]:
+        """Case-insensitive lookup so YAML/JSON deserialisation is forgiving."""
         if isinstance(value, str):
             val_lower = value.lower()
             for member in cls:
@@ -38,45 +85,31 @@ class RelationState(str, Enum):
         return super()._missing_(value)
 
     def __hash__(self) -> int:
-        canon = {
-            "supported": "active",
-            "confirmed": "active",
-            "hypothesized": "proposed",
-            "weakening": "decaying",
-            "ended": "terminated",
-        }
-        return hash(canon.get(self.value, self.value))
+        return hash(_RELATION_STATE_CANON.get(self.value, self.value))
 
     def __eq__(self, other: Any) -> bool:
         if self is other:
             return True
-        canon_map = {
-            "active": "active",
-            "supported": "active",
-            "confirmed": "active",
-            "proposed": "proposed",
-            "hypothesized": "proposed",
-            "candidate": "proposed",
-            "decaying": "decaying",
-            "weakening": "decaying",
-            "occluded": "occluded",
-            "unknown": "unknown",
-            "contradicted": "contradicted",
-            "terminated": "terminated",
-            "ended": "terminated",
-        }
-        my_c = canon_map.get(self.value, self.value)
+        my_c = _RELATION_STATE_CANON.get(self.value, self.value)
         if isinstance(other, RelationState):
-            other_c = canon_map.get(other.value, other.value)
-            return my_c == other_c
-        elif isinstance(other, str):
-            other_c = canon_map.get(other.lower(), other.lower())
-            return my_c == other_c
+            return my_c == _RELATION_STATE_CANON.get(other.value, other.value)
+        if isinstance(other, str):
+            return my_c == _RELATION_STATE_CANON.get(other.lower(), other.lower())
         return super().__eq__(other)
 
 
 class RelationStateMachine:
-    """State machine governing the temporal lifecycle of relation hypotheses."""
+    """Temporal belief state machine governing relation edge lifecycle.
+
+    Each relation is keyed by ``(subject_id, object_id, predicate)`` and carries
+    a continuous belief score in ``[-1.0, 1.0]``.  Positive evidence increments
+    the belief; contradicting evidence decrements it.  Belief decays at
+    ``decay_per_second`` when no fresh evidence arrives.
+
+    State transitions follow the canonical :class:`RelationState` lifecycle.
+    The machine returns only relations involving *active* object IDs when
+    ``active_object_ids`` is provided to :meth:`update`.
+    """
 
     def __init__(self, config: RelationTemporalConfig):
         if config is None:

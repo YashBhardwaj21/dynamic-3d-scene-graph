@@ -405,8 +405,8 @@ class SceneGraphConfig(BaseModel):
         return cls.model_validate(base_dict)
 
 
-
 def load_config(path: str | Path) -> SceneGraphConfig:
+    """Load a config by merging ``configs/default.yaml`` with the given override file."""
     return SceneGraphConfig.from_files(
         base_path="configs/default.yaml",
         override_path=path,

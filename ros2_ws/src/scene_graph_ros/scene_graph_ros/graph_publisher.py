@@ -38,6 +38,83 @@ except ImportError:
     Trigger = None
 
 
+class VoxelMapAccumulator:
+    """Persistent, voxel-downsampled point cloud map.
+
+    Accumulates RGB-D back-projected depth frames as the camera moves, keeping
+    a bounded memory footprint by voxel-downsampling (mean colour per occupied
+    voxel) when the buffer exceeds ``max_points``.
+    """
+
+    def __init__(self, voxel_size_m: float = 0.02, max_points: int = 500_000):
+        self.voxel_size_m = float(voxel_size_m)
+        self.max_points = int(max_points)
+        # Storage: float32 (x, y, z) and uint8 (r, g, b) kept separate for
+        # efficient voxel hashing and PointCloud2 serialisation.
+        self._pts: Optional[np.ndarray] = None   # (N, 3) float32
+        self._rgb: Optional[np.ndarray] = None   # (N, 3) uint8
+
+    def reset(self) -> None:
+        """Clear the accumulated map (call on session restart)."""
+        self._pts = None
+        self._rgb = None
+
+    @property
+    def point_count(self) -> int:
+        return 0 if self._pts is None else len(self._pts)
+
+    def add_frame(
+        self,
+        pts_world: np.ndarray,  # (N, 3) float64/32
+        colors: np.ndarray,     # (N, 3) uint8 BGR or RGB
+    ) -> None:
+        """Append a batch of world-space points to the map, then downsample if needed."""
+        if pts_world.shape[0] == 0:
+            return
+
+        pts_new = pts_world.astype(np.float32)
+        rgb_new = colors.astype(np.uint8)
+
+        if self._pts is None:
+            self._pts = pts_new
+            self._rgb = rgb_new
+        else:
+            self._pts = np.vstack([self._pts, pts_new])
+            self._rgb = np.vstack([self._rgb, rgb_new])
+
+        if len(self._pts) > self.max_points:
+            self._voxel_downsample()
+
+    def _voxel_downsample(self) -> None:
+        """Grid-hash voxel downsampling: keep mean colour per occupied voxel."""
+        vs = self.voxel_size_m
+        # Map each point to its voxel integer key
+        keys = np.floor(self._pts / vs).astype(np.int32)  # (N, 3)
+        # Pack 3D key into a single int64 for np.unique
+        packed = (
+            keys[:, 0].astype(np.int64) * 1_000_003
+            + keys[:, 1].astype(np.int64) * 1_009
+            + keys[:, 2].astype(np.int64)
+        )
+        _, first_idx, inverse = np.unique(packed, return_index=True, return_inverse=True)
+        n_voxels = len(first_idx)
+        # Mean position per voxel
+        pts_down = np.zeros((n_voxels, 3), dtype=np.float32)
+        rgb_down = np.zeros((n_voxels, 3), dtype=np.float32)
+        counts = np.bincount(inverse, minlength=n_voxels).astype(np.float32)
+        for dim in range(3):
+            np.add.at(pts_down[:, dim], inverse, self._pts[:, dim])
+            np.add.at(rgb_down[:, dim], inverse, self._rgb[:, dim].astype(np.float32))
+        pts_down /= counts[:, np.newaxis]
+        rgb_down /= counts[:, np.newaxis]
+        self._pts = pts_down
+        self._rgb = rgb_down.astype(np.uint8)
+
+    def get_cloud(self) -> Tuple[Optional[np.ndarray], Optional[np.ndarray]]:
+        """Return (pts float32 Nx3, rgb uint8 Nx3) or (None, None) if empty."""
+        return self._pts, self._rgb
+
+
 class GraphPublisher:
     """Publishes SceneGraph state to ROS topics and provides query services."""
 
@@ -48,8 +125,12 @@ class GraphPublisher:
         markers_topic: str = "/scene_graph/markers",
         object_cloud_topic: str = "/scene_graph/object_cloud",
         scene_cloud_topic: str = "/scene_graph/scene_cloud",
-        publish_scene_cloud: bool = True,
+        publish_scene_cloud: bool = False,
         scene_cloud_stride: int = 4,
+        map_cloud_topic: str = "/scene_graph/map_cloud",
+        map_voxel_size_m: float = 0.02,
+        map_max_points: int = 500_000,
+        map_cloud_stride: int = 4,
         overlay_detections_topic: str = "/scene_graph/overlay_detections",
         overlay_tracks_topic: str = "/scene_graph/overlay_tracks",
         world_frame: str = "world",
@@ -60,12 +141,23 @@ class GraphPublisher:
         self.state_pub = node.create_publisher(String, state_topic, 10)
         self.markers_pub = node.create_publisher(MarkerArray, markers_topic, 10)
         self.cloud_pub = node.create_publisher(PointCloud2, object_cloud_topic, 10)
+
+        # Per-frame ephemeral scene cloud (disabled by default — use map cloud instead)
         self.publish_scene_cloud_enabled = publish_scene_cloud
         self.scene_cloud_stride = max(1, scene_cloud_stride)
         if self.publish_scene_cloud_enabled:
             self.scene_cloud_pub = node.create_publisher(PointCloud2, scene_cloud_topic, 10)
         else:
             self.scene_cloud_pub = None
+
+        # Growing persistent map cloud (SLAM-style accumulator)
+        self.map_cloud_pub = node.create_publisher(PointCloud2, map_cloud_topic, 10)
+        self.map_accumulator = VoxelMapAccumulator(
+            voxel_size_m=map_voxel_size_m,
+            max_points=map_max_points,
+        )
+        self.map_cloud_stride = max(1, map_cloud_stride)
+
         self.overlay_det_pub = node.create_publisher(Image, overlay_detections_topic, 10)
         self.overlay_track_pub = node.create_publisher(Image, overlay_tracks_topic, 10)
 
@@ -146,10 +238,13 @@ class GraphPublisher:
         self.latest_snapshot = snapshot
 
         self.publish_json_state(snapshot)
-        self.publish_rviz_markers(snapshot, packet)
+        # Skip expensive marker computation when RViz has the display disabled
+        if self.markers_pub.get_subscription_count() > 0:
+            self.publish_rviz_markers(snapshot, packet)
         self.publish_object_cloud(graph, packet)
         if self.publish_scene_cloud_enabled:
             self.publish_scene_cloud(packet)
+        self.publish_map_cloud(packet)   # always publish growing map
         self.publish_overlays(graph, packet, observations)
 
     def publish_json_state(self, snapshot: SceneGraphSnapshot):
@@ -212,46 +307,47 @@ class GraphPublisher:
 
         obj_positions: Dict[str, Tuple[float, float, float]] = {}
 
-        # 1. Spatial Context Regions (Translucent bounding boxes)
+        # 1. Spatial Context Regions (Wireframe bounding box outline — not solid cube)
         for cid, ctx in getattr(snapshot, "spatial_contexts", {}).items():
             if cid == "world":
                 continue
             b_min = ctx.get("bbox_min")
             b_max = ctx.get("bbox_max")
             if b_min and b_max:
+                x0, y0, z0 = float(b_min[0]), float(b_min[1]), float(b_min[2])
+                x1, y1, z1 = float(b_max[0]), float(b_max[1]), float(b_max[2])
+                # 12 edges of the bounding box as a LINE_LIST
+                corners = [
+                    # bottom face
+                    (x0,y0,z0),(x1,y0,z0), (x1,y0,z0),(x1,y1,z0),
+                    (x1,y1,z0),(x0,y1,z0), (x0,y1,z0),(x0,y0,z0),
+                    # top face
+                    (x0,y0,z1),(x1,y0,z1), (x1,y0,z1),(x1,y1,z1),
+                    (x1,y1,z1),(x0,y1,z1), (x0,y1,z1),(x0,y0,z1),
+                    # verticals
+                    (x0,y0,z0),(x0,y0,z1), (x1,y0,z0),(x1,y0,z1),
+                    (x1,y1,z0),(x1,y1,z1), (x0,y1,z0),(x0,y1,z1),
+                ]
+
                 ctx_marker = Marker()
                 ctx_marker.header.frame_id = self.world_frame
                 ctx_marker.header.stamp = stamp
                 ctx_marker.ns = "spatial_contexts"
                 ctx_marker.id = marker_id
                 marker_id += 1
-                ctx_marker.type = Marker.CUBE
+                ctx_marker.type = Marker.LINE_LIST
                 ctx_marker.action = Marker.ADD
-
-                cx = (b_min[0] + b_max[0]) * 0.5
-                cy = (b_min[1] + b_max[1]) * 0.5
-                cz = (b_min[2] + b_max[2]) * 0.5
-                sx = max(0.2, b_max[0] - b_min[0])
-                sy = max(0.2, b_max[1] - b_min[1])
-                sz = max(0.1, b_max[2] - b_min[2])
-
-                ctx_marker.pose.position.x = float(cx)
-                ctx_marker.pose.position.y = float(cy)
-                ctx_marker.pose.position.z = float(cz)
-                ctx_marker.pose.orientation.w = 1.0
-
-                ctx_marker.scale.x = float(sx)
-                ctx_marker.scale.y = float(sy)
-                ctx_marker.scale.z = float(sz)
-
-                ctx_marker.color.r = 0.35
-                ctx_marker.color.g = 0.55
-                ctx_marker.color.b = 0.75
-                ctx_marker.color.a = 0.15
+                ctx_marker.scale.x = 0.012  # line width
+                ctx_marker.color.r = 0.40
+                ctx_marker.color.g = 0.70
+                ctx_marker.color.b = 0.95
+                ctx_marker.color.a = 0.70
                 ctx_marker.lifetime = Duration(sec=1, nanosec=0)
+                for cx, cy, cz in corners:
+                    ctx_marker.points.append(Point(x=cx, y=cy, z=cz))
                 marker_array.markers.append(ctx_marker)
 
-        # 2. Objects and Labels
+        # 2. Objects: wireframe OBB outline + compact text label
         for obj in snapshot.objects:
             pos = obj.obb_center_world or obj.centroid_world
             if pos is None:
@@ -261,50 +357,69 @@ class GraphPublisher:
             r_int, g_int, b_int = track_color(obj.track_id)
             r, g, b = r_int / 255.0, g_int / 255.0, b_int / 255.0
 
-            obj_marker = Marker()
-            obj_marker.header.frame_id = self.world_frame
-            obj_marker.header.stamp = stamp
-            obj_marker.ns = "scene_objects"
-            obj_marker.id = marker_id
-            marker_id += 1
-            obj_marker.type = Marker.CUBE
-            obj_marker.action = Marker.ADD
-
-            obj_marker.pose.position.x = float(pos[0])
-            obj_marker.pose.position.y = float(pos[1])
-            obj_marker.pose.position.z = float(pos[2])
-
-            if obj.obb_axes_world is not None:
-                try:
-                    axes = np.asarray(obj.obb_axes_world, dtype=np.float64)
-                    qx, qy, qz, qw = rotation_matrix_to_quaternion(axes)
-                    obj_marker.pose.orientation.x = float(qx)
-                    obj_marker.pose.orientation.y = float(qy)
-                    obj_marker.pose.orientation.z = float(qz)
-                    obj_marker.pose.orientation.w = float(qw)
-                except Exception:
-                    obj_marker.pose.orientation.w = 1.0
-            else:
-                obj_marker.pose.orientation.w = 1.0
-
+            # --- Determine OBB corners in world space ---
+            cx, cy, cz = float(pos[0]), float(pos[1]), float(pos[2])
             if obj.obb_extents_world is not None:
                 extents = [max(0.04, float(x)) for x in obj.obb_extents_world]
             else:
                 extents = [0.15, 0.15, 0.15]
+            hx, hy, hz = extents[0] / 2.0, extents[1] / 2.0, extents[2] / 2.0
 
-            obj_marker.scale.x = extents[0]
-            obj_marker.scale.y = extents[1]
-            obj_marker.scale.z = extents[2]
+            # OBB axes (columns of rotation matrix) or identity
+            if obj.obb_axes_world is not None:
+                try:
+                    axes = np.asarray(obj.obb_axes_world, dtype=np.float64)  # (3, 3)
+                    ax0 = axes[:, 0] * hx  # half-extent vectors along each axis
+                    ax1 = axes[:, 1] * hy
+                    ax2 = axes[:, 2] * hz
+                except Exception:
+                    ax0 = np.array([hx, 0, 0])
+                    ax1 = np.array([0, hy, 0])
+                    ax2 = np.array([0, 0, hz])
+            else:
+                ax0 = np.array([hx, 0, 0])
+                ax1 = np.array([0, hy, 0])
+                ax2 = np.array([0, 0, hz])
 
-            obj_marker.color.r = float(r)
-            obj_marker.color.g = float(g)
-            obj_marker.color.b = float(b)
-            # Anchors have subtle translucent appearance; child objects are solid
+            ctr = np.array([cx, cy, cz])
+            # 8 corners: (+/-ax0) (+/-ax1) (+/-ax2)
+            c000 = ctr - ax0 - ax1 - ax2
+            c001 = ctr - ax0 - ax1 + ax2
+            c010 = ctr - ax0 + ax1 - ax2
+            c011 = ctr - ax0 + ax1 + ax2
+            c100 = ctr + ax0 - ax1 - ax2
+            c101 = ctr + ax0 - ax1 + ax2
+            c110 = ctr + ax0 + ax1 - ax2
+            c111 = ctr + ax0 + ax1 + ax2
+
+            # 12 edges of the box (pairs of corners)
+            edges = [
+                (c000, c100), (c001, c101), (c010, c110), (c011, c111),  # along ax0
+                (c000, c010), (c001, c011), (c100, c110), (c101, c111),  # along ax1
+                (c000, c001), (c010, c011), (c100, c101), (c110, c111),  # along ax2
+            ]
+
+            wire_marker = Marker()
+            wire_marker.header.frame_id = self.world_frame
+            wire_marker.header.stamp = stamp
+            wire_marker.ns = "scene_objects"
+            wire_marker.id = marker_id
+            marker_id += 1
+            wire_marker.type = Marker.LINE_LIST
+            wire_marker.action = Marker.ADD
+            wire_marker.scale.x = 0.012  # line width (m)
+            wire_marker.color.r = float(r)
+            wire_marker.color.g = float(g)
+            wire_marker.color.b = float(b)
             is_anchor = getattr(obj, "is_spatial_anchor", False)
-            obj_marker.color.a = 0.25 if is_anchor else 0.80
-            obj_marker.lifetime = Duration(sec=1, nanosec=0)
-            marker_array.markers.append(obj_marker)
+            wire_marker.color.a = 0.60 if is_anchor else 0.90
+            wire_marker.lifetime = Duration(sec=1, nanosec=0)
+            for pa, pb in edges:
+                wire_marker.points.append(Point(x=float(pa[0]), y=float(pa[1]), z=float(pa[2])))
+                wire_marker.points.append(Point(x=float(pb[0]), y=float(pb[1]), z=float(pb[2])))
+            marker_array.markers.append(wire_marker)
 
+            # --- Compact text label above the box ---
             text_marker = Marker()
             text_marker.header.frame_id = self.world_frame
             text_marker.header.stamp = stamp
@@ -316,21 +431,17 @@ class GraphPublisher:
 
             text_marker.pose.position.x = float(pos[0])
             text_marker.pose.position.y = float(pos[1])
-            text_marker.pose.position.z = float(pos[2]) + extents[2] / 2.0 + 0.07
+            text_marker.pose.position.z = float(pos[2]) + hz + 0.06
             text_marker.pose.orientation.w = 1.0
 
-            text_marker.scale.z = 0.07
+            text_marker.scale.z = 0.055  # compact label size
             text_marker.color.r = 1.0
             text_marker.color.g = 1.0
             text_marker.color.b = 1.0
-            text_marker.color.a = 1.0
+            text_marker.color.a = 0.90
+            # Clean label: class + short ID only — state badges live in 2D viewer
             short_id = obj.track_id[-4:] if len(obj.track_id) >= 4 else obj.track_id
-            if is_anchor:
-                text_marker.text = f"{obj.class_name.upper()} #{short_id} [ANCHOR]"
-            elif getattr(obj, "spatial_context_id", "world") != "world":
-                text_marker.text = f"{obj.class_name.upper()} #{short_id} [on DESK]"
-            else:
-                text_marker.text = f"{obj.class_name.upper()} #{short_id} [{obj.object_state}]"
+            text_marker.text = f"{obj.class_name.upper()} #{short_id}"
             text_marker.lifetime = Duration(sec=1, nanosec=0)
             marker_array.markers.append(text_marker)
 
@@ -386,7 +497,7 @@ class GraphPublisher:
                 line_marker.points.append(pt_bot)
                 marker_array.markers.append(line_marker)
 
-        # 3b. Sibling directional & proximity relations (ranked and capped to top 8)
+        # 3b. Sibling directional & proximity relations (ranked, capped to top 8, arrows only — no text labels in 3D)
         ranked_sibling_rels = sorted(
             sibling_rels,
             key=lambda r: (priority.get(r.predicate, 0), r.confidence),
@@ -433,33 +544,8 @@ class GraphPublisher:
                 arrow_marker.color.a = 0.80
                 arrow_marker.lifetime = Duration(sec=1, nanosec=0)
                 marker_array.markers.append(arrow_marker)
-
-                mid_x = (p1[0] + p2[0]) * 0.5
-                mid_y = (p1[1] + p2[1]) * 0.5
-                mid_z = (p1[2] + p2[2]) * 0.5
-
-                edge_text_marker = Marker()
-                edge_text_marker.header.frame_id = self.world_frame
-                edge_text_marker.header.stamp = stamp
-                edge_text_marker.ns = "relation_labels"
-                edge_text_marker.id = marker_id
-                marker_id += 1
-                edge_text_marker.type = Marker.TEXT_VIEW_FACING
-                edge_text_marker.action = Marker.ADD
-
-                edge_text_marker.pose.position.x = float(mid_x)
-                edge_text_marker.pose.position.y = float(mid_y)
-                edge_text_marker.pose.position.z = float(mid_z) + 0.05
-                edge_text_marker.pose.orientation.w = 1.0
-
-                edge_text_marker.scale.z = 0.040
-                edge_text_marker.color.r = float(cr)
-                edge_text_marker.color.g = float(cg)
-                edge_text_marker.color.b = float(cb)
-                edge_text_marker.color.a = 0.95
-                edge_text_marker.text = f"{rel.predicate}"
-                edge_text_marker.lifetime = Duration(sec=1, nanosec=0)
-                marker_array.markers.append(edge_text_marker)
+                # Relation text labels intentionally omitted from 3D view — they clutter the map.
+                # Predicate labels are visible in the 2D overlay viewer instead.
 
         if packet.world_T_camera is not None:
             cam_pos = packet.world_T_camera[:3, 3]
@@ -586,6 +672,60 @@ class GraphPublisher:
             colors=colors,
         )
         self.scene_cloud_pub.publish(cloud_msg)
+
+    def publish_map_cloud(self, packet: FramePacket) -> None:
+        """Accumulate depth frame into the persistent SLAM-style map and publish it.
+
+        Points are back-projected into world space and appended to the voxel
+        accumulator.  The entire accumulated map is published on every call so
+        RViz always shows the full growing cloud without needing Decay Time.
+        """
+        if packet.depth is None or packet.rgb is None or packet.world_T_camera is None:
+            # No pose — skip accumulation but still publish whatever we have
+            pts, rgb = self.map_accumulator.get_cloud()
+            if pts is not None:
+                cloud_msg = numpy_to_point_cloud2(
+                    points=pts,
+                    frame_id=self.world_frame,
+                    timestamp=packet.timestamp,
+                    colors=rgb,
+                )
+                self.map_cloud_pub.publish(cloud_msg)
+            return
+
+        stride = self.map_cloud_stride
+        depth_sub = packet.depth[::stride, ::stride]
+        rgb_sub = packet.rgb[::stride, ::stride]
+
+        valid = (
+            (depth_sub >= 0.10)
+            & (depth_sub <= 8.0)
+            & np.isfinite(depth_sub)
+        )
+        if np.any(valid):
+            v, u = np.where(valid)
+            z = depth_sub[v, u]
+            u_orig = u * stride
+            v_orig = v * stride
+
+            intr = packet.camera_intrinsics
+            x = (u_orig - intr.cx) * z / intr.fx
+            y = (v_orig - intr.cy) * z / intr.fy
+            pts_cam = np.column_stack((x, y, z)).astype(np.float64)
+            pts_world = transform_points(packet.world_T_camera, pts_cam).astype(np.float32)
+            colors = rgb_sub[v, u].astype(np.uint8)  # RGB or BGR — matches scene_cloud
+
+            self.map_accumulator.add_frame(pts_world, colors)
+
+        pts, rgb = self.map_accumulator.get_cloud()
+        if pts is not None:
+            cloud_msg = numpy_to_point_cloud2(
+                points=pts,
+                frame_id=self.world_frame,
+                timestamp=packet.timestamp,
+                colors=rgb,
+            )
+            self.map_cloud_pub.publish(cloud_msg)
 
     def publish_overlays(
         self,

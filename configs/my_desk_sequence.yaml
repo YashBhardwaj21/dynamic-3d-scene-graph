@@ -1,0 +1,73 @@
+# my_desk_sequence.yaml — SceneGraph config for the D455-recorded desk sequence
+#
+# Recorded with tools/record_d455.py using the Intel RealSense D455.
+# Depth scale is 1000.0 (D455 outputs depth in millimetres).
+# Pose source: TUM groundtruth format (groundtruth.txt in TUM association format).
+
+dataset:
+  type: tum
+  name: My Desk Sequence (D455 Recorded)
+  root: data/raw/my_desk_sequence
+
+depth:
+  scale: 1000.0
+
+pose_source: tum_groundtruth
+
+camera:
+  fx: 386.1071
+  fy: 385.3501
+  cx: 321.8448
+  cy: 244.2656
+  width: 640
+  height: 480
+
+reference_frame:
+  type: camera
+  up_axis: [0.0, -1.0, 0.0]
+  heading_axis: [0.0, 0.0, 1.0]
+
+perception:
+  type: yoloe
+  mode: prompt_free
+  model: models/yoloe-26s-seg-pf.pt
+  confidence_threshold: 0.25
+  image_size: 480
+  device: auto
+
+geometry:
+  min_valid_points: 20
+  min_depth_m: 0.20
+  max_depth_m: 6.0
+  measurement_noise_std_m: 0.03
+  spatial_outlier_sigma: 3.0
+  robust_depth:
+    k: 2.5
+  downsampling:
+    voxel_size_m: 0.02
+
+tracking:
+  confirmation:
+    min_hits: 3
+  occlusion:
+    max_missing_seconds: 5.0
+    max_missing_seconds_out_of_view: 10.0
+  measurement:
+    position_std_m: 0.03
+  association:
+    max_distance_m: 0.45
+    size_weight: 0.25
+
+temporal:
+  relation:
+    confirmation_threshold: 0.70
+    contradiction_threshold: -0.70
+    decay_per_second: 0.1
+    unknown_after_seconds: 3.0
+    lost_after_seconds: 6.0
+    min_confirmation_hits: 1
+    min_evidence_confidence: 0.05
+
+sync:
+  rgb_depth_max_dt: 0.05
+  rgb_pose_max_dt: 0.05

@@ -33,10 +33,13 @@ from typing import Optional, List, Dict
 import cv2
 import numpy as np
 
+import rcl_interfaces.msg
 import rclpy
 from rclpy.node import Node
+from rosgraph_msgs.msg import Clock
 from sensor_msgs.msg import Image, CameraInfo
 import tf2_ros
+
 
 from scene_graph.data.tum_loader import TUMLoader, RGBEntry, DepthEntry, PoseEntry
 from scene_graph.data.synchronization import associate
@@ -60,6 +63,7 @@ class TUMPlayerNode(Node):
         self.declare_parameter("rate_multiplier", 1.0)
         self.declare_parameter("start_frame", 0)
         self.declare_parameter("end_frame", -1)
+        self.declare_parameter("frame_stride", 1)
         self.declare_parameter("rgb_topic", "/tum/rgb/image_raw")
         self.declare_parameter("depth_topic", "/tum/depth/image_raw")
         self.declare_parameter("camera_info_topic", "/tum/rgb/camera_info")
@@ -67,12 +71,28 @@ class TUMPlayerNode(Node):
         self.declare_parameter("sensor_frame", "camera_optical_frame")
         self.declare_parameter("publish_rate_hz", 30.0)
         self.declare_parameter("loop", False)
+        self.declare_parameter("publish_groundtruth_tf",
+            False,
+            rcl_interfaces.msg.ParameterDescriptor(
+                description="Publish ground-truth world→sensor TF transforms. "
+                            "Set to false when a SLAM backend (e.g. RTAB-Map) "
+                            "provides its own TF instead."
+            ),
+        )
+        # Override depth scale (raw integer units per metre).
+        # If 0 (default), falls back to config.depth.scale or the dataset default.
+        self.declare_parameter("depth_scale", 0.0)
+        # Float32 (metres) depth topic published alongside the raw 16UC1 topic.
+        # RTAB-Map consumes this directly so it never needs to know the depth scale.
+        # Set to empty string to disable.
+        self.declare_parameter("slam_depth_topic", "/tum/depth_m/image_raw")
 
         dataset_root_param = self.get_parameter("dataset_root").get_parameter_value().string_value
         config_path_param = self.get_parameter("config_path").get_parameter_value().string_value
         self.rate_multiplier = self.get_parameter("rate_multiplier").get_parameter_value().double_value
         self.param_start_frame = self.get_parameter("start_frame").get_parameter_value().integer_value
         self.param_end_frame = self.get_parameter("end_frame").get_parameter_value().integer_value
+        self.frame_stride = max(1, self.get_parameter("frame_stride").get_parameter_value().integer_value)
         self.rgb_topic = self.get_parameter("rgb_topic").get_parameter_value().string_value
         self.depth_topic = self.get_parameter("depth_topic").get_parameter_value().string_value
         self.camera_info_topic = self.get_parameter("camera_info_topic").get_parameter_value().string_value
@@ -80,8 +100,21 @@ class TUMPlayerNode(Node):
         self.sensor_frame = self.get_parameter("sensor_frame").get_parameter_value().string_value
         self.publish_rate_hz = self.get_parameter("publish_rate_hz").get_parameter_value().double_value
         self.loop = self.get_parameter("loop").get_parameter_value().bool_value
+        self.publish_groundtruth_tf = (
+            self.get_parameter("publish_groundtruth_tf").get_parameter_value().bool_value
+        )
+        _depth_scale_param = self.get_parameter("depth_scale").get_parameter_value().double_value
+        self.slam_depth_topic = self.get_parameter("slam_depth_topic").get_parameter_value().string_value.strip()
 
         self.config = load_scene_graph_config(config_path_param)
+
+        # Resolve depth scale: parameter > config > dataset default
+        if _depth_scale_param > 0:
+            self.depth_scale = float(_depth_scale_param)
+        elif self.config.depth is not None and self.config.depth.scale > 0:
+            self.depth_scale = float(self.config.depth.scale)
+        else:
+            self.depth_scale = 5000.0  # TUM standard default
 
         dataset_root = resolve_path(dataset_root_param)
         if not dataset_root.exists() and self.config.dataset is not None:
@@ -139,6 +172,20 @@ class TUMPlayerNode(Node):
         self.camera_info_pub = self.create_publisher(CameraInfo, self.camera_info_topic, 10)
         self.tf_broadcaster = tf2_ros.TransformBroadcaster(self)
 
+        # /clock drives simulated time for RTAB-Map, scene_graph_node, and RViz.
+        # tum_player itself does NOT use use_sim_time — its timer must run on wall clock.
+        self.clock_pub = self.create_publisher(Clock, "/clock", 10)
+
+
+        # Float32 (metres) depth topic for RTAB-Map — avoids all depth-scale confusion.
+        self.slam_depth_pub = None
+        if self.slam_depth_topic:
+            self.slam_depth_pub = self.create_publisher(Image, self.slam_depth_topic, 10)
+            self.get_logger().info(
+                f"Publishing float32 depth (metres) for SLAM on {self.slam_depth_topic} "
+                f"(scale={self.depth_scale:.0f} raw units/m)"
+            )
+
         self.frame_cache: Dict[int, Tuple[Image, Optional[Image], CameraInfo, Optional[object]]] = {}
 
         self.published_count = 0
@@ -148,9 +195,12 @@ class TUMPlayerNode(Node):
         self.timer = self.create_timer(timer_period, self.timer_callback)
 
         total_frames = self.end_frame - self.start_frame + 1
+        effective_frames = (total_frames + self.frame_stride - 1) // self.frame_stride
+        tf_mode = "groundtruth TF" if self.publish_groundtruth_tf else "no TF (SLAM backend expected)"
         self.get_logger().info(
-            f"TUM Player ready: frames {self.start_frame}..{self.end_frame} ({total_frames} total), "
-            f"target_rate={self.publish_rate_hz:.1f}Hz"
+            f"TUM Player ready: frames {self.start_frame}..{self.end_frame} "
+            f"({total_frames} total, stride={self.frame_stride} → {effective_frames} to publish), "
+            f"target_rate={self.publish_rate_hz:.1f}Hz, pose_mode={tf_mode}"
         )
 
     def get_frame_messages(self, idx: int):
@@ -175,6 +225,7 @@ class TUMPlayerNode(Node):
         )
 
         depth_msg = None
+        slam_depth_msg = None
         if idx in self.rgb_to_depth:
             d_idx = self.rgb_to_depth[idx]
             depth_path = str(self.loader.resolve_depth_path(self.depth_entries[d_idx]))
@@ -186,6 +237,15 @@ class TUMPlayerNode(Node):
                     frame_id=self.sensor_frame,
                     timestamp=current_ts,
                 )
+                # Float32 metres depth for SLAM backends (RTAB-Map, etc.)
+                if self.slam_depth_pub is not None:
+                    depth_m = (depth_raw.astype(np.float32) / self.depth_scale)
+                    slam_depth_msg = numpy_to_ros_image(
+                        depth_m,
+                        encoding="32FC1",
+                        frame_id=self.sensor_frame,
+                        timestamp=current_ts,
+                    )
 
         camera_info_msg = intrinsics_to_camera_info(
             self.intrinsics,
@@ -204,7 +264,7 @@ class TUMPlayerNode(Node):
                 timestamp=current_ts,
             )
 
-        cached = (rgb_msg, depth_msg, camera_info_msg, tf_msg)
+        cached = (rgb_msg, depth_msg, slam_depth_msg, camera_info_msg, tf_msg)
         if len(self.frame_cache) < 500:
             self.frame_cache[idx] = cached
         return cached
@@ -236,15 +296,26 @@ class TUMPlayerNode(Node):
         if self.start_wall_time is None:
             self.start_wall_time = time.monotonic()
 
-        rgb_msg, depth_msg, camera_info_msg, tf_msg = self.get_frame_messages(self.current_idx)
+        rgb_msg, depth_msg, slam_depth_msg, camera_info_msg, tf_msg = self.get_frame_messages(self.current_idx)
 
-        if tf_msg is not None:
+        # Advance simulated time FIRST so downstream nodes (RTAB-Map, scene_graph_node,
+        # RViz) see the correct TUM timestamp before the frame data arrives.
+        clock_msg = Clock()
+        clock_msg.clock = rgb_msg.header.stamp
+        self.clock_pub.publish(clock_msg)
+
+        if tf_msg is not None and self.publish_groundtruth_tf:
             self.tf_broadcaster.sendTransform(tf_msg)
 
         self.camera_info_pub.publish(camera_info_msg)
 
+
         if depth_msg is not None:
             self.depth_pub.publish(depth_msg)
+
+        # Publish float32 metres depth for SLAM backends (RTAB-Map)
+        if slam_depth_msg is not None and self.slam_depth_pub is not None:
+            self.slam_depth_pub.publish(slam_depth_msg)
 
         self.rgb_pub.publish(rgb_msg)
 
@@ -258,7 +329,8 @@ class TUMPlayerNode(Node):
                 f"target_rate={self.publish_rate_hz:.1f} Hz, actual_rate={actual_rate:.1f} Hz"
             )
 
-        self.current_idx += 1
+        self.current_idx += self.frame_stride
+
 
 
 def main(args=None):

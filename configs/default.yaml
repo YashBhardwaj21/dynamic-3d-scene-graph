@@ -1,5 +1,9 @@
-# default.yaml
-# Frozen parameters for the dynamic 3D scene graph
+# default.yaml — Base configuration for the Dynamic 3D Scene Graph
+#
+# This file defines frozen system-wide defaults.  Dataset-specific overrides
+# (e.g. configs/tum_desk.yaml, configs/live_d455.yaml) are deep-merged on top
+# by SceneGraphConfig.from_files().  Only fields that differ from these defaults
+# need to appear in an override file.
 
 tracking:
   confirmation:
@@ -139,3 +143,4 @@ roles:
     - cup
     - pen
     - paper
+    - bottle

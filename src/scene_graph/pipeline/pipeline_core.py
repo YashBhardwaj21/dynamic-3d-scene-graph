@@ -33,6 +33,21 @@ from scene_graph.tracking.track import Track, TrackState
 
 
 class SceneGraphPipeline:
+    """Core pipeline orchestrator for a single scene graph update cycle.
+
+    Owns the tracker, relation registry, state machines, and the persistent
+    world-model graph.  Each call to :meth:`update` advances the entire
+    pipeline by one frame::
+
+        FramePacket
+          → geometry computation
+          → CausalTracker.update
+          → ObjectStateMachine.update
+          → RelationRegistry.compute_all  (context → candidates → evaluation)
+          → RelationStateMachine.update
+          → TemporalSceneGraph.update_nodes / update_edges
+          → returns TemporalSceneGraph
+    """
 
     def __init__(self, config: SceneGraphConfig):
         if config is None:
@@ -223,7 +238,6 @@ class SceneGraphPipeline:
                     )
 
         return geometry
-
 
     def update(
         self,

@@ -14,8 +14,8 @@ from launch_ros.actions import Node
 
 def generate_launch_description():
     pkg_share = get_package_share_directory("scene_graph_ros")
-    src_rviz = "/mnt/c/Users/Yash Bhardwaj/Desktop/perception/ros2_ws/src/scene_graph_ros/rviz/scene_graph.rviz"
-    default_rviz_config = src_rviz if os.path.exists(src_rviz) else os.path.join(pkg_share, "rviz", "scene_graph.rviz")
+    default_rviz_config = os.path.join(pkg_share, "rviz", "scene_graph.rviz")
+
 
     use_bridge_arg = DeclareLaunchArgument(
         "use_bridge",
@@ -67,14 +67,32 @@ def generate_launch_description():
 
     publish_scene_cloud_arg = DeclareLaunchArgument(
         "publish_scene_cloud",
-        default_value="true",
-        description="Whether to unproject and publish the full 3D world/environment point cloud",
+        default_value="false",
+        description="Enable the ephemeral per-frame scene cloud (disabled by default; use map cloud instead)",
     )
 
     scene_cloud_stride_arg = DeclareLaunchArgument(
         "scene_cloud_stride",
         default_value="4",
-        description="Subsampling stride for full scene point cloud unprojection (4 is fast on CPU)",
+        description="Subsampling stride for per-frame scene cloud (only used when publish_scene_cloud=true)",
+    )
+
+    map_voxel_size_m_arg = DeclareLaunchArgument(
+        "map_voxel_size_m",
+        default_value="0.02",
+        description="Voxel size (m) for the growing map cloud downsampling",
+    )
+
+    map_max_points_arg = DeclareLaunchArgument(
+        "map_max_points",
+        default_value="500000",
+        description="Maximum points in the map before voxel downsampling triggers",
+    )
+
+    map_cloud_stride_arg = DeclareLaunchArgument(
+        "map_cloud_stride",
+        default_value="4",
+        description="Subsampling stride for map cloud unprojection (4 = every 4th pixel, 2 = denser)",
     )
 
     world_frame_arg = DeclareLaunchArgument(
@@ -195,6 +213,9 @@ def generate_launch_description():
                 "max_missing_seconds": LaunchConfiguration("max_missing_seconds"),
                 "publish_scene_cloud": LaunchConfiguration("publish_scene_cloud"),
                 "scene_cloud_stride": LaunchConfiguration("scene_cloud_stride"),
+                "map_voxel_size_m": LaunchConfiguration("map_voxel_size_m"),
+                "map_max_points": LaunchConfiguration("map_max_points"),
+                "map_cloud_stride": LaunchConfiguration("map_cloud_stride"),
             }
         ],
         condition=IfCondition(LaunchConfiguration("use_scenegraph")),
@@ -229,6 +250,9 @@ def generate_launch_description():
         max_missing_seconds_arg,
         publish_scene_cloud_arg,
         scene_cloud_stride_arg,
+        map_voxel_size_m_arg,
+        map_max_points_arg,
+        map_cloud_stride_arg,
         world_frame_arg,
         sensor_frame_arg,
         rgb_topic_arg,
