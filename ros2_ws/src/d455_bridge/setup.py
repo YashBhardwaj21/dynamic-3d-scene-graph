@@ -13,10 +13,10 @@ setup(
     ],
     install_requires=['setuptools'],
     zip_safe=True,
-    maintainer='saturn',
-    maintainer_email='saturn@todo.todo',
-    description='TODO: Package description',
-    license='TODO: License declaration',
+    maintainer='Yash Bhardwaj',
+    maintainer_email='user@example.com',
+    description='RealSense D455 Windows TCP Bridge receiver for ROS 2',
+    license='Apache-2.0',
     extras_require={
         'test': [
             'pytest',

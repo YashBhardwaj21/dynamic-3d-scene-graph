@@ -218,7 +218,12 @@ def launch_setup(context, *args, **kwargs):
             executable="rviz2",
             name="rviz2",
             output="screen",
-            arguments=["-d", default_rviz_config],
+            arguments=[
+                "-d",
+                default_rviz_config,
+                "--display-title-format",
+                "3D Scene Graph & Dense Map - RViz2",
+            ],
             condition=IfCondition(LaunchConfiguration("use_rviz")),
         )
     )

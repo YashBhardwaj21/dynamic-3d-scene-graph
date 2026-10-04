@@ -132,8 +132,8 @@ Each frame is transmitted over a persistent, raw TCP socket as a single contiguo
 
 ## 4. The Source Code Behind the System
 
-### A. Windows Sender Script (`d455_test.py`)
-**Location**: `C:\Users\Yash Bhardwaj\Desktop\d455_test.py`
+### A. Windows Sender Script (`tools/d455_sender.py`)
+**Location**: `tools/d455_sender.py`
 
 ```python
 import json
@@ -143,8 +143,8 @@ import time
 import numpy as np
 import pyrealsense2 as rs
 
-# WSL2 IP address (obtain via: ip -4 addr show eth0 in WSL)
-WSL_HOST = "172.29.3.153"
+# WSL2 IP address: automatically resolved via `wsl hostname -I` or WSL_HOST env var
+WSL_HOST = "127.0.0.1"  # Auto-resolved at runtime to WSL Hyper-V IP
 WSL_PORT = 5000
 
 WIDTH = 640
@@ -304,16 +304,14 @@ In WSL2 terminal:
 ```bash
 ip -4 addr show eth0 | grep -oP '(?<=inet\s)\d+(\.\d+){3}'
 ```
-*Example Output*: `172.29.3.153`
-
-Verify that `WSL_HOST` in `C:\Users\Yash Bhardwaj\Desktop\d455_test.py` matches this IP.
+*Note*: `tools/d455_sender.py` will auto-detect this IP automatically across the Hyper-V switch.
 
 ---
 
 ### Step 2: Build the ROS 2 Workspace in WSL2
 In WSL2 terminal:
 ```bash
-cd "/mnt/c/Users/Yash Bhardwaj/Desktop/perception/ros2_ws"
+cd ros2_ws
 source /opt/ros/humble/setup.bash
 colcon build --symlink-install
 ```
@@ -321,13 +319,13 @@ colcon build --symlink-install
 ---
 
 ### Step 3: Launch the Perception & Scene Graph Stack in WSL2
-In WSL2 terminal:
+In WSL2 terminal (or simply run `./run_live_d455.sh` from the repo root):
 ```bash
 source /opt/ros/humble/setup.bash
-source /home/saturn/myenv/bin/activate
-cd "/mnt/c/Users/Yash Bhardwaj/Desktop/perception/ros2_ws"
+source <path_to_venv>/bin/activate
+cd ros2_ws
 source install/setup.bash
-export PYTHONPATH="/mnt/c/Users/Yash Bhardwaj/Desktop/perception/src:$PYTHONPATH"
+export PYTHONPATH="$(pwd)/../src:$PYTHONPATH"
 
 # Launch D455 Bridge, Static TF, Scene Graph Node, RViz2, and 2D Dashboard:
 ros2 launch scene_graph_ros live_scene_graph.launch.py
@@ -345,9 +343,9 @@ ros2 launch scene_graph_ros live_scene_graph.launch.py
 ---
 
 ### Step 4: Start the Camera Stream on Windows
-Open **PowerShell** on the Windows host and run:
+Open **PowerShell** in the repository root directory on the Windows host and run:
 ```powershell
-python "C:\Users\Yash Bhardwaj\Desktop\d455_test.py"
+python tools\d455_sender.py
 ```
 
 *Expected Output*:
@@ -355,7 +353,8 @@ python "C:\Users\Yash Bhardwaj\Desktop\d455_test.py"
 Starting Intel RealSense D455...
 Device: Intel RealSense D455
 Serial: 146322250154
-Connecting to WSL2 TCP receiver at 172.29.3.153:5000...
+[D455 Sender] Auto-detected direct WSL2 Hyper-V IP: 172.xx.xx.xx
+Connecting to WSL2 TCP receiver...
 TCP connection established. Streaming continuous RGB + Depth...
 Frame 0000 | RGB=921,600B Depth=614,400B send=4.2ms
 Frame 0030 | RGB=921,600B Depth=614,400B send=4.8ms

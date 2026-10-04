@@ -2,10 +2,10 @@
 <?xml-model href="http://download.ros.org/schema/package_format3.xsd" schematypens="http://www.w3.org/2001/XMLSchema"?>
 <package format="3">
   <name>d455_bridge</name>
-  <version>0.0.0</version>
-  <description>TODO: Package description</description>
-  <maintainer email="saturn@todo.todo">saturn</maintainer>
-  <license>TODO: License declaration</license>
+  <version>0.1.0</version>
+  <description>RealSense D455 Windows TCP Bridge receiver for ROS 2</description>
+  <maintainer email="user@example.com">Yash Bhardwaj</maintainer>
+  <license>Apache-2.0</license>
 
   <depend>rclpy</depend>
   <depend>sensor_msgs</depend>

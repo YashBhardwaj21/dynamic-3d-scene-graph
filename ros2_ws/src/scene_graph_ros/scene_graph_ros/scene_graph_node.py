@@ -6,8 +6,9 @@ import os
 import sys
 from pathlib import Path
 
-# Ensure repository root and active virtualenvs are on sys.path
+# Ensure repository root and active/local virtualenvs are on sys.path
 def _ensure_paths():
+    repo_root = None
     current = Path(__file__).resolve().parent
     while current != current.parent:
         candidate_src = current / "src"
@@ -15,18 +16,40 @@ def _ensure_paths():
             src_str = str(candidate_src)
             if src_str not in sys.path:
                 sys.path.insert(0, src_str)
+            repo_root = current
             break
         current = current.parent
 
+    # Candidate virtualenv directories:
+    # 1. Explicit SCENE_GRAPH_VENV environment variable
+    # 2. Active virtualenv ($VIRTUAL_ENV)
+    # 3. Workspace-local virtualenvs (.venv, myenv, venv)
+    # 4. User home virtualenvs (~/.venv, ~/myenv, ~/venv)
+    py_ver = f"python{sys.version_info.major}.{sys.version_info.minor}"
+    candidates = []
+
+    custom_venv = os.environ.get("SCENE_GRAPH_VENV")
+    if custom_venv:
+        candidates.append(Path(custom_venv))
+
     venv = os.environ.get("VIRTUAL_ENV")
     if venv:
-        for py_ver in ["python3.10", "python3.11", "python3.9", "python3"]:
-            sp = Path(venv) / "lib" / py_ver / "site-packages"
+        candidates.append(Path(venv))
+
+    if repo_root:
+        candidates.extend([repo_root / ".venv", repo_root / "myenv", repo_root / "venv"])
+
+    candidates.extend([Path.home() / ".venv", Path.home() / "myenv", Path.home() / "venv"])
+
+    ver_list = [py_ver, "python3.10", "python3.11", "python3.12", "python3.9", "python3"]
+    for c in candidates:
+        if not c.exists():
+            continue
+        for ver in ver_list:
+            sp = c / "lib" / ver / "site-packages"
             if sp.exists() and str(sp) not in sys.path:
                 sys.path.insert(0, str(sp))
-    home_myenv = Path.home() / "myenv" / "lib" / "python3.10" / "site-packages"
-    if home_myenv.exists() and str(home_myenv) not in sys.path:
-        sys.path.insert(0, str(home_myenv))
+                break
 
 _ensure_paths()
 

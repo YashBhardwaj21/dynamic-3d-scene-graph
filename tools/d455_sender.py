@@ -1,3 +1,4 @@
+import os
 import json
 import socket
 import struct
@@ -20,12 +21,20 @@ DEFAULT_PORT = 5000
 
 def resolve_wsl_host(preferred_host: str, port: int) -> str:
     """Resolve WSL host IP directly via Hyper-V virtual switch to bypass buggy wslrelay."""
+    env_host = os.environ.get("WSL_HOST")
+    if env_host:
+        return env_host.strip()
+
     if preferred_host not in ("127.0.0.1", "localhost"):
         return preferred_host
 
     try:
         import subprocess
-        res = subprocess.run(["wsl", "-d", "Ubuntu-22.04", "hostname", "-I"], capture_output=True, text=True, timeout=2)
+        # Try default WSL distro first
+        res = subprocess.run(["wsl", "hostname", "-I"], capture_output=True, text=True, timeout=2)
+        if res.returncode != 0 or not res.stdout.strip():
+            # Fallback to specific Ubuntu-22.04 if installed
+            res = subprocess.run(["wsl", "-d", "Ubuntu-22.04", "hostname", "-I"], capture_output=True, text=True, timeout=2)
         if res.returncode == 0:
             ip = res.stdout.strip().split()[0]
             if ip:

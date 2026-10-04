@@ -1,9 +1,5 @@
 """Launch YOLO 2D Perception, 3D Tracking, Spatial Relations, and 2D Viewer.
 
-Dedicated to the YOLO perception pipeline:
-- tum_player (replaying RGB, depth, camera_info, and ground-truth TF)
-- scene_graph_node (YOLO object detection + causal 3D tracking + spatial relations)
-- live_2d_viewer (Window 1: YOLO detections & masks, Window 2: Tracks & 3D relations)
 """
 
 import os
@@ -178,8 +174,8 @@ def generate_launch_description():
             ),
             DeclareLaunchArgument(
                 "split_viewer_windows",
-                default_value="true",
-                description="Split 2D viewer into two independent windows (YOLO and Tracks/Relations)",
+                default_value="false",
+                description="Split 2D viewer into two independent windows (set false for single combined window)",
             ),
             DeclareLaunchArgument(
                 "map_voxel_size_m",
