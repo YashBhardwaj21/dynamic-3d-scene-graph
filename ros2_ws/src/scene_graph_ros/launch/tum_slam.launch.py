@@ -49,6 +49,7 @@ def launch_setup(context, *args, **kwargs):
                 "min_subscribers": 1,
             }
         ],
+        condition=IfCondition(LaunchConfiguration("launch_player")),
     )
 
     downstream_actions = [
@@ -133,9 +134,14 @@ def generate_launch_description():
                 description="Path to TUM RGB-D sequence directory",
             ),
             DeclareLaunchArgument(
+                "launch_player",
+                default_value="true",
+                description="Whether to launch TUM player sequence streamer (set false if player is already running)",
+            ),
+            DeclareLaunchArgument(
                 "publish_rate_hz",
-                default_value="3.0",
-                description="Replay input rate in Hz",
+                default_value="30.0",
+                description="Replay input rate in Hz (default 30.0 matching dataset frequency)",
             ),
             DeclareLaunchArgument(
                 "rate_multiplier",

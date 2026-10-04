@@ -1,3 +1,4 @@
+# ruff: noqa: BLE001, S110
 """Generic SceneGraph ROS Node."""
 
 from __future__ import annotations
@@ -5,6 +6,7 @@ from __future__ import annotations
 import os
 import sys
 from pathlib import Path
+
 
 # Ensure repository root and active/local virtualenvs are on sys.path
 def _ensure_paths():
@@ -56,33 +58,35 @@ _ensure_paths()
 import queue
 import threading
 import time
+from collections import deque
 from dataclasses import dataclass
-from typing import Optional, List
-import numpy as np
 
-import rclpy
-from rclpy.node import Node
-from rclpy.duration import Duration
-from rclpy.time import Time
-from sensor_msgs.msg import Image, CameraInfo, Imu
 import message_filters
+import numpy as np
+import rclpy
 import tf2_ros
+from rclpy.duration import Duration
+from rclpy.node import Node
+from rclpy.time import Time
+from sensor_msgs.msg import CameraInfo, Image, Imu
 from tf2_ros import TransformException
 
+from scene_graph.config import SceneGraphConfig
 from scene_graph.data.frame_packet import FramePacket, IMUSample, LocalizationMode
+from scene_graph.data.sensor_frame import SensorFrame, StreamStatus
+from scene_graph.data.timestamp import Timestamp, TimestampDomain
 from scene_graph.geometry.camera import CameraIntrinsics, DepthModel
 from scene_graph.geometry.reference_frame import RelationReferenceFrame
-from scene_graph.pipeline.online_pipeline import OnlinePipeline
 from scene_graph.graph.snapshot import create_snapshot
-
+from scene_graph.pipeline.online_pipeline import OnlinePipeline
 from scene_graph_ros.config_loader import load_scene_graph_config
-from scene_graph_ros.ros_conversions import (
-    ros_image_to_numpy,
-    camera_info_to_intrinsics,
-    transform_to_matrix,
-    imu_msg_to_sample,
-)
 from scene_graph_ros.graph_publisher import GraphPublisher
+from scene_graph_ros.ros_conversions import (
+    camera_info_to_intrinsics,
+    imu_msg_to_sample,
+    ros_image_to_numpy,
+    transform_to_matrix,
+)
 
 
 @dataclass
@@ -90,7 +94,7 @@ class PendingFrame:
     """Container for synchronized raw ROS messages awaiting worker processing."""
     rgb_msg: Image
     depth_msg: Image
-    camera_info_msg: Optional[CameraInfo]
+    camera_info_msg: CameraInfo | None
     arrival_time: float
 
 
@@ -124,12 +128,14 @@ class SceneGraphROSNode(Node):
         self.declare_parameter("map_cloud_stride", 4)
         self.declare_parameter("overlay_detections_topic", "/scene_graph/overlay_detections")
         self.declare_parameter("overlay_tracks_topic", "/scene_graph/overlay_tracks")
-        self.declare_parameter("queue_size", 64)
-        self.declare_parameter("drop_old_frames", False)
+        self.declare_parameter("queue_size", 4)
+        self.declare_parameter("drop_old_frames", True)
         self.declare_parameter("localization_mode", "world")
         self.declare_parameter("async_mode", True)
         self.declare_parameter("min_hits", -1)
         self.declare_parameter("max_missing_seconds", -1.0)
+        if not self.has_parameter("use_sim_time"):
+            self.declare_parameter("use_sim_time", False)
         # When True, TF lookup uses the *latest* available transform (Time(0)) rather
         # than the exact image timestamp.  Required for SLAM backends (RTAB-Map, ORB-SLAM3)
         # which publish TF *after* processing each frame, making exact-timestamp lookups
@@ -164,13 +170,24 @@ class SceneGraphROSNode(Node):
         self.overlay_detections_topic = self.get_parameter("overlay_detections_topic").get_parameter_value().string_value
         self.overlay_tracks_topic = self.get_parameter("overlay_tracks_topic").get_parameter_value().string_value
         self.queue_size = self.get_parameter("queue_size").get_parameter_value().integer_value
-        self.drop_old_frames = self.get_parameter("drop_old_frames").get_parameter_value().bool_value
+
+        # Robust boolean parsing to prevent string/bool confusion (Failure 2 regression protection)
+        raw_drop = self.get_parameter("drop_old_frames").value
+        self.drop_old_frames = raw_drop.strip().lower() in ("true", "1", "yes") if isinstance(raw_drop, str) else bool(raw_drop)
+
         self.localization_mode = self.get_parameter("localization_mode").get_parameter_value().string_value.lower()
-        self.async_mode = self.get_parameter("async_mode").get_parameter_value().bool_value
+
+        raw_async = self.get_parameter("async_mode").value
+        self.async_mode = raw_async.strip().lower() in ("true", "1", "yes") if isinstance(raw_async, str) else bool(raw_async)
+
         self.param_min_hits = self.get_parameter("min_hits").get_parameter_value().integer_value
         self.param_max_missing_seconds = self.get_parameter("max_missing_seconds").get_parameter_value().double_value
-        self.use_latest_tf = self.get_parameter("use_latest_tf").get_parameter_value().bool_value
+
+        raw_tf = self.get_parameter("use_latest_tf").value
+        self.use_latest_tf = raw_tf.strip().lower() in ("true", "1", "yes") if isinstance(raw_tf, str) else bool(raw_tf)
+
         self.slam_pose_max_age = self.get_parameter("slam_pose_max_age").get_parameter_value().double_value
+
 
 
         self.get_logger().info(f"Loading SceneGraph configuration from {self.config_path}")
@@ -225,8 +242,8 @@ class SceneGraphROSNode(Node):
             world_frame=self.world_frame,
         )
 
-        self.latest_camera_info: Optional[CameraInfo] = None
-        self.latest_intrinsics: Optional[CameraIntrinsics] = None
+        self.latest_camera_info: CameraInfo | None = None
+        self.latest_intrinsics: CameraIntrinsics | None = None
         self.camera_info_sub = self.create_subscription(
             CameraInfo,
             self.camera_info_topic,
@@ -237,8 +254,9 @@ class SceneGraphROSNode(Node):
         self.tf_buffer = tf2_ros.Buffer(node=self)
         self.tf_listener = tf2_ros.TransformListener(self.tf_buffer, self)
 
-        self.imu_buffer: List[IMUSample] = []
-        self.last_frame_timestamp: Optional[float] = None
+        # Bounded ring buffer: 500 samples (~2.5s @ 200 Hz)
+        self.imu_buffer: deque[IMUSample] = deque(maxlen=500)
+        self.last_frame_timestamp: float | None = None
         if self.use_imu:
             self.imu_sub = self.create_subscription(
                 Imu,
@@ -250,21 +268,23 @@ class SceneGraphROSNode(Node):
         self.rgb_sub = message_filters.Subscriber(self, Image, self.rgb_topic)
         self.depth_sub = message_filters.Subscriber(self, Image, self.depth_topic)
 
+        # ApproximateTimeSynchronizer with queue_size=4 (133ms max age @ 30 FPS, replaces 30-frame/1000ms stale backlog)
         self.sync = message_filters.ApproximateTimeSynchronizer(
             [self.rgb_sub, self.depth_sub],
-            queue_size=30,
+            queue_size=4,
             slop=self.rgb_depth_max_dt,
         )
         self.sync.registerCallback(self.rgb_depth_callback)
 
+
         self.frame_counter = 0
         self.processed_frames = 0
         self.dropped_frames = 0
-        self.processing_start_time: Optional[float] = None
-        self.last_input_time: Optional[float] = None
+        self.processing_start_time: float | None = None
+        self.last_input_time: float | None = None
         self.input_fps: float = 0.0
 
-        max_q = self.queue_size if self.queue_size > 0 else 0
+        max_q = max(0, self.queue_size)
         self.frame_queue = queue.Queue(maxsize=max_q)
         self.stop_event = threading.Event()
 
@@ -296,11 +316,9 @@ class SceneGraphROSNode(Node):
             self.get_logger().warn(f"Failed to parse CameraInfo: {e}")
 
     def imu_callback(self, msg: Imu):
-        """Buffer incoming IMU samples."""
+        """Buffer incoming IMU samples into bounded ring buffer (500 samples, ~2.5s @ 200 Hz)."""
         sample = imu_msg_to_sample(msg)
         self.imu_buffer.append(sample)
-        if len(self.imu_buffer) > 500:
-            self.imu_buffer.pop(0)
 
     def rgb_depth_callback(self, rgb_msg: Image, depth_msg: Image):
         """Lightweight callback: copies message references to queue and returns immediately."""
@@ -508,7 +526,7 @@ class SceneGraphROSNode(Node):
                     transform_valid = False
                     transform_source = "missing_slam_tf"
                     self.get_logger().warn(
-                        f"SLAM TF lookup failed ({self.world_frame}→{self.sensor_frame}): {ex}. "
+                        f"SLAM TF lookup failed ({self.world_frame} -> {self.sensor_frame}): {ex}. "
                         "Waiting for SLAM backend to initialise.",
                         throttle_duration_sec=2.0,
                     )
@@ -558,37 +576,46 @@ class SceneGraphROSNode(Node):
                 heading_world=heading_axis,
             )
 
-        packet = FramePacket(
-            frame_index=self.frame_counter,
-            timestamp=rgb_timestamp,
+        # Stage 1: Canonical SensorFrame creation
+        sensor_status = StreamStatus.OK if depth_m is not None else StreamStatus.DEPTH_DROPPED
+        sim_time_param = self.get_parameter("use_sim_time").value
+        is_sim_time = sim_time_param.strip().lower() in ("true", "1", "yes") if isinstance(sim_time_param, str) else bool(sim_time_param)
+        domain = TimestampDomain.SIMULATED_TIME if is_sim_time else TimestampDomain.SYSTEM_TIME
+
+        sensor_frame = SensorFrame(
+            session_id="ros2_live_session",
+            sequence_number=self.frame_counter,
+            timestamp=Timestamp(value=rgb_timestamp, domain=domain, source="ros_rgb"),
             rgb=rgb_np,
-            depth=depth_m,
-            world_T_camera=world_T_camera,
             camera_intrinsics=intrinsics,
-            depth_model=self.depth_model,
-            relation_frame=relation_frame,
+            depth=depth_m,
+            depth_scale=1.0 / self.depth_scale if self.depth_scale > 0 else 0.001,
             imu_samples=windowed_imu,
             frame_id=pending.rgb_msg.header.frame_id or self.sensor_frame,
             optical_frame_id=pending.depth_msg.header.frame_id if pending.depth_msg else self.sensor_frame,
-            pose_source=transform_source,
-            sensor_timestamp=rgb_timestamp,
-            rgb_timestamp=rgb_timestamp,
-            depth_timestamp=depth_timestamp,
+            status=sensor_status,
+        )
+
+        # Stage 1 -> Downstream bridge via FramePacket.from_sensor_frame
+        packet = FramePacket.from_sensor_frame(
+            sensor_frame=sensor_frame,
+            world_T_camera=world_T_camera,
             pose_timestamp=pose_timestamp,
-            pose_age=pose_age if np.isfinite(pose_age) else 0.0,
-            world_frame=world_frame_used,
+            pose_source=transform_source,
             transform_source=transform_source,
             transform_valid=transform_valid,
             localization_mode=LocalizationMode.CAMERA_LOCAL_MODE if self.localization_mode == "camera_local" else LocalizationMode.WORLD_MODE,
-            metadata={"frame_id": pending.rgb_msg.header.frame_id, "allow_camera_fallback": True},
+            relation_frame=relation_frame,
+            world_frame=world_frame_used,
         )
+
 
 
         if self.debug_frame_packet_only:
             self.get_logger().info(
                 f"Frame {self.frame_counter} | "
                 f"RGB: {rgb_np.shape} | "
-                f"Depth: {depth_np.shape if depth_np is not None else 'None'} | "
+                f"Depth: {depth_m.shape if depth_m is not None else 'None'} | "
                 f"Timestamp: {rgb_timestamp:.4f} | "
                 f"Pose: {'available' if world_T_camera is not None else 'missing'}"
             )

@@ -15,6 +15,10 @@ from launch_ros.actions import Node
 
 
 def launch_setup(context, *args, **kwargs):
+    launch_player_raw = context.perform_substitution(LaunchConfiguration("launch_player")).strip().lower()
+    with_slam_raw = context.perform_substitution(LaunchConfiguration("with_slam")).strip().lower()
+    should_launch_player = (launch_player_raw in ("true", "1")) and (with_slam_raw not in ("true", "1"))
+
     tum_player_node = Node(
         package="scene_graph_ros",
         executable="tum_player",
@@ -37,7 +41,7 @@ def launch_setup(context, *args, **kwargs):
                 "min_subscribers": 1,
             }
         ],
-        condition=IfCondition(LaunchConfiguration("launch_player")),
+        condition=IfCondition(str(should_launch_player).lower()),
     )
 
     scene_graph_node = Node(
@@ -95,7 +99,12 @@ def generate_launch_description():
             DeclareLaunchArgument(
                 "launch_player",
                 default_value="true",
-                description="Whether to launch TUM player sequence streamer",
+                description="Whether to launch TUM player sequence streamer (set false when running alongside tum_slam)",
+            ),
+            DeclareLaunchArgument(
+                "with_slam",
+                default_value="false",
+                description="Set true when running alongside tum_slam (disables internal player to ensure single /clock)",
             ),
             DeclareLaunchArgument(
                 "dataset_root",
@@ -109,8 +118,8 @@ def generate_launch_description():
             ),
             DeclareLaunchArgument(
                 "publish_rate_hz",
-                default_value="2.0",
-                description="Replay input rate in Hz",
+                default_value="30.0",
+                description="Replay input rate in Hz (default 30.0 matching dataset frequency)",
             ),
             DeclareLaunchArgument(
                 "rate_multiplier",

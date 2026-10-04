@@ -1,3 +1,4 @@
+# ruff: noqa: BLE001, S110, UP045
 """Live 2D perception viewer node for detections, tracks, and telemetry."""
 
 from __future__ import annotations
@@ -7,8 +8,10 @@ import os
 import sys
 from pathlib import Path
 from typing import Optional
+
 import cv2
 import numpy as np
+
 
 # Ensure repository root and active/local virtualenvs are on sys.path
 def _ensure_paths():
@@ -96,10 +99,32 @@ class Live2DViewerNode(Node):
         self.gui_available: bool = True
 
         if not os.environ.get("DISPLAY") and not os.environ.get("WAYLAND_DISPLAY"):
-            self.get_logger().warn(
-                "No DISPLAY or WAYLAND_DISPLAY found in environment. GUI window disabled (headless mode)."
+            self.get_logger().info(
+                "WSL GUI: No DISPLAY or WAYLAND_DISPLAY found in environment. "
+                "GUI window disabled (headless mode). Ingestion and scene graph continue normally."
             )
             self.gui_available = False
+        else:
+            try:
+                if self.split_windows:
+                    cv2.namedWindow(self.window_det_name, cv2.WINDOW_NORMAL)
+                    cv2.namedWindow(self.window_track_name, cv2.WINDOW_NORMAL)
+                    cv2.resizeWindow(self.window_det_name, 640, 520)
+                    cv2.resizeWindow(self.window_track_name, 640, 520)
+                    cv2.moveWindow(self.window_det_name, 40, 40)
+                    cv2.moveWindow(self.window_track_name, 700, 40)
+                else:
+                    cv2.namedWindow(self.window_name, cv2.WINDOW_NORMAL)
+                    cv2.resizeWindow(self.window_name, 1280, 540)
+                    cv2.moveWindow(self.window_name, 40, 40)
+                display_env = os.environ.get("DISPLAY") or os.environ.get("WAYLAND_DISPLAY")
+                self.get_logger().info(f"WSL GUI: Available ({display_env}). OpenCV windows initialized successfully.")
+            except Exception as e:
+                self.get_logger().warn(
+                    f"WSL GUI: Display environment is set, but window initialization failed: {e}. "
+                    f"Falling back to headless mode. (This is NOT an ingestion failure)."
+                )
+                self.gui_available = False
 
         self.det_sub = self.create_subscription(
             Image,
@@ -119,22 +144,6 @@ class Live2DViewerNode(Node):
             self.state_callback,
             10,
         )
-
-        if self.gui_available:
-            try:
-                if self.split_windows:
-                    cv2.namedWindow(self.window_det_name, cv2.WINDOW_NORMAL)
-                    cv2.namedWindow(self.window_track_name, cv2.WINDOW_NORMAL)
-                    cv2.resizeWindow(self.window_det_name, 640, 520)
-                    cv2.resizeWindow(self.window_track_name, 640, 520)
-                    cv2.moveWindow(self.window_det_name, 40, 40)
-                    cv2.moveWindow(self.window_track_name, 700, 40)
-                else:
-                    cv2.namedWindow(self.window_name, cv2.WINDOW_NORMAL)
-                    cv2.resizeWindow(self.window_name, 1280, 540)
-                    cv2.moveWindow(self.window_name, 40, 40)
-            except Exception as e:
-                self.get_logger().warn(f"Failed to initialize OpenCV windows: {e}")
 
         period = 1.0 / max(1.0, display_rate)
         wall_clock = rclpy.clock.Clock(clock_type=rclpy.clock.ClockType.STEADY_TIME)
@@ -269,6 +278,10 @@ class Live2DViewerNode(Node):
             1,
             cv2.LINE_AA,
         )
+
+        if not self.gui_available:
+            self.get_logger().info(f"[Viewer Headless] {status_text}", throttle_duration_sec=2.0)
+            return
 
         if self.split_windows:
             win_h = h + 32 + 42

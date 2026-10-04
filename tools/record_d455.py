@@ -1,16 +1,17 @@
 #!/usr/bin/env python3
+# ruff: noqa: BLE001, S110, S112, SIM115, DTZ005
 """Record synchronized RGB-D video sequences from Intel RealSense D455.
 
 Saves sequences directly in TUM RGB-D format compatible with the Scene Graph pipeline:
   data/raw/<sequence_name>/
-    ├── rgb/                  # Color images (PNG, BGR8)
-    ├── depth/                # Metric depth images (16-bit PNG, millimeters, scale=1000)
-    ├── rgb.txt               # TUM index: timestamp rgb/timestamp.png
-    ├── depth.txt             # TUM index: timestamp depth/timestamp.png
-    ├── groundtruth.txt       # Placeholder / odometry poses (timestamp tx ty tz qx qy qz qw)
-    ├── accelerometer.txt     # IMU acceleration data (timestamp ax ay az)
-    ├── camera_intrinsics.json # Factory calibration intrinsics
-    └── config.yaml           # Ready-to-run SceneGraph replay config
+    |-- rgb/                  # Color images (PNG, BGR8)
+    |-- depth/                # Metric depth images (16-bit PNG, millimeters, scale=1000)
+    |-- rgb.txt               # TUM index: timestamp rgb/timestamp.png
+    |-- depth.txt             # TUM index: timestamp depth/timestamp.png
+    |-- groundtruth.txt       # Placeholder / odometry poses (timestamp tx ty tz qx qy qz qw)
+    |-- accelerometer.txt     # IMU acceleration data (timestamp ax ay az)
+    |-- camera_intrinsics.json # Factory calibration intrinsics
+    +-- config.yaml           # Ready-to-run SceneGraph replay config
 
 Usage:
   python tools/record_d455.py
@@ -22,14 +23,13 @@ from __future__ import annotations
 
 import argparse
 import json
-import os
 import queue
 import sys
 import threading
 import time
 from datetime import datetime
 from pathlib import Path
-from typing import Dict, Any, Optional
+from typing import Any
 
 import cv2
 import numpy as np
@@ -88,7 +88,7 @@ class AsyncFrameWriter:
 
 def generate_scenegraph_config(
     sequence_dir: Path,
-    intrinsics: Dict[str, Any],
+    intrinsics: dict[str, Any],
     depth_scale: float = 1000.0,
 ) -> str:
     """Generate a ready-to-run SceneGraph YAML config for the recorded sequence."""
@@ -299,12 +299,15 @@ def main():
     depth_txt = open(seq_dir / "depth.txt", "w")
     groundtruth_txt = open(seq_dir / "groundtruth.txt", "w")
     accel_txt = open(seq_dir / "accelerometer.txt", "w") if imu_enabled else None
+    gyro_txt = open(seq_dir / "gyroscope.txt", "w") if imu_enabled else None
 
     rgb_txt.write("# RGB images\n# timestamp filename\n")
     depth_txt.write("# Depth images\n# timestamp filename\n")
-    groundtruth_txt.write("# Camera trajectory (identity default)\n# timestamp tx ty tz qx qy qz qw\n")
+    groundtruth_txt.write("# Camera trajectory (SYNTHETIC IDENTITY PLACEHOLDER - NO GROUND TRUTH AVAILABLE)\n# timestamp tx ty tz qx qy qz qw\n")
     if accel_txt:
         accel_txt.write("# Accelerometer samples\n# timestamp ax ay az\n")
+    if gyro_txt:
+        gyro_txt.write("# Gyroscope samples\n# timestamp wx wy wz\n")
 
     # Start async writer
     writer = AsyncFrameWriter(max_queue_size=200)
@@ -333,22 +336,24 @@ def main():
                 aligned = align.process(frames)
                 color_frame = aligned.get_color_frame()
                 depth_frame = aligned.get_depth_frame()
-            except Exception as e:
+            except Exception:
                 continue
 
             if not color_frame or not depth_frame:
                 continue
 
-            # Hardware timestamp in seconds
-            ts_sec = color_frame.get_timestamp() * 1e-3
+            # Preserved distinct hardware timestamps in seconds
+            color_ts_sec = color_frame.get_timestamp() * 1e-3
+            depth_ts_sec = depth_frame.get_timestamp() * 1e-3
 
             color_np = np.asanyarray(color_frame.get_data())
             depth_np = np.asanyarray(depth_frame.get_data())
 
-            # File names
-            ts_str = f"{ts_sec:.6f}"
-            rgb_rel = f"rgb/{ts_str}.png"
-            depth_rel = f"depth/{ts_str}.png"
+            # File names matching exact sensor timestamps
+            color_ts_str = f"{color_ts_sec:.6f}"
+            depth_ts_str = f"{depth_ts_sec:.6f}"
+            rgb_rel = f"rgb/{color_ts_str}.png"
+            depth_rel = f"depth/{depth_ts_str}.png"
             rgb_abs = str(seq_dir / rgb_rel)
             depth_abs = str(seq_dir / depth_rel)
 
@@ -356,16 +361,23 @@ def main():
             writer.submit(rgb_abs, color_np, depth_abs, depth_np)
 
             # Write indices
-            rgb_txt.write(f"{ts_str} {rgb_rel}\n")
-            depth_txt.write(f"{ts_str} {depth_rel}\n")
-            groundtruth_txt.write(f"{ts_str} 0.0000 0.0000 0.0000 0.0000 0.0000 0.0000 1.0000\n")
+            rgb_txt.write(f"{color_ts_str} {rgb_rel}\n")
+            depth_txt.write(f"{depth_ts_str} {depth_rel}\n")
+            groundtruth_txt.write(f"{color_ts_str} 0.0000 0.0000 0.0000 0.0000 0.0000 0.0000 1.0000\n")
 
-            # Record IMU if available
-            if accel_txt:
+            # Record 6-Axis IMU (accel + gyro) with individual hardware timestamps
+            if imu_enabled:
                 accel = frames.first_or_default(rs.stream.accel)
-                if accel:
+                gyro = frames.first_or_default(rs.stream.gyro)
+                if accel and accel_txt:
                     accel_data = accel.as_motion_frame().get_motion_data()
-                    accel_txt.write(f"{ts_str} {accel_data.x:.4f} {accel_data.y:.4f} {accel_data.z:.4f}\n")
+                    accel_ts = accel.get_timestamp() * 1e-3
+                    accel_txt.write(f"{accel_ts:.6f} {accel_data.x:.6f} {accel_data.y:.6f} {accel_data.z:.6f}\n")
+                if gyro and gyro_txt:
+                    gyro_data = gyro.as_motion_frame().get_motion_data()
+                    gyro_ts = gyro.get_timestamp() * 1e-3
+                    gyro_txt.write(f"{gyro_ts:.6f} {gyro_data.x:.6f} {gyro_data.y:.6f} {gyro_data.z:.6f}\n")
+
 
             recorded_frames += 1
 
@@ -421,8 +433,11 @@ def main():
             groundtruth_txt.close()
             if accel_txt:
                 accel_txt.close()
+            if gyro_txt:
+                gyro_txt.close()
         except Exception:
             pass
+
 
         # Wait for all images to write
         try:
@@ -454,10 +469,10 @@ def main():
         print(f"  Sequence:       {seq_name}")
         print(f"  Location:       {seq_dir.resolve()}")
         print(f"  Total Frames:   {recorded_frames} frames in {elapsed_total:.1f}s ({actual_fps:.1f} FPS)")
-        print(f"  Files Created:  rgb.txt, depth.txt, camera_intrinsics.json, config.yaml")
+        print("  Files Created:  rgb.txt, depth.txt, camera_intrinsics.json, config.yaml")
         print("=" * 65)
         print("\n>>> HOW TO RUN THIS RECORDED SEQUENCE IN SCENE GRAPH:")
-        print(f"  In WSL2:")
+        print("  In WSL2:")
         print(f"    bash run_demo.sh config_path:={seq_dir.as_posix()}/config.yaml")
         print("=" * 65)
 

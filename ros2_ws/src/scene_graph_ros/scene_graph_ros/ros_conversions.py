@@ -1,12 +1,14 @@
+# ruff: noqa: BLE001, S110
 """ROS 2 message conversion utilities for Dynamic 3D Scene Graph."""
 
 from typing import Optional, Union
+
 import numpy as np
 
 try:
-    from sensor_msgs.msg import Image, CameraInfo, Imu, PointCloud2, PointField
-    from geometry_msgs.msg import TransformStamped, Transform
     from builtin_interfaces.msg import Time
+    from geometry_msgs.msg import Transform, TransformStamped
+    from sensor_msgs.msg import CameraInfo, Image, Imu, PointCloud2, PointField
     HAS_ROS2_MSGS = True
 except ImportError:
     HAS_ROS2_MSGS = False
@@ -52,13 +54,12 @@ except ImportError:
             self.step = 0
             self.data = b""
 
-try:
-    from cv_bridge import CvBridge
-    _CV_BRIDGE = CvBridge()
-except ImportError:
-    _CV_BRIDGE = None
+# Pure-NumPy conversion is used to avoid cv_bridge C++ Boost ABI conflicts with NumPy 2.x
+_CV_BRIDGE = None
 
 from scene_graph.data.frame_packet import IMUSample
+from scene_graph.data.sensor_frame import SensorFrame, StreamStatus
+from scene_graph.data.timestamp import Timestamp, TimestampDomain
 from scene_graph.geometry.camera import CameraIntrinsics
 
 
@@ -212,6 +213,9 @@ def camera_info_to_intrinsics(msg: "CameraInfo") -> CameraIntrinsics:
     else:
         raise ValueError("CameraInfo contains invalid zero focal length in both K and P")
 
+    distortion = tuple(float(x) for x in msg.d) if msg.d else (0.0, 0.0, 0.0, 0.0, 0.0)
+    distortion_model = str(msg.distortion_model) if msg.distortion_model else "plumb_bob"
+
     return CameraIntrinsics(
         fx=fx,
         fy=fy,
@@ -219,6 +223,8 @@ def camera_info_to_intrinsics(msg: "CameraInfo") -> CameraIntrinsics:
         cy=cy,
         width=width,
         height=height,
+        distortion=distortion,
+        distortion_model=distortion_model,
     )
 
 
@@ -238,8 +244,8 @@ def intrinsics_to_camera_info(
     msg.header.frame_id = frame_id
     msg.width = intrinsics.width
     msg.height = intrinsics.height
-    msg.distortion_model = "plumb_bob"
-    msg.d = [0.0, 0.0, 0.0, 0.0, 0.0]
+    msg.distortion_model = intrinsics.distortion_model or "plumb_bob"
+    msg.d = list(intrinsics.distortion) if intrinsics.distortion else [0.0, 0.0, 0.0, 0.0, 0.0]
 
     msg.k = [
         intrinsics.fx, 0.0, intrinsics.cx,
@@ -341,7 +347,7 @@ def numpy_to_point_cloud2(
     points: np.ndarray,
     frame_id: str,
     timestamp: float,
-    colors: Optional[np.ndarray] = None,
+    colors: np.ndarray | None = None,
 ) -> "PointCloud2":
     msg = PointCloud2()
     sec = int(timestamp)
@@ -405,4 +411,71 @@ def numpy_to_point_cloud2(
         msg.data = points_f32.tobytes()
 
     return msg
+ 
+ 
+def ros_messages_to_sensor_frame(
+    rgb_msg: "Image",
+    depth_msg: Optional["Image"],
+    camera_info_msg: Optional["CameraInfo"],
+    session_id: str = "ros2_session",
+    sequence_number: int = 0,
+    depth_scale: float = 1000.0,
+    imu_samples: tuple[IMUSample, ...] = (),
+    domain: TimestampDomain = TimestampDomain.SYSTEM_TIME,
+    fallback_intrinsics: CameraIntrinsics | None = None,
+) -> SensorFrame:
+    """Constructs a canonical Stage 1 SensorFrame from raw ROS 2 sensor messages."""
+    rgb_stamp = rgb_msg.header.stamp
+    rgb_ts_sec = float(rgb_stamp.sec) + float(rgb_stamp.nanosec) * 1e-9
+
+    rgb_np = ros_image_to_numpy(rgb_msg)
+    depth_m = None
+    if depth_msg is not None:
+        depth_raw = ros_image_to_numpy(depth_msg)
+        if np.issubdtype(depth_raw.dtype, np.integer):
+            scale = depth_scale if depth_scale > 0.0 else 1000.0
+            depth_m = depth_raw.astype(np.float32) / scale
+        else:
+            depth_m = depth_raw.astype(np.float32)
+
+    intrinsics = None
+    if camera_info_msg is not None:
+        try:
+            intrinsics = camera_info_to_intrinsics(camera_info_msg)
+        except Exception:
+            pass
+
+    if intrinsics is None:
+        if fallback_intrinsics is not None:
+            intrinsics = fallback_intrinsics
+        else:
+            raise ValueError("Cannot assemble SensorFrame without valid CameraInfo or fallback intrinsics")
+
+    status = StreamStatus.OK if depth_m is not None else StreamStatus.DEPTH_DROPPED
+
+    # Convert IMU samples to SensorFrame IMUSample format if needed
+    mapped_imu = []
+    for s in imu_samples:
+        mapped_imu.append(
+            IMUSample(
+                timestamp=s.timestamp,
+                accel=s.accel,
+                gyro=s.gyro,
+            )
+        )
+
+    return SensorFrame(
+        session_id=session_id,
+        sequence_number=sequence_number,
+        timestamp=Timestamp(value=rgb_ts_sec, domain=domain, source="ros_rgb"),
+        rgb=rgb_np,
+        camera_intrinsics=intrinsics,
+        depth=depth_m,
+        depth_scale=1.0 / depth_scale if depth_scale > 0 else 0.001,
+        imu_samples=tuple(mapped_imu),
+        frame_id=rgb_msg.header.frame_id or "camera_color_optical_frame",
+        optical_frame_id=depth_msg.header.frame_id if depth_msg else "camera_depth_optical_frame",
+        status=status,
+    )
+
 
