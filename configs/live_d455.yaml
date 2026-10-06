@@ -13,7 +13,11 @@ sensor:
   camera_info_topic: /camera/camera/color/camera_info
 
 depth:
+  # Hardware-queried runtime scale is authoritative.
+  # The values below serve strictly as fallback default and validation bounds:
   scale: 1000.0
+  expected_scale_m_per_unit: 0.001
+  scale_tolerance: 0.0001
 
 estimation:
   backend: rtabmap

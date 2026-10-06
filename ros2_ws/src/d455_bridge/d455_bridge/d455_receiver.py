@@ -45,9 +45,14 @@ try:
     from builtin_interfaces.msg import Time as TimeMsg
     from rclpy.node import Node
     from sensor_msgs.msg import CameraInfo, Image, Imu
+    from std_msgs.msg import String as StringMsg
     HAS_RCLPY = True
 except ImportError:
     HAS_RCLPY = False
+
+    class StringMsg:
+        def __init__(self, data=""):
+            self.data = data
 
     class Header:
         def __init__(self, stamp=None, frame_id=""):
@@ -200,6 +205,12 @@ class D455Receiver(Node):
         self.depth_pub = self.create_publisher(Image, "/camera/camera/aligned_depth_to_color/image_raw", 2)
         self.camera_info_pub = self.create_publisher(CameraInfo, "/camera/camera/color/camera_info", 2)
         self.imu_pub = self.create_publisher(Imu, "/camera/camera/imu", 50)
+        self.metadata_pub = self.create_publisher(StringMsg, "/camera/camera/metadata", 10)
+
+        # Runtime Metadata Tracking
+        self.last_depth_scale: float | None = None
+        self.last_hw_skew_ms: float = 0.0
+        self.last_metadata: dict[str, Any] | None = None
 
         # Bounded Queue & Workers
         self.frame_queue: queue.Queue = queue.Queue(maxsize=self.queue_size)
@@ -456,11 +467,14 @@ class D455Receiver(Node):
             offset_ms = (self.clock_mapping.offset or 0.0) * 1000.0
             drift_ppm = (self.clock_mapping.last_drift or 0.0) * 1e6
 
+            scale_str = f"{self.last_depth_scale:.6f}m" if self.last_depth_scale is not None else "N/A"
+
             self.get_logger().info(
                 f"[D455 Bridge] RGB: {rgb_hz:.1f}Hz | Depth: {rgb_hz:.1f}Hz | IMU: {imu_hz:.1f}Hz | "
                 f"Queue: {q_depth}/{self.queue_size} | Drops: {self.dropped_frames} | "
                 f"Gaps: {self.sequence_gap_count} (lost={self.missing_frames_count}) | "
                 f"Dup: {self.duplicate_count} | OoO: {self.out_of_order_count} | SkewRej: {self.rejected_skew_count} | "
+                f"Scale: {scale_str} | Skew: {self.last_hw_skew_ms:.2f}ms | "
                 f"Clock: {clk_status} (offset={offset_ms:.1f}ms, drift={drift_ppm:.1f}ppm)"
             )
             self.last_log_time = now
@@ -508,7 +522,7 @@ class D455Receiver(Node):
         depth_ts = float(depth_info["timestamp"])
 
         # Live RGB-Depth Skew Check (Protected Operating Point: 50 ms)
-        dt_ms = header.get("rgb_depth_dt_ms", abs(color_ts - depth_ts) * 1000.0)
+        dt_ms = float(header.get("rgb_depth_dt_ms", abs(color_ts - depth_ts) * 1000.0))
         if dt_ms > self.max_skew_ms:
             self.rejected_skew_count += 1
             self.get_logger().warn(
@@ -525,6 +539,11 @@ class D455Receiver(Node):
         sec = int(mapped_ts_sec)
         nanosec = int((mapped_ts_sec - sec) * 1e9)
         mapped_stamp = TimeMsg(sec=sec, nanosec=nanosec)
+
+        # Runtime Depth Scale & Hardware Skew Tracking
+        depth_scale = float(depth_info.get("depth_scale", 0.001))
+        self.last_depth_scale = depth_scale
+        self.last_hw_skew_ms = dt_ms
 
         # Publish RGB Image
         rgb_msg = Image()
@@ -574,6 +593,31 @@ class D455Receiver(Node):
             0.0, 0.0, 1.0, 0.0,
         ]
         self.camera_info_pub.publish(camera_info)
+
+        # Publish Per-Frame Metadata Explicitly Associated with Frame Stamp and Sequence
+        seq_num = int(header.get("frame_id", header.get("sequence_number", 0)))
+        metadata_record = {
+            "stamp": {"sec": sec, "nanosec": nanosec},
+            "timestamp": mapped_ts_sec,
+            "sequence_number": seq_num,
+            "session_id": str(header.get("session_id", "default")),
+            "source_timestamp": color_ts,
+            "source_domain": str(color_info.get("timestamp_domain", "hardware_clock")),
+            "host_capture_timestamp": float(header.get("host_capture_time", header.get("host_wall_time", color_ts))),
+            "network_arrival_timestamp": float(packet.get("arrival_ros_sec", mapped_ts_sec)),
+            "mapped_ros_timestamp": mapped_ts_sec,
+            "rgb_depth_dt_ms": dt_ms,
+            "depth_scale": depth_scale,
+            "clock": {
+                "offset_sec": float(self.clock_mapping.offset or 0.0),
+                "drift": float(self.clock_mapping.last_drift or 0.0),
+                "healthy": bool(self.clock_mapping.is_healthy),
+            },
+        }
+        self.last_metadata = metadata_record
+        meta_msg = StringMsg()
+        meta_msg.data = json.dumps(metadata_record)
+        self.metadata_pub.publish(meta_msg)
 
         # Publish IMU samples with individual mapped timestamps
         self._publish_imu_only(packet)

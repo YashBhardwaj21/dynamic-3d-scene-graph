@@ -9,7 +9,7 @@ In robotic perception and dynamic scene graph generation, **low and bounded sens
 | Queue Location | Capacity | Type | Drop Policy | Max Age (@ 30 FPS) | Reason |
 | :--- | :--- | :--- | :--- | :--- | :--- |
 | **Sender Transport Queue** | 1 frame | `queue.Queue` | Drop oldest | $\approx 33\text{ ms}$ | Decouples USB capture from TCP send; network hiccups cannot block camera. |
-| **Receiver Socket Queue** | 4 frames | `queue.Queue` | Drop oldest | $\approx 133\text{ ms}$ | Buffers between network receive thread and ROS publication timer. |
+| **Receiver Socket Queue** | 2 frames | `queue.Queue` | Drop oldest | $\approx 66\text{ ms}$ | Buffers between network receive thread and ROS publication timer with minimal latency accumulation. |
 | **ROS Message Synchronizer** | 4 frames | `ApproximateTimeSynchronizer` | Drop oldest | $\approx 133\text{ ms}$ | Replaces previous 30-frame synchronizer that accumulated 1.0s of stale backlog. |
 | **Ingestion Worker Queue** | 4 frames | `queue.Queue` | Drop oldest (`drop_old_frames=True`) | $\approx 133\text{ ms}$ | Replaces previous 64-frame queue that accumulated >2.1s of backlog behind YOLO. |
 | **IMU History Buffer** | 500 samples | `collections.deque` | FIFO (automatic) | $\approx 2.5\text{ s}$ (@ 200 Hz) | Windowed extraction for frame intervals; $O(1)$ append without memory copies. |

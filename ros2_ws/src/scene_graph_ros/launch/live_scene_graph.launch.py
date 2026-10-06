@@ -248,7 +248,7 @@ def generate_launch_description():
         DeclareLaunchArgument(
             "depth_scale",
             default_value="1000.0",
-            description="Depth scale conversion factor (1000.0 for RealSense D455 raw mm depth)",
+            description="Fallback depth scale units-per-meter (used only if hardware runtime metadata is absent)",
         ),
         DeclareLaunchArgument(
             "queue_size",

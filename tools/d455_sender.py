@@ -1,6 +1,5 @@
 # ruff: noqa: BLE001, S110
-"""Production-Grade Intel RealSense D455 Sender for Windows -> WSL2 Transport.
-Implements Stage 1 Data Acquisition and Transport:
+"""
 - Queries authoritative hardware calibration, stream profile, and depth scale directly from RealSense SDK.
 - Decouples USB acquisition from TCP transmission using a bounded latest-frame buffer (capacity=1).
 - Captures 6-axis IMU (accel + gyro) with hardware timestamps.
@@ -96,21 +95,28 @@ def extract_frame_metadata(frame) -> dict[str, Any]:
         return metadata
 
     query_fields = [
-        ("frame_counter", rs.frame_metadata_value.frame_counter),
-        ("sensor_timestamp", rs.frame_metadata_value.sensor_timestamp),
-        ("time_of_arrival", rs.frame_metadata_value.time_of_arrival),
-        ("actual_fps", rs.frame_metadata_value.actual_fps),
-        ("actual_exposure", rs.frame_metadata_value.actual_exposure),
-        ("gain", rs.frame_metadata_value.gain),
-        ("backend_timestamp", rs.frame_metadata_value.backend_timestamp),
-    ]
+    ("frame_counter", "frame_counter"),
+    ("sensor_timestamp", "sensor_timestamp"),
+    ("time_of_arrival", "time_of_arrival"),
+    ("actual_fps", "actual_fps"),
+    ("actual_exposure", "actual_exposure"),
+    ("gain", "gain_level"),
+    ("backend_timestamp", "backend_timestamp"),
+]
 
-    for field_name, rs_val in query_fields:
+    for field_name, enum_name in query_fields:
         try:
+            rs_val = getattr(rs.frame_metadata_value, enum_name, None)
+
+            if rs_val is None:
+                metadata[field_name] = None
+                continue
+
             if frame.supports_frame_metadata(rs_val):
                 metadata[field_name] = int(frame.get_frame_metadata(rs_val))
             else:
                 metadata[field_name] = None
+
         except Exception:
             metadata[field_name] = None
 
@@ -165,6 +171,17 @@ def create_sender_pipeline(enable_imu: bool = True):
         "firmware_version": device.get_info(rs.camera_info.firmware_version) if device.supports(rs.camera_info.firmware_version) else "unknown",
         "usb_type": device.get_info(rs.camera_info.usb_type_descriptor) if device.supports(rs.camera_info.usb_type_descriptor) else "unknown",
     }
+    usb_type = str(dev_info["usb_type"]).strip()
+
+    if not usb_type.startswith("3."):
+        try:
+            pipeline.stop()
+        except Exception:
+            pass
+
+        raise RuntimeError(
+            f"Stage 1 requires USB 3.x, but the D455 negotiated USB {usb_type or 'unknown'}."
+        )
 
     align = rs.align(rs.stream.color)
     return pipeline, align, depth_scale, intrinsics_dict, imu_enabled, dev_info
@@ -221,7 +238,7 @@ class D455SenderService:
                     print(f"[D455 Sender] Device: {dev_info['name']} (FW: {dev_info['firmware_version']}, USB: {dev_info['usb_type']})")
                     print(f"[D455 Sender] Runtime depth scale: {depth_scale:.6f} m/unit | Intrinsics: fx={intrinsics['fx']:.1f}, fy={intrinsics['fy']:.1f}")
                 except Exception as ex:
-                    print(f"[D455 Sender] Waiting for D455 USB connection: {ex}. Retrying in 2.0s...")
+                    print(f"[D455 Sender] Pipeline initialization failed: {ex}. Retrying in 2.0s...")
                     time.sleep(2.0)
                     continue
 
@@ -232,9 +249,17 @@ class D455SenderService:
                 self.wait_tracker.add(wait_ms)
 
                 t0_align = time.perf_counter()
+
+                raw_color_frame = frames.get_color_frame()
+                raw_depth_frame = frames.get_depth_frame()
+
+                if not raw_color_frame or not raw_depth_frame:
+                    continue
+
                 aligned_frames = align.process(frames)
                 color_frame = aligned_frames.get_color_frame()
                 depth_frame = aligned_frames.get_depth_frame()
+
                 align_ms = (time.perf_counter() - t0_align) * 1000.0
                 self.align_tracker.add(align_ms)
 
@@ -244,20 +269,37 @@ class D455SenderService:
                 color_data = np.asanyarray(color_frame.get_data())
                 depth_data = np.asanyarray(depth_frame.get_data())
 
-                color_ts_raw = color_frame.get_timestamp()
-                depth_ts_raw = depth_frame.get_timestamp()
+                color_ts_raw = raw_color_frame.get_timestamp()
+                depth_ts_raw = raw_depth_frame.get_timestamp()
+
                 # RealSense get_timestamp() returns milliseconds -> convert to float seconds
                 color_ts_sec = color_ts_raw * 1e-3
                 depth_ts_sec = depth_ts_raw * 1e-3
+
+                color_domain = (
+                    str(raw_color_frame.get_frame_timestamp_domain())
+                    .replace("timestamp_domain.", "")
+                    .lower()
+                )
+                depth_domain = (
+                    str(raw_depth_frame.get_frame_timestamp_domain())
+                    .replace("timestamp_domain.", "")
+                    .lower()
+                )
+
+                if color_domain != depth_domain:
+                    print(
+                        f"[D455 Sender] Rejecting frame: RGB timestamp domain "
+                        f"'{color_domain}' != depth domain '{depth_domain}'."
+                    )
+                    continue
+
                 skew_ms = abs(color_ts_raw - depth_ts_raw)
                 self.skew_tracker.add(skew_ms)
 
-                color_domain = str(color_frame.get_frame_timestamp_domain()).replace("timestamp_domain.", "").lower()
-                depth_domain = str(depth_frame.get_frame_timestamp_domain()).replace("timestamp_domain.", "").lower()
-
                 # Extract optional hardware metadata
-                color_meta = extract_frame_metadata(color_frame)
-                depth_meta = extract_frame_metadata(depth_frame)
+                color_meta = extract_frame_metadata(raw_color_frame)
+                depth_meta = extract_frame_metadata(raw_depth_frame)
 
                 # Collect high-rate IMU if present
                 imu_samples = []
@@ -282,6 +324,7 @@ class D455SenderService:
                     "frame_id": self.frames_captured,
                     "host_monotonic_time": time.perf_counter(),
                     "host_wall_time": time.time(),
+                    "host_capture_time": time.time(),
                     "color": {
                         "timestamp": color_ts_sec,
                         "timestamp_raw_ms": color_ts_raw,

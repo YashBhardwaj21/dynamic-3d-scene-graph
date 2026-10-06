@@ -51,9 +51,11 @@ class CameraConfig(BaseModel):
 
 
 class DepthConfig(BaseModel):
-    model_config = ConfigDict(extra="forbid")
+    model_config = ConfigDict(extra="allow")
 
-    scale: float = Field(..., gt=0)
+    scale: float = Field(1000.0, gt=0)
+    expected_scale_m_per_unit: float = Field(0.001, gt=0)
+    scale_tolerance: float = Field(0.0001, ge=0)
 
 
 class SensorConfig(BaseModel):

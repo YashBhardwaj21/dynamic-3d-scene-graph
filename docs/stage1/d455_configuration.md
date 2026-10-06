@@ -13,7 +13,7 @@ The following operating points are **protected and experimentally tuned**:
 | **Depth Scale** | $\approx 0.001\text{ m/unit}$ | HARDWARE-DERIVED | Queried at runtime via `depth_sensor.get_depth_scale()`. |
 | **Live Sync Tolerance** | 0.05 s (50 ms) | EXPERIMENTALLY-VALIDATED | D455 active stereo and rolling shutter capture exhibits up to 33 ms skew under load. |
 | **TUM Sync Tolerance** | 0.02 s (20 ms) | DATASET CONSTANT | TUM benchmark dataset frames are paired within 20 ms. |
-| **SLAM Pose Max Age** | 2.0 s | SAFETY LIMIT | Causal SLAM keyframes arrive asynchronously; prevents tracking stall while rejecting stale poses. |
+| **SLAM Pose Max Age** | 0.08 s (80 ms) | SAFETY LIMIT | Live freshness limit (<80ms accepted, >80ms rejected to prevent stale tracking backlog). |
 | **Future TF Tolerance** | $1\times 10^{-4}\text{ s}$ | SAFETY LIMIT | Strictly rejects non-causal TF lookups that look ahead into the future. |
 
 ## 2. Dynamic Hardware Queries vs Hardcoded Constants

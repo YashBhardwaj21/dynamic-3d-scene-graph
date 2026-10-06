@@ -4,6 +4,7 @@ import numpy as np
 import pytest
 
 from ros2_ws.src.scene_graph_ros.scene_graph_ros.ros_conversions import (
+    HAS_ROS2_MSGS,
     camera_info_to_intrinsics,
     intrinsics_to_camera_info,
 )
@@ -87,6 +88,8 @@ def test_calibration_resolution_validation():
 
 def test_calibration_end_to_end_ros_roundtrip():
     """Verify that CameraIntrinsics <-> ROS CameraInfo preserves K, D, P, R, and distortion model."""
+    if not HAS_ROS2_MSGS:
+        pytest.skip("sensor_msgs not available in environment")
     intr = CameraIntrinsics(
         fx=385.5,
         fy=386.2,

@@ -7,7 +7,7 @@ import time
 
 import numpy as np
 
-from ros2_ws.src.d455_bridge.d455_bridge.d455_receiver import D455Receiver
+from ros2_ws.src.d455_bridge.d455_bridge.d455_receiver import HAS_RCLPY, D455Receiver
 
 
 def _send_packet(client: socket.socket, header: dict, rgb_data: bytes, depth_data: bytes):
@@ -87,71 +87,104 @@ def test_sender_receiver_socket_loopback_and_ros_publication():
         assert not receiver.frame_queue.empty()
         assert receiver.total_frames_received == 1
 
-        # Create dedicated subscriber node to verify actual ROS topic publication
-        import rclpy
-        import pytest
-        from sensor_msgs.msg import CameraInfo, Image, Imu
+        if not HAS_RCLPY:
+            # Standalone unit test environment: verify receiver dispatch and topic publications on mock publishers
+            receiver._dispatch_queued_frames()
+            assert receiver.total_frames_published == 1
+            assert len(receiver.rgb_pub.published) == 1
+            assert len(receiver.depth_pub.published) == 1
+            assert len(receiver.camera_info_pub.published) == 1
+            assert len(receiver.metadata_pub.published) == 1
 
-        sub_node = rclpy.create_node("test_topic_subscriber")
-        received_rgb = []
-        received_depth = []
-        received_info = []
-        received_imu = []
+            meta_raw = receiver.metadata_pub.published[-1]
+            meta = json.loads(meta_raw.data)
+            assert meta["session_id"] == "test_loopback"
+            assert meta["sequence_number"] == 1
+            assert meta["depth_scale"] == pytest.approx(0.001)
+            assert meta["rgb_depth_dt_ms"] == pytest.approx(5.0)
+            assert meta["source_timestamp"] == pytest.approx(10.0)
+            assert "network_arrival_timestamp" in meta
+            assert "mapped_ros_timestamp" in meta
+            assert "host_capture_timestamp" in meta
+        else:
+            # Create dedicated subscriber node to verify actual ROS topic publication
+            import rclpy
+            from sensor_msgs.msg import CameraInfo, Image, Imu
+            from std_msgs.msg import String as StringMsg
 
-        sub_node.create_subscription(Image, "/camera/camera/color/image_raw", lambda m: received_rgb.append(m), 10)
-        sub_node.create_subscription(Image, "/camera/camera/aligned_depth_to_color/image_raw", lambda m: received_depth.append(m), 10)
-        sub_node.create_subscription(CameraInfo, "/camera/camera/color/camera_info", lambda m: received_info.append(m), 10)
-        sub_node.create_subscription(Imu, "/camera/camera/imu", lambda m: received_imu.append(m), 10)
+            sub_node = rclpy.create_node("test_topic_subscriber")
+            received_rgb = []
+            received_depth = []
+            received_info = []
+            received_imu = []
+            received_meta = []
 
-        executor = rclpy.executors.SingleThreadedExecutor()
-        executor.add_node(receiver)
-        executor.add_node(sub_node)
+            sub_node.create_subscription(Image, "/camera/camera/color/image_raw", lambda m: received_rgb.append(m), 10)
+            sub_node.create_subscription(Image, "/camera/camera/aligned_depth_to_color/image_raw", lambda m: received_depth.append(m), 10)
+            sub_node.create_subscription(CameraInfo, "/camera/camera/color/camera_info", lambda m: received_info.append(m), 10)
+            sub_node.create_subscription(Imu, "/camera/camera/imu", lambda m: received_imu.append(m), 10)
+            sub_node.create_subscription(StringMsg, "/camera/camera/metadata", lambda m: received_meta.append(m), 10)
 
-        # Wait for DDS subscription discovery
-        for _ in range(50):
-            executor.spin_once(timeout_sec=0.02)
-            if receiver.rgb_pub.get_subscription_count() > 0:
-                break
+            executor = rclpy.executors.SingleThreadedExecutor()
+            executor.add_node(receiver)
+            executor.add_node(sub_node)
 
-        # Dispatch frame to ROS publishers
-        receiver._dispatch_queued_frames()
+            # Wait for DDS subscription discovery
+            for _ in range(50):
+                executor.spin_once(timeout_sec=0.02)
+                if receiver.rgb_pub.get_subscription_count() > 0:
+                    break
 
-        assert receiver.total_frames_published == 1
+            # Dispatch frame to ROS publishers
+            receiver._dispatch_queued_frames()
 
-        # Spin executor to process delivered ROS messages
-        for _ in range(20):
-            executor.spin_once(timeout_sec=0.05)
-            if received_rgb and received_depth and received_info and received_imu:
-                break
+            assert receiver.total_frames_published == 1
 
-        # Verify actual ROS topic publications
-        assert len(received_rgb) >= 1
-        rgb_msg = received_rgb[-1]
-        assert rgb_msg.header.frame_id == "camera_color_optical_frame"
-        assert rgb_msg.width == 640
-        assert rgb_msg.height == 480
-        assert rgb_msg.encoding == "bgr8"
+            # Spin executor to process delivered ROS messages
+            for _ in range(20):
+                executor.spin_once(timeout_sec=0.05)
+                if received_rgb and received_depth and received_info and received_imu and received_meta:
+                    break
 
-        assert len(received_depth) >= 1
-        depth_msg = received_depth[-1]
-        assert depth_msg.header.frame_id == "camera_color_optical_frame"
-        assert depth_msg.width == 640
-        assert depth_msg.height == 480
-        assert depth_msg.encoding == "16UC1"
+            # Verify actual ROS topic publications
+            assert len(received_rgb) >= 1
+            rgb_msg = received_rgb[-1]
+            assert rgb_msg.header.frame_id == "camera_color_optical_frame"
+            assert rgb_msg.width == 640
+            assert rgb_msg.height == 480
+            assert rgb_msg.encoding == "bgr8"
 
-        assert len(received_info) >= 1
-        info_msg = received_info[-1]
-        assert info_msg.width == 640
-        assert info_msg.height == 480
-        assert info_msg.k[0] == pytest.approx(385.0)
-        assert info_msg.distortion_model == "plumb_bob"
-        assert list(info_msg.d) == pytest.approx([0.01, -0.02, 0.001, -0.001, 0.0])
+            assert len(received_depth) >= 1
+            depth_msg = received_depth[-1]
+            assert depth_msg.header.frame_id == "camera_color_optical_frame"
+            assert depth_msg.width == 640
+            assert depth_msg.height == 480
+            assert depth_msg.encoding == "16UC1"
 
-        assert len(received_imu) >= 1
-        imu_msg = received_imu[-1]
-        assert imu_msg.header.frame_id == "camera_imu_optical_frame"
-        assert imu_msg.linear_acceleration.y == pytest.approx(9.81)
-        assert imu_msg.angular_velocity.z == pytest.approx(0.03)
+            assert len(received_info) >= 1
+            info_msg = received_info[-1]
+            assert info_msg.width == 640
+            assert info_msg.height == 480
+            assert info_msg.k[0] == pytest.approx(385.0)
+            assert info_msg.distortion_model == "plumb_bob"
+            assert list(info_msg.d) == pytest.approx([0.01, -0.02, 0.001, -0.001, 0.0])
+
+            assert len(received_imu) >= 1
+            imu_msg = received_imu[-1]
+            assert imu_msg.header.frame_id == "camera_imu_optical_frame"
+            assert imu_msg.linear_acceleration.y == pytest.approx(9.81)
+            assert imu_msg.angular_velocity.z == pytest.approx(0.03)
+
+            assert len(received_meta) >= 1
+            meta_record = json.loads(received_meta[-1].data)
+            assert meta_record["session_id"] == "test_loopback"
+            assert meta_record["sequence_number"] == 1
+            assert meta_record["depth_scale"] == pytest.approx(0.001)
+            assert meta_record["rgb_depth_dt_ms"] == pytest.approx(5.0)
+            assert meta_record["source_timestamp"] == pytest.approx(10.0)
+            assert "network_arrival_timestamp" in meta_record
+            assert "mapped_ros_timestamp" in meta_record
+            assert "host_capture_timestamp" in meta_record
 
         client.close()
 

@@ -1,7 +1,7 @@
 # ruff: noqa: BLE001, S110
 """ROS 2 message conversion utilities for Dynamic 3D Scene Graph."""
 
-from typing import Optional, Union
+from typing import Any, Optional, Union
 
 import numpy as np
 
@@ -378,18 +378,32 @@ def ros_messages_to_sensor_frame(
     imu_samples: tuple[IMUSample, ...] = (),
     domain: TimestampDomain = TimestampDomain.SYSTEM_TIME,
     fallback_intrinsics: CameraIntrinsics | None = None,
+    host_capture_timestamp: Timestamp | float | None = None,
+    network_arrival_timestamp: Timestamp | float | None = None,
+    mapped_ros_timestamp: float | None = None,
+    source_timestamp: float | None = None,
+    source_domain: TimestampDomain | str | None = None,
+    metadata: dict[str, Any] | None = None,
 ) -> SensorFrame:
     """Constructs a canonical Stage 1 SensorFrame from raw ROS 2 sensor messages."""
     rgb_stamp = rgb_msg.header.stamp
     rgb_ts_sec = float(rgb_stamp.sec) + float(rgb_stamp.nanosec) * 1e-9
+
+    # Determine runtime meters_per_unit scale
+    if depth_scale > 0:
+        if depth_scale < 0.1:
+            meters_per_unit = float(depth_scale)
+        else:
+            meters_per_unit = 1.0 / float(depth_scale)
+    else:
+        meters_per_unit = 0.001
 
     rgb_np = ros_image_to_numpy(rgb_msg)
     depth_m = None
     if depth_msg is not None:
         depth_raw = ros_image_to_numpy(depth_msg)
         if np.issubdtype(depth_raw.dtype, np.integer):
-            scale = depth_scale if depth_scale > 0.0 else 1000.0
-            depth_m = depth_raw.astype(np.float32) / scale
+            depth_m = depth_raw.astype(np.float32) * meters_per_unit
         else:
             depth_m = depth_raw.astype(np.float32)
 
@@ -419,6 +433,29 @@ def ros_messages_to_sensor_frame(
             )
         )
 
+    # Process provenance timestamps
+    host_cap_ts = None
+    if host_capture_timestamp is not None:
+        if isinstance(host_capture_timestamp, Timestamp):
+            host_cap_ts = host_capture_timestamp
+        else:
+            host_cap_ts = Timestamp(value=float(host_capture_timestamp), domain=TimestampDomain.SYSTEM_TIME, source="d455_sender")
+
+    net_arr_ts = None
+    if network_arrival_timestamp is not None:
+        if isinstance(network_arrival_timestamp, Timestamp):
+            net_arr_ts = network_arrival_timestamp
+        else:
+            net_arr_ts = Timestamp(value=float(network_arrival_timestamp), domain=TimestampDomain.SYSTEM_TIME, source="d455_receiver")
+
+    mapped_ros_ts = mapped_ros_timestamp if mapped_ros_timestamp is not None else rgb_ts_sec
+
+    frame_metadata = dict(metadata or {})
+    if source_timestamp is not None:
+        frame_metadata["source_timestamp"] = float(source_timestamp)
+    if source_domain is not None:
+        frame_metadata["source_domain"] = str(source_domain)
+
     return SensorFrame(
         session_id=session_id,
         sequence_number=sequence_number,
@@ -426,11 +463,15 @@ def ros_messages_to_sensor_frame(
         rgb=rgb_np,
         camera_intrinsics=intrinsics,
         depth=depth_m,
-        depth_scale=1.0 / depth_scale if depth_scale > 0 else 0.001,
+        depth_scale=meters_per_unit,
         imu_samples=tuple(mapped_imu),
+        host_capture_timestamp=host_cap_ts,
+        network_arrival_timestamp=net_arr_ts,
+        mapped_ros_timestamp=mapped_ros_ts,
         frame_id=rgb_msg.header.frame_id or "camera_color_optical_frame",
         optical_frame_id=depth_msg.header.frame_id if depth_msg else "camera_depth_optical_frame",
         status=status,
+        metadata=frame_metadata,
     )
 
 

@@ -51,5 +51,4 @@ exec ros2 launch scene_graph_ros live_scene_graph.launch.py \
     use_viewer:=true \
     config_path:=configs/live_d455.yaml \
     localization_mode:=slam \
-    depth_scale:=1000.0 \
     "$@"

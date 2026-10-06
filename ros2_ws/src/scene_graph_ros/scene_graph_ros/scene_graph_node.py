@@ -71,6 +71,14 @@ from rclpy.node import Node
 from rclpy.time import Time
 from sensor_msgs.msg import CameraInfo, Image, Imu
 from tf2_ros import TransformException
+import json
+
+try:
+    from std_msgs.msg import String as StringMsg
+except ImportError:
+    class StringMsg:  # type: ignore
+        def __init__(self, data=""):
+            self.data = data
 
 try:
     from rtabmap_msgs.msg import Info as RtabmapInfo, OdomInfo as RtabmapOdomInfo
@@ -167,6 +175,7 @@ class SceneGraphROSNode(Node):
         self.declare_parameter("rtabmap_odom_topic", "/rtabmap/odom")
         self.declare_parameter("rtabmap_odom_info_topic", "/rtabmap/odom_info")
         self.declare_parameter("rtabmap_info_topic", "/rtabmap/info")
+        self.declare_parameter("metadata_topic", "/camera/camera/metadata")
 
         self.rgb_topic = self.get_parameter("rgb_topic").get_parameter_value().string_value
         self.depth_topic = self.get_parameter("depth_topic").get_parameter_value().string_value
@@ -215,6 +224,7 @@ class SceneGraphROSNode(Node):
         self.rtabmap_odom_topic = self.get_parameter("rtabmap_odom_topic").get_parameter_value().string_value
         self.rtabmap_odom_info_topic = self.get_parameter("rtabmap_odom_info_topic").get_parameter_value().string_value
         self.rtabmap_info_topic = self.get_parameter("rtabmap_info_topic").get_parameter_value().string_value
+        self.metadata_topic = self.get_parameter("metadata_topic").get_parameter_value().string_value
 
 
 
@@ -384,6 +394,14 @@ class SceneGraphROSNode(Node):
         )
         self.sync.registerCallback(self.rgb_depth_callback)
 
+        self.metadata_buffer: deque[dict[str, Any]] = deque(maxlen=50)
+        self.metadata_sub = self.create_subscription(
+            StringMsg,
+            self.metadata_topic,
+            self._metadata_callback,
+            10,
+        )
+
 
         self.frame_counter = 0
         self.processed_frames = 0
@@ -427,6 +445,14 @@ class SceneGraphROSNode(Node):
         """Buffer incoming IMU samples into bounded ring buffer (500 samples, ~2.5s @ 200 Hz)."""
         sample = imu_msg_to_sample(msg)
         self.imu_buffer.append(sample)
+
+    def _metadata_callback(self, msg: Any):
+        """Buffer incoming per-frame metadata explicitly associated with frame stamps."""
+        try:
+            data = json.loads(msg.data)
+            self.metadata_buffer.append(data)
+        except Exception as e:
+            self.get_logger().warn(f"Failed to parse metadata message: {e}", throttle_duration_sec=2.0)
 
     def _odom_info_callback(self, msg: Any):
         """Forward RTAB-Map /rtabmap/odom_info message to pose estimator."""
@@ -548,11 +574,57 @@ class SceneGraphROSNode(Node):
             self.get_logger().error(f"Image conversion error: {e}")
             return
 
+        # Match per-frame metadata explicitly associated with this frame
+        matched_meta = None
+        for rec in reversed(self.metadata_buffer):
+            rec_stamp = rec.get("stamp", {})
+            if rec_stamp.get("sec") == rgb_stamp.sec and rec_stamp.get("nanosec") == rgb_stamp.nanosec:
+                matched_meta = rec
+                break
+            if "timestamp" in rec and abs(rec["timestamp"] - rgb_timestamp) < 1e-4:
+                matched_meta = rec
+                break
+
+        sim_time_param = self.get_parameter("use_sim_time").value
+        is_sim_time = sim_time_param.strip().lower() in ("true", "1", "yes") if isinstance(sim_time_param, str) else bool(sim_time_param)
+        domain = TimestampDomain.SIMULATED_TIME if is_sim_time else TimestampDomain.SYSTEM_TIME
+
+        if matched_meta is not None:
+            session_id = str(matched_meta.get("session_id", "d455_live_session"))
+            frame_seq = int(matched_meta.get("sequence_number", self.frame_counter))
+            runtime_depth_scale = matched_meta.get("depth_scale", None)
+            source_ts = float(matched_meta.get("source_timestamp", rgb_timestamp))
+            source_dom_str = str(matched_meta.get("source_domain", "hardware_clock"))
+            host_cap_ts = matched_meta.get("host_capture_timestamp", None)
+            net_arr_ts = matched_meta.get("network_arrival_timestamp", None)
+            mapped_ts = float(matched_meta.get("mapped_ros_timestamp", rgb_timestamp))
+            hw_skew_ms = matched_meta.get("rgb_depth_dt_ms", None)
+        else:
+            session_id = "ros2_session"
+            frame_seq = self.frame_counter
+            runtime_depth_scale = None
+            source_ts = rgb_timestamp
+            source_dom_str = "simulated_time" if is_sim_time else "system_time"
+            host_cap_ts = None
+            net_arr_ts = None
+            mapped_ts = rgb_timestamp
+            hw_skew_ms = None
+
+        # Authoritative depth scale: runtime scale takes precedence when available
+        if runtime_depth_scale is not None and float(runtime_depth_scale) > 0:
+            raw_scale = float(runtime_depth_scale)
+            if raw_scale < 0.1:
+                meters_per_unit = raw_scale
+            else:
+                meters_per_unit = 1.0 / raw_scale
+        else:
+            scale_param = self.depth_scale if self.depth_scale > 0 else 1000.0
+            meters_per_unit = 1.0 / scale_param
+
         depth_m = None
         if depth_raw is not None:
             if np.issubdtype(depth_raw.dtype, np.integer):
-                scale = self.depth_scale if self.depth_scale > 0 else 1000.0
-                depth_m = depth_raw.astype(np.float32) / scale
+                depth_m = depth_raw.astype(np.float32) * meters_per_unit
             else:
                 depth_m = depth_raw.astype(np.float32)
 
@@ -566,22 +638,38 @@ class SceneGraphROSNode(Node):
 
         # Stage 1: Canonical SensorFrame creation (acquisition-only)
         sensor_status = StreamStatus.OK if depth_m is not None else StreamStatus.DEPTH_DROPPED
-        sim_time_param = self.get_parameter("use_sim_time").value
-        is_sim_time = sim_time_param.strip().lower() in ("true", "1", "yes") if isinstance(sim_time_param, str) else bool(sim_time_param)
-        domain = TimestampDomain.SIMULATED_TIME if is_sim_time else TimestampDomain.SYSTEM_TIME
+
+        host_cap_stamp = (
+            Timestamp(value=float(host_cap_ts), domain=TimestampDomain.SYSTEM_TIME, source="d455_sender")
+            if host_cap_ts is not None else None
+        )
+        net_arr_stamp = (
+            Timestamp(value=float(net_arr_ts), domain=TimestampDomain.SYSTEM_TIME, source="d455_receiver")
+            if net_arr_ts is not None else None
+        )
+
+        frame_meta = dict(matched_meta) if matched_meta is not None else {}
+        frame_meta["source_timestamp"] = source_ts
+        frame_meta["source_domain"] = source_dom_str
+        if hw_skew_ms is not None:
+            frame_meta["rgb_depth_dt_ms"] = float(hw_skew_ms)
 
         sensor_frame = SensorFrame(
-            session_id="ros2_live_session",
-            sequence_number=self.frame_counter,
+            session_id=session_id,
+            sequence_number=frame_seq,
             timestamp=Timestamp(value=rgb_timestamp, domain=domain, source="ros_rgb"),
             rgb=rgb_np,
             camera_intrinsics=intrinsics,
             depth=depth_m,
-            depth_scale=1.0 / self.depth_scale if self.depth_scale > 0 else 0.001,
+            depth_scale=meters_per_unit,
             imu_samples=windowed_imu,
+            host_capture_timestamp=host_cap_stamp,
+            network_arrival_timestamp=net_arr_stamp,
+            mapped_ros_timestamp=mapped_ts,
             frame_id=pending.rgb_msg.header.frame_id or self.sensor_frame,
             optical_frame_id=pending.depth_msg.header.frame_id if pending.depth_msg else self.sensor_frame,
             status=sensor_status,
+            metadata=frame_meta,
         )
 
         # Stage 3: Backend-independent pose estimation
