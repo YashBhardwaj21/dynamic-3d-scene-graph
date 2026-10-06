@@ -37,76 +37,7 @@ def _ensure_paths():
 
 _ensure_paths()
 
-try:
-    from scene_graph.data.timestamp import ClockMapping, TimestampDomain
-except ImportError:
-    # Minimal fallback ClockMapping if core scene_graph is not in python path
-    class TimestampDomain:
-        HARDWARE_CLOCK = "hardware_clock"
-        SYSTEM_TIME = "system_time"
-        GLOBAL_TIME = "global_time"
-        SIMULATED_TIME = "simulated_time"
-        UNKNOWN = "unknown"
-
-    class ClockMapping:
-        def __init__(self, smoothing_alpha=0.05, max_drift_jump_sec=0.5, max_stale_duration_sec=2.0):
-            self.smoothing_alpha = smoothing_alpha
-            self.max_drift_jump_sec = max_drift_jump_sec
-            self.max_stale_duration_sec = max_stale_duration_sec
-            self._offset = None
-            self._last_update_monotonic = 0.0
-            self._sample_count = 0
-            self._is_healthy = False
-            self._drift_rate = 0.0
-
-        @property
-        def is_healthy(self):
-            if not self._is_healthy or self._offset is None:
-                return False
-            return (time.monotonic() - self._last_update_monotonic) <= self.max_stale_duration_sec
-
-        @property
-        def offset(self):
-            return self._offset
-
-        @property
-        def last_drift(self):
-            return self._drift_rate
-
-        def update(self, source_time, target_time):
-            now_mono = time.monotonic()
-            raw_offset = target_time - source_time
-            if self._offset is None:
-                self._offset = raw_offset
-                self._last_update_monotonic = now_mono
-                self._sample_count = 1
-                self._is_healthy = True
-                return True
-            if abs(raw_offset - self._offset) > self.max_drift_jump_sec:
-                self._offset = raw_offset
-                self._last_update_monotonic = now_mono
-                self._sample_count = 1
-                self._is_healthy = False
-                return False
-            dt = max(1e-4, now_mono - self._last_update_monotonic)
-            self._drift_rate = (raw_offset - self._offset) / dt
-            self._offset = (1.0 - self.smoothing_alpha) * self._offset + self.smoothing_alpha * raw_offset
-            self._last_update_monotonic = now_mono
-            self._sample_count += 1
-            self._is_healthy = True
-            return True
-
-        def map_timestamp(self, source_time):
-            if self._offset is None:
-                return source_time
-            return source_time + self._offset
-
-        def reset(self):
-            self._offset = None
-            self._last_update_monotonic = 0.0
-            self._sample_count = 0
-            self._is_healthy = False
-            self._drift_rate = 0.0
+from scene_graph.data.timestamp import ClockMapping, TimestampDomain
 
 
 try:
@@ -225,7 +156,7 @@ except ImportError:
 # Protected Operating Points
 HOST = "0.0.0.0"
 PORT = 5000
-MAX_QUEUE_SIZE = 4
+MAX_QUEUE_SIZE = 2  # Low-latency latest-frame policy: max 2 frames in flight
 MAX_RGB_DEPTH_SKEW_MS = 50.0  # Protected live sync tolerance (0.05 s)
 MAX_HEADER_SIZE_BYTES = 1024 * 1024       # 1 MB maximum JSON header
 MAX_STREAM_PAYLOAD_BYTES = 10 * 1024 * 1024 # 10 MB maximum payload per modality
@@ -268,14 +199,14 @@ class D455Receiver(Node):
         self.rgb_pub = self.create_publisher(Image, "/camera/camera/color/image_raw", 2)
         self.depth_pub = self.create_publisher(Image, "/camera/camera/aligned_depth_to_color/image_raw", 2)
         self.camera_info_pub = self.create_publisher(CameraInfo, "/camera/camera/color/camera_info", 2)
-        self.imu_pub = self.create_publisher(Imu, "/camera/camera/imu", 20)
+        self.imu_pub = self.create_publisher(Imu, "/camera/camera/imu", 50)
 
         # Bounded Queue & Workers
         self.frame_queue: queue.Queue = queue.Queue(maxsize=self.queue_size)
         self.stop_event = threading.Event()
         self.active_conn: socket.socket | None = None
 
-        # Clock Mapping & State
+        # Clock Mapping & State (Learns from arrival time at socket boundary, NOT queue dispatch time)
         self.clock_mapping = ClockMapping(smoothing_alpha=0.05, max_drift_jump_sec=0.5, max_stale_duration_sec=2.0)
         self.current_session_id: str | None = None
         self.last_sequence_number: int = -1
@@ -288,6 +219,8 @@ class D455Receiver(Node):
         self.rejected_skew_count = 0
         self.out_of_order_count = 0
         self.duplicate_count = 0
+        self.sequence_gap_count = 0
+        self.missing_frames_count = 0
         self.invalid_packet_count = 0
         self.last_log_time = time.monotonic()
         self.fps_frame_count = 0
@@ -331,9 +264,10 @@ class D455Receiver(Node):
                     try:
                         raw_len = recv_exact(conn, 4)
                         header_size = struct.unpack("!I", raw_len)[0]
+                        # Framing validation: invalid length destroys stream alignment -> disconnect
                         if not 1 <= header_size <= MAX_HEADER_SIZE_BYTES:
                             self.invalid_packet_count += 1
-                            self.get_logger().error(f"Malformed header length: {header_size} bytes. Disconnecting.")
+                            self.get_logger().error(f"Malformed header length: {header_size} bytes. Disconnecting to realign.")
                             break
 
                         header_bytes = recv_exact(conn, header_size)
@@ -341,8 +275,16 @@ class D455Receiver(Node):
                             header = json.loads(header_bytes.decode("utf-8"))
                         except Exception as json_err:
                             self.invalid_packet_count += 1
-                            self.get_logger().error(f"Malformed JSON in transport header: {json_err}. Disconnecting.")
+                            self.get_logger().error(f"Malformed JSON in transport header: {json_err}. Disconnecting to realign.")
                             break
+
+                        # Exact arrival timestamp in ROS time at the network boundary (zero queue latency)
+                        ros_clock = self.get_clock().now()
+                        if hasattr(ros_clock, "nanoseconds"):
+                            arrival_ros_sec = float(ros_clock.nanoseconds) * 1e-9
+                        else:
+                            t_msg = ros_clock.to_msg()
+                            arrival_ros_sec = float(t_msg.sec) + float(t_msg.nanosec) * 1e-9
 
                         recv_time_wall = time.time()
                         recv_time_mono = time.monotonic()
@@ -353,39 +295,88 @@ class D455Receiver(Node):
                             self.get_logger().warn("Packet missing color or depth metadata. Skipping.")
                             continue
 
-                        rgb_size = header["color"]["payload_size"]
-                        depth_size = header["depth"]["payload_size"]
+                        rgb_size = header["color"].get("payload_size")
+                        depth_size = header["depth"].get("payload_size")
 
-                        # Check payload bounds before reading
-                        if not (100 <= rgb_size <= MAX_STREAM_PAYLOAD_BYTES and 100 <= depth_size <= MAX_STREAM_PAYLOAD_BYTES):
+                        # Payload size bounds validation: corrupt sizes destroy stream framing -> disconnect
+                        if not (isinstance(rgb_size, int) and isinstance(depth_size, int) and
+                                100 <= rgb_size <= MAX_STREAM_PAYLOAD_BYTES and 100 <= depth_size <= MAX_STREAM_PAYLOAD_BYTES):
                             self.invalid_packet_count += 1
-                            self.get_logger().error(f"Invalid payload bounds: rgb={rgb_size}B, depth={depth_size}B. Disconnecting.")
+                            self.get_logger().error(f"Invalid payload bounds: rgb={rgb_size}B, depth={depth_size}B. Disconnecting to realign.")
                             break
 
-                        # Validate dimensional consistency
-                        c_w = header["color"]["width"]
-                        c_h = header["color"]["height"]
-                        c_ch = header["color"].get("channels", 3)
-                        c_bpc = header["color"].get("bytes_per_channel", 1)
-                        if rgb_size != (c_w * c_h * c_ch * c_bpc):
-                            self.invalid_packet_count += 1
-                            self.get_logger().error(f"Inconsistent RGB payload size {rgb_size} vs expected {c_w*c_h*c_ch*c_bpc}. Discarding.")
-                            break
-
-                        d_w = header["depth"]["width"]
-                        d_h = header["depth"]["height"]
-                        if depth_size != (d_w * d_h * 2):
-                            self.invalid_packet_count += 1
-                            self.get_logger().error(f"Inconsistent depth payload size {depth_size} vs expected {d_w*d_h*2}. Discarding.")
-                            break
-
+                        # Read exact payloads from stream
                         rgb_bytes = recv_exact(conn, rgb_size)
                         depth_bytes = recv_exact(conn, depth_size)
+
+                        # Semantic dimension validation: stream bytes are now consumed so connection remains intact
+                        c_w = header["color"].get("width")
+                        c_h = header["color"].get("height")
+                        c_ch = header["color"].get("channels", 3)
+                        c_bpc = header["color"].get("bytes_per_channel", 1)
+                        d_w = header["depth"].get("width")
+                        d_h = header["depth"].get("height")
+
+                        if not (isinstance(c_w, int) and c_w > 0 and
+                                isinstance(c_h, int) and c_h > 0 and
+                                isinstance(c_ch, int) and c_ch > 0 and
+                                isinstance(c_bpc, int) and c_bpc > 0 and
+                                isinstance(d_w, int) and d_w > 0 and
+                                isinstance(d_h, int) and d_h > 0):
+                            self.invalid_packet_count += 1
+                            self.get_logger().error("Non-positive or non-integer image dimensions in header. Discarding packet.")
+                            continue
+
+                        if rgb_size != (c_w * c_h * c_ch * c_bpc):
+                            self.invalid_packet_count += 1
+                            self.get_logger().error(f"Inconsistent RGB payload size {rgb_size} vs expected {c_w*c_h*c_ch*c_bpc}. Discarding packet.")
+                            continue
+
+                        if depth_size != (d_w * d_h * 2):
+                            self.invalid_packet_count += 1
+                            self.get_logger().error(f"Inconsistent depth payload size {depth_size} vs expected {d_w*d_h*2}. Discarding packet.")
+                            continue
+
+                        # Session Continuity Check: clear stale queued video to prevent cross-session contamination
+                        session_id = str(header.get("session_id", "default"))
+                        if session_id != self.current_session_id:
+                            self.get_logger().info(f"New sensor session detected: '{session_id}'. Purging stale queue and resetting clock mapping.")
+                            cleared_stale = 0
+                            while True:
+                                try:
+                                    self.frame_queue.get_nowait()
+                                    cleared_stale += 1
+                                except queue.Empty:
+                                    break
+                            if cleared_stale > 0:
+                                self.dropped_frames += cleared_stale
+                                self.get_logger().info(f"Purged {cleared_stale} stale buffered frames from previous session.")
+                            self.clock_mapping.reset()
+                            self.current_session_id = session_id
+                            self.last_sequence_number = -1
+
+                        # Sequence Gap and Ordering Tracking
+                        seq_num = int(header.get("frame_id", header.get("sequence_number", 0)))
+                        if self.last_sequence_number >= 0:
+                            if seq_num < self.last_sequence_number:
+                                self.out_of_order_count += 1
+                            elif seq_num == self.last_sequence_number:
+                                self.duplicate_count += 1
+                            elif seq_num > self.last_sequence_number + 1:
+                                gap = seq_num - self.last_sequence_number - 1
+                                self.sequence_gap_count += 1
+                                self.missing_frames_count += gap
+                        self.last_sequence_number = seq_num
+
+                        # Clock Mapping: Updated directly at network arrival time (excludes queue delays)
+                        color_ts = float(header["color"]["timestamp"])
+                        self.clock_mapping.update(source_time=color_ts, target_time=arrival_ros_sec)
 
                         packet = {
                             "header": header,
                             "rgb_bytes": rgb_bytes,
                             "depth_bytes": depth_bytes,
+                            "arrival_ros_sec": arrival_ros_sec,
                             "receive_time_wall": recv_time_wall,
                             "receive_time_mono": recv_time_mono,
                         }
@@ -397,8 +388,10 @@ class D455Receiver(Node):
                             self.frame_queue.put_nowait(packet)
                         except queue.Full:
                             try:
-                                _ = self.frame_queue.get_nowait()
+                                stale_pkt = self.frame_queue.get_nowait()
                                 self.dropped_frames += 1
+                                # Publish IMU from dropped packet to preserve complete high-rate telemetry
+                                self._publish_imu_only(stale_pkt)
                             except queue.Empty:
                                 pass
                             try:
@@ -422,18 +415,35 @@ class D455Receiver(Node):
                 self.active_conn = None
 
     def _dispatch_queued_frames(self):
+        """Latest-frame dispatch: drains queue and processes only the newest RGB-D frame.
+        
+        Publishes IMU telemetry for all drained frames so high-rate state estimation is never interrupted.
+        """
+        packets = []
         while True:
             try:
-                packet = self.frame_queue.get_nowait()
+                packets.append(self.frame_queue.get_nowait())
             except queue.Empty:
                 break
 
+        if not packets:
+            return
+
+        # Drain queue: publish IMU for stale intermediate packets to guarantee complete IMU telemetry
+        for pkt in packets[:-1]:
             try:
-                self._publish_frame(packet)
-                self.total_frames_published += 1
-                self.fps_frame_count += 1
+                self._publish_imu_only(pkt)
             except Exception as ex:
-                self.get_logger().error(f"Error publishing frame: {ex}")
+                self.get_logger().error(f"Error publishing IMU from drained packet: {ex}")
+            self.dropped_frames += 1
+
+        # Publish full RGB-D + CameraInfo + IMU for the single newest frame
+        try:
+            self._publish_frame(packets[-1])
+            self.total_frames_published += 1
+            self.fps_frame_count += 1
+        except Exception as ex:
+            self.get_logger().error(f"Error publishing frame: {ex}")
 
         # Periodic telemetry summary
         now = time.monotonic()
@@ -448,12 +458,44 @@ class D455Receiver(Node):
 
             self.get_logger().info(
                 f"[D455 Bridge] RGB: {rgb_hz:.1f}Hz | Depth: {rgb_hz:.1f}Hz | IMU: {imu_hz:.1f}Hz | "
-                f"Queue: {q_depth}/{self.queue_size} | Drops: {self.dropped_frames} | SkewRej: {self.rejected_skew_count} | "
+                f"Queue: {q_depth}/{self.queue_size} | Drops: {self.dropped_frames} | "
+                f"Gaps: {self.sequence_gap_count} (lost={self.missing_frames_count}) | "
+                f"Dup: {self.duplicate_count} | OoO: {self.out_of_order_count} | SkewRej: {self.rejected_skew_count} | "
                 f"Clock: {clk_status} (offset={offset_ms:.1f}ms, drift={drift_ppm:.1f}ppm)"
             )
             self.last_log_time = now
             self.fps_frame_count = 0
             self.imu_count = 0
+
+    def _publish_imu_only(self, packet: dict[str, Any]):
+        """Publishes all IMU samples from a packet whose RGB-D frame was skipped/dropped."""
+        header = packet["header"]
+        color_ts = float(header["color"]["timestamp"])
+        fallback_sec = packet.get("arrival_ros_sec", time.time())
+        imu_samples = header.get("imu", [])
+        for imu_sample in imu_samples:
+            imu_s_ts = float(imu_sample.get("timestamp", color_ts))
+            if self.clock_mapping.is_healthy:
+                imu_mapped_sec = self.clock_mapping.map_timestamp(imu_s_ts)
+            else:
+                imu_mapped_sec = fallback_sec
+
+            i_sec = int(imu_mapped_sec)
+            i_nanosec = int((imu_mapped_sec - i_sec) * 1e9)
+
+            imu_msg = Imu()
+            imu_msg.header.stamp = TimeMsg(sec=i_sec, nanosec=i_nanosec)
+            imu_msg.header.frame_id = "camera_imu_optical_frame"
+            accel = imu_sample.get("accel", [0.0, 0.0, 0.0])
+            gyro = imu_sample.get("gyro", [0.0, 0.0, 0.0])
+            imu_msg.linear_acceleration.x = float(accel[0])
+            imu_msg.linear_acceleration.y = float(accel[1])
+            imu_msg.linear_acceleration.z = float(accel[2])
+            imu_msg.angular_velocity.x = float(gyro[0])
+            imu_msg.angular_velocity.y = float(gyro[1])
+            imu_msg.angular_velocity.z = float(gyro[2])
+            self.imu_pub.publish(imu_msg)
+            self.imu_count += 1
 
     def _publish_frame(self, packet: dict[str, Any]):
         header = packet["header"]
@@ -462,49 +504,23 @@ class D455Receiver(Node):
 
         color_info = header["color"]
         depth_info = header["depth"]
-
-        # Session and sequence continuity checks
-        session_id = header.get("session_id", "default")
-        if session_id != self.current_session_id:
-            self.get_logger().info(f"New sensor session detected: '{session_id}'. Resetting clock mapping.")
-            self.clock_mapping.reset()
-            self.current_session_id = session_id
-            self.last_sequence_number = -1
-
-        seq_num = int(header.get("frame_id", header.get("sequence_number", 0)))
-        if self.last_sequence_number >= 0:
-            if seq_num < self.last_sequence_number:
-                self.out_of_order_count += 1
-            elif seq_num == self.last_sequence_number:
-                self.duplicate_count += 1
-        self.last_sequence_number = seq_num
-
-        # Live RGB-Depth Skew Check (Protected Operating Point: 50 ms)
         color_ts = float(color_info["timestamp"])
         depth_ts = float(depth_info["timestamp"])
-        dt_ms = header.get("rgb_depth_dt_ms", abs(color_ts - depth_ts) * 1000.0)
 
+        # Live RGB-Depth Skew Check (Protected Operating Point: 50 ms)
+        dt_ms = header.get("rgb_depth_dt_ms", abs(color_ts - depth_ts) * 1000.0)
         if dt_ms > self.max_skew_ms:
             self.rejected_skew_count += 1
             self.get_logger().warn(
-                f"Frame {seq_num} rejected: RGB-depth skew {dt_ms:.2f}ms exceeds tolerance {self.max_skew_ms:.2f}ms"
+                f"Frame {header.get('frame_id')} rejected: RGB-depth skew {dt_ms:.2f}ms exceeds tolerance {self.max_skew_ms:.2f}ms"
             )
             return
 
-        # Clock Mapping & Timing Extraction
-        ros_clock = self.get_clock().now()
-        if hasattr(ros_clock, "nanoseconds"):
-            local_ros_sec = float(ros_clock.nanoseconds) * 1e-9
-        else:
-            t_msg = ros_clock.to_msg()
-            local_ros_sec = float(t_msg.sec) + float(t_msg.nanosec) * 1e-9
-
-        # Update online clock filter
-        mapping_valid = self.clock_mapping.update(source_time=color_ts, target_time=local_ros_sec)
-        if mapping_valid and self.clock_mapping.is_healthy:
+        # Timing Projection: Map source timestamp using calibrated network-boundary offset
+        if self.clock_mapping.is_healthy:
             mapped_ts_sec = self.clock_mapping.map_timestamp(color_ts)
         else:
-            mapped_ts_sec = local_ros_sec  # Degraded safe fallback
+            mapped_ts_sec = packet.get("arrival_ros_sec", time.time())
 
         sec = int(mapped_ts_sec)
         nanosec = int((mapped_ts_sec - sec) * 1e9)
@@ -538,7 +554,7 @@ class D455Receiver(Node):
             depth_msg.data = depth_bytes
         self.depth_pub.publish(depth_msg)
 
-        # Publish CameraInfo with factory intrinsics
+        # Publish CameraInfo with factory intrinsics & distortion model
         camera_info = CameraInfo()
         camera_info.header.stamp = mapped_stamp
         camera_info.header.frame_id = "camera_color_optical_frame"
@@ -549,8 +565,8 @@ class D455Receiver(Node):
             0.0, color_info["fy"], color_info["ppy"],
             0.0, 0.0, 1.0,
         ]
-        camera_info.d = color_info.get("distortion", [0.0, 0.0, 0.0, 0.0, 0.0])
-        camera_info.distortion_model = color_info.get("distortion_model", "plumb_bob")
+        camera_info.d = [float(c) for c in color_info.get("distortion", [0.0, 0.0, 0.0, 0.0, 0.0])]
+        camera_info.distortion_model = str(color_info.get("distortion_model", "plumb_bob"))
         camera_info.r = [1.0, 0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 0.0, 1.0]
         camera_info.p = [
             color_info["fx"], 0.0, color_info["ppx"], 0.0,
@@ -560,30 +576,7 @@ class D455Receiver(Node):
         self.camera_info_pub.publish(camera_info)
 
         # Publish IMU samples with individual mapped timestamps
-        imu_samples = header.get("imu", [])
-        for imu_sample in imu_samples:
-            imu_s_ts = float(imu_sample.get("timestamp", color_ts))
-            if self.clock_mapping.is_healthy:
-                imu_mapped_sec = self.clock_mapping.map_timestamp(imu_s_ts)
-            else:
-                imu_mapped_sec = local_ros_sec
-
-            i_sec = int(imu_mapped_sec)
-            i_nanosec = int((imu_mapped_sec - i_sec) * 1e9)
-
-            imu_msg = Imu()
-            imu_msg.header.stamp = TimeMsg(sec=i_sec, nanosec=i_nanosec)
-            imu_msg.header.frame_id = "camera_imu_optical_frame"
-            accel = imu_sample.get("accel", [0.0, 0.0, 0.0])
-            gyro = imu_sample.get("gyro", [0.0, 0.0, 0.0])
-            imu_msg.linear_acceleration.x = float(accel[0])
-            imu_msg.linear_acceleration.y = float(accel[1])
-            imu_msg.linear_acceleration.z = float(accel[2])
-            imu_msg.angular_velocity.x = float(gyro[0])
-            imu_msg.angular_velocity.y = float(gyro[1])
-            imu_msg.angular_velocity.z = float(gyro[2])
-            self.imu_pub.publish(imu_msg)
-            self.imu_count += 1
+        self._publish_imu_only(packet)
 
     def destroy_node(self):
         self.stop_event.set()

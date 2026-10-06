@@ -338,6 +338,18 @@ class RolesConfig(BaseModel):
     )
 
 
+class EstimationConfig(BaseModel):
+    model_config = ConfigDict(extra="allow")
+
+    backend: str = Field("rtabmap")
+    pose_max_dt: float = Field(0.05, gt=0.0)
+    max_pose_age: float = Field(0.20, gt=0.0)
+    telemetry_max_age: float = Field(0.25, gt=0.0)
+    allow_causal_fallback: bool = Field(True)
+    world_frame: str = Field("world")
+    sensor_frame: str = Field("camera_optical_frame")
+
+
 class ReferenceFrameConfig(BaseModel):
     model_config = ConfigDict(extra="forbid")
 
@@ -357,6 +369,7 @@ class SceneGraphConfig(BaseModel):
     pose: Optional[PoseConfig] = None
     sensor: Optional[SensorConfig] = Field(default_factory=SensorConfig)
     sync: Optional[SyncConfig] = Field(default_factory=SyncConfig)
+    estimation: Optional[EstimationConfig] = Field(default_factory=EstimationConfig)
     reference_frame: Optional[ReferenceFrameConfig] = Field(default_factory=ReferenceFrameConfig)
     geometry: Optional[GeometryConfig] = Field(default_factory=GeometryConfig)
     perception: Optional[PerceptionConfig] = Field(default_factory=PerceptionConfig)

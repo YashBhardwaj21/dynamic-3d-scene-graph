@@ -65,60 +65,14 @@ from scene_graph.geometry.camera import CameraIntrinsics
 
 def quaternion_to_rotation_matrix(qx: float, qy: float, qz: float, qw: float) -> np.ndarray:
     """Convert a quaternion (x, y, z, w) into a 3x3 orthonormal rotation matrix."""
-    norm = np.sqrt(qx * qx + qy * qy + qz * qz + qw * qw)
-    if norm < 1e-12:
-        raise ValueError("Cannot normalize near-zero quaternion")
-    
-    x, y, z, w = qx / norm, qy / norm, qz / norm, qw / norm
-
-    r00 = 1.0 - 2.0 * (y * y + z * z)
-    r01 = 2.0 * (x * y - z * w)
-    r02 = 2.0 * (x * z + y * w)
-
-    r10 = 2.0 * (x * y + z * w)
-    r11 = 1.0 - 2.0 * (x * x + z * z)
-    r12 = 2.0 * (y * z - x * w)
-
-    r20 = 2.0 * (x * z - y * w)
-    r21 = 2.0 * (y * z + x * w)
-    r22 = 1.0 - 2.0 * (x * x + y * y)
-
-    return np.array([
-        [r00, r01, r02],
-        [r10, r11, r12],
-        [r20, r21, r22],
-    ], dtype=np.float64)
+    from scene_graph.geometry.transforms import quaternion_to_matrix
+    return quaternion_to_matrix(qx, qy, qz, qw)
 
 
 def rotation_matrix_to_quaternion(R: np.ndarray) -> tuple[float, float, float, float]:
     """Convert a 3x3 orthonormal rotation matrix into a unit quaternion (x, y, z, w)."""
-    tr = np.trace(R)
-    if tr > 0:
-        S = np.sqrt(tr + 1.0) * 2.0
-        qw = 0.25 * S
-        qx = (R[2, 1] - R[1, 2]) / S
-        qy = (R[0, 2] - R[2, 0]) / S
-        qz = (R[1, 0] - R[0, 1]) / S
-    elif (R[0, 0] > R[1, 1]) and (R[0, 0] > R[2, 2]):
-        S = np.sqrt(1.0 + R[0, 0] - R[1, 1] - R[2, 2]) * 2.0
-        qw = (R[2, 1] - R[1, 2]) / S
-        qx = 0.25 * S
-        qy = (R[0, 1] + R[1, 0]) / S
-        qz = (R[0, 2] + R[2, 0]) / S
-    elif R[1, 1] > R[2, 2]:
-        S = np.sqrt(1.0 + R[1, 1] - R[0, 0] - R[2, 2]) * 2.0
-        qw = (R[0, 2] - R[2, 0]) / S
-        qx = (R[0, 1] + R[1, 0]) / S
-        qy = 0.25 * S
-        qz = (R[1, 2] + R[2, 1]) / S
-    else:
-        S = np.sqrt(1.0 + R[2, 2] - R[0, 0] - R[1, 1]) * 2.0
-        qw = (R[1, 0] - R[0, 1]) / S
-        qx = (R[0, 2] + R[2, 0]) / S
-        qy = (R[1, 2] + R[2, 1]) / S
-        qz = 0.25 * S
-
-    return float(qx), float(qy), float(qz), float(qw)
+    from scene_graph.geometry.transforms import matrix_to_quaternion
+    return matrix_to_quaternion(R)
 
 
 def ros_image_to_numpy(msg) -> np.ndarray:
@@ -213,8 +167,9 @@ def camera_info_to_intrinsics(msg: "CameraInfo") -> CameraIntrinsics:
     else:
         raise ValueError("CameraInfo contains invalid zero focal length in both K and P")
 
-    distortion = tuple(float(x) for x in msg.d) if msg.d else (0.0, 0.0, 0.0, 0.0, 0.0)
-    distortion_model = str(msg.distortion_model) if msg.distortion_model else "plumb_bob"
+    msg_d = getattr(msg, "d", None)
+    distortion = tuple(float(x) for x in msg_d) if msg_d else (0.0, 0.0, 0.0, 0.0, 0.0)
+    distortion_model = str(getattr(msg, "distortion_model", "plumb_bob") or "plumb_bob")
 
     return CameraIntrinsics(
         fx=fx,
@@ -231,7 +186,7 @@ def camera_info_to_intrinsics(msg: "CameraInfo") -> CameraIntrinsics:
 def intrinsics_to_camera_info(
     intrinsics: CameraIntrinsics,
     frame_id: str,
-    timestamp: float,
+    timestamp: float = 0.0,
 ) -> "CameraInfo":
     """Construct sensor_msgs/CameraInfo from CameraIntrinsics."""
     if not HAS_ROS2_MSGS:

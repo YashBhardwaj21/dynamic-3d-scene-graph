@@ -16,23 +16,22 @@ import numpy as np
 from scene_graph.geometry.reference_frame import RelationReferenceFrame
 
 
-# --- Dataset-specific gravity/heading conventions ---
+# Dataset-specific gravity and heading conventions
 # TUM RGB-D: Camera looks along +Z, gravity is approximately -Y in world.
-# The groundtruth poses are in a world frame where Z is roughly "up" for
+# The groundtruth poses are in a world frame where Z is roughly up for
 # the freiburg sequences recorded on a desk.
-
 DATASET_CONVENTIONS = {
     "tum_rgbd": {
-        "up_axis": np.array([0.0, 0.0, 1.0]),      # Z-up in TUM world frame
-        "heading_axis": np.array([1.0, 0.0, 0.0]),  # X-forward as default heading
+        "up_axis": np.array([0.0, 0.0, 1.0]),
+        "heading_axis": np.array([1.0, 0.0, 0.0]),
     },
     "tum": {
         "up_axis": np.array([0.0, 0.0, 1.0]),
         "heading_axis": np.array([1.0, 0.0, 0.0]),
     },
     "d455": {
-        "up_axis": np.array([0.0, 0.0, 1.0]),      # Z-up in standard robotics world
-        "heading_axis": np.array([1.0, 0.0, 0.0]),  # X-forward
+        "up_axis": np.array([0.0, 0.0, 1.0]),
+        "heading_axis": np.array([1.0, 0.0, 0.0]),
     },
     "realsense": {
         "up_axis": np.array([0.0, 0.0, 1.0]),

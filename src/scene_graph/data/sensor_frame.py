@@ -99,7 +99,15 @@ class SensorFrame:
         if self.rgb.dtype != np.uint8:
             raise TypeError(f"SensorFrame.rgb must have dtype uint8, got {self.rgb.dtype}")
 
-        # 4. Validate Depth array (Strict Invariant: Float32 Meters)
+        # 4. Validate Camera Intrinsics match image dimensions
+        if self.camera_intrinsics is not None:
+            if self.camera_intrinsics.width != self.rgb.shape[1] or self.camera_intrinsics.height != self.rgb.shape[0]:
+                raise ValueError(
+                    f"Image shape ({self.rgb.shape[0]}, {self.rgb.shape[1]}) does not match camera intrinsics "
+                    f"dimensions ({self.camera_intrinsics.height}, {self.camera_intrinsics.width})"
+                )
+
+        # 5. Validate Depth array (Strict Invariant: Float32 Meters)
         if self.depth is not None:
             if not isinstance(self.depth, np.ndarray):
                 raise TypeError("SensorFrame.depth must be a valid NumPy ndarray or None")
@@ -110,14 +118,18 @@ class SensorFrame:
                 )
             if self.depth.ndim != 2:
                 raise ValueError(f"SensorFrame.depth must be (H, W) 2D array, got shape {self.depth.shape}")
+            if self.depth.shape != self.rgb.shape[:2]:
+                raise ValueError(
+                    f"Depth shape {self.depth.shape} does not match RGB shape {self.rgb.shape[:2]}"
+                )
             if self.depth.dtype != np.float32:
                 object.__setattr__(self, "depth", self.depth.astype(np.float32))
 
-        # 5. Validate depth scale
+        # 6. Validate depth scale
         if self.depth_scale <= 0.0 or not np.isfinite(self.depth_scale):
             raise ValueError(f"SensorFrame.depth_scale must be positive and finite, got {self.depth_scale}")
 
-        # 6. Ensure IMU samples is a tuple
+        # 7. Ensure IMU samples is a tuple
         if not isinstance(self.imu_samples, tuple):
             object.__setattr__(self, "imu_samples", tuple(self.imu_samples))
 

@@ -1,20 +1,17 @@
-"""
-relation_state.py — Temporal belief state machine for scene graph relations.
+"""relation_state.py: Temporal belief state machine for scene graph relations.
 
-Canonical lifecycle::
+Canonical lifecycle:
+    PROPOSED -> ACTIVE -> DECAYING -> OCCLUDED -> UNKNOWN -> TERMINATED
+                            \
+                       CONTRADICTED
 
-    PROPOSED  →  ACTIVE  →  DECAYING  →  OCCLUDED  →  UNKNOWN  →  TERMINATED
-                                ↘
-                           CONTRADICTED
-
-Compatibility aliases (accepted for backward-compatibility with older
-config/serialised snapshots; equality comparisons canonicalise them):
-
-    SUPPORTED   == ACTIVE
-    CONFIRMED   == ACTIVE
+Compatibility aliases (accepted for backward compatibility with older
+snapshots; equality comparisons canonicalise them):
+    SUPPORTED == ACTIVE
+    CONFIRMED == ACTIVE
     HYPOTHESIZED == PROPOSED
-    WEAKENING   == DECAYING
-    ENDED       == TERMINATED
+    WEAKENING == DECAYING
+    ENDED == TERMINATED
 """
 
 from enum import Enum
@@ -29,9 +26,7 @@ from scene_graph.relations.evidence import EvidenceResult, RelationEvidence
 RelationKey = Tuple[str, str, str]
 
 # Canonical alias map: maps every state value (including legacy aliases) to its
-# canonical equivalent.  Shared by RelationState.__hash__ and __eq__ so they
-# always agree.  Defined at module level because Python's Enum metaclass does
-# not reliably expose plain dict class-attributes on enum instances.
+# canonical equivalent. Shared by RelationState.__hash__ and __eq__.
 _RELATION_STATE_CANON: dict = {
     "active": "active",
     "supported": "active",
@@ -52,27 +47,26 @@ _RELATION_STATE_CANON: dict = {
 class RelationState(str, Enum):
     """Lifecycle states for temporal relation beliefs.
 
-    Canonical states are ``PROPOSED``, ``ACTIVE``, ``DECAYING``, ``OCCLUDED``,
-    ``UNKNOWN``, ``CONTRADICTED``, and ``TERMINATED``.  Legacy aliases
-    (``SUPPORTED``, ``CONFIRMED``, ``HYPOTHESIZED``, ``WEAKENING``, ``ENDED``)
-    compare equal to their canonical equivalents via :meth:`__eq__`.
+    Canonical states are PROPOSED, ACTIVE, DECAYING, OCCLUDED, UNKNOWN,
+    CONTRADICTED, and TERMINATED. Legacy aliases compare equal to their
+    canonical equivalents via __eq__.
     """
 
-    # ── Canonical lifecycle states ─────────────────────────────────────────
-    PROPOSED = "proposed"       # observed but not yet above confirmation threshold
-    ACTIVE = "active"           # confirmed above threshold
-    DECAYING = "decaying"       # confirmed but evidence declining
-    OCCLUDED = "occluded"       # no evidence due to occlusion (not contradicted)
-    UNKNOWN = "unknown"         # insufficient evidence to commit
-    CONTRADICTED = "contradicted"  # evidence actively refutes the relation
-    TERMINATED = "terminated"   # purged from memory after extended absence
+    # Canonical lifecycle states
+    PROPOSED = "proposed"
+    ACTIVE = "active"
+    DECAYING = "decaying"
+    OCCLUDED = "occluded"
+    UNKNOWN = "unknown"
+    CONTRADICTED = "contradicted"
+    TERMINATED = "terminated"
 
-    # ── Compatibility aliases (kept for backward-compatible deserialisation) ─
-    SUPPORTED = "supported"     # alias → ACTIVE
-    CONFIRMED = "confirmed"     # alias → ACTIVE
-    HYPOTHESIZED = "hypothesized"  # alias → PROPOSED
-    WEAKENING = "weakening"     # alias → DECAYING
-    ENDED = "ended"             # alias → TERMINATED
+    # Compatibility aliases (kept for backward-compatible deserialisation)
+    SUPPORTED = "supported"
+    CONFIRMED = "confirmed"
+    HYPOTHESIZED = "hypothesized"
+    WEAKENING = "weakening"
+    ENDED = "ended"
 
     @classmethod
     def _missing_(cls, value: object) -> Optional["RelationState"]:

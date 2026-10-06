@@ -1,5 +1,28 @@
 # live_d455.yaml
-# Production live configuration for Intel RealSense D455 running real-time perception
+# Production live configuration for Intel RealSense D455 running real-time perception & RTAB-Map SLAM
+
+sensor:
+  name: realsense_d455
+  depth_scale_units_per_meter: 1000.0
+  measurement_model: stereo
+  baseline_m: 0.095
+  subpixel_disparity_std: 0.1
+  pixel_noise_std: 0.5
+  rgb_topic: /camera/camera/color/image_raw
+  depth_topic: /camera/camera/aligned_depth_to_color/image_raw
+  camera_info_topic: /camera/camera/color/camera_info
+
+depth:
+  scale: 1000.0
+
+estimation:
+  backend: rtabmap
+  pose_max_dt: 0.05
+  max_pose_age: 0.08      # Live freshness limit: < 80ms (0-30ms good, 30-50ms usable, >80ms rejected)
+  telemetry_max_age: 0.10 # Live telemetry freshness limit: 100ms
+  allow_causal_fallback: true
+  world_frame: world
+  sensor_frame: camera_color_optical_frame
 
 tracking:
   confirmation:
@@ -63,7 +86,7 @@ sync:
   rgb_pose_max_dt: 0.05
 
 reference_frame:
-  type: camera
+  type: world
   up_axis: [0.0, 0.0, 1.0]
 
 relations:

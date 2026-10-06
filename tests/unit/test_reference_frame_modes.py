@@ -101,7 +101,7 @@ def test_camera_rotation_invariance_under_map_mode():
     T2[:3, :3] = R2
     T2[:3, 3] = [0.0, 4.0, 0.0]
 
-    # --- Test under MAP mode ---
+    # Test under MAP mode
     ref_map = RelationReferenceFrame.create("map", T1)
 
     ctx_map_pose1 = FrameContext(
@@ -133,7 +133,7 @@ def test_camera_rotation_invariance_under_map_mode():
     # Invariant! A is still West/Left of B in MAP frame
     assert ev_map_2_dict.get("LEFT_OF") == EvidenceResult.SUPPORTED
 
-    # --- Test under CAMERA mode ---
+    # Test under CAMERA mode
     ref_cam_pose1 = RelationReferenceFrame.create("camera", T1)
     ctx_cam_pose1 = FrameContext(
         frame_index=0,

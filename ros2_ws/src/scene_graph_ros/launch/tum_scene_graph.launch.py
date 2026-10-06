@@ -10,11 +10,15 @@ from ament_index_python.packages import get_package_share_directory
 from launch import LaunchDescription
 from launch.actions import (
     DeclareLaunchArgument,
+    EmitEvent,
     GroupAction,
     IncludeLaunchDescription,
     OpaqueFunction,
+    RegisterEventHandler,
 )
 from launch.conditions import IfCondition
+from launch.event_handlers import OnProcessExit
+from launch.events import Shutdown
 from launch.launch_description_sources import PythonLaunchDescriptionSource
 from launch.substitutions import LaunchConfiguration, PathJoinSubstitution
 from launch_ros.actions import Node, SetParameter
@@ -96,6 +100,7 @@ def launch_setup(context, *args, **kwargs):
                 "min_subscribers": 3 if launch_rtabmap else 1,
             }
         ],
+        condition=IfCondition(LaunchConfiguration("launch_player")),
     )
 
     # Downstream nodes use the dataset clock.
@@ -201,6 +206,7 @@ def launch_setup(context, *args, **kwargs):
                     "use_latest_tf": use_latest_tf,
                     "slam_pose_max_age": 2.0,
                     "pose_max_dt": 0.05,
+                    "telemetry_log_path": LaunchConfiguration("telemetry_log_path"),
                     "rgb_topic": "/tum/rgb/image_raw",
                     "depth_topic": "/tum/depth/image_raw",
                     "camera_info_topic": "/tum/rgb/camera_info",
@@ -246,12 +252,34 @@ def launch_setup(context, *args, **kwargs):
 
     sim_group = GroupAction(downstream_actions)
 
-    return [tum_player_node, sim_group]
+    actions = [tum_player_node, sim_group]
+
+    raw_shutdown = (
+        context.launch_configurations.get("shutdown_on_finish", "false")
+        .strip()
+        .lower()
+    )
+    if raw_shutdown == "true":
+        actions.append(
+            RegisterEventHandler(
+                OnProcessExit(
+                    target_action=tum_player_node,
+                    on_exit=[EmitEvent(event=Shutdown())],
+                )
+            )
+        )
+
+    return actions
 
 
 def generate_launch_description():
     return LaunchDescription(
         [
+            DeclareLaunchArgument(
+                "launch_player",
+                default_value="true",
+                description="Whether to launch TUM player sequence streamer (set false if player is already running)",
+            ),
             DeclareLaunchArgument(
                 "localization_mode",
                 default_value="slam",
@@ -289,13 +317,18 @@ def generate_launch_description():
             ),
             DeclareLaunchArgument(
                 "start_frame",
-                default_value="0",
-                description="Starting frame index",
+                default_value="-1",
+                description="Starting frame index (-1 = from config or 0)",
             ),
             DeclareLaunchArgument(
                 "end_frame",
                 default_value="-1",
                 description="Ending frame index (-1 = end of sequence)",
+            ),
+            DeclareLaunchArgument(
+                "shutdown_on_finish",
+                default_value="false",
+                description="Automatically shutdown all nodes when tum_player sequence finishes",
             ),
             DeclareLaunchArgument(
                 "frame_stride",
@@ -357,8 +390,8 @@ def generate_launch_description():
             ),
             DeclareLaunchArgument(
                 "publish_rate_hz",
-                default_value="2.0",
-                description="Replay input rate in Hz",
+                default_value="30.0",
+                description="Replay input rate in Hz (default 30.0 matching dataset recording rate)",
             ),
             DeclareLaunchArgument(
                 "loop",
@@ -379,6 +412,11 @@ def generate_launch_description():
                 "map_cloud_stride",
                 default_value="2",
                 description="Pixel stride for map cloud generation (2 = 4x denser)",
+            ),
+            DeclareLaunchArgument(
+                "telemetry_log_path",
+                default_value="",
+                description="Optional CSV path to record estimator telemetry",
             ),
             OpaqueFunction(function=launch_setup),
         ]

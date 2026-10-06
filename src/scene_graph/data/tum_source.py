@@ -6,8 +6,13 @@ import numpy as np
 from scene_graph.config import SceneGraphConfig
 from scene_graph.data.frame_packet import FramePacket
 from scene_graph.data.frame_source import FrameSource
+from scene_graph.data.sensor_frame import SensorFrame, StreamStatus
+from scene_graph.data.timestamp import Timestamp, TimestampDomain
+from scene_graph.estimation.base import BasePoseEstimator
+from scene_graph.estimation.ground_truth import GroundTruthEstimator
 from scene_graph.geometry.camera import CameraIntrinsics, DepthModel
 from scene_graph.geometry.reference_frame import RelationReferenceFrame
+from scene_graph.geometry.reference_frame_provider import ReferenceFrameProvider
 from scene_graph.data.tum_loader import TUMLoader
 from scene_graph.data.synchronization import associate
 
@@ -21,7 +26,8 @@ class TUMReplaySource(FrameSource):
     
     def __init__(
         self,
-        config: SceneGraphConfig
+        config: SceneGraphConfig,
+        pose_estimator: Optional[BasePoseEstimator] = None,
     ):
         self.config = config
         
@@ -40,13 +46,23 @@ class TUMReplaySource(FrameSource):
         depth_timestamps = [e.timestamp for e in self.depth_entries]
         pose_timestamps = [e.timestamp for e in self.pose_entries]
         
-        rgb_depth_max_dt = self.config.sync.rgb_depth_max_dt
-        rgb_pose_max_dt = self.config.sync.rgb_pose_max_dt
+        rgb_depth_max_dt = self.config.sync.rgb_depth_max_dt if self.config.sync else 0.02
+        rgb_pose_max_dt = self.config.sync.rgb_pose_max_dt if self.config.sync else 0.05
         
-        # Associate
+        # Associate depth
         self.rgb_to_depth = dict(associate(rgb_timestamps, depth_timestamps, rgb_depth_max_dt))
         self.rgb_to_pose = dict(associate(rgb_timestamps, pose_timestamps, rgb_pose_max_dt))
         
+        # Estimator setup (defaults to GroundTruthEstimator for offline replay if none provided)
+        self.pose_estimator = pose_estimator
+        if self.pose_estimator is None:
+            self.pose_estimator = GroundTruthEstimator(
+                pose_entries=self.pose_entries,
+                max_dt=rgb_pose_max_dt,
+            )
+
+        self.ref_frame_provider = ReferenceFrameProvider(dataset_type="tum")
+
         if self.config.sequence is None:
             self.start_idx = 0
             self._end_idx = len(self.rgb_entries) - 1
@@ -104,41 +120,35 @@ class TUMReplaySource(FrameSource):
                         scale = self.config.depth.scale if self.config.depth is not None else 5000.0
                         depth_np = depth_raw.astype(np.float32) / scale
                     has_depth = True
-                
-            # Get Pose Matrix if matched (Optional)
-            pose_np = None
-            has_pose = False
-            if frame_idx in self.rgb_to_pose:
-                p_idx = self.rgb_to_pose[frame_idx]
-                pose_np = self.pose_entries[p_idx].as_transform_matrix()
-                has_pose = True
-                
-            # Construct global relation frame
-            up_axis = np.array([0.0, 0.0, 1.0])
-            heading_axis = np.array([1.0, 0.0, 0.0])
-            if self.config.reference_frame is not None:
-                up_axis = np.array(self.config.reference_frame.up_axis, dtype=np.float64)
-                heading_axis = np.array(self.config.reference_frame.heading_axis, dtype=np.float64)
 
-            relation_frame = RelationReferenceFrame.from_gravity_and_heading(
-                origin_world=np.zeros(3),
-                up_axis_world=up_axis,
-                heading_world=heading_axis
-            )
-            
-            packet = FramePacket(
-                frame_index=frame_idx,
-                timestamp=rgb_entry.timestamp,
+            # Construct Stage 1 SensorFrame (acquisition-only)
+            sensor_frame = SensorFrame(
+                session_id=getattr(self.config.dataset, "name", "tum_replay") or "tum_replay",
+                sequence_number=frame_idx,
+                timestamp=Timestamp(value=rgb_entry.timestamp, domain=TimestampDomain.SIMULATED_TIME, source="tum_rgb"),
                 rgb=rgb_np,
-                depth=depth_np,
-                world_T_camera=pose_np,
                 camera_intrinsics=camera_intrinsics,
-                depth_model=depth_model,
-                relation_frame=relation_frame,
+                depth=depth_np,
+                depth_scale=1.0 / self.config.depth.scale if (self.config.depth and self.config.depth.scale > 0) else 0.0002,
                 frame_id="camera_color_optical_frame",
                 optical_frame_id="camera_depth_optical_frame",
-                pose_source="groundtruth",
-                metadata={}
+                status=StreamStatus.OK if has_depth else StreamStatus.DEPTH_DROPPED,
+            )
+
+            # Stage 3: Estimate pose via BasePoseEstimator
+            pose_estimate, estimator_state = self.pose_estimator.estimate(sensor_frame)
+
+            # Construct relation reference frame
+            origin = pose_estimate.world_T_camera[:3, 3] if pose_estimate.valid else None
+            relation_frame = self.ref_frame_provider.get_frame(origin_world=origin)
+
+            # Construct FramePacket
+            packet = FramePacket.from_sensor_frame(
+                sensor_frame=sensor_frame,
+                pose_estimate=pose_estimate,
+                estimator_state=estimator_state,
+                relation_frame=relation_frame,
+                world_frame="world",
             )
             
             yield packet

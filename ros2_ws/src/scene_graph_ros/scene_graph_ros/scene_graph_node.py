@@ -55,6 +55,7 @@ def _ensure_paths():
 
 _ensure_paths()
 
+import csv
 import queue
 import threading
 import time
@@ -71,12 +72,29 @@ from rclpy.time import Time
 from sensor_msgs.msg import CameraInfo, Image, Imu
 from tf2_ros import TransformException
 
+try:
+    from rtabmap_msgs.msg import Info as RtabmapInfo, OdomInfo as RtabmapOdomInfo
+    from nav_msgs.msg import Odometry
+    HAS_RTABMAP_MSGS = True
+except ImportError:
+    HAS_RTABMAP_MSGS = False
+    RtabmapInfo = None
+    RtabmapOdomInfo = None
+    Odometry = None
+
 from scene_graph.config import SceneGraphConfig
 from scene_graph.data.frame_packet import FramePacket, IMUSample, LocalizationMode
+from scene_graph.data.pose_estimate import EstimatorState, PoseEstimate, TrackingState
 from scene_graph.data.sensor_frame import SensorFrame, StreamStatus
 from scene_graph.data.timestamp import Timestamp, TimestampDomain
+from scene_graph.estimation.base import BasePoseEstimator
+from scene_graph.estimation.identity import IdentityEstimator
+from scene_graph.estimation.rtabmap import RTABMapEstimator
+from scene_graph.estimation.tf_buffer import TFBufferEstimator
 from scene_graph.geometry.camera import CameraIntrinsics, DepthModel
 from scene_graph.geometry.reference_frame import RelationReferenceFrame
+from scene_graph.geometry.reference_frame_provider import ReferenceFrameProvider
+from scene_graph.geometry.transforms import matrix_to_quaternion
 from scene_graph.graph.snapshot import create_snapshot
 from scene_graph.pipeline.online_pipeline import OnlinePipeline
 from scene_graph_ros.config_loader import load_scene_graph_config
@@ -144,6 +162,11 @@ class SceneGraphROSNode(Node):
         # Max age (seconds) of the latest TF before the frame is considered un-localized.
         # Only used in use_latest_tf mode. 0 = disabled (accept any age).
         self.declare_parameter("slam_pose_max_age", 2.0)
+        self.declare_parameter("telemetry_log_path", "")
+        self.declare_parameter("telemetry_max_age", 0.25)
+        self.declare_parameter("rtabmap_odom_topic", "/rtabmap/odom")
+        self.declare_parameter("rtabmap_odom_info_topic", "/rtabmap/odom_info")
+        self.declare_parameter("rtabmap_info_topic", "/rtabmap/info")
 
         self.rgb_topic = self.get_parameter("rgb_topic").get_parameter_value().string_value
         self.depth_topic = self.get_parameter("depth_topic").get_parameter_value().string_value
@@ -187,6 +210,11 @@ class SceneGraphROSNode(Node):
         self.use_latest_tf = raw_tf.strip().lower() in ("true", "1", "yes") if isinstance(raw_tf, str) else bool(raw_tf)
 
         self.slam_pose_max_age = self.get_parameter("slam_pose_max_age").get_parameter_value().double_value
+        self.telemetry_log_path = self.get_parameter("telemetry_log_path").get_parameter_value().string_value
+        self.telemetry_max_age = self.get_parameter("telemetry_max_age").get_parameter_value().double_value
+        self.rtabmap_odom_topic = self.get_parameter("rtabmap_odom_topic").get_parameter_value().string_value
+        self.rtabmap_odom_info_topic = self.get_parameter("rtabmap_odom_info_topic").get_parameter_value().string_value
+        self.rtabmap_info_topic = self.get_parameter("rtabmap_info_topic").get_parameter_value().string_value
 
 
 
@@ -254,6 +282,86 @@ class SceneGraphROSNode(Node):
         self.tf_buffer = tf2_ros.Buffer(node=self)
         self.tf_listener = tf2_ros.TransformListener(self.tf_buffer, self)
 
+        # Stage 3: Canonical ReferenceFrameProvider initialization
+        dataset_type = "tum" if "tum" in self.rgb_topic.lower() else "realsense"
+        self.ref_frame_provider = ReferenceFrameProvider(dataset_type=dataset_type)
+
+        # Stage 3: Estimator subsystem initialization
+        if self.localization_mode == "camera_local":
+            self.pose_estimator: BasePoseEstimator = IdentityEstimator(frame_id=self.sensor_frame)
+        elif self.localization_mode in ("world", "ground_truth"):
+            self.pose_estimator = TFBufferEstimator(
+                tf_buffer=self.tf_buffer,
+                world_frame=self.world_frame,
+                sensor_frame=self.sensor_frame,
+                pose_max_dt=self.pose_max_dt,
+                slam_pose_max_age=self.slam_pose_max_age,
+                allow_causal_fallback=self.use_latest_tf,
+                backend_name="ground_truth" if self.localization_mode == "ground_truth" else "tf_buffer",
+            )
+        else:  # "slam" / "rtabmap"
+            self.pose_estimator = RTABMapEstimator(
+                tf_buffer=self.tf_buffer,
+                world_frame=self.world_frame,
+                sensor_frame=self.sensor_frame,
+                pose_max_dt=self.pose_max_dt,
+                slam_pose_max_age=self.slam_pose_max_age,
+                telemetry_max_age=self.telemetry_max_age,
+                allow_causal_fallback=self.use_latest_tf,
+                backend_name="rtabmap",
+            )
+
+        # RTAB-Map telemetry subscriptions
+        self.odom_info_sub = None
+        self.info_sub = None
+        self.odom_sub = None
+        if HAS_RTABMAP_MSGS and isinstance(self.pose_estimator, RTABMapEstimator):
+            self.odom_info_sub = self.create_subscription(
+                RtabmapOdomInfo,
+                self.rtabmap_odom_info_topic,
+                self._odom_info_callback,
+                10,
+            )
+            self.info_sub = self.create_subscription(
+                RtabmapInfo,
+                self.rtabmap_info_topic,
+                self._info_callback,
+                10,
+            )
+            self.odom_sub = self.create_subscription(
+                Odometry,
+                self.rtabmap_odom_topic,
+                self._odom_callback,
+                10,
+            )
+            self.get_logger().info(
+                f"RTAB-Map telemetry subscriptions registered:\n"
+                f"  OdomInfo: {self.rtabmap_odom_info_topic}\n"
+                f"  Info: {self.rtabmap_info_topic}\n"
+                f"  Odom: {self.rtabmap_odom_topic}"
+            )
+
+        # Telemetry logging to CSV and TUM trajectory format (if path provided)
+        self._telemetry_file = None
+        self._telemetry_writer = None
+        self._tum_trajectory_file = None
+        if self.telemetry_log_path:
+            p = Path(self.telemetry_log_path)
+            p.parent.mkdir(parents=True, exist_ok=True)
+            self._telemetry_file = open(p, "w", newline="", encoding="utf-8")
+            self._telemetry_writer = csv.writer(self._telemetry_file)
+            self._telemetry_writer.writerow([
+                "timestamp", "frame_id", "pose_valid", "pose_age", "pose_source",
+                "backend_name", "tracking_state", "matches", "inliers", "inlier_ratio",
+                "features", "local_map_size", "local_key_frames", "key_frame_added",
+                "registration_time_ms", "odometry_lost", "current_node_id",
+                "loop_closure_id", "loop_closure_detected", "telemetry_age",
+                "covariance_available", "latency_ms"
+            ])
+            tum_path = p.parent / "estimated.tum"
+            self._tum_trajectory_file = open(tum_path, "w", encoding="utf-8")
+            self.get_logger().info(f"Logging Stage 3 estimator telemetry to {self.telemetry_log_path} and trajectory to {tum_path}")
+
         # Bounded ring buffer: 500 samples (~2.5s @ 200 Hz)
         self.imu_buffer: deque[IMUSample] = deque(maxlen=500)
         self.last_frame_timestamp: float | None = None
@@ -319,6 +427,21 @@ class SceneGraphROSNode(Node):
         """Buffer incoming IMU samples into bounded ring buffer (500 samples, ~2.5s @ 200 Hz)."""
         sample = imu_msg_to_sample(msg)
         self.imu_buffer.append(sample)
+
+    def _odom_info_callback(self, msg: Any):
+        """Forward RTAB-Map /rtabmap/odom_info message to pose estimator."""
+        if isinstance(self.pose_estimator, RTABMapEstimator):
+            self.pose_estimator.add_odom_info_msg(msg)
+
+    def _info_callback(self, msg: Any):
+        """Forward RTAB-Map /rtabmap/info message to pose estimator."""
+        if isinstance(self.pose_estimator, RTABMapEstimator):
+            self.pose_estimator.add_info_msg(msg)
+
+    def _odom_callback(self, msg: Any):
+        """Forward RTAB-Map /rtabmap/odom message to pose estimator."""
+        if isinstance(self.pose_estimator, RTABMapEstimator):
+            self.pose_estimator.add_odom_msg(msg)
 
     def rgb_depth_callback(self, rgb_msg: Image, depth_msg: Image):
         """Lightweight callback: copies message references to queue and returns immediately."""
@@ -418,136 +541,12 @@ class SceneGraphROSNode(Node):
                     throttle_duration_sec=2.0,
                 )
 
-        world_T_camera = None
-        pose_timestamp = None
-        pose_age = float("inf")
-        transform_valid = False
-        transform_source = "unknown"
-        tf_latency_ms = 0.0
-
-        if self.localization_mode == "camera_local":
-            world_T_camera = np.eye(4, dtype=np.float64)
-            pose_timestamp = rgb_timestamp
-            pose_age = 0.0
-            transform_valid = True
-            transform_source = "camera_local"
-            world_frame_used = self.sensor_frame
-        else:
-            world_frame_used = self.world_frame
-            t_tf_start = time.monotonic()
-            target_time = Time(seconds=rgb_stamp.sec, nanoseconds=rgb_stamp.nanosec)
-
-            # Determine if this mode permits causal SLAM fallback (SLAM mode or use_latest_tf=True)
-            allow_causal_slam = (self.localization_mode == "slam") or self.use_latest_tf
-
-            # Step 1: Attempt exact or interpolated transform valid for frame timestamp T
-            exact_succeeded = False
-            try:
-                # If exact/ground-truth mode, wait up to pose_max_dt. If SLAM mode, check non-blocking (0 timeout).
-                exact_timeout = Duration(seconds=0 if allow_causal_slam else self.pose_max_dt)
-                transform_stamped = self.tf_buffer.lookup_transform(
-                    self.world_frame,
-                    self.sensor_frame,
-                    target_time,
-                    timeout=exact_timeout,
-                )
-                tf_stamp = transform_stamped.header.stamp
-                pose_timestamp = float(tf_stamp.sec) + float(tf_stamp.nanosec) * 1e-9
-                raw_age = rgb_timestamp - pose_timestamp
-
-                if raw_age < -1e-4:
-                    transform_valid = False
-                    transform_source = "future_tf_rejected"
-                    self.get_logger().warn(
-                        f"TF returned future transform at frame {rgb_timestamp:.4f}: tf_ts={pose_timestamp:.4f} > frame_ts. Rejected.",
-                        throttle_duration_sec=2.0,
-                    )
-                elif raw_age > self.pose_max_dt:
-                    transform_valid = False
-                    transform_source = "stale_tf"
-                    self.get_logger().warn(
-                        f"Stale TF for {self.world_frame} -> {self.sensor_frame} at {rgb_timestamp:.4f}: "
-                        f"age={raw_age*1000.0:.1f}ms > max={self.pose_max_dt*1000.0:.1f}ms",
-                        throttle_duration_sec=2.0,
-                    )
-                else:
-                    world_T_camera = transform_to_matrix(transform_stamped)
-                    transform_valid = True
-                    pose_age = max(0.0, raw_age)
-                    transform_source = "tf_exact"
-                    exact_succeeded = True
-            except TransformException as ex:
-                if not allow_causal_slam:
-                    transform_valid = False
-                    transform_source = "missing_tf"
-                    self.get_logger().warn(
-                        f"TF lookup failed for {self.world_frame} -> {self.sensor_frame} at {rgb_timestamp:.4f}: {ex}. "
-                        "Frame marked invalid for world graph.",
-                        throttle_duration_sec=2.0,
-                    )
-
-            # Step 2: In SLAM mode, if exact transform at T is not yet ready, use causal latest transform <= T
-            if allow_causal_slam and not exact_succeeded:
-                try:
-                    transform_stamped = self.tf_buffer.lookup_transform(
-                        self.world_frame,
-                        self.sensor_frame,
-                        Time(),  # newest transform available in buffer
-                        timeout=Duration(seconds=self.pose_max_dt),
-                    )
-                    tf_stamp = transform_stamped.header.stamp
-                    pose_timestamp = float(tf_stamp.sec) + float(tf_stamp.nanosec) * 1e-9
-
-                    # Enforce causal invariant: pose_timestamp <= rgb_timestamp (never future)
-                    if pose_timestamp > rgb_timestamp:
-                        transform_valid = False
-                        transform_source = "future_tf_rejected"
-                        pose_age = rgb_timestamp - pose_timestamp
-                        self.get_logger().warn(
-                            f"Newest SLAM TF {pose_timestamp:.4f} is in future relative to frame {rgb_timestamp:.4f} "
-                            f"(dt={pose_age*1000.0:.1f}ms). Causal policy strictly rejects future poses.",
-                            throttle_duration_sec=2.0,
-                        )
-                    else:
-                        pose_age = rgb_timestamp - pose_timestamp  # Non-negative
-                        if self.slam_pose_max_age > 0 and pose_age > self.slam_pose_max_age:
-                            transform_valid = False
-                            transform_source = "stale_slam_tf"
-                            self.get_logger().warn(
-                                f"Causal SLAM TF age {pose_age*1000.0:.0f}ms > max={self.slam_pose_max_age*1000.0:.0f}ms. "
-                                "SLAM backend may not have localised yet.",
-                                throttle_duration_sec=2.0,
-                            )
-                        else:
-                            world_T_camera = transform_to_matrix(transform_stamped)
-                            transform_valid = True
-                            transform_source = "slam_causal_tf"
-                except TransformException as ex:
-                    transform_valid = False
-                    transform_source = "missing_slam_tf"
-                    self.get_logger().warn(
-                        f"SLAM TF lookup failed ({self.world_frame} -> {self.sensor_frame}): {ex}. "
-                        "Waiting for SLAM backend to initialise.",
-                        throttle_duration_sec=2.0,
-                    )
-
-            tf_latency_ms = (time.monotonic() - t_tf_start) * 1000.0
-
-            if self.frame_counter % 25 == 0 or self.frame_counter < 10:
-                tf_ts_str = f"{pose_timestamp:.4f}" if pose_timestamp is not None else "None"
-                self.get_logger().info(
-                    f"Pose association [frame {self.frame_counter:04d}]: "
-                    f"frame_ts={rgb_timestamp:.4f}, tf_ts={tf_ts_str}, "
-                    f"tf_age={pose_age*1000.0:.1f}ms, source={transform_source}, valid={transform_valid}"
-                )
-
         try:
             rgb_np = ros_image_to_numpy(pending.rgb_msg)
             depth_raw = ros_image_to_numpy(pending.depth_msg) if pending.depth_msg is not None else None
         except Exception as e:
             self.get_logger().error(f"Image conversion error: {e}")
             return
-
 
         depth_m = None
         if depth_raw is not None:
@@ -565,18 +564,7 @@ class SceneGraphROSNode(Node):
             )
         self.last_frame_timestamp = rgb_timestamp
 
-        if self.localization_mode == "camera_local" or (self.config.reference_frame and self.config.reference_frame.type == "camera"):
-            relation_frame = RelationReferenceFrame.create("camera", world_T_camera if world_T_camera is not None else np.eye(4, dtype=np.float64))
-        else:
-            up_axis = np.array(self.config.reference_frame.up_axis, dtype=np.float64) if self.config.reference_frame else np.array([0.0, 0.0, 1.0])
-            heading_axis = np.array(self.config.reference_frame.heading_axis, dtype=np.float64) if self.config.reference_frame else np.array([1.0, 0.0, 0.0])
-            relation_frame = RelationReferenceFrame.from_gravity_and_heading(
-                origin_world=world_T_camera[:3, 3] if world_T_camera is not None else np.zeros(3, dtype=np.float64),
-                up_axis_world=up_axis,
-                heading_world=heading_axis,
-            )
-
-        # Stage 1: Canonical SensorFrame creation
+        # Stage 1: Canonical SensorFrame creation (acquisition-only)
         sensor_status = StreamStatus.OK if depth_m is not None else StreamStatus.DEPTH_DROPPED
         sim_time_param = self.get_parameter("use_sim_time").value
         is_sim_time = sim_time_param.strip().lower() in ("true", "1", "yes") if isinstance(sim_time_param, str) else bool(sim_time_param)
@@ -596,20 +584,89 @@ class SceneGraphROSNode(Node):
             status=sensor_status,
         )
 
-        # Stage 1 -> Downstream bridge via FramePacket.from_sensor_frame
+        # Stage 3: Backend-independent pose estimation
+        t_est_start = time.monotonic()
+        pose_estimate, estimator_state = self.pose_estimator.estimate(sensor_frame)
+        estimate_latency_ms = (time.monotonic() - t_est_start) * 1000.0
+
+        # Stage 3: Canonical ReferenceFrame via ReferenceFrameProvider
+        if self.localization_mode == "camera_local" or (self.config.reference_frame and self.config.reference_frame.type == "camera"):
+            relation_frame = RelationReferenceFrame.create(
+                "camera",
+                pose_estimate.world_T_camera if pose_estimate.valid else np.eye(4, dtype=np.float64),
+            )
+        else:
+            origin = pose_estimate.world_T_camera[:3, 3] if pose_estimate.valid else None
+            relation_frame = self.ref_frame_provider.get_frame(origin_world=origin)
+
+        # Stage 3: FramePacket assembly with PoseEstimate & EstimatorState
+        world_frame_used = self.sensor_frame if self.localization_mode == "camera_local" else self.world_frame
         packet = FramePacket.from_sensor_frame(
             sensor_frame=sensor_frame,
-            world_T_camera=world_T_camera,
-            pose_timestamp=pose_timestamp,
-            pose_source=transform_source,
-            transform_source=transform_source,
-            transform_valid=transform_valid,
+            pose_estimate=pose_estimate,
+            estimator_state=estimator_state,
             localization_mode=LocalizationMode.CAMERA_LOCAL_MODE if self.localization_mode == "camera_local" else LocalizationMode.WORLD_MODE,
             relation_frame=relation_frame,
             world_frame=world_frame_used,
         )
 
+        # HUD logging
+        if self.frame_counter % 25 == 0 or self.frame_counter < 10:
+            cov_str = "YES" if estimator_state.covariance_available else "NO"
+            loop_str = "YES" if estimator_state.loop_closure_detected else "NO"
+            self.get_logger().info(
+                f"[RTAB-MAP {estimator_state.tracking_state.value.upper()}] "
+                f"frame={self.frame_counter:04d} | "
+                f"pose_age={pose_estimate.age*1000.0:.1f}ms | "
+                f"features={estimator_state.features} | "
+                f"matches={estimator_state.matches} | "
+                f"inliers={estimator_state.inliers} | "
+                f"ratio={estimator_state.inlier_ratio:.3f} | "
+                f"local_map={estimator_state.local_map_size} | "
+                f"covariance={cov_str} | "
+                f"loop_closure={loop_str} | "
+                f"estimation={estimate_latency_ms:.1f}ms"
+            )
 
+        # Telemetry logging to CSV
+        if self._telemetry_writer is not None:
+            self._telemetry_writer.writerow([
+                f"{rgb_timestamp:.6f}",
+                self.frame_counter,
+                pose_estimate.valid,
+                f"{pose_estimate.age:.4f}" if np.isfinite(pose_estimate.age) else "-1.0",
+                pose_estimate.source,
+                estimator_state.backend_name,
+                estimator_state.tracking_state.value,
+                estimator_state.matches,
+                estimator_state.inliers,
+                f"{estimator_state.inlier_ratio:.4f}",
+                estimator_state.features,
+                estimator_state.local_map_size,
+                estimator_state.local_key_frames,
+                estimator_state.key_frame_added,
+                f"{estimator_state.registration_time_ms:.2f}",
+                estimator_state.odometry_lost,
+                estimator_state.current_node_id,
+                estimator_state.loop_closure_id,
+                estimator_state.loop_closure_detected,
+                f"{estimator_state.telemetry_age:.4f}" if np.isfinite(estimator_state.telemetry_age) else "-1.0",
+                estimator_state.covariance_available,
+                f"{estimate_latency_ms:.2f}",
+            ])
+            if self.frame_counter % 10 == 0 and self._telemetry_file is not None:
+                self._telemetry_file.flush()
+
+        # TUM trajectory logging
+        if self._tum_trajectory_file is not None and pose_estimate.valid and pose_estimate.world_T_camera is not None:
+            T = pose_estimate.world_T_camera
+            qx, qy, qz, qw = matrix_to_quaternion(T[:3, :3])
+            tx, ty, tz = T[:3, 3]
+            self._tum_trajectory_file.write(
+                f"{rgb_timestamp:.6f} {tx:.6f} {ty:.6f} {tz:.6f} {qx:.6f} {qy:.6f} {qz:.6f} {qw:.6f}\n"
+            )
+            if self.frame_counter % 10 == 0:
+                self._tum_trajectory_file.flush()
 
         if self.debug_frame_packet_only:
             self.get_logger().info(
@@ -617,7 +674,7 @@ class SceneGraphROSNode(Node):
                 f"RGB: {rgb_np.shape} | "
                 f"Depth: {depth_m.shape if depth_m is not None else 'None'} | "
                 f"Timestamp: {rgb_timestamp:.4f} | "
-                f"Pose: {'available' if world_T_camera is not None else 'missing'}"
+                f"Pose: {'available' if pose_estimate.valid else 'missing'}"
             )
             self.frame_counter += 1
             self.processed_frames += 1
@@ -641,7 +698,7 @@ class SceneGraphROSNode(Node):
                 total_latency_ms=total_latency_ms,
                 queue_size=self.frame_queue.qsize(),
                 dropped_frames=self.dropped_frames,
-                tf_latency_ms=tf_latency_ms,
+                tf_latency_ms=estimate_latency_ms,
                 inference_latency_ms=infer_latency_ms,
             )
 
@@ -669,12 +726,18 @@ class SceneGraphROSNode(Node):
             )
 
     def destroy_node(self):
-        """Clean shutdown stopping worker thread before node destruction."""
+        """Clean shutdown stopping worker thread and closing telemetry file before destruction."""
         self.stop_event.set()
         if hasattr(self, "pipeline") and self.pipeline is not None and hasattr(self.pipeline, "stop"):
             self.pipeline.stop()
         if hasattr(self, "worker_thread") and self.worker_thread.is_alive():
             self.worker_thread.join(timeout=2.0)
+        if hasattr(self, "_telemetry_file") and self._telemetry_file is not None and not self._telemetry_file.closed:
+            self._telemetry_file.flush()
+            self._telemetry_file.close()
+        if hasattr(self, "_tum_trajectory_file") and self._tum_trajectory_file is not None and not self._tum_trajectory_file.closed:
+            self._tum_trajectory_file.flush()
+            self._tum_trajectory_file.close()
         super().destroy_node()
 
 

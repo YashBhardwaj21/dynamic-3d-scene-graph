@@ -5,6 +5,10 @@ import sys
 import numpy as np
 
 
+import pytest
+
+pytest.importorskip("streamlit")
+
 SPEC = importlib.util.spec_from_file_location(
     "scene_graph_demo", Path(__file__).parents[2] / "tools" / "scene_graph_demo.py"
 )

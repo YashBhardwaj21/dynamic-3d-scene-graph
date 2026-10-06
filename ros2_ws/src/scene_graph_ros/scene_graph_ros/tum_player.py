@@ -84,7 +84,7 @@ class TUMPlayerNode(Node):
         self.declare_parameter("dataset_root", "data/raw/rgbd_dataset_freiburg1_desk")
         self.declare_parameter("config_path", "configs/tum_fr1_desk.yaml")
         self.declare_parameter("rate_multiplier", 1.0)
-        self.declare_parameter("start_frame", 0)
+        self.declare_parameter("start_frame", -1)
         self.declare_parameter("end_frame", -1)
         self.declare_parameter("frame_stride", 1)
         self.declare_parameter("rgb_topic", "/tum/rgb/image_raw")
@@ -130,7 +130,7 @@ class TUMPlayerNode(Node):
         )
         _depth_scale_param = self.get_parameter("depth_scale").get_parameter_value().double_value
         self.slam_depth_topic = self.get_parameter("slam_depth_topic").get_parameter_value().string_value.strip()
-        self.min_subscribers = max(1, self.get_parameter("min_subscribers").get_parameter_value().integer_value)
+        self.min_subscribers = max(0, self.get_parameter("min_subscribers").get_parameter_value().integer_value)
 
         self.config = load_scene_graph_config(config_path_param)
 
@@ -168,11 +168,14 @@ class TUMPlayerNode(Node):
         start_frame = self.param_start_frame
         end_frame = self.param_end_frame
 
-        if start_frame == 0 and self.config.sequence is not None:
+        if start_frame < 0 and self.config.sequence is not None and self.config.sequence.start_frame is not None:
             start_frame = self.config.sequence.start_frame
-        if end_frame == -1 and self.config.sequence is not None and self.config.sequence.end_frame is not None:
+        if start_frame < 0:
+            start_frame = 0
+
+        if end_frame < 0 and self.config.sequence is not None and self.config.sequence.end_frame is not None:
             end_frame = self.config.sequence.end_frame
-        if end_frame == -1:
+        if end_frame < 0:
             end_frame = len(self.rgb_entries) - 1
 
         self.start_frame = max(0, min(start_frame, len(self.rgb_entries) - 1))
@@ -318,7 +321,7 @@ class TUMPlayerNode(Node):
                     f"target_rate={self.publish_rate_hz:.1f} Hz, actual_rate={actual_rate:.1f} Hz"
                 )
                 self.timer.cancel()
-                return
+                raise SystemExit
 
         if self.published_count == 0 and self.rgb_pub.get_subscription_count() < self.min_subscribers:
             if self.current_idx <= self.end_frame:
@@ -378,11 +381,12 @@ def main(args=None):
     node = TUMPlayerNode()
     try:
         rclpy.spin(node)
-    except KeyboardInterrupt:
+    except (KeyboardInterrupt, SystemExit):
         pass
     finally:
         node.destroy_node()
-        rclpy.shutdown()
+        if rclpy.ok():
+            rclpy.shutdown()
 
 
 if __name__ == "__main__":

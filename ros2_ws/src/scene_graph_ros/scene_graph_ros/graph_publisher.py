@@ -357,7 +357,7 @@ class GraphPublisher:
             r_int, g_int, b_int = track_color(obj.track_id)
             r, g, b = r_int / 255.0, g_int / 255.0, b_int / 255.0
 
-            # --- Determine OBB corners in world space ---
+            # Determine OBB corners in world space
             cx, cy, cz = float(pos[0]), float(pos[1]), float(pos[2])
             if obj.obb_extents_world is not None:
                 extents = [max(0.04, float(x)) for x in obj.obb_extents_world]
@@ -419,7 +419,7 @@ class GraphPublisher:
                 wire_marker.points.append(Point(x=float(pb[0]), y=float(pb[1]), z=float(pb[2])))
             marker_array.markers.append(wire_marker)
 
-            # --- Compact text label above the box ---
+            # Compact text label above the box
             text_marker = Marker()
             text_marker.header.frame_id = self.world_frame
             text_marker.header.stamp = stamp
@@ -658,16 +658,26 @@ class GraphPublisher:
         y = (v_orig - cy) * z / fy
         pts_cam = np.column_stack((x, y, z)).astype(np.float64)
 
-        if packet.world_T_camera is not None:
-            pts_world = transform_points(packet.world_T_camera, pts_cam)
+        is_global_valid = (
+            packet.world_T_camera is not None
+            and getattr(packet, "transform_valid", False) is True
+        )
+
+        if is_global_valid:
+            pts_to_pub = transform_points(packet.world_T_camera, pts_cam)
+            cloud_frame_id = self.world_frame
+        elif getattr(packet, "localization_mode", None) == LocalizationMode.CAMERA_LOCAL_MODE:
+            pts_to_pub = pts_cam
+            cloud_frame_id = packet.frame_id or "camera_color_optical_frame"
         else:
-            pts_world = pts_cam
+            # When world localization is invalid/missing, never publish camera-local points under world frame
+            return
 
         colors = rgb_sub[v, u]
 
         cloud_msg = numpy_to_point_cloud2(
-            points=pts_world,
-            frame_id=self.world_frame,
+            points=pts_to_pub,
+            frame_id=cloud_frame_id,
             timestamp=packet.timestamp,
             colors=colors,
         )

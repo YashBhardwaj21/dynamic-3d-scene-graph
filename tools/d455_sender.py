@@ -316,13 +316,18 @@ class D455SenderService:
 
                 item = (header, color_data.tobytes(), depth_data.tobytes())
 
-                # Non-blocking bounded push: drops stale frame if transport thread is behind
+                # Non-blocking bounded push: drops stale video frame if transport thread is behind,
+                # while preserving all accumulated IMU telemetry in the replacement packet.
                 try:
                     self.transport_queue.put_nowait(item)
                 except queue.Full:
                     try:
-                        _ = self.transport_queue.get_nowait()
+                        stale_item = self.transport_queue.get_nowait()
                         self.frames_dropped_transport += 1
+                        stale_imu = stale_item[0].get("imu", [])
+                        if stale_imu:
+                            # Prepend IMU from dropped video frame so high-rate state estimation is never interrupted
+                            item[0]["imu"] = stale_imu + item[0].get("imu", [])
                     except queue.Empty:
                         pass
                     try:

@@ -134,12 +134,15 @@ def test_scene_graph_node_use_sim_time_ros():
     except ImportError:
         pytest.skip("rclpy or scene_graph_ros not available")
 
+    if rclpy.ok():
+        rclpy.shutdown()
     rclpy.init(args=["--ros-args", "-p", "use_sim_time:=true"])
     try:
         node = SceneGraphROSNode()
         assert node.get_parameter("use_sim_time").value is True
         node.destroy_node()
     finally:
-        rclpy.shutdown()
+        if rclpy.ok():
+            rclpy.shutdown()
 
 

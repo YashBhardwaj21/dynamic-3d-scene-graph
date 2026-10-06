@@ -6,6 +6,7 @@ import numpy as np
 
 from scene_graph.geometry.camera import CameraIntrinsics, DepthModel
 from scene_graph.geometry.reference_frame import RelationReferenceFrame
+from scene_graph.data.pose_estimate import EstimatorState, PoseEstimate
 
 if TYPE_CHECKING:
     from scene_graph.data.sensor_frame import SensorFrame
@@ -48,6 +49,10 @@ class FramePacket:
     pose_source: str = "unknown"
     metadata: dict = field(default_factory=dict)
 
+    # Stage 3 Pose & Estimator Telemetry Contracts
+    pose_estimate: PoseEstimate | None = None
+    estimator_state: EstimatorState | None = None
+
     # Explicit Localization & Timestamp Provenance
     sensor_timestamp: float | None = None
     rgb_timestamp: float | None = None
@@ -73,15 +78,33 @@ class FramePacket:
         if self.depth_timestamp is None and self.depth is not None:
             self.depth_timestamp = self.rgb_timestamp
 
-        if self.localization_mode == LocalizationMode.CAMERA_LOCAL_MODE:
+        if self.pose_estimate is not None:
+            if self.world_T_camera is None:
+                self.world_T_camera = self.pose_estimate.world_T_camera
+            if self.pose_timestamp is None:
+                self.pose_timestamp = self.pose_estimate.pose_timestamp or self.pose_estimate.timestamp
+            self.pose_age = self.pose_estimate.age
+            self.transform_valid = self.pose_estimate.valid
+            eff_source = self.pose_estimate.transform_source if self.pose_estimate.transform_source != "unknown" else self.pose_estimate.source
+            if eff_source != "unknown":
+                self.transform_source = eff_source
+                self.pose_source = eff_source
+            self.world_frame = self.pose_estimate.frame_id
+        elif self.localization_mode == LocalizationMode.CAMERA_LOCAL_MODE:
             self.world_frame = self.frame_id
             if self.world_T_camera is None:
                 self.world_T_camera = np.eye(4, dtype=np.float64)
             if self.pose_timestamp is None:
                 self.pose_timestamp = self.rgb_timestamp
             self.transform_source = "camera_local"
+            self.pose_source = "camera_local"
             self.transform_valid = True
             self.pose_age = 0.0
+            self.pose_estimate = PoseEstimate.identity(
+                timestamp=self.rgb_timestamp,
+                frame_id=self.world_frame,
+                source=self.transform_source,
+            )
         else:
             if self.pose_timestamp is not None:
                 self.pose_age = abs(self.rgb_timestamp - self.pose_timestamp)
@@ -91,6 +114,28 @@ class FramePacket:
             else:
                 self.transform_valid = False
                 self.transform_source = "missing_tf" if self.transform_source == "unknown" else self.transform_source
+
+            eff_source = self.transform_source if self.transform_source != "unknown" else self.pose_source
+            if self.transform_valid and self.world_T_camera is not None:
+                self.pose_estimate = PoseEstimate(
+                    world_T_camera=self.world_T_camera,
+                    timestamp=self.rgb_timestamp,
+                    valid=True,
+                    age=self.pose_age,
+                    source=eff_source,
+                    frame_id=self.world_frame,
+                    pose_timestamp=self.pose_timestamp,
+                    target_timestamp=self.rgb_timestamp,
+                    transform_source=eff_source,
+                )
+            else:
+                self.pose_estimate = PoseEstimate.invalid(
+                    timestamp=self.rgb_timestamp,
+                    source=eff_source,
+                    target_timestamp=self.rgb_timestamp,
+                    transform_source=self.transform_source,
+                    frame_id=self.world_frame,
+                )
 
         if self.rgb is not None and isinstance(self.rgb, np.ndarray):
             if self.rgb.ndim != 3 or self.rgb.shape[2] != 3:
@@ -111,7 +156,6 @@ class FramePacket:
 
         if self.world_T_camera is not None and isinstance(self.world_T_camera, np.ndarray) and self.world_T_camera.shape != (4, 4):
             raise ValueError("FramePacket.world_T_camera must be (4, 4) pose matrix")
-
 
         if self.metadata is None:
             self.metadata = {}
@@ -148,11 +192,13 @@ class FramePacket:
         localization_mode: LocalizationMode = LocalizationMode.WORLD_MODE,
         relation_frame: RelationReferenceFrame | None = None,
         world_frame: str = "world",
+        pose_estimate: PoseEstimate | None = None,
+        estimator_state: EstimatorState | None = None,
     ) -> "FramePacket":
         """Compatibility bridge converting a canonical Stage 1 SensorFrame into FramePacket.
 
         Preserves all sensor timestamps, intrinsics, and metric depth while attaching
-        downstream localization and reference frame context.
+        downstream localization, pose estimates, and reference frame context.
         """
         mapped_imu = tuple(
             IMUSample(timestamp=s.timestamp, accel=s.accel, gyro=s.gyro)
@@ -171,8 +217,15 @@ class FramePacket:
         metadata["timestamp_domain"] = sensor_frame.timestamp.domain.value
         if sensor_frame.host_capture_timestamp is not None:
             metadata["host_capture_time"] = sensor_frame.host_capture_timestamp.value
-        if sensor_frame.network_arrival_timestamp is not None:
-            metadata["network_arrival_time"] = sensor_frame.network_arrival_timestamp.value
+        if pose_estimate is not None:
+            eff_src = pose_estimate.transform_source if pose_estimate.transform_source != "unknown" else pose_estimate.source
+            if eff_src != "unknown":
+                pose_source = eff_src
+                transform_source = eff_src
+        elif transform_source != "unknown" and pose_source == "unknown":
+            pose_source = transform_source
+        elif pose_source != "unknown" and transform_source == "unknown":
+            transform_source = pose_source
 
         return cls(
             frame_index=sensor_frame.sequence_number,
@@ -187,6 +240,8 @@ class FramePacket:
             optical_frame_id=sensor_frame.optical_frame_id,
             pose_source=pose_source,
             metadata=metadata,
+            pose_estimate=pose_estimate,
+            estimator_state=estimator_state,
             sensor_timestamp=sensor_frame.timestamp.value,
             rgb_timestamp=sensor_frame.timestamp.value,
             depth_timestamp=sensor_frame.timestamp.value if sensor_frame.has_depth else None,

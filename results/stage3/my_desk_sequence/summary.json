@@ -1,0 +1,26 @@
+{
+  "sequence": "my_desk_sequence",
+  "total_frames": 80,
+  "valid_poses": 71,
+  "tracking_ratio_pct": 88.75,
+  "tracking_states": {
+    "initializing": 9,
+    "tracking": 71,
+    "lost": 0,
+    "recovered": 0
+  },
+  "telemetry": {
+    "mean_inliers": 54.9625,
+    "max_inliers": 375.0,
+    "mean_matches": 95.1,
+    "mean_features": 213.7375,
+    "covariance_available_pct": 22.5,
+    "mean_latency_ms": 53.10787499999999,
+    "p95_latency_ms": 124.2405
+  },
+  "accuracy": {
+    "has_real_ground_truth": false,
+    "ate_rmse_m": null,
+    "rpe_rmse_m": null
+  }
+}

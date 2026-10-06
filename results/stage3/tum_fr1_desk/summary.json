@@ -1,0 +1,26 @@
+{
+  "sequence": "tum_fr1_desk",
+  "total_frames": 33,
+  "valid_poses": 26,
+  "tracking_ratio_pct": 78.78787878787878,
+  "tracking_states": {
+    "initializing": 7,
+    "tracking": 26,
+    "lost": 0,
+    "recovered": 0
+  },
+  "telemetry": {
+    "mean_inliers": 75.87878787878788,
+    "max_inliers": 301.0,
+    "mean_matches": 158.78787878787878,
+    "mean_features": 401.8181818181818,
+    "covariance_available_pct": 42.42424242424242,
+    "mean_latency_ms": 37.13636363636363,
+    "p95_latency_ms": 125.802
+  },
+  "accuracy": {
+    "has_real_ground_truth": true,
+    "ate_rmse_m": 0.05450635536282583,
+    "rpe_rmse_m": 0.03486541135911063
+  }
+}

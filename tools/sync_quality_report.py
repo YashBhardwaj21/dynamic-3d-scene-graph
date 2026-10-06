@@ -10,7 +10,7 @@ from scene_graph.data.synchronization import associate
 
 
 def print_association_stats(primary_ts, secondary_ts, matches, name):
-    print(f"\n--- {name} Synchronization ---")
+    print(f"\n[{name} Synchronization]")
     if not matches:
         print("No matches found.")
         return
@@ -55,9 +55,7 @@ def report_for_window(rgb_entries, depth_entries, pose_entries, max_dt, start_id
     depth_ts = [e.timestamp for e in depth_entries]
     pose_ts = [e.timestamp for e in pose_entries]
     
-    print(f"\n======================================")
-    print(f"{title}")
-    print(f"======================================")
+    print(f"\n[{title}]")
     print(f"RGB: {len(rgb_ts)}")
     print(f"Depth: {len(depth_ts)}")
     print(f"Pose: {len(pose_ts)}")
@@ -77,7 +75,7 @@ def report_for_window(rgb_entries, depth_entries, pose_entries, max_dt, start_id
         if i in depth_match_dict and i in pose_match_dict:
             complete += 1
             
-    print(f"\n--- Complete Frame Packets ---")
+    print(f"\n[Complete Frame Packets]")
     print(f"RGB-depth matched: {len(rgb_depth_matches)}")
     print(f"RGB-pose matched: {len(rgb_pose_matches)}")
     print(f"Complete RGB-depth-pose: {complete}")

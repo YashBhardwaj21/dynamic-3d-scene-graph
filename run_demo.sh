@@ -38,12 +38,10 @@ fi
 
 cd "$SCRIPT_DIR"
 
-echo "============================================================"
-echo " Starting Dynamic 3D Scene Graph Real-time Demo..."
-echo " Display: $DISPLAY | Wayland: $WAYLAND_DISPLAY"
-echo " Ingesting TUM RGB-D Sequence -> YOLOE Perception -> Geometry"
-echo " -> Causal Tracker -> Spatial Hierarchy -> Temporal Relations"
-echo " -> 3D RViz Visualization + 2D Perception Dashboard"
-echo "============================================================"
+echo "Starting Dynamic 3D Scene Graph Real-time Demo..."
+echo "Display: $DISPLAY | Wayland: $WAYLAND_DISPLAY"
+echo "Ingesting TUM RGB-D Sequence -> YOLOE Perception -> Geometry"
+echo "-> Causal Tracker -> Spatial Hierarchy -> Temporal Relations"
+echo "-> 3D RViz Visualization + 2D Perception Dashboard"
 
 exec ros2 launch scene_graph_ros tum_scene_graph.launch.py "$@"

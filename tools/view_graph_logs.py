@@ -51,16 +51,14 @@ class GraphLogViewer(Node):
 
         # Clear screen and move cursor home for smooth terminal dashboard
         sys.stdout.write("\033[2J\033[H")
-        sys.stdout.write("================================ DYNAMIC 3D SCENE GRAPH TELEMETRY ================================\n")
-        sys.stdout.write(f" Frame: #{frame:05d} | Timestamp: {timestamp:12.4f}s | FPS: {fps:5.1f} | Latency: {latency:5.1f}ms | Queue: {qsize} | Dropped: {dropped}\n")
-        sys.stdout.write("--------------------------------------------------------------------------------------------------\n")
+        sys.stdout.write("[DYNAMIC 3D SCENE GRAPH TELEMETRY]\n")
+        sys.stdout.write(f" Frame: #{frame:05d} | Timestamp: {timestamp:12.4f}s | FPS: {fps:5.1f} | Latency: {latency:5.1f}ms | Queue: {qsize} | Dropped: {dropped}\n\n")
 
         sys.stdout.write(f" ACTIVE 3D OBJECTS ({len(objects)}):\n")
         if not objects:
             sys.stdout.write("   (No confirmed 3D objects currently tracked)\n")
         else:
             sys.stdout.write(f"   {'TRACK ID':<12} {'CLASS':<12} {'STATE':<10} {'CENTROID [X, Y, Z] (m)':<26} {'CONF':<6} {'OBS':<5}\n")
-            sys.stdout.write(f"   {'-'*10:<12} {'-'*10:<12} {'-'*8:<10} {'-'*24:<26} {'-'*5:<6} {'-'*4:<5}\n")
             for obj in objects:
                 tid = obj.get("id", "N/A")
                 cls = obj.get("class", "unknown")
@@ -68,11 +66,10 @@ class GraphLogViewer(Node):
                 conf = obj.get("confidence", 0.0)
                 obs = obj.get("observations", 0)
                 centroid = obj.get("centroid")
-                pos_str = f"[{centroid[0]:6.2f}, {centroid[1]:6.2f}, {centroid[2]:6.2f}]" if centroid else "[  ---,   ---,   ---]"
+                pos_str = f"[{centroid[0]:6.2f}, {centroid[1]:6.2f}, {centroid[2]:6.2f}]" if centroid else "[  N/A,   N/A,   N/A]"
                 sys.stdout.write(f"   {tid:<12} {cls:<12} {st:<10} {pos_str:<26} {conf:0.2f}   {obs:<5}\n")
 
-        sys.stdout.write("--------------------------------------------------------------------------------------------------\n")
-        sys.stdout.write(f" CONFIRMED SPATIAL & TEMPORAL RELATIONS ({len(relations)}):\n")
+        sys.stdout.write(f"\n CONFIRMED SPATIAL & TEMPORAL RELATIONS ({len(relations)}):\n")
         if not relations:
             sys.stdout.write("   (No confirmed relations in active belief model)\n")
         else:
@@ -82,9 +79,9 @@ class GraphLogViewer(Node):
                 obj_str = f"{rel.get('object_class', 'obj')}:{rel.get('object', '?')}"
                 conf = rel.get("confidence", 0.0)
                 state = rel.get("state", "ACTIVE")
-                sys.stdout.write(f"   • {sub:<22}  --{pred:^15}-->  {obj_str:<22} (conf: {conf:0.2f}, {state})\n")
+                sys.stdout.write(f"   * {sub:<22} -> [{pred:^13}] -> {obj_str:<22} (conf: {conf:0.2f}, {state})\n")
 
-        sys.stdout.write("==================================================================================================\n")
+        sys.stdout.write("\n")
         sys.stdout.flush()
 
 

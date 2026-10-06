@@ -56,7 +56,15 @@ class Timestamp:
             return False
         if self.domain == TimestampDomain.UNKNOWN or other.domain == TimestampDomain.UNKNOWN:
             return False
-        return self.domain == other.domain
+        if self.domain != other.domain:
+            return False
+        # Hardware and system clocks from distinct sources have arbitrary relative offsets
+        if self.domain in (TimestampDomain.HARDWARE_CLOCK, TimestampDomain.SYSTEM_TIME):
+            return self.source == other.source
+        # Simulated and Global time are comparable if both share compatible or declared source
+        if self.source != "unknown" and other.source != "unknown" and self.source != other.source:
+            return False
+        return True
 
     def delta_to(self, other: Timestamp) -> float:
         """Computes (other.value - self.value) in seconds, enforcing clock domain compatibility."""
@@ -100,8 +108,9 @@ class Timestamp:
 class ClockMapping:
     """Manages online offset estimation and health tracking between two clock domains.
     
-    Used specifically to map Windows RealSense acquisition timestamps to the WSL2 / ROS 2 clock domain
-    without destroying the original hardware timestamp.
+    Uses a minimum-delay sliding window filter (NTP-style) to estimate true clock offset
+    without being distorted by network transit latency spikes, OS scheduling jitter, or queue delays.
+    Guarantees monotonically non-decreasing mapped timestamps.
     """
 
     def __init__(
@@ -109,23 +118,26 @@ class ClockMapping:
         smoothing_alpha: float = 0.05,
         max_drift_jump_sec: float = 0.5,
         max_stale_duration_sec: float = 2.0,
+        window_size: int = 30,
     ):
         self.smoothing_alpha = float(smoothing_alpha)
         self.max_drift_jump_sec = float(max_drift_jump_sec)
         self.max_stale_duration_sec = float(max_stale_duration_sec)
+        self.window_size = max(1, int(window_size))
 
         self._offset: float | None = None
+        self._delay_window: list[float] = []
         self._last_update_monotonic: float = 0.0
         self._sample_count: int = 0
         self._is_healthy: bool = False
         self._last_raw_offset: float = 0.0
         self._drift_rate: float = 0.0
+        self._last_mapped_time: float = -float("inf")
 
     @property
     def is_healthy(self) -> bool:
         if not self._is_healthy or self._offset is None:
             return False
-        # If mapping hasn't been updated recently, mark unhealthy
         return (time.monotonic() - self._last_update_monotonic) <= self.max_stale_duration_sec
 
     @property
@@ -141,21 +153,25 @@ class ClockMapping:
         return self._drift_rate
 
     def update(self, source_time: float, target_time: float) -> bool:
-        """Updates the online offset filter with a new observation (source_time -> target_time).
+        """Updates the offset filter using arrival timestamp at the network/driver boundary.
+        
+        Args:
+            source_time: Sensor hardware or capture timestamp.
+            target_time: Exact arrival timestamp in target clock domain (before queues).
         
         Returns:
-            True if sample was accepted and mapping is healthy, False if a discontinuity was detected.
+            True if sample was accepted and mapping is healthy, False if a discontinuity occurred.
         """
         now_mono = time.monotonic()
         raw_offset = target_time - source_time
 
         if self._offset is None:
-            # Initialize filter directly with first valid measurement
             self._offset = raw_offset
             self._last_raw_offset = raw_offset
             self._last_update_monotonic = now_mono
             self._sample_count = 1
             self._is_healthy = True
+            self._delay_window = [raw_offset]
             return True
 
         # Check for sudden clock jump (NTP synchronization, camera reset, or sleep/wake drift)
@@ -167,12 +183,21 @@ class ClockMapping:
             self._last_update_monotonic = now_mono
             self._sample_count = 1
             self._is_healthy = False
+            self._delay_window = [raw_offset]
             return False
 
-        # Exponential moving average filter to reject network transit jitter
+        # Maintain sliding window of recent transit offsets
+        self._delay_window.append(raw_offset)
+        if len(self._delay_window) > self.window_size:
+            self._delay_window.pop(0)
+
+        # Minimum transit delay in the window approximates the true clock offset with minimal network jitter
+        min_delay_offset = min(self._delay_window)
+
+        # Smooth tracking using minimum-delay estimate
         dt = max(1e-4, now_mono - self._last_update_monotonic)
         self._drift_rate = (raw_offset - self._last_raw_offset) / dt
-        self._offset = (1.0 - self.smoothing_alpha) * self._offset + self.smoothing_alpha * raw_offset
+        self._offset = (1.0 - self.smoothing_alpha) * self._offset + self.smoothing_alpha * min_delay_offset
         self._last_raw_offset = raw_offset
         self._last_update_monotonic = now_mono
         self._sample_count += 1
@@ -180,16 +205,26 @@ class ClockMapping:
         return True
 
     def map_timestamp(self, source_time: float) -> float:
-        """Applies estimated offset to project source_time into target clock domain."""
+        """Applies estimated offset to project source_time into target clock domain.
+        
+        Enforces monotonic non-decreasing guarantee: mapped output never jumps backward.
+        """
         if self._offset is None:
             return source_time
-        return source_time + self._offset
+        mapped = source_time + self._offset
+        if mapped < self._last_mapped_time:
+            mapped = self._last_mapped_time
+        else:
+            self._last_mapped_time = mapped
+        return mapped
 
     def reset(self) -> None:
-        """Resets the clock mapping upon reconnect or camera session restart."""
+        """Resets the clock mapping upon reconnect, session restart, or disconnect."""
         self._offset = None
+        self._delay_window.clear()
         self._last_update_monotonic = 0.0
         self._sample_count = 0
         self._is_healthy = False
         self._last_raw_offset = 0.0
         self._drift_rate = 0.0
+        self._last_mapped_time = -float("inf")
