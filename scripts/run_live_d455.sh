@@ -38,17 +38,17 @@ fi
 cd "$SCRIPT_DIR"
 
 echo "Starting Intel RealSense D455 Live Runtime"
-echo "Pipeline: D455 Bridge (Port 5000) -> RTAB-Map SLAM -> SceneGraph"
+echo "Pipeline: RealSense D455 -> RTAB-Map SLAM -> SceneGraph"
 echo "Time Domain: System wall clock (use_sim_time=false)"
 echo "Freshness: High-accuracy live SLAM (pose_max_age=80ms)"
 echo "Visualization: RViz2 (Window 3) + 2D Detections & Tracks (Windows 1 & 2)"
 
 exec ros2 launch scene_graph_ros live_scene_graph.launch.py \
-    use_bridge:=true \
+    use_bridge:=false \
     use_rtabmap:=true \
     use_scenegraph:=true \
     use_rviz:=true \
     use_viewer:=true \
-    config_path:=configs/live_d455.yaml \
+    config_path:=configs/runtime/live_d455.yaml \
     localization_mode:=slam \
     "$@"

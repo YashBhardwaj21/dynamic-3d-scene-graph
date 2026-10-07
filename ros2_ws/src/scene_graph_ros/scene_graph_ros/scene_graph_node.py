@@ -176,6 +176,7 @@ class SceneGraphROSNode(Node):
         self.declare_parameter("rtabmap_odom_info_topic", "/rtabmap/odom_info")
         self.declare_parameter("rtabmap_info_topic", "/rtabmap/info")
         self.declare_parameter("metadata_topic", "/camera/camera/metadata")
+        self.declare_parameter("dataset_type", "realsense")
 
         self.rgb_topic = self.get_parameter("rgb_topic").get_parameter_value().string_value
         self.depth_topic = self.get_parameter("depth_topic").get_parameter_value().string_value
@@ -292,8 +293,8 @@ class SceneGraphROSNode(Node):
         self.tf_buffer = tf2_ros.Buffer(node=self)
         self.tf_listener = tf2_ros.TransformListener(self.tf_buffer, self)
 
-        # Stage 3: Canonical ReferenceFrameProvider initialization
-        dataset_type = "tum" if "tum" in self.rgb_topic.lower() else "realsense"
+        # Canonical ReferenceFrameProvider initialization
+        dataset_type = self.get_parameter("dataset_type").get_parameter_value().string_value
         self.ref_frame_provider = ReferenceFrameProvider(dataset_type=dataset_type)
 
         # Stage 3: Estimator subsystem initialization

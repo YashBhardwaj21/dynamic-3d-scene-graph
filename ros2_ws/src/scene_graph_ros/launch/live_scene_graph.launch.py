@@ -177,8 +177,8 @@ def generate_launch_description():
     return LaunchDescription([
         DeclareLaunchArgument(
             "use_bridge",
-            default_value="true",
-            description="Whether to launch D455 TCP receiver bridge node",
+            default_value="false",
+            description="Whether to launch legacy D455 TCP receiver bridge node",
         ),
         DeclareLaunchArgument(
             "use_rtabmap",
@@ -212,7 +212,7 @@ def generate_launch_description():
         ),
         DeclareLaunchArgument(
             "config_path",
-            default_value="configs/live_d455.yaml",
+            default_value="configs/runtime/live_d455.yaml",
             description="Path to SceneGraph configuration YAML",
         ),
         DeclareLaunchArgument(

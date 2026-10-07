@@ -23,7 +23,6 @@ setup(
     entry_points={
         "console_scripts": [
             "scene_graph_node = scene_graph_ros.scene_graph_node:main",
-            "tum_player = scene_graph_ros.tum_player:main",
             "live_2d_viewer = scene_graph_ros.live_2d_viewer:main",
         ],
     },
