@@ -1,0 +1,1712 @@
+[
+  {
+    "entity_a": "chair_001",
+    "class_a": "chair",
+    "entity_b": "chair_002",
+    "class_b": "chair",
+    "centroid_distance_3d_m": 0.8017,
+    "centroid_distance_2d_m": 0.8003,
+    "footprint_clearance_m": 0.0917,
+    "uncertainty_std_m": 0.2931
+  },
+  {
+    "entity_a": "chair_001",
+    "class_a": "chair",
+    "entity_b": "chair_005",
+    "class_b": "chair",
+    "centroid_distance_3d_m": 1.2839,
+    "centroid_distance_2d_m": 1.2834,
+    "footprint_clearance_m": 0.1171,
+    "uncertainty_std_m": 0.1839
+  },
+  {
+    "entity_a": "chair_001",
+    "class_a": "chair",
+    "entity_b": "chair_003",
+    "class_b": "desk",
+    "centroid_distance_3d_m": 1.5127,
+    "centroid_distance_2d_m": 1.5103,
+    "footprint_clearance_m": 0.8341,
+    "uncertainty_std_m": 0.3659
+  },
+  {
+    "entity_a": "chair_001",
+    "class_a": "chair",
+    "entity_b": "storage box_001",
+    "class_b": "door",
+    "centroid_distance_3d_m": 2.2161,
+    "centroid_distance_2d_m": 2.2115,
+    "footprint_clearance_m": 1.5968,
+    "uncertainty_std_m": 0.2038
+  },
+  {
+    "entity_a": "chair_001",
+    "class_a": "chair",
+    "entity_b": "desk_001",
+    "class_b": "desk",
+    "centroid_distance_3d_m": 1.143,
+    "centroid_distance_2d_m": 1.1298,
+    "footprint_clearance_m": 0.3159,
+    "uncertainty_std_m": 0.321
+  },
+  {
+    "entity_a": "chair_001",
+    "class_a": "chair",
+    "entity_b": "laptop_001",
+    "class_b": "laptop",
+    "centroid_distance_3d_m": 0.9645,
+    "centroid_distance_2d_m": 0.8285,
+    "footprint_clearance_m": 0.3622,
+    "uncertainty_std_m": 0.2243
+  },
+  {
+    "entity_a": "chair_001",
+    "class_a": "chair",
+    "entity_b": "chair_008",
+    "class_b": "chair",
+    "centroid_distance_3d_m": 2.3847,
+    "centroid_distance_2d_m": 2.3846,
+    "footprint_clearance_m": 1.5248,
+    "uncertainty_std_m": 0.2181
+  },
+  {
+    "entity_a": "chair_001",
+    "class_a": "chair",
+    "entity_b": "chair_010",
+    "class_b": "chair",
+    "centroid_distance_3d_m": 1.9528,
+    "centroid_distance_2d_m": 1.9524,
+    "footprint_clearance_m": 1.0346,
+    "uncertainty_std_m": 0.272
+  },
+  {
+    "entity_a": "chair_001",
+    "class_a": "chair",
+    "entity_b": "chair_011",
+    "class_b": "chair",
+    "centroid_distance_3d_m": 3.0229,
+    "centroid_distance_2d_m": 3.0226,
+    "footprint_clearance_m": 2.0335,
+    "uncertainty_std_m": 0.2284
+  },
+  {
+    "entity_a": "chair_001",
+    "class_a": "chair",
+    "entity_b": "storage box_003",
+    "class_b": "desk",
+    "centroid_distance_3d_m": 2.9388,
+    "centroid_distance_2d_m": 2.9336,
+    "footprint_clearance_m": 0.9611,
+    "uncertainty_std_m": 0.3542
+  },
+  {
+    "entity_a": "chair_001",
+    "class_a": "chair",
+    "entity_b": "desk_004",
+    "class_b": "desk",
+    "centroid_distance_3d_m": 2.422,
+    "centroid_distance_2d_m": 2.4186,
+    "footprint_clearance_m": 0.4476,
+    "uncertainty_std_m": 0.3247
+  },
+  {
+    "entity_a": "chair_001",
+    "class_a": "chair",
+    "entity_b": "backpack_001",
+    "class_b": "backpack",
+    "centroid_distance_3d_m": 4.2834,
+    "centroid_distance_2d_m": 4.2745,
+    "footprint_clearance_m": 3.1293,
+    "uncertainty_std_m": 0.2837
+  },
+  {
+    "entity_a": "chair_001",
+    "class_a": "chair",
+    "entity_b": "door_002",
+    "class_b": "door",
+    "centroid_distance_3d_m": 4.7699,
+    "centroid_distance_2d_m": 4.7557,
+    "footprint_clearance_m": 3.7386,
+    "uncertainty_std_m": 0.2932
+  },
+  {
+    "entity_a": "chair_001",
+    "class_a": "chair",
+    "entity_b": "backpack_006",
+    "class_b": "backpack",
+    "centroid_distance_3d_m": 4.5826,
+    "centroid_distance_2d_m": 4.5742,
+    "footprint_clearance_m": 3.9298,
+    "uncertainty_std_m": 0.1505
+  },
+  {
+    "entity_a": "chair_001",
+    "class_a": "chair",
+    "entity_b": "handbag_001",
+    "class_b": "handbag",
+    "centroid_distance_3d_m": 5.0588,
+    "centroid_distance_2d_m": 5.0504,
+    "footprint_clearance_m": 4.1714,
+    "uncertainty_std_m": 0.1877
+  },
+  {
+    "entity_a": "chair_001",
+    "class_a": "chair",
+    "entity_b": "backpack_007",
+    "class_b": "backpack",
+    "centroid_distance_3d_m": 6.4043,
+    "centroid_distance_2d_m": 6.396,
+    "footprint_clearance_m": 5.434,
+    "uncertainty_std_m": 0.1491
+  },
+  {
+    "entity_a": "chair_001",
+    "class_a": "chair",
+    "entity_b": "chair_015",
+    "class_b": "backpack",
+    "centroid_distance_3d_m": 5.6834,
+    "centroid_distance_2d_m": 5.6827,
+    "footprint_clearance_m": 4.9595,
+    "uncertainty_std_m": 0.1944
+  },
+  {
+    "entity_a": "chair_001",
+    "class_a": "chair",
+    "entity_b": "chair_016",
+    "class_b": "chair",
+    "centroid_distance_3d_m": 4.2897,
+    "centroid_distance_2d_m": 4.2896,
+    "footprint_clearance_m": 3.2532,
+    "uncertainty_std_m": 0.303
+  },
+  {
+    "entity_a": "chair_002",
+    "class_a": "chair",
+    "entity_b": "chair_005",
+    "class_b": "chair",
+    "centroid_distance_3d_m": 2.0793,
+    "centroid_distance_2d_m": 2.0777,
+    "footprint_clearance_m": 0.8541,
+    "uncertainty_std_m": 0.2841
+  },
+  {
+    "entity_a": "chair_002",
+    "class_a": "chair",
+    "entity_b": "chair_003",
+    "class_b": "desk",
+    "centroid_distance_3d_m": 2.1336,
+    "centroid_distance_2d_m": 2.1332,
+    "footprint_clearance_m": 1.2532,
+    "uncertainty_std_m": 0.4252
+  },
+  {
+    "entity_a": "chair_002",
+    "class_a": "chair",
+    "entity_b": "storage box_001",
+    "class_b": "door",
+    "centroid_distance_3d_m": 1.6616,
+    "centroid_distance_2d_m": 1.6589,
+    "footprint_clearance_m": 1.244,
+    "uncertainty_std_m": 0.2974
+  },
+  {
+    "entity_a": "chair_002",
+    "class_a": "chair",
+    "entity_b": "desk_001",
+    "class_b": "desk",
+    "centroid_distance_3d_m": 0.7895,
+    "centroid_distance_2d_m": 0.7579,
+    "footprint_clearance_m": 0.0412,
+    "uncertainty_std_m": 0.3872
+  },
+  {
+    "entity_a": "chair_002",
+    "class_a": "chair",
+    "entity_b": "laptop_001",
+    "class_b": "laptop",
+    "centroid_distance_3d_m": 1.2143,
+    "centroid_distance_2d_m": 1.087,
+    "footprint_clearance_m": 0.2683,
+    "uncertainty_std_m": 0.3118
+  },
+  {
+    "entity_a": "chair_002",
+    "class_a": "chair",
+    "entity_b": "chair_008",
+    "class_b": "chair",
+    "centroid_distance_3d_m": 3.1364,
+    "centroid_distance_2d_m": 3.1357,
+    "footprint_clearance_m": 2.2803,
+    "uncertainty_std_m": 0.3073
+  },
+  {
+    "entity_a": "chair_002",
+    "class_a": "chair",
+    "entity_b": "chair_010",
+    "class_b": "chair",
+    "centroid_distance_3d_m": 1.1559,
+    "centroid_distance_2d_m": 1.1559,
+    "footprint_clearance_m": 0.3935,
+    "uncertainty_std_m": 0.3477
+  },
+  {
+    "entity_a": "chair_002",
+    "class_a": "chair",
+    "entity_b": "chair_011",
+    "class_b": "chair",
+    "centroid_distance_3d_m": 2.2248,
+    "centroid_distance_2d_m": 2.2248,
+    "footprint_clearance_m": 1.4329,
+    "uncertainty_std_m": 0.3148
+  },
+  {
+    "entity_a": "chair_002",
+    "class_a": "chair",
+    "entity_b": "storage box_003",
+    "class_b": "desk",
+    "centroid_distance_3d_m": 2.191,
+    "centroid_distance_2d_m": 2.1798,
+    "footprint_clearance_m": 0.2798,
+    "uncertainty_std_m": 0.4151
+  },
+  {
+    "entity_a": "chair_002",
+    "class_a": "chair",
+    "entity_b": "desk_004",
+    "class_b": "desk",
+    "centroid_distance_3d_m": 1.6764,
+    "centroid_distance_2d_m": 1.6673,
+    "footprint_clearance_m": 0.0423,
+    "uncertainty_std_m": 0.3903
+  },
+  {
+    "entity_a": "chair_002",
+    "class_a": "chair",
+    "entity_b": "backpack_001",
+    "class_b": "backpack",
+    "centroid_distance_3d_m": 3.4899,
+    "centroid_distance_2d_m": 3.4824,
+    "footprint_clearance_m": 2.5122,
+    "uncertainty_std_m": 0.3569
+  },
+  {
+    "entity_a": "chair_002",
+    "class_a": "chair",
+    "entity_b": "door_002",
+    "class_b": "door",
+    "centroid_distance_3d_m": 3.9831,
+    "centroid_distance_2d_m": 3.9614,
+    "footprint_clearance_m": 3.1894,
+    "uncertainty_std_m": 0.3645
+  },
+  {
+    "entity_a": "chair_002",
+    "class_a": "chair",
+    "entity_b": "backpack_006",
+    "class_b": "backpack",
+    "centroid_distance_3d_m": 3.8573,
+    "centroid_distance_2d_m": 3.8504,
+    "footprint_clearance_m": 3.4392,
+    "uncertainty_std_m": 0.2637
+  },
+  {
+    "entity_a": "chair_002",
+    "class_a": "chair",
+    "entity_b": "handbag_001",
+    "class_b": "handbag",
+    "centroid_distance_3d_m": 4.3834,
+    "centroid_distance_2d_m": 4.3766,
+    "footprint_clearance_m": 3.7007,
+    "uncertainty_std_m": 0.2866
+  },
+  {
+    "entity_a": "chair_002",
+    "class_a": "chair",
+    "entity_b": "backpack_007",
+    "class_b": "backpack",
+    "centroid_distance_3d_m": 5.9162,
+    "centroid_distance_2d_m": 5.9096,
+    "footprint_clearance_m": 5.0659,
+    "uncertainty_std_m": 0.2629
+  },
+  {
+    "entity_a": "chair_002",
+    "class_a": "chair",
+    "entity_b": "chair_015",
+    "class_b": "backpack",
+    "centroid_distance_3d_m": 5.2829,
+    "centroid_distance_2d_m": 5.2812,
+    "footprint_clearance_m": 4.6683,
+    "uncertainty_std_m": 0.291
+  },
+  {
+    "entity_a": "chair_002",
+    "class_a": "chair",
+    "entity_b": "chair_016",
+    "class_b": "chair",
+    "centroid_distance_3d_m": 3.8035,
+    "centroid_distance_2d_m": 3.8028,
+    "footprint_clearance_m": 2.8691,
+    "uncertainty_std_m": 0.3724
+  },
+  {
+    "entity_a": "chair_005",
+    "class_a": "chair",
+    "entity_b": "chair_003",
+    "class_b": "desk",
+    "centroid_distance_3d_m": 1.3448,
+    "centroid_distance_2d_m": 1.3394,
+    "footprint_clearance_m": 0.9769,
+    "uncertainty_std_m": 0.3587
+  },
+  {
+    "entity_a": "chair_005",
+    "class_a": "chair",
+    "entity_b": "storage box_001",
+    "class_b": "door",
+    "centroid_distance_3d_m": 3.3941,
+    "centroid_distance_2d_m": 3.3895,
+    "footprint_clearance_m": 2.6473,
+    "uncertainty_std_m": 0.1906
+  },
+  {
+    "entity_a": "chair_005",
+    "class_a": "chair",
+    "entity_b": "desk_001",
+    "class_b": "desk",
+    "centroid_distance_3d_m": 2.1833,
+    "centroid_distance_2d_m": 2.1788,
+    "footprint_clearance_m": 1.1614,
+    "uncertainty_std_m": 0.3128
+  },
+  {
+    "entity_a": "chair_005",
+    "class_a": "chair",
+    "entity_b": "laptop_001",
+    "class_b": "laptop",
+    "centroid_distance_3d_m": 1.5638,
+    "centroid_distance_2d_m": 1.4946,
+    "footprint_clearance_m": 0.8149,
+    "uncertainty_std_m": 0.2123
+  },
+  {
+    "entity_a": "chair_005",
+    "class_a": "chair",
+    "entity_b": "chair_008",
+    "class_b": "chair",
+    "centroid_distance_3d_m": 1.4689,
+    "centroid_distance_2d_m": 1.4688,
+    "footprint_clearance_m": 1.0721,
+    "uncertainty_std_m": 0.2058
+  },
+  {
+    "entity_a": "chair_005",
+    "class_a": "chair",
+    "entity_b": "chair_010",
+    "class_b": "chair",
+    "centroid_distance_3d_m": 3.216,
+    "centroid_distance_2d_m": 3.2151,
+    "footprint_clearance_m": 2.2051,
+    "uncertainty_std_m": 0.2623
+  },
+  {
+    "entity_a": "chair_005",
+    "class_a": "chair",
+    "entity_b": "chair_011",
+    "class_b": "chair",
+    "centroid_distance_3d_m": 4.2841,
+    "centroid_distance_2d_m": 4.2833,
+    "footprint_clearance_m": 3.2412,
+    "uncertainty_std_m": 0.2167
+  },
+  {
+    "entity_a": "chair_005",
+    "class_a": "chair",
+    "entity_b": "storage box_003",
+    "class_b": "desk",
+    "centroid_distance_3d_m": 4.1296,
+    "centroid_distance_2d_m": 4.1272,
+    "footprint_clearance_m": 2.0505,
+    "uncertainty_std_m": 0.3467
+  },
+  {
+    "entity_a": "chair_005",
+    "class_a": "chair",
+    "entity_b": "desk_004",
+    "class_b": "desk",
+    "centroid_distance_3d_m": 3.6204,
+    "centroid_distance_2d_m": 3.6192,
+    "footprint_clearance_m": 1.2532,
+    "uncertainty_std_m": 0.3165
+  },
+  {
+    "entity_a": "chair_005",
+    "class_a": "chair",
+    "entity_b": "backpack_001",
+    "class_b": "backpack",
+    "centroid_distance_3d_m": 5.5265,
+    "centroid_distance_2d_m": 5.5177,
+    "footprint_clearance_m": 4.3229,
+    "uncertainty_std_m": 0.2744
+  },
+  {
+    "entity_a": "chair_005",
+    "class_a": "chair",
+    "entity_b": "door_002",
+    "class_b": "door",
+    "centroid_distance_3d_m": 6.0474,
+    "centroid_distance_2d_m": 6.0381,
+    "footprint_clearance_m": 4.9702,
+    "uncertainty_std_m": 0.2841
+  },
+  {
+    "entity_a": "chair_005",
+    "class_a": "chair",
+    "entity_b": "backpack_006",
+    "class_b": "backpack",
+    "centroid_distance_3d_m": 5.8359,
+    "centroid_distance_2d_m": 5.8276,
+    "footprint_clearance_m": 5.1001,
+    "uncertainty_std_m": 0.1321
+  },
+  {
+    "entity_a": "chair_005",
+    "class_a": "chair",
+    "entity_b": "handbag_001",
+    "class_b": "handbag",
+    "centroid_distance_3d_m": 6.2732,
+    "centroid_distance_2d_m": 6.2647,
+    "footprint_clearance_m": 5.3187,
+    "uncertainty_std_m": 0.1733
+  },
+  {
+    "entity_a": "chair_005",
+    "class_a": "chair",
+    "entity_b": "backpack_007",
+    "class_b": "backpack",
+    "centroid_distance_3d_m": 7.4252,
+    "centroid_distance_2d_m": 7.4164,
+    "footprint_clearance_m": 6.3635,
+    "uncertainty_std_m": 0.1304
+  },
+  {
+    "entity_a": "chair_005",
+    "class_a": "chair",
+    "entity_b": "chair_015",
+    "class_b": "backpack",
+    "centroid_distance_3d_m": 6.62,
+    "centroid_distance_2d_m": 6.6198,
+    "footprint_clearance_m": 5.7291,
+    "uncertainty_std_m": 0.1806
+  },
+  {
+    "entity_a": "chair_005",
+    "class_a": "chair",
+    "entity_b": "chair_016",
+    "class_b": "chair",
+    "centroid_distance_3d_m": 5.3462,
+    "centroid_distance_2d_m": 5.3462,
+    "footprint_clearance_m": 4.2608,
+    "uncertainty_std_m": 0.2943
+  },
+  {
+    "entity_a": "chair_003",
+    "class_a": "desk",
+    "entity_b": "storage box_001",
+    "class_b": "door",
+    "centroid_distance_3d_m": 2.7665,
+    "centroid_distance_2d_m": 2.766,
+    "footprint_clearance_m": 2.0359,
+    "uncertainty_std_m": 0.3693
+  },
+  {
+    "entity_a": "chair_003",
+    "class_a": "desk",
+    "entity_b": "desk_001",
+    "class_b": "desk",
+    "centroid_distance_3d_m": 2.6498,
+    "centroid_distance_2d_m": 2.6371,
+    "footprint_clearance_m": 1.6421,
+    "uncertainty_std_m": 0.4449
+  },
+  {
+    "entity_a": "chair_003",
+    "class_a": "desk",
+    "entity_b": "laptop_001",
+    "class_b": "laptop",
+    "centroid_distance_3d_m": 2.3078,
+    "centroid_distance_2d_m": 2.2338,
+    "footprint_clearance_m": 1.7295,
+    "uncertainty_std_m": 0.381
+  },
+  {
+    "entity_a": "chair_003",
+    "class_a": "desk",
+    "entity_b": "chair_008",
+    "class_b": "chair",
+    "centroid_distance_3d_m": 1.1898,
+    "centroid_distance_2d_m": 1.1853,
+    "footprint_clearance_m": 0.0409,
+    "uncertainty_std_m": 0.3774
+  },
+  {
+    "entity_a": "chair_003",
+    "class_a": "desk",
+    "entity_b": "chair_010",
+    "class_b": "chair",
+    "centroid_distance_3d_m": 3.2225,
+    "centroid_distance_2d_m": 3.2222,
+    "footprint_clearance_m": 2.2676,
+    "uncertainty_std_m": 0.4109
+  },
+  {
+    "entity_a": "chair_003",
+    "class_a": "desk",
+    "entity_b": "chair_011",
+    "class_b": "chair",
+    "centroid_distance_3d_m": 4.2446,
+    "centroid_distance_2d_m": 4.2444,
+    "footprint_clearance_m": 3.2401,
+    "uncertainty_std_m": 0.3834
+  },
+  {
+    "entity_a": "chair_003",
+    "class_a": "desk",
+    "entity_b": "storage box_003",
+    "class_b": "desk",
+    "centroid_distance_3d_m": 4.3087,
+    "centroid_distance_2d_m": 4.3008,
+    "footprint_clearance_m": 2.2864,
+    "uncertainty_std_m": 0.4693
+  },
+  {
+    "entity_a": "chair_003",
+    "class_a": "desk",
+    "entity_b": "desk_004",
+    "class_b": "desk",
+    "centroid_distance_3d_m": 3.7993,
+    "centroid_distance_2d_m": 3.7933,
+    "footprint_clearance_m": 1.7789,
+    "uncertainty_std_m": 0.4475
+  },
+  {
+    "entity_a": "chair_003",
+    "class_a": "desk",
+    "entity_b": "backpack_001",
+    "class_b": "backpack",
+    "centroid_distance_3d_m": 5.5179,
+    "centroid_distance_2d_m": 5.5146,
+    "footprint_clearance_m": 4.3263,
+    "uncertainty_std_m": 0.4187
+  },
+  {
+    "entity_a": "chair_003",
+    "class_a": "desk",
+    "entity_b": "door_002",
+    "class_b": "door",
+    "centroid_distance_3d_m": 5.792,
+    "centroid_distance_2d_m": 5.7742,
+    "footprint_clearance_m": 4.6176,
+    "uncertainty_std_m": 0.4252
+  },
+  {
+    "entity_a": "chair_003",
+    "class_a": "desk",
+    "entity_b": "backpack_006",
+    "class_b": "backpack",
+    "centroid_distance_3d_m": 5.2744,
+    "centroid_distance_2d_m": 5.2709,
+    "footprint_clearance_m": 4.4665,
+    "uncertainty_std_m": 0.3428
+  },
+  {
+    "entity_a": "chair_003",
+    "class_a": "desk",
+    "entity_b": "handbag_001",
+    "class_b": "handbag",
+    "centroid_distance_3d_m": 5.5743,
+    "centroid_distance_2d_m": 5.5705,
+    "footprint_clearance_m": 4.6268,
+    "uncertainty_std_m": 0.3607
+  },
+  {
+    "entity_a": "chair_003",
+    "class_a": "desk",
+    "entity_b": "backpack_007",
+    "class_b": "backpack",
+    "centroid_distance_3d_m": 6.3871,
+    "centroid_distance_2d_m": 6.3825,
+    "footprint_clearance_m": 5.2629,
+    "uncertainty_std_m": 0.3421
+  },
+  {
+    "entity_a": "chair_003",
+    "class_a": "desk",
+    "entity_b": "chair_015",
+    "class_b": "backpack",
+    "centroid_distance_3d_m": 5.5194,
+    "centroid_distance_2d_m": 5.5167,
+    "footprint_clearance_m": 4.5015,
+    "uncertainty_std_m": 0.3642
+  },
+  {
+    "entity_a": "chair_003",
+    "class_a": "desk",
+    "entity_b": "chair_016",
+    "class_b": "chair",
+    "centroid_distance_3d_m": 4.403,
+    "centroid_distance_2d_m": 4.4017,
+    "footprint_clearance_m": 3.3713,
+    "uncertainty_std_m": 0.432
+  },
+  {
+    "entity_a": "storage box_001",
+    "class_a": "door",
+    "entity_b": "desk_001",
+    "class_b": "desk",
+    "centroid_distance_3d_m": 2.3297,
+    "centroid_distance_2d_m": 2.3082,
+    "footprint_clearance_m": 1.5882,
+    "uncertainty_std_m": 0.3249
+  },
+  {
+    "entity_a": "storage box_001",
+    "class_a": "door",
+    "entity_b": "laptop_001",
+    "class_b": "laptop",
+    "centroid_distance_3d_m": 2.8147,
+    "centroid_distance_2d_m": 2.7419,
+    "footprint_clearance_m": 2.3911,
+    "uncertainty_std_m": 0.2298
+  },
+  {
+    "entity_a": "storage box_001",
+    "class_a": "door",
+    "entity_b": "chair_008",
+    "class_b": "chair",
+    "centroid_distance_3d_m": 3.9532,
+    "centroid_distance_2d_m": 3.95,
+    "footprint_clearance_m": 3.5245,
+    "uncertainty_std_m": 0.2238
+  },
+  {
+    "entity_a": "storage box_001",
+    "class_a": "door",
+    "entity_b": "chair_010",
+    "class_b": "chair",
+    "centroid_distance_3d_m": 1.5337,
+    "centroid_distance_2d_m": 1.5303,
+    "footprint_clearance_m": 1.0307,
+    "uncertainty_std_m": 0.2766
+  },
+  {
+    "entity_a": "storage box_001",
+    "class_a": "door",
+    "entity_b": "chair_011",
+    "class_b": "chair",
+    "centroid_distance_3d_m": 2.0314,
+    "centroid_distance_2d_m": 2.0291,
+    "footprint_clearance_m": 1.4843,
+    "uncertainty_std_m": 0.2339
+  },
+  {
+    "entity_a": "storage box_001",
+    "class_a": "door",
+    "entity_b": "storage box_003",
+    "class_b": "desk",
+    "centroid_distance_3d_m": 2.4835,
+    "centroid_distance_2d_m": 2.4633,
+    "footprint_clearance_m": 1.3826,
+    "uncertainty_std_m": 0.3577
+  },
+  {
+    "entity_a": "storage box_001",
+    "class_a": "door",
+    "entity_b": "desk_004",
+    "class_b": "desk",
+    "centroid_distance_3d_m": 2.157,
+    "centroid_distance_2d_m": 2.1401,
+    "footprint_clearance_m": 1.2468,
+    "uncertainty_std_m": 0.3285
+  },
+  {
+    "entity_a": "storage box_001",
+    "class_a": "door",
+    "entity_b": "backpack_001",
+    "class_b": "backpack",
+    "centroid_distance_3d_m": 3.1573,
+    "centroid_distance_2d_m": 3.1544,
+    "footprint_clearance_m": 2.4852,
+    "uncertainty_std_m": 0.2881
+  },
+  {
+    "entity_a": "storage box_001",
+    "class_a": "door",
+    "entity_b": "door_002",
+    "class_b": "door",
+    "centroid_distance_3d_m": 3.1477,
+    "centroid_distance_2d_m": 3.1062,
+    "footprint_clearance_m": 2.2278,
+    "uncertainty_std_m": 0.2974
+  },
+  {
+    "entity_a": "storage box_001",
+    "class_a": "door",
+    "entity_b": "backpack_006",
+    "class_b": "backpack",
+    "centroid_distance_3d_m": 2.5124,
+    "centroid_distance_2d_m": 2.5088,
+    "footprint_clearance_m": 2.0535,
+    "uncertainty_std_m": 0.1587
+  },
+  {
+    "entity_a": "storage box_001",
+    "class_a": "door",
+    "entity_b": "handbag_001",
+    "class_b": "handbag",
+    "centroid_distance_3d_m": 2.8823,
+    "centroid_distance_2d_m": 2.8785,
+    "footprint_clearance_m": 2.2417,
+    "uncertainty_std_m": 0.1943
+  },
+  {
+    "entity_a": "storage box_001",
+    "class_a": "door",
+    "entity_b": "backpack_007",
+    "class_b": "backpack",
+    "centroid_distance_3d_m": 4.2546,
+    "centroid_distance_2d_m": 4.2506,
+    "footprint_clearance_m": 3.4159,
+    "uncertainty_std_m": 0.1573
+  },
+  {
+    "entity_a": "storage box_001",
+    "class_a": "door",
+    "entity_b": "chair_015",
+    "class_b": "backpack",
+    "centroid_distance_3d_m": 3.6525,
+    "centroid_distance_2d_m": 3.6454,
+    "footprint_clearance_m": 3.0792,
+    "uncertainty_std_m": 0.2008
+  },
+  {
+    "entity_a": "storage box_001",
+    "class_a": "door",
+    "entity_b": "chair_016",
+    "class_b": "chair",
+    "centroid_distance_3d_m": 2.1513,
+    "centroid_distance_2d_m": 2.1449,
+    "footprint_clearance_m": 1.2205,
+    "uncertainty_std_m": 0.3071
+  },
+  {
+    "entity_a": "desk_001",
+    "class_a": "desk",
+    "entity_b": "laptop_001",
+    "class_b": "laptop",
+    "centroid_distance_3d_m": 0.8164,
+    "centroid_distance_2d_m": 0.751,
+    "footprint_clearance_m": 0.1608,
+    "uncertainty_std_m": 0.3381
+  },
+  {
+    "entity_a": "desk_001",
+    "class_a": "desk",
+    "entity_b": "chair_008",
+    "class_b": "chair",
+    "centroid_distance_3d_m": 3.4769,
+    "centroid_distance_2d_m": 3.4734,
+    "footprint_clearance_m": 2.6638,
+    "uncertainty_std_m": 0.3341
+  },
+  {
+    "entity_a": "desk_001",
+    "class_a": "desk",
+    "entity_b": "chair_010",
+    "class_b": "chair",
+    "centroid_distance_3d_m": 1.2832,
+    "centroid_distance_2d_m": 1.2654,
+    "footprint_clearance_m": 0.0377,
+    "uncertainty_std_m": 0.3715
+  },
+  {
+    "entity_a": "desk_001",
+    "class_a": "desk",
+    "entity_b": "chair_011",
+    "class_b": "chair",
+    "centroid_distance_3d_m": 2.2562,
+    "centroid_distance_2d_m": 2.2456,
+    "footprint_clearance_m": 1.0905,
+    "uncertainty_std_m": 0.3409
+  },
+  {
+    "entity_a": "desk_001",
+    "class_a": "desk",
+    "entity_b": "storage box_003",
+    "class_b": "desk",
+    "centroid_distance_3d_m": 1.9717,
+    "centroid_distance_2d_m": 1.9717,
+    "footprint_clearance_m": 0.12,
+    "uncertainty_std_m": 0.4353
+  },
+  {
+    "entity_a": "desk_001",
+    "class_a": "desk",
+    "entity_b": "desk_004",
+    "class_b": "desk",
+    "centroid_distance_3d_m": 1.4816,
+    "centroid_distance_2d_m": 1.4809,
+    "footprint_clearance_m": 0.0013,
+    "uncertainty_std_m": 0.4116
+  },
+  {
+    "entity_a": "desk_001",
+    "class_a": "desk",
+    "entity_b": "backpack_001",
+    "class_b": "backpack",
+    "centroid_distance_3d_m": 3.4359,
+    "centroid_distance_2d_m": 3.4064,
+    "footprint_clearance_m": 2.0986,
+    "uncertainty_std_m": 0.3802
+  },
+  {
+    "entity_a": "desk_001",
+    "class_a": "desk",
+    "entity_b": "door_002",
+    "class_b": "door",
+    "centroid_distance_3d_m": 4.099,
+    "centroid_distance_2d_m": 4.0944,
+    "footprint_clearance_m": 2.9373,
+    "uncertainty_std_m": 0.3873
+  },
+  {
+    "entity_a": "desk_001",
+    "class_a": "desk",
+    "entity_b": "backpack_006",
+    "class_b": "backpack",
+    "centroid_distance_3d_m": 4.2485,
+    "centroid_distance_2d_m": 4.2244,
+    "footprint_clearance_m": 3.4914,
+    "uncertainty_std_m": 0.2944
+  },
+  {
+    "entity_a": "desk_001",
+    "class_a": "desk",
+    "entity_b": "handbag_001",
+    "class_b": "handbag",
+    "centroid_distance_3d_m": 4.8482,
+    "centroid_distance_2d_m": 4.8259,
+    "footprint_clearance_m": 3.7969,
+    "uncertainty_std_m": 0.3151
+  },
+  {
+    "entity_a": "desk_001",
+    "class_a": "desk",
+    "entity_b": "backpack_007",
+    "class_b": "backpack",
+    "centroid_distance_3d_m": 6.5477,
+    "centroid_distance_2d_m": 6.5286,
+    "footprint_clearance_m": 5.3646,
+    "uncertainty_std_m": 0.2937
+  },
+  {
+    "entity_a": "desk_001",
+    "class_a": "desk",
+    "entity_b": "chair_015",
+    "class_b": "backpack",
+    "centroid_distance_3d_m": 5.9542,
+    "centroid_distance_2d_m": 5.9536,
+    "footprint_clearance_m": 5.0197,
+    "uncertainty_std_m": 0.3191
+  },
+  {
+    "entity_a": "desk_001",
+    "class_a": "desk",
+    "entity_b": "chair_016",
+    "class_b": "chair",
+    "centroid_distance_3d_m": 4.4428,
+    "centroid_distance_2d_m": 4.4402,
+    "footprint_clearance_m": 3.1668,
+    "uncertainty_std_m": 0.3948
+  },
+  {
+    "entity_a": "laptop_001",
+    "class_a": "laptop",
+    "entity_b": "chair_008",
+    "class_b": "chair",
+    "centroid_distance_3d_m": 2.9239,
+    "centroid_distance_2d_m": 2.8849,
+    "footprint_clearance_m": 2.2919,
+    "uncertainty_std_m": 0.2425
+  },
+  {
+    "entity_a": "laptop_001",
+    "class_a": "laptop",
+    "entity_b": "chair_010",
+    "class_b": "chair",
+    "centroid_distance_3d_m": 2.0467,
+    "centroid_distance_2d_m": 1.976,
+    "footprint_clearance_m": 1.2492,
+    "uncertainty_std_m": 0.292
+  },
+  {
+    "entity_a": "laptop_001",
+    "class_a": "laptop",
+    "entity_b": "chair_011",
+    "class_b": "chair",
+    "centroid_distance_3d_m": 3.0376,
+    "centroid_distance_2d_m": 2.9894,
+    "footprint_clearance_m": 2.3054,
+    "uncertainty_std_m": 0.2519
+  },
+  {
+    "entity_a": "laptop_001",
+    "class_a": "laptop",
+    "entity_b": "storage box_003",
+    "class_b": "desk",
+    "centroid_distance_3d_m": 2.7365,
+    "centroid_distance_2d_m": 2.7177,
+    "footprint_clearance_m": 1.0082,
+    "uncertainty_std_m": 0.3697
+  },
+  {
+    "entity_a": "laptop_001",
+    "class_a": "laptop",
+    "entity_b": "desk_004",
+    "class_b": "desk",
+    "centroid_distance_3d_m": 2.2613,
+    "centroid_distance_2d_m": 2.2314,
+    "footprint_clearance_m": 0.1675,
+    "uncertainty_std_m": 0.3416
+  },
+  {
+    "entity_a": "laptop_001",
+    "class_a": "laptop",
+    "entity_b": "backpack_001",
+    "class_b": "backpack",
+    "centroid_distance_3d_m": 4.2278,
+    "centroid_distance_2d_m": 4.1571,
+    "footprint_clearance_m": 3.303,
+    "uncertainty_std_m": 0.3029
+  },
+  {
+    "entity_a": "laptop_001",
+    "class_a": "laptop",
+    "entity_b": "door_002",
+    "class_b": "door",
+    "centroid_distance_3d_m": 4.8302,
+    "centroid_distance_2d_m": 4.8286,
+    "footprint_clearance_m": 4.1548,
+    "uncertainty_std_m": 0.3118
+  },
+  {
+    "entity_a": "laptop_001",
+    "class_a": "laptop",
+    "entity_b": "backpack_006",
+    "class_b": "backpack",
+    "centroid_distance_3d_m": 4.9384,
+    "centroid_distance_2d_m": 4.8777,
+    "footprint_clearance_m": 4.5739,
+    "uncertainty_std_m": 0.1842
+  },
+  {
+    "entity_a": "laptop_001",
+    "class_a": "laptop",
+    "entity_b": "handbag_001",
+    "class_b": "handbag",
+    "centroid_distance_3d_m": 5.4945,
+    "centroid_distance_2d_m": 5.4381,
+    "footprint_clearance_m": 4.849,
+    "uncertainty_std_m": 0.2157
+  },
+  {
+    "entity_a": "laptop_001",
+    "class_a": "laptop",
+    "entity_b": "backpack_007",
+    "class_b": "backpack",
+    "centroid_distance_3d_m": 7.039,
+    "centroid_distance_2d_m": 6.991,
+    "footprint_clearance_m": 6.2287,
+    "uncertainty_std_m": 0.183
+  },
+  {
+    "entity_a": "laptop_001",
+    "class_a": "laptop",
+    "entity_b": "chair_015",
+    "class_b": "backpack",
+    "centroid_distance_3d_m": 6.3533,
+    "centroid_distance_2d_m": 6.3402,
+    "footprint_clearance_m": 5.7863,
+    "uncertainty_std_m": 0.2215
+  },
+  {
+    "entity_a": "laptop_001",
+    "class_a": "laptop",
+    "entity_b": "chair_016",
+    "class_b": "chair",
+    "centroid_distance_3d_m": 4.9044,
+    "centroid_distance_2d_m": 4.8818,
+    "footprint_clearance_m": 4.0353,
+    "uncertainty_std_m": 0.3211
+  },
+  {
+    "entity_a": "chair_008",
+    "class_a": "chair",
+    "entity_b": "chair_010",
+    "class_b": "chair",
+    "centroid_distance_3d_m": 4.2786,
+    "centroid_distance_2d_m": 4.2782,
+    "footprint_clearance_m": 3.5848,
+    "uncertainty_std_m": 0.2873
+  },
+  {
+    "entity_a": "chair_008",
+    "class_a": "chair",
+    "entity_b": "chair_011",
+    "class_b": "chair",
+    "centroid_distance_3d_m": 5.3315,
+    "centroid_distance_2d_m": 5.3311,
+    "footprint_clearance_m": 4.5824,
+    "uncertainty_std_m": 0.2464
+  },
+  {
+    "entity_a": "chair_008",
+    "class_a": "chair",
+    "entity_b": "storage box_003",
+    "class_b": "desk",
+    "centroid_distance_3d_m": 5.3121,
+    "centroid_distance_2d_m": 5.3099,
+    "footprint_clearance_m": 3.4799,
+    "uncertainty_std_m": 0.366
+  },
+  {
+    "entity_a": "chair_008",
+    "class_a": "chair",
+    "entity_b": "desk_004",
+    "class_b": "desk",
+    "centroid_distance_3d_m": 4.7963,
+    "centroid_distance_2d_m": 4.795,
+    "footprint_clearance_m": 2.7559,
+    "uncertainty_std_m": 0.3376
+  },
+  {
+    "entity_a": "chair_008",
+    "class_a": "chair",
+    "entity_b": "backpack_001",
+    "class_b": "backpack",
+    "centroid_distance_3d_m": 6.607,
+    "centroid_distance_2d_m": 6.6005,
+    "footprint_clearance_m": 5.6787,
+    "uncertainty_std_m": 0.2984
+  },
+  {
+    "entity_a": "chair_008",
+    "class_a": "chair",
+    "entity_b": "door_002",
+    "class_b": "door",
+    "centroid_distance_3d_m": 6.938,
+    "centroid_distance_2d_m": 6.9292,
+    "footprint_clearance_m": 6.0736,
+    "uncertainty_std_m": 0.3074
+  },
+  {
+    "entity_a": "chair_008",
+    "class_a": "chair",
+    "entity_b": "backpack_006",
+    "class_b": "backpack",
+    "centroid_distance_3d_m": 6.4628,
+    "centroid_distance_2d_m": 6.456,
+    "footprint_clearance_m": 5.9926,
+    "uncertainty_std_m": 0.1766
+  },
+  {
+    "entity_a": "chair_008",
+    "class_a": "chair",
+    "entity_b": "handbag_001",
+    "class_b": "handbag",
+    "centroid_distance_3d_m": 6.7568,
+    "centroid_distance_2d_m": 6.7498,
+    "footprint_clearance_m": 6.1629,
+    "uncertainty_std_m": 0.2092
+  },
+  {
+    "entity_a": "chair_008",
+    "class_a": "chair",
+    "entity_b": "backpack_007",
+    "class_b": "backpack",
+    "centroid_distance_3d_m": 7.4604,
+    "centroid_distance_2d_m": 7.4524,
+    "footprint_clearance_m": 6.7528,
+    "uncertainty_std_m": 0.1754
+  },
+  {
+    "entity_a": "chair_008",
+    "class_a": "chair",
+    "entity_b": "chair_015",
+    "class_b": "backpack",
+    "centroid_distance_3d_m": 6.5476,
+    "centroid_distance_2d_m": 6.5472,
+    "footprint_clearance_m": 5.9425,
+    "uncertainty_std_m": 0.2153
+  },
+  {
+    "entity_a": "chair_008",
+    "class_a": "chair",
+    "entity_b": "chair_016",
+    "class_b": "chair",
+    "centroid_distance_3d_m": 5.5315,
+    "centroid_distance_2d_m": 5.5315,
+    "footprint_clearance_m": 4.8891,
+    "uncertainty_std_m": 0.3168
+  },
+  {
+    "entity_a": "chair_010",
+    "class_a": "chair",
+    "entity_b": "chair_011",
+    "class_b": "chair",
+    "centroid_distance_3d_m": 1.0703,
+    "centroid_distance_2d_m": 1.0703,
+    "footprint_clearance_m": 0.4287,
+    "uncertainty_std_m": 0.2952
+  },
+  {
+    "entity_a": "chair_010",
+    "class_a": "chair",
+    "entity_b": "storage box_003",
+    "class_b": "desk",
+    "centroid_distance_3d_m": 1.1316,
+    "centroid_distance_2d_m": 1.1113,
+    "footprint_clearance_m": 0.0487,
+    "uncertainty_std_m": 0.4005
+  },
+  {
+    "entity_a": "chair_010",
+    "class_a": "chair",
+    "entity_b": "desk_004",
+    "class_b": "desk",
+    "centroid_distance_3d_m": 0.6793,
+    "centroid_distance_2d_m": 0.6584,
+    "footprint_clearance_m": 0.0522,
+    "uncertainty_std_m": 0.3747
+  },
+  {
+    "entity_a": "chair_010",
+    "class_a": "chair",
+    "entity_b": "backpack_001",
+    "class_b": "backpack",
+    "centroid_distance_3d_m": 2.3394,
+    "centroid_distance_2d_m": 2.3274,
+    "footprint_clearance_m": 1.521,
+    "uncertainty_std_m": 0.3398
+  },
+  {
+    "entity_a": "chair_010",
+    "class_a": "chair",
+    "entity_b": "door_002",
+    "class_b": "door",
+    "centroid_distance_3d_m": 2.8888,
+    "centroid_distance_2d_m": 2.86,
+    "footprint_clearance_m": 2.2617,
+    "uncertainty_std_m": 0.3477
+  },
+  {
+    "entity_a": "chair_010",
+    "class_a": "chair",
+    "entity_b": "backpack_006",
+    "class_b": "backpack",
+    "centroid_distance_3d_m": 2.9869,
+    "centroid_distance_2d_m": 2.9774,
+    "footprint_clearance_m": 2.7557,
+    "uncertainty_std_m": 0.24
+  },
+  {
+    "entity_a": "chair_010",
+    "class_a": "chair",
+    "entity_b": "handbag_001",
+    "class_b": "handbag",
+    "centroid_distance_3d_m": 3.6207,
+    "centroid_distance_2d_m": 3.6119,
+    "footprint_clearance_m": 3.0523,
+    "uncertainty_std_m": 0.265
+  },
+  {
+    "entity_a": "chair_010",
+    "class_a": "chair",
+    "entity_b": "backpack_007",
+    "class_b": "backpack",
+    "centroid_distance_3d_m": 5.4871,
+    "centroid_distance_2d_m": 5.4796,
+    "footprint_clearance_m": 4.5994,
+    "uncertainty_std_m": 0.2391
+  },
+  {
+    "entity_a": "chair_010",
+    "class_a": "chair",
+    "entity_b": "chair_015",
+    "class_b": "backpack",
+    "centroid_distance_3d_m": 5.0235,
+    "centroid_distance_2d_m": 5.022,
+    "footprint_clearance_m": 4.353,
+    "uncertainty_std_m": 0.2698
+  },
+  {
+    "entity_a": "chair_010",
+    "class_a": "chair",
+    "entity_b": "chair_016",
+    "class_b": "chair",
+    "centroid_distance_3d_m": 3.4654,
+    "centroid_distance_2d_m": 3.4649,
+    "footprint_clearance_m": 2.4185,
+    "uncertainty_std_m": 0.3561
+  },
+  {
+    "entity_a": "chair_011",
+    "class_a": "chair",
+    "entity_b": "storage box_003",
+    "class_b": "desk",
+    "centroid_distance_3d_m": 0.7099,
+    "centroid_distance_2d_m": 0.6753,
+    "footprint_clearance_m": 0.0029,
+    "uncertainty_std_m": 0.3723
+  },
+  {
+    "entity_a": "chair_011",
+    "class_a": "chair",
+    "entity_b": "desk_004",
+    "class_b": "desk",
+    "centroid_distance_3d_m": 0.8666,
+    "centroid_distance_2d_m": 0.8491,
+    "footprint_clearance_m": 0.0077,
+    "uncertainty_std_m": 0.3443
+  },
+  {
+    "entity_a": "chair_011",
+    "class_a": "chair",
+    "entity_b": "backpack_001",
+    "class_b": "backpack",
+    "centroid_distance_3d_m": 1.2919,
+    "centroid_distance_2d_m": 1.2711,
+    "footprint_clearance_m": 0.02,
+    "uncertainty_std_m": 0.306
+  },
+  {
+    "entity_a": "chair_011",
+    "class_a": "chair",
+    "entity_b": "door_002",
+    "class_b": "door",
+    "centroid_distance_3d_m": 1.9066,
+    "centroid_distance_2d_m": 1.8613,
+    "footprint_clearance_m": 0.834,
+    "uncertainty_std_m": 0.3148
+  },
+  {
+    "entity_a": "chair_011",
+    "class_a": "chair",
+    "entity_b": "backpack_006",
+    "class_b": "backpack",
+    "centroid_distance_3d_m": 2.3362,
+    "centroid_distance_2d_m": 2.3246,
+    "footprint_clearance_m": 2.0051,
+    "uncertainty_std_m": 0.1892
+  },
+  {
+    "entity_a": "chair_011",
+    "class_a": "chair",
+    "entity_b": "handbag_001",
+    "class_b": "handbag",
+    "centroid_distance_3d_m": 3.0649,
+    "centroid_distance_2d_m": 3.055,
+    "footprint_clearance_m": 2.3835,
+    "uncertainty_std_m": 0.22
+  },
+  {
+    "entity_a": "chair_011",
+    "class_a": "chair",
+    "entity_b": "backpack_007",
+    "class_b": "backpack",
+    "centroid_distance_3d_m": 5.2116,
+    "centroid_distance_2d_m": 5.204,
+    "footprint_clearance_m": 4.3173,
+    "uncertainty_std_m": 0.1881
+  },
+  {
+    "entity_a": "chair_011",
+    "class_a": "chair",
+    "entity_b": "chair_015",
+    "class_b": "backpack",
+    "centroid_distance_3d_m": 4.9386,
+    "centroid_distance_2d_m": 4.9369,
+    "footprint_clearance_m": 4.3633,
+    "uncertainty_std_m": 0.2257
+  },
+  {
+    "entity_a": "chair_011",
+    "class_a": "chair",
+    "entity_b": "chair_016",
+    "class_b": "chair",
+    "centroid_distance_3d_m": 3.4056,
+    "centroid_distance_2d_m": 3.4049,
+    "footprint_clearance_m": 2.3596,
+    "uncertainty_std_m": 0.324
+  },
+  {
+    "entity_a": "storage box_003",
+    "class_a": "desk",
+    "entity_b": "desk_004",
+    "class_b": "desk",
+    "centroid_distance_3d_m": 0.5172,
+    "centroid_distance_2d_m": 0.5151,
+    "footprint_clearance_m": 0.0153,
+    "uncertainty_std_m": 0.438
+  },
+  {
+    "entity_a": "storage box_003",
+    "class_a": "desk",
+    "entity_b": "backpack_001",
+    "class_b": "backpack",
+    "centroid_distance_3d_m": 1.5289,
+    "centroid_distance_2d_m": 1.4611,
+    "footprint_clearance_m": 0.0859,
+    "uncertainty_std_m": 0.4085
+  },
+  {
+    "entity_a": "storage box_003",
+    "class_a": "desk",
+    "entity_b": "door_002",
+    "class_b": "door",
+    "centroid_distance_3d_m": 2.3686,
+    "centroid_distance_2d_m": 2.3606,
+    "footprint_clearance_m": 0.9046,
+    "uncertainty_std_m": 0.4152
+  },
+  {
+    "entity_a": "storage box_003",
+    "class_a": "desk",
+    "entity_b": "backpack_006",
+    "class_b": "backpack",
+    "centroid_distance_3d_m": 3.0204,
+    "centroid_distance_2d_m": 2.9864,
+    "footprint_clearance_m": 2.1736,
+    "uncertainty_std_m": 0.3303
+  },
+  {
+    "entity_a": "storage box_003",
+    "class_a": "desk",
+    "entity_b": "handbag_001",
+    "class_b": "handbag",
+    "centroid_distance_3d_m": 3.7532,
+    "centroid_distance_2d_m": 3.7243,
+    "footprint_clearance_m": 2.5181,
+    "uncertainty_std_m": 0.3488
+  },
+  {
+    "entity_a": "storage box_003",
+    "class_a": "desk",
+    "entity_b": "backpack_007",
+    "class_b": "backpack",
+    "centroid_distance_3d_m": 5.898,
+    "centroid_distance_2d_m": 5.8767,
+    "footprint_clearance_m": 4.3696,
+    "uncertainty_std_m": 0.3296
+  },
+  {
+    "entity_a": "storage box_003",
+    "class_a": "desk",
+    "entity_b": "chair_015",
+    "class_b": "backpack",
+    "centroid_distance_3d_m": 5.5889,
+    "centroid_distance_2d_m": 5.5882,
+    "footprint_clearance_m": 4.3623,
+    "uncertainty_std_m": 0.3525
+  },
+  {
+    "entity_a": "storage box_003",
+    "class_a": "desk",
+    "entity_b": "chair_016",
+    "class_b": "chair",
+    "centroid_distance_3d_m": 4.0473,
+    "centroid_distance_2d_m": 4.0445,
+    "footprint_clearance_m": 2.3577,
+    "uncertainty_std_m": 0.4222
+  },
+  {
+    "entity_a": "desk_004",
+    "class_a": "desk",
+    "entity_b": "backpack_001",
+    "class_b": "backpack",
+    "centroid_distance_3d_m": 1.9677,
+    "centroid_distance_2d_m": 1.9257,
+    "footprint_clearance_m": 0.5532,
+    "uncertainty_std_m": 0.3832
+  },
+  {
+    "entity_a": "desk_004",
+    "class_a": "desk",
+    "entity_b": "door_002",
+    "class_b": "door",
+    "centroid_distance_3d_m": 2.7093,
+    "centroid_distance_2d_m": 2.6986,
+    "footprint_clearance_m": 1.581,
+    "uncertainty_std_m": 0.3903
+  },
+  {
+    "entity_a": "desk_004",
+    "class_a": "desk",
+    "entity_b": "backpack_006",
+    "class_b": "backpack",
+    "centroid_distance_3d_m": 3.1444,
+    "centroid_distance_2d_m": 3.1181,
+    "footprint_clearance_m": 2.6151,
+    "uncertainty_std_m": 0.2984
+  },
+  {
+    "entity_a": "desk_004",
+    "class_a": "desk",
+    "entity_b": "handbag_001",
+    "class_b": "handbag",
+    "centroid_distance_3d_m": 3.8433,
+    "centroid_distance_2d_m": 3.8204,
+    "footprint_clearance_m": 2.9667,
+    "uncertainty_std_m": 0.3188
+  },
+  {
+    "entity_a": "desk_004",
+    "class_a": "desk",
+    "entity_b": "backpack_007",
+    "class_b": "backpack",
+    "centroid_distance_3d_m": 5.8736,
+    "centroid_distance_2d_m": 5.856,
+    "footprint_clearance_m": 4.7968,
+    "uncertainty_std_m": 0.2977
+  },
+  {
+    "entity_a": "desk_004",
+    "class_a": "desk",
+    "entity_b": "chair_015",
+    "class_b": "backpack",
+    "centroid_distance_3d_m": 5.4831,
+    "centroid_distance_2d_m": 5.4829,
+    "footprint_clearance_m": 4.6175,
+    "uncertainty_std_m": 0.3228
+  },
+  {
+    "entity_a": "desk_004",
+    "class_a": "desk",
+    "entity_b": "chair_016",
+    "class_b": "chair",
+    "centroid_distance_3d_m": 3.925,
+    "centroid_distance_2d_m": 3.9236,
+    "footprint_clearance_m": 2.658,
+    "uncertainty_std_m": 0.3977
+  },
+  {
+    "entity_a": "backpack_001",
+    "class_a": "backpack",
+    "entity_b": "door_002",
+    "class_b": "door",
+    "centroid_distance_3d_m": 1.3477,
+    "centroid_distance_2d_m": 1.1838,
+    "footprint_clearance_m": 0.0459,
+    "uncertainty_std_m": 0.3569
+  },
+  {
+    "entity_a": "backpack_001",
+    "class_a": "backpack",
+    "entity_b": "backpack_006",
+    "class_b": "backpack",
+    "centroid_distance_3d_m": 2.3398,
+    "centroid_distance_2d_m": 2.3398,
+    "footprint_clearance_m": 1.7226,
+    "uncertainty_std_m": 0.2532
+  },
+  {
+    "entity_a": "backpack_001",
+    "class_a": "backpack",
+    "entity_b": "handbag_001",
+    "class_b": "handbag",
+    "centroid_distance_3d_m": 3.0869,
+    "centroid_distance_2d_m": 3.0868,
+    "footprint_clearance_m": 2.1791,
+    "uncertainty_std_m": 0.277
+  },
+  {
+    "entity_a": "backpack_001",
+    "class_a": "backpack",
+    "entity_b": "backpack_007",
+    "class_b": "backpack",
+    "centroid_distance_3d_m": 5.4277,
+    "centroid_distance_2d_m": 5.4274,
+    "footprint_clearance_m": 4.293,
+    "uncertainty_std_m": 0.2524
+  },
+  {
+    "entity_a": "backpack_001",
+    "class_a": "backpack",
+    "entity_b": "chair_015",
+    "class_b": "backpack",
+    "centroid_distance_3d_m": 5.4035,
+    "centroid_distance_2d_m": 5.3914,
+    "footprint_clearance_m": 4.6271,
+    "uncertainty_std_m": 0.2816
+  },
+  {
+    "entity_a": "backpack_001",
+    "class_a": "backpack",
+    "entity_b": "chair_016",
+    "class_b": "chair",
+    "centroid_distance_3d_m": 4.0032,
+    "centroid_distance_2d_m": 3.992,
+    "footprint_clearance_m": 2.7767,
+    "uncertainty_std_m": 0.3651
+  },
+  {
+    "entity_a": "door_002",
+    "class_a": "door",
+    "entity_b": "backpack_006",
+    "class_b": "backpack",
+    "centroid_distance_3d_m": 1.5079,
+    "centroid_distance_2d_m": 1.3626,
+    "footprint_clearance_m": 0.1747,
+    "uncertainty_std_m": 0.2638
+  },
+  {
+    "entity_a": "door_002",
+    "class_a": "door",
+    "entity_b": "handbag_001",
+    "class_b": "handbag",
+    "centroid_distance_3d_m": 2.1409,
+    "centroid_distance_2d_m": 2.0369,
+    "footprint_clearance_m": 0.5091,
+    "uncertainty_std_m": 0.2866
+  },
+  {
+    "entity_a": "door_002",
+    "class_a": "door",
+    "entity_b": "backpack_007",
+    "class_b": "backpack",
+    "centroid_distance_3d_m": 4.4418,
+    "centroid_distance_2d_m": 4.3872,
+    "footprint_clearance_m": 2.5863,
+    "uncertainty_std_m": 0.2629
+  },
+  {
+    "entity_a": "door_002",
+    "class_a": "door",
+    "entity_b": "chair_015",
+    "class_b": "backpack",
+    "centroid_distance_3d_m": 4.4963,
+    "centroid_distance_2d_m": 4.4874,
+    "footprint_clearance_m": 3.1142,
+    "uncertainty_std_m": 0.2911
+  },
+  {
+    "entity_a": "door_002",
+    "class_a": "door",
+    "entity_b": "chair_016",
+    "class_b": "chair",
+    "centroid_distance_3d_m": 3.2735,
+    "centroid_distance_2d_m": 3.2553,
+    "footprint_clearance_m": 1.7881,
+    "uncertainty_std_m": 0.3725
+  },
+  {
+    "entity_a": "backpack_006",
+    "class_a": "backpack",
+    "entity_b": "handbag_001",
+    "class_b": "handbag",
+    "centroid_distance_3d_m": 0.7614,
+    "centroid_distance_2d_m": 0.7613,
+    "footprint_clearance_m": 0.0954,
+    "uncertainty_std_m": 0.1374
+  },
+  {
+    "entity_a": "backpack_006",
+    "class_a": "backpack",
+    "entity_b": "backpack_007",
+    "class_b": "backpack",
+    "centroid_distance_3d_m": 3.0881,
+    "centroid_distance_2d_m": 3.0877,
+    "footprint_clearance_m": 2.1608,
+    "uncertainty_std_m": 0.0765
+  },
+  {
+    "entity_a": "backpack_006",
+    "class_a": "backpack",
+    "entity_b": "chair_015",
+    "class_b": "backpack",
+    "centroid_distance_3d_m": 3.1468,
+    "centroid_distance_2d_m": 3.1257,
+    "footprint_clearance_m": 2.6015,
+    "uncertainty_std_m": 0.1464
+  },
+  {
+    "entity_a": "backpack_006",
+    "class_a": "backpack",
+    "entity_b": "chair_016",
+    "class_b": "chair",
+    "centroid_distance_3d_m": 1.9722,
+    "centroid_distance_2d_m": 1.949,
+    "footprint_clearance_m": 1.2634,
+    "uncertainty_std_m": 0.2747
+  },
+  {
+    "entity_a": "handbag_001",
+    "class_a": "handbag",
+    "entity_b": "backpack_007",
+    "class_b": "backpack",
+    "centroid_distance_3d_m": 2.354,
+    "centroid_distance_2d_m": 2.3537,
+    "footprint_clearance_m": 1.4763,
+    "uncertainty_std_m": 0.1358
+  },
+  {
+    "entity_a": "handbag_001",
+    "class_a": "handbag",
+    "entity_b": "chair_015",
+    "class_b": "backpack",
+    "centroid_distance_3d_m": 2.5399,
+    "centroid_distance_2d_m": 2.5118,
+    "footprint_clearance_m": 2.0363,
+    "uncertainty_std_m": 0.1845
+  },
+  {
+    "entity_a": "handbag_001",
+    "class_a": "handbag",
+    "entity_b": "chair_016",
+    "class_b": "chair",
+    "centroid_distance_3d_m": 1.6769,
+    "centroid_distance_2d_m": 1.6471,
+    "footprint_clearance_m": 1.194,
+    "uncertainty_std_m": 0.2967
+  },
+  {
+    "entity_a": "backpack_007",
+    "class_a": "backpack",
+    "entity_b": "chair_015",
+    "class_b": "backpack",
+    "centroid_distance_3d_m": 1.0816,
+    "centroid_distance_2d_m": 0.9999,
+    "footprint_clearance_m": 0.5954,
+    "uncertainty_std_m": 0.1449
+  },
+  {
+    "entity_a": "backpack_007",
+    "class_a": "backpack",
+    "entity_b": "chair_016",
+    "class_b": "chair",
+    "centroid_distance_3d_m": 2.1397,
+    "centroid_distance_2d_m": 2.1109,
+    "footprint_clearance_m": 1.3824,
+    "uncertainty_std_m": 0.2739
+  },
+  {
+    "entity_a": "chair_015",
+    "class_a": "backpack",
+    "entity_b": "chair_016",
+    "class_b": "chair",
+    "centroid_distance_3d_m": 1.5619,
+    "centroid_distance_2d_m": 1.5606,
+    "footprint_clearance_m": 0.826,
+    "uncertainty_std_m": 0.301
+  }
+]

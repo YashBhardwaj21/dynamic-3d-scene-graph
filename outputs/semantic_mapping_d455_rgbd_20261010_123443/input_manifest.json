@@ -1,0 +1,27 @@
+{
+  "dataset_dir": "/mnt/c/Users/Yash Bhardwaj/Desktop/perception/data/raw/d455_rgbd_20261010_123443",
+  "sequence_name": "d455_rgbd_20261010_123443",
+  "total_rgb_frames": 2492,
+  "total_depth_frames": 2492,
+  "total_associated_pairs": 2492,
+  "fps_estimate": 26.17,
+  "duration_s": 95.21,
+  "depth_scale_m_per_unit": 0.0010000000474974513,
+  "depth_units_per_meter": 999.999952502551,
+  "intrinsics": {
+    "fx": 384.12969970703125,
+    "fy": 383.6869812011719,
+    "cx": 320.2670593261719,
+    "cy": 244.56988525390625,
+    "width": 640,
+    "height": 480
+  },
+  "metadata_source": "metadata.json (color_intrinsics)",
+  "has_precomputed_associations": true,
+  "notes": [
+    "Discovered 2492 RGB frames from rgb.txt",
+    "Discovered 2492 Depth frames from depth.txt",
+    "Loaded 2492 associations from dataset associations.txt",
+    "Calibration loaded from: metadata.json (color_intrinsics) (fx=384.1, fy=383.7, scale=0.001000m/unit)"
+  ]
+}

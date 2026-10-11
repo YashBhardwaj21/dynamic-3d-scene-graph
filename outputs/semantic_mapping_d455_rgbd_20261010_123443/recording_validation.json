@@ -1,0 +1,27 @@
+{
+  "status": "PASS",
+  "dataset_dir": "/mnt/c/Users/Yash Bhardwaj/Desktop/perception/data/raw/d455_rgbd_20261010_123443",
+  "sequence_name": "d455_rgbd_20261010_123443",
+  "counts": {
+    "rgb_frames": 2492,
+    "depth_frames": 2492,
+    "associated_pairs": 2492,
+    "sampled_frames_checked": 169
+  },
+  "timing": {
+    "duration_s": 95.21,
+    "fps_estimate": 26.17,
+    "skew_ms_median": 12.231,
+    "skew_ms_p95": 12.672,
+    "skew_ms_max": 17.699
+  },
+  "quality": {
+    "decode_failures": 0,
+    "type_shape_failures": 0,
+    "mean_valid_depth_fraction": 0.8025,
+    "depth_scale_m_per_unit": 0.0010000000474974513,
+    "calibration_source": "metadata.json (color_intrinsics)"
+  },
+  "errors": [],
+  "warnings": []
+}

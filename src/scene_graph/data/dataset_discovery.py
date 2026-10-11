@@ -337,3 +337,177 @@ def discover_recording(
         has_precomputed_associations=has_precomputed,
         notes=notes,
     )
+
+
+def validate_recording_session(
+    dataset_path: Path,
+    sample_stride: int = 15,
+) -> Dict[str, Any]:
+    """Execute complete validation suite on an RGB-D recording session directory.
+
+    Checks:
+      1. Existence of RGB and Depth directories.
+      2. Frame counts, non-empty pairs, association completeness.
+      3. Timestamp monotonicity and RGB-Depth synchronization skew.
+      4. Image decode validity, shape, channels, and data types (uint8 RGB, uint16 Depth).
+      5. Valid depth pixel fraction and depth scale reasonableness.
+      6. Calibrated pinhole intrinsics conformance with D455 profile.
+
+    Returns:
+      Validation report dict with 'status': 'PASS' | 'FAIL', 'errors', 'warnings', and statistics.
+    """
+    dataset_path = Path(dataset_path)
+    errors: List[str] = []
+    warnings: List[str] = []
+
+    if not dataset_path.exists():
+        return {
+            "status": "FAIL",
+            "errors": [f"Recording directory does not exist: {dataset_path}"],
+            "warnings": [],
+        }
+
+    try:
+        manifest = discover_recording(dataset_path)
+    except Exception as e:
+        return {
+            "status": "FAIL",
+            "errors": [f"Discovery failed: {e}"],
+            "warnings": [],
+        }
+
+    # 1. Counts validation
+    rgb_count = manifest.total_rgb_count
+    depth_count = manifest.total_depth_count
+    assoc_count = manifest.total_associated_count
+
+    if rgb_count == 0:
+        errors.append("No RGB frames discovered in recording")
+    if depth_count == 0:
+        errors.append("No Depth frames discovered in recording")
+    if assoc_count == 0:
+        errors.append("No synchronized RGB-D pairs could be formed")
+    elif assoc_count < 10:
+        warnings.append(f"Very short recording: only {assoc_count} associated frames")
+
+    # 2. Timestamp monotonicity & skew validation
+    rgb_ts = [p[0] for p in manifest.associated_pairs]
+    depth_ts = [p[2] for p in manifest.associated_pairs]
+
+    for i in range(1, len(rgb_ts)):
+        if rgb_ts[i] <= rgb_ts[i - 1]:
+            errors.append(f"Non-monotonic RGB timestamp at index {i}: {rgb_ts[i]} <= {rgb_ts[i - 1]}")
+            break
+
+    for i in range(1, len(depth_ts)):
+        if depth_ts[i] <= depth_ts[i - 1]:
+            errors.append(f"Non-monotonic Depth timestamp at index {i}: {depth_ts[i]} <= {depth_ts[i - 1]}")
+            break
+
+    skews_ms = [(dt - rt) * 1000.0 for rt, dt in zip(rgb_ts, depth_ts)]
+    abs_skews = [abs(s) for s in skews_ms]
+    median_skew = float(np.median(abs_skews)) if abs_skews else 0.0
+    p95_skew = float(np.percentile(abs_skews, 95)) if abs_skews else 0.0
+    max_skew = float(np.max(abs_skews)) if abs_skews else 0.0
+
+    if max_skew > 50.0:
+        warnings.append(f"Max RGB-Depth skew is {max_skew:.1f} ms (>50ms tolerance)")
+
+    # 3. Image decode & integrity sampling
+    sample_indices = sorted(list(set(
+        [0, len(manifest.associated_pairs) // 2, len(manifest.associated_pairs) - 1] +
+        list(range(0, len(manifest.associated_pairs), max(1, sample_stride)))
+    )))
+
+    decode_failures = 0
+    type_shape_failures = 0
+    valid_depth_fractions = []
+
+    expected_w = manifest.intrinsics.width
+    expected_h = manifest.intrinsics.height
+
+    for idx in sample_indices:
+        if idx >= len(manifest.associated_pairs):
+            continue
+        _, rgb_rel, _, depth_rel = manifest.associated_pairs[idx]
+        rgb_full = dataset_path / rgb_rel
+        depth_full = dataset_path / depth_rel
+
+        # RGB decode check
+        rgb_img = cv2.imread(str(rgb_full), cv2.IMREAD_COLOR)
+        if rgb_img is None:
+            decode_failures += 1
+            errors.append(f"Failed to decode RGB image: {rgb_rel}")
+            continue
+        if rgb_img.shape != (expected_h, expected_w, 3) or rgb_img.dtype != np.uint8:
+            type_shape_failures += 1
+            errors.append(f"Invalid RGB format {rgb_rel}: shape={rgb_img.shape}, dtype={rgb_img.dtype}")
+
+        # Depth decode check
+        depth_img = cv2.imread(str(depth_full), cv2.IMREAD_UNCHANGED)
+        if depth_img is None:
+            decode_failures += 1
+            errors.append(f"Failed to decode Depth image: {depth_rel}")
+            continue
+        if depth_img.shape != (expected_h, expected_w) or depth_img.dtype != np.uint16:
+            type_shape_failures += 1
+            errors.append(f"Invalid Depth format {depth_rel}: shape={depth_img.shape}, dtype={depth_img.dtype}")
+        else:
+            valid_frac = float(np.mean(depth_img > 0))
+            valid_depth_fractions.append(valid_frac)
+
+    mean_valid_depth = float(np.mean(valid_depth_fractions)) if valid_depth_fractions else 0.0
+    if mean_valid_depth < 0.20:
+        warnings.append(f"Low valid depth coverage: mean valid pixel fraction is {mean_valid_depth * 100:.1f}%")
+
+    # 4. Intrinsics & scale verification
+    if manifest.depth_scale_m_per_unit <= 0.0 or manifest.depth_scale_m_per_unit > 0.05:
+        errors.append(f"Invalid depth scale: {manifest.depth_scale_m_per_unit} m/unit")
+
+    fx, fy = manifest.intrinsics.fx, manifest.intrinsics.fy
+    cx, cy = manifest.intrinsics.cx, manifest.intrinsics.cy
+    if not (200.0 <= fx <= 800.0 and 200.0 <= fy <= 800.0):
+        warnings.append(f"Focal length unusual for D455: fx={fx:.1f}, fy={fy:.1f}")
+    if not (200.0 <= cx <= 500.0 and 150.0 <= cy <= 350.0):
+        warnings.append(f"Principal point unusual for 640x480: cx={cx:.1f}, cy={cy:.1f}")
+
+    status = "PASS" if not errors else "FAIL"
+
+    report = {
+        "status": status,
+        "dataset_dir": str(dataset_path),
+        "sequence_name": manifest.sequence_name,
+        "counts": {
+            "rgb_frames": rgb_count,
+            "depth_frames": depth_count,
+            "associated_pairs": assoc_count,
+            "sampled_frames_checked": len(sample_indices),
+        },
+        "timing": {
+            "duration_s": round(manifest.duration_s, 2),
+            "fps_estimate": round(manifest.fps_estimate, 2),
+            "skew_ms_median": round(median_skew, 3),
+            "skew_ms_p95": round(p95_skew, 3),
+            "skew_ms_max": round(max_skew, 3),
+        },
+        "quality": {
+            "decode_failures": decode_failures,
+            "type_shape_failures": type_shape_failures,
+            "mean_valid_depth_fraction": round(mean_valid_depth, 4),
+            "depth_scale_m_per_unit": manifest.depth_scale_m_per_unit,
+            "calibration_source": manifest.metadata_source,
+        },
+        "errors": errors,
+        "warnings": warnings,
+    }
+
+    # Save validation report
+    try:
+        report_file = dataset_path / "recording_validation.json"
+        with open(report_file, "w", encoding="utf-8") as f:
+            json.dump(report, f, indent=2)
+    except Exception:
+        pass
+
+    return report
+

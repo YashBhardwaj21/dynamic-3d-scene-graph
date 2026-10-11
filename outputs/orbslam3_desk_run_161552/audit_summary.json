@@ -1,0 +1,31 @@
+{
+  "total_dataset_frames": 1043,
+  "trajectory_poses_count": 1043,
+  "tracked_frames_count": 1043,
+  "lost_frames_count": 0,
+  "coverage_percentage": 100.0,
+  "is_timestamp_monotonic": true,
+  "nan_inf_count": 0,
+  "max_quaternion_norm_error": 1.1143554679016177e-07,
+  "total_path_length_m": 9.7434,
+  "mean_step_m": 0.0094,
+  "max_step_m": 0.0272,
+  "bounding_box_m": {
+    "x_min": -4.131495953,
+    "x_max": 0.192432463,
+    "y_min": -0.125248551,
+    "y_max": 1.299258232,
+    "z_min": -1.174710035,
+    "z_max": 2.156705141
+  },
+  "segments": [
+    {
+      "status": "TRACKED",
+      "start_idx": 0,
+      "end_idx": 1042,
+      "count": 1043,
+      "start_time": 0.209102,
+      "end_time": 69.728112
+    }
+  ]
+}

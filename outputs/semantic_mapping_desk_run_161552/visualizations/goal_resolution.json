@@ -1,0 +1,36 @@
+{
+  "success": true,
+  "prompt": "go to the chair near desk_003 and stop 0.5 metres away",
+  "target_entity_id": "desk_003",
+  "target_class": "desk",
+  "standoff_distance_m": 0.5,
+  "robot_radius_m": 0.18,
+  "target_center_floor": [
+    1.057,
+    2.9707,
+    0.4278
+  ],
+  "approach_pose_2d": {
+    "x_m": 0.7276788182499125,
+    "y_m": 1.8513907836747139,
+    "yaw_rad": 1.28465230849519,
+    "yaw_deg": 73.60515541851262
+  },
+  "evidence": {
+    "match_type": "explicit_id",
+    "object_center_m": [
+      1.057,
+      2.9707,
+      0.4278
+    ],
+    "estimated_object_radius_m": 0.487,
+    "robot_radius_m": 0.18,
+    "camera_offset_m": 0.12,
+    "calculated_standoff_m": 0.5,
+    "approach_vector": [
+      -0.282,
+      -0.959
+    ]
+  },
+  "rejection_reason": null
+}

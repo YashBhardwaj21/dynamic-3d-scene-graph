@@ -1,0 +1,7 @@
+localization:
+  atlas_file: trajectory/atlas.osa
+  floor_transform_file: floor_plane.json
+  map_directory: /mnt/c/Users/Yash Bhardwaj/Desktop/perception/outputs/semantic_mapping_d455_rgbd_20261010_123443
+  max_covariance: 0.05
+  min_inliers_tracked: 15
+  reference_trajectory: trajectory/CameraTrajectory.txt

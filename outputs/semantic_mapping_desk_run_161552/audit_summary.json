@@ -1,0 +1,317 @@
+{
+  "sequence_name": "desk_run_20261009_161552",
+  "coordinate_frame": "floor_map (ROS REP-103)",
+  "total_input_frames": 1043,
+  "selected_frames": 209,
+  "processed_frames_with_pose": 209,
+  "input_frame_coverage_pct": 20.04,
+  "pose_coverage_pct": 100.0,
+  "raw_detections_count": 1339,
+  "valid_3d_observations_count": 1020,
+  "rejected_depth_count": 319,
+  "confirmed_entities_count": 24,
+  "unconfirmed_candidates_count": 42,
+  "floor_plane": {
+    "frame_id": "floor_map",
+    "parent_frame_id": "slam_world",
+    "coordinate_convention": "ROS REP-103: X=Forward, Y=Left, Z=Height (Z=0 on floor plane)",
+    "upward_normal": [
+      -0.0582,
+      -0.9006,
+      0.4307
+    ],
+    "plane_distance_d": 0.8886,
+    "inlier_count": 9120,
+    "total_candidate_points": 30061,
+    "inlier_percentage": 30.34,
+    "residual_mean_m": 0.0119,
+    "residual_std_m": 0.0087,
+    "camera_start_height_above_floor_m": 0.8886,
+    "T_floor_world": [
+      [
+        0.027796,
+        0.429822,
+        0.902486,
+        0.0
+      ],
+      [
+        -0.997916,
+        0.064533,
+        0.0,
+        0.0
+      ],
+      [
+        -0.05824,
+        -0.900604,
+        0.43072,
+        0.888577
+      ],
+      [
+        0.0,
+        0.0,
+        0.0,
+        1.0
+      ]
+    ],
+    "T_world_floor": [
+      [
+        0.027796,
+        -0.997916,
+        -0.05824,
+        0.051751
+      ],
+      [
+        0.429822,
+        0.064533,
+        -0.900604,
+        0.800257
+      ],
+      [
+        0.902486,
+        0.0,
+        0.43072,
+        -0.382728
+      ],
+      [
+        0.0,
+        0.0,
+        0.0,
+        1.0
+      ]
+    ]
+  },
+  "occupancy_grid_stats": {
+    "total_cells": 16728,
+    "free_cells": 6759,
+    "occupied_cells": 5097,
+    "unknown_cells": 4872,
+    "free_pct": 40.41,
+    "occupied_pct": 30.47,
+    "unknown_pct": 29.12,
+    "inflated_occupied_cells": 12187,
+    "inflated_occupied_pct": 72.85,
+    "inflated_free_cells": 935,
+    "inflated_free_pct": 5.59,
+    "resolution_m": 0.05,
+    "width_m": 6.15,
+    "height_m": 6.8
+  },
+  "multi_view_consistency_audit": [
+    {
+      "entity_id": "chair_002",
+      "class_name": "chair",
+      "observation_count": 35,
+      "frame_span": 180,
+      "mean_centroid_deviation_m": 0.2672,
+      "max_centroid_deviation_m": 0.5015,
+      "converged_under_tolerance": false
+    },
+    {
+      "entity_id": "robot_001",
+      "class_name": "desk",
+      "observation_count": 13,
+      "frame_span": 105,
+      "mean_centroid_deviation_m": 0.3733,
+      "max_centroid_deviation_m": 0.6243,
+      "converged_under_tolerance": false
+    },
+    {
+      "entity_id": "chair_003",
+      "class_name": "desk",
+      "observation_count": 79,
+      "frame_span": 395,
+      "mean_centroid_deviation_m": 0.4188,
+      "max_centroid_deviation_m": 0.7073,
+      "converged_under_tolerance": false
+    },
+    {
+      "entity_id": "chair_001",
+      "class_name": "chair",
+      "observation_count": 11,
+      "frame_span": 100,
+      "mean_centroid_deviation_m": 0.2161,
+      "max_centroid_deviation_m": 0.5797,
+      "converged_under_tolerance": true
+    },
+    {
+      "entity_id": "chair_004",
+      "class_name": "chair",
+      "observation_count": 42,
+      "frame_span": 245,
+      "mean_centroid_deviation_m": 0.1473,
+      "max_centroid_deviation_m": 0.2976,
+      "converged_under_tolerance": true
+    },
+    {
+      "entity_id": "ceiling fan_002",
+      "class_name": "ceiling fan",
+      "observation_count": 21,
+      "frame_span": 155,
+      "mean_centroid_deviation_m": 0.3698,
+      "max_centroid_deviation_m": 0.637,
+      "converged_under_tolerance": false
+    },
+    {
+      "entity_id": "chair_005",
+      "class_name": "chair",
+      "observation_count": 45,
+      "frame_span": 260,
+      "mean_centroid_deviation_m": 0.0816,
+      "max_centroid_deviation_m": 0.2277,
+      "converged_under_tolerance": true
+    },
+    {
+      "entity_id": "desk_002",
+      "class_name": "desk",
+      "observation_count": 39,
+      "frame_span": 205,
+      "mean_centroid_deviation_m": 0.3617,
+      "max_centroid_deviation_m": 1.147,
+      "converged_under_tolerance": false
+    },
+    {
+      "entity_id": "chair_007",
+      "class_name": "chair",
+      "observation_count": 34,
+      "frame_span": 180,
+      "mean_centroid_deviation_m": 0.1537,
+      "max_centroid_deviation_m": 0.441,
+      "converged_under_tolerance": true
+    },
+    {
+      "entity_id": "laptop_002",
+      "class_name": "laptop",
+      "observation_count": 12,
+      "frame_span": 120,
+      "mean_centroid_deviation_m": 0.0803,
+      "max_centroid_deviation_m": 0.249,
+      "converged_under_tolerance": true
+    },
+    {
+      "entity_id": "ceiling fan_003",
+      "class_name": "ceiling fan",
+      "observation_count": 8,
+      "frame_span": 35,
+      "mean_centroid_deviation_m": 0.166,
+      "max_centroid_deviation_m": 0.44,
+      "converged_under_tolerance": true
+    },
+    {
+      "entity_id": "chair_012",
+      "class_name": "chair",
+      "observation_count": 75,
+      "frame_span": 560,
+      "mean_centroid_deviation_m": 0.3067,
+      "max_centroid_deviation_m": 1.2904,
+      "converged_under_tolerance": false
+    },
+    {
+      "entity_id": "desk_004",
+      "class_name": "desk",
+      "observation_count": 22,
+      "frame_span": 105,
+      "mean_centroid_deviation_m": 0.0481,
+      "max_centroid_deviation_m": 0.1359,
+      "converged_under_tolerance": true
+    },
+    {
+      "entity_id": "desk_003",
+      "class_name": "desk",
+      "observation_count": 53,
+      "frame_span": 300,
+      "mean_centroid_deviation_m": 0.3104,
+      "max_centroid_deviation_m": 0.7184,
+      "converged_under_tolerance": false
+    },
+    {
+      "entity_id": "chair_013",
+      "class_name": "chair",
+      "observation_count": 14,
+      "frame_span": 150,
+      "mean_centroid_deviation_m": 0.349,
+      "max_centroid_deviation_m": 0.6782,
+      "converged_under_tolerance": false
+    },
+    {
+      "entity_id": "desk_005",
+      "class_name": "desk",
+      "observation_count": 28,
+      "frame_span": 265,
+      "mean_centroid_deviation_m": 0.264,
+      "max_centroid_deviation_m": 0.5712,
+      "converged_under_tolerance": false
+    },
+    {
+      "entity_id": "desk_008",
+      "class_name": "desk",
+      "observation_count": 99,
+      "frame_span": 245,
+      "mean_centroid_deviation_m": 0.3394,
+      "max_centroid_deviation_m": 0.7443,
+      "converged_under_tolerance": false
+    },
+    {
+      "entity_id": "chair_018",
+      "class_name": "desk",
+      "observation_count": 8,
+      "frame_span": 45,
+      "mean_centroid_deviation_m": 0.0483,
+      "max_centroid_deviation_m": 0.1404,
+      "converged_under_tolerance": true
+    },
+    {
+      "entity_id": "desk_012",
+      "class_name": "desk",
+      "observation_count": 59,
+      "frame_span": 290,
+      "mean_centroid_deviation_m": 0.3394,
+      "max_centroid_deviation_m": 0.5503,
+      "converged_under_tolerance": false
+    },
+    {
+      "entity_id": "chair_021",
+      "class_name": "chair",
+      "observation_count": 87,
+      "frame_span": 215,
+      "mean_centroid_deviation_m": 0.3154,
+      "max_centroid_deviation_m": 0.5691,
+      "converged_under_tolerance": false
+    },
+    {
+      "entity_id": "desk_014",
+      "class_name": "desk",
+      "observation_count": 26,
+      "frame_span": 125,
+      "mean_centroid_deviation_m": 0.3226,
+      "max_centroid_deviation_m": 0.4301,
+      "converged_under_tolerance": false
+    },
+    {
+      "entity_id": "chair_023",
+      "class_name": "chair",
+      "observation_count": 10,
+      "frame_span": 125,
+      "mean_centroid_deviation_m": 0.3491,
+      "max_centroid_deviation_m": 0.7893,
+      "converged_under_tolerance": false
+    },
+    {
+      "entity_id": "chair_025",
+      "class_name": "chair",
+      "observation_count": 23,
+      "frame_span": 110,
+      "mean_centroid_deviation_m": 0.2353,
+      "max_centroid_deviation_m": 0.314,
+      "converged_under_tolerance": true
+    },
+    {
+      "entity_id": "desk_013",
+      "class_name": "handbag",
+      "observation_count": 8,
+      "frame_span": 265,
+      "mean_centroid_deviation_m": 0.1653,
+      "max_centroid_deviation_m": 0.5742,
+      "converged_under_tolerance": true
+    }
+  ]
+}
