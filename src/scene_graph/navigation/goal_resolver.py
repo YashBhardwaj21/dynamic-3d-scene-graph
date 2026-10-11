@@ -1,8 +1,8 @@
 """Natural Language Prompt to Navigation Goal Resolver.
 
 Transforms instructions (e.g. "Go to the table with the drone and stop 0.5 metres away",
-"Go to chair_003", "Approach the desk and stop 0.4 metres away") into validated,
-collision-free robot goal poses in the floor-aligned coordinate frame.
+"Go to the chair near desk_003 and stop 0.5 metres away", "Go to chair_003") into validated,
+collision-free robot goal poses in the floor-aligned coordinate frame without silent misidentification.
 """
 
 from __future__ import annotations
@@ -100,56 +100,62 @@ class GoalResolver:
             with open(dist_path, "r", encoding="utf-8") as f:
                 dist_data = json.load(f)
 
-        return cls(sem_map, dist_data, robot_radius_m=robot_radius_m)
+        return cls(sem_map, object_distances=dist_data, robot_radius_m=robot_radius_m)
 
     def parse_prompt(self, prompt: str) -> Dict[str, Any]:
-        """Extract target class, explicit ID, standoff distance, and relational tokens."""
+        """Extract structured fields: target class, target ID, relation, anchor class, anchor ID, standoff."""
         p_lower = prompt.lower().strip()
 
-        # 1. Parse standoff distance (e.g. "stop 0.5 metres away", "stop 0.4m away", "0.5m")
-        standoff = 0.5  # default 0.5 meters
+        # 1. Parse standoff distance
+        standoff = 0.5
         m_dist = re.search(r"(\d+(?:\.\d+)?)\s*(?:metres?|meters?|m)\s*(?:away)?", p_lower)
         if m_dist:
             standoff = float(m_dist.group(1))
 
-        # 2. Check for explicit entity ID (e.g. "chair_003", "desk_002", "robot_001")
-        explicit_id = None
-        m_id = re.search(r"\b([a-z_]+_\d{3})\b", p_lower)
-        if m_id:
-            candidate_id = m_id.group(1)
-            if candidate_id in self.entities:
-                explicit_id = candidate_id
+        # 2. Check for relational preposition (near, with, next to, beside, by, holding)
+        rel_pattern = r"\b(near|with|next to|beside|by|holding)\b"
+        m_rel = re.search(rel_pattern, p_lower)
 
-        # 3. Target class matching
-        target_class = None
-        for canonical, syns in self.CLASS_SYNONYMS.items():
-            for s in syns:
-                if re.search(rf"\b{re.escape(s)}\b", p_lower):
-                    target_class = canonical
-                    break
-            if target_class:
-                break
+        if m_rel:
+            rel_word = m_rel.group(1)
+            target_part = p_lower[: m_rel.start()].strip()
+            anchor_part = p_lower[m_rel.end() :].strip()
+        else:
+            rel_word = None
+            target_part = p_lower
+            anchor_part = ""
 
-        # 4. Relational context keywords ("with the drone", "near the window", etc.)
-        relational_cue = None
-        m_with = re.search(r"(?:with|near|holding|next to)\s+(?:the\s+)?([a-z_]+)", p_lower)
-        if m_with:
-            cue_word = m_with.group(1)
-            # resolve cue word to class
-            for canonical, syns in self.CLASS_SYNONYMS.items():
-                if cue_word in syns or cue_word == canonical:
-                    relational_cue = canonical
-                    break
-            if not relational_cue:
-                relational_cue = cue_word
+        # Target extraction
+        target_explicit_id = self._extract_entity_id(target_part)
+        target_class = self._extract_class_name(target_part)
+
+        # Anchor extraction
+        anchor_explicit_id = self._extract_entity_id(anchor_part) if anchor_part else None
+        anchor_class = self._extract_class_name(anchor_part) if anchor_part else None
 
         return {
-            "explicit_id": explicit_id,
+            "target_explicit_id": target_explicit_id,
             "target_class": target_class,
+            "relation": rel_word,
+            "anchor_explicit_id": anchor_explicit_id,
+            "anchor_class": anchor_class,
             "standoff_distance_m": standoff,
-            "relational_cue": relational_cue,
             "raw_prompt": prompt,
         }
+
+    def _extract_entity_id(self, text: str) -> Optional[str]:
+        for m in re.finditer(r"\b([a-z_]+_\d{3,4})\b", text):
+            return m.group(1)
+        return None
+
+    def _extract_class_name(self, text: str) -> Optional[str]:
+        for canonical, syns in self.CLASS_SYNONYMS.items():
+            if re.search(rf"\b{re.escape(canonical)}\b", text):
+                return canonical
+            for s in syns:
+                if re.search(rf"\b{re.escape(s)}\b", text):
+                    return canonical
+        return None
 
     def _is_entity_confirmed(self, entity: Dict[str, Any]) -> bool:
         if "is_confirmed" in entity:
@@ -191,117 +197,128 @@ class GoalResolver:
         prompt: str,
         current_robot_pose: Tuple[float, float, float] = (0.0, 0.0, 0.0),
     ) -> GoalResolutionResult:
-        """Resolve prompt to target entity and generate verified approach pose."""
+        """Resolve prompt to target entity and generate verified approach pose without ambiguity."""
         parsed = self.parse_prompt(prompt)
         standoff = parsed["standoff_distance_m"]
-        explicit_id = parsed["explicit_id"]
+        target_id = parsed["target_explicit_id"]
         target_class = parsed["target_class"]
-        rel_cue = parsed["relational_cue"]
+        relation = parsed["relation"]
+        anchor_id = parsed["anchor_explicit_id"]
+        anchor_class = parsed["anchor_class"]
 
-        # Case 1: Explicit entity ID requested
-        if explicit_id:
-            entity = self.entities.get(explicit_id)
+        # 1. Target explicit ID requested (e.g. "go to desk_003")
+        if target_id:
+            entity = self.entities.get(target_id)
             if not entity:
                 return GoalResolutionResult(
                     success=False,
                     prompt=prompt,
-                    rejection_reason=f"Entity '{explicit_id}' not found in semantic map",
+                    target_entity_id=target_id,
+                    rejection_reason=f"No confirmed entities or object '{target_id}' found in semantic map",
                 )
             if not self._is_entity_confirmed(entity):
                 q_reason = entity.get("quarantine_reason") or entity.get("status") or "unconfirmed"
                 return GoalResolutionResult(
                     success=False,
                     prompt=prompt,
-                    target_entity_id=explicit_id,
-                    rejection_reason=f"Entity '{explicit_id}' is quarantined or unconfirmed ({q_reason})",
+                    target_entity_id=target_id,
+                    rejection_reason=f"Entity '{target_id}' is quarantined or unconfirmed ({q_reason})",
                 )
-            return self._build_approach_pose(explicit_id, entity, standoff, current_robot_pose, prompt, {"match_type": "explicit_id"})
+            return self._build_approach_pose(target_id, entity, standoff, current_robot_pose, prompt, {"match_type": "explicit_id"})
 
-        # Case 2: Target class with relational cue (e.g. "table with the drone")
-        confirmed_candidates = []
-        for eid, ent in self.entities.items():
-            if not self._is_entity_confirmed(ent):
-                continue
-            e_cls = ent.get("class_name", "").lower()
-            if target_class:
-                allowed_classes = self.CLASS_SYNONYMS.get(target_class, [target_class])
-                if e_cls in allowed_classes:
-                    confirmed_candidates.append((eid, ent))
+        # 2. Gather confirmed candidates of the target class
+        if not target_class:
+            return GoalResolutionResult(
+                success=False,
+                prompt=prompt,
+                rejection_reason="Could not determine target object class or explicit entity ID from prompt",
+            )
+
+        allowed_target_classes = self.CLASS_SYNONYMS.get(target_class, [target_class])
+        confirmed_candidates = [
+            (eid, ent) for eid, ent in self.entities.items()
+            if self._is_entity_confirmed(ent) and ent.get("class_name", "").lower() in allowed_target_classes
+        ]
 
         if not confirmed_candidates:
-            # Check if any candidate exists in unconfirmed/quarantine
-            unconf = [eid for eid, ent in self.entities.items() if target_class and ent.get("class_name") in self.CLASS_SYNONYMS.get(target_class, [])]
+            # Check unconfirmed
+            unconf = [eid for eid, ent in self.entities.items() if ent.get("class_name", "").lower() in allowed_target_classes]
             if unconf:
                 return GoalResolutionResult(
                     success=False,
                     prompt=prompt,
-                    rejection_reason=f"Found candidates {unconf} for '{target_class}', but they are UNCONFIRMED with insufficient multi-view evidence",
+                    rejection_reason=f"Found candidates {unconf} for '{target_class}', but they are UNCONFIRMED with insufficient evidence",
                 )
             return GoalResolutionResult(
                 success=False,
                 prompt=prompt,
-                rejection_reason=f"No confirmed entities of class '{target_class}' found in mapped environment",
+                rejection_reason=f"No confirmed entities of class '{target_class}' found in map",
             )
 
-        # Disambiguate using relational cue if available
-        if rel_cue:
-            rel_cue_classes = self.CLASS_SYNONYMS.get(rel_cue, [rel_cue])
-            cue_entities = [
-                (eid, ent) for eid, ent in self.entities.items()
-                if ent.get("class_name", "").lower() in rel_cue_classes
-            ]
+        # 3. Disambiguate using relational anchor if present
+        if relation and (anchor_id or anchor_class):
+            anchor_entities = []
+            if anchor_id and anchor_id in self.entities:
+                anchor_entities = [(anchor_id, self.entities[anchor_id])]
+            elif anchor_class:
+                allowed_anchor_classes = self.CLASS_SYNONYMS.get(anchor_class, [anchor_class])
+                anchor_entities = [
+                    (eid, ent) for eid, ent in self.entities.items()
+                    if ent.get("class_name", "").lower() in allowed_anchor_classes
+                ]
 
             scored_candidates = []
             for t_id, t_ent in confirmed_candidates:
                 t_pos = np.array(self._get_entity_center(t_ent))
-                # Find minimum distance to any cue entity
-                min_cue_dist = float("inf")
-                best_cue_id = None
-                for c_id, c_ent in cue_entities:
-                    c_pos = np.array(self._get_entity_center(c_ent))
-                    dist = float(np.linalg.norm(t_pos[:2] - c_pos[:2]))
-                    if dist < min_cue_dist:
-                        min_cue_dist = dist
-                        best_cue_id = c_id
+                min_dist = float("inf")
+                best_a_id = None
+                for a_id, a_ent in anchor_entities:
+                    a_pos = np.array(self._get_entity_center(a_ent))
+                    dist = float(np.linalg.norm(t_pos[:2] - a_pos[:2]))
+                    if dist < min_dist:
+                        min_dist = dist
+                        best_a_id = a_id
 
-                # If within 2.0 meters, plausible spatial relationship (e.g. drone on/near table)
-                if min_cue_dist <= 2.0:
-                    scored_candidates.append((t_id, t_ent, min_cue_dist, best_cue_id))
+                if min_dist <= 2.2:  # Plausible relational proximity
+                    scored_candidates.append((t_id, t_ent, min_dist, best_a_id))
 
-            if len(scored_candidates) == 1:
-                t_id, t_ent, d_cue, c_id = scored_candidates[0]
+            if len(scored_candidates) == 0:
+                return GoalResolutionResult(
+                    success=False,
+                    prompt=prompt,
+                    rejection_reason=f"No '{target_class}' found {relation} anchor '{anchor_id or anchor_class}' within 2.2m",
+                )
+            elif len(scored_candidates) == 1:
+                t_id, t_ent, d_rel, a_id = scored_candidates[0]
                 evidence = {
                     "match_type": "relational_association",
-                    "related_entity": c_id,
-                    "distance_to_relation_m": round(d_cue, 3),
+                    "anchor_entity": a_id,
+                    "related_entity": a_id,
+                    "distance_to_anchor_m": round(d_rel, 3),
+                    "distance_to_relation_m": round(d_rel, 3),
                 }
                 return self._build_approach_pose(t_id, t_ent, standoff, current_robot_pose, prompt, evidence)
-            elif len(scored_candidates) > 1:
-                scored_candidates.sort(key=lambda x: x[2])
-                t_id, t_ent, d_cue, c_id = scored_candidates[0]
-                evidence = {
-                    "match_type": "closest_to_relational_cue",
-                    "related_entity": c_id,
-                    "distance_to_relation_m": round(d_cue, 3),
-                }
-                return self._build_approach_pose(t_id, t_ent, standoff, current_robot_pose, prompt, evidence)
+            else:
+                # Ambiguous: multiple targets near the same anchor -> Reject instead of silent guessing!
+                c_names = [sc[0] for sc in scored_candidates]
+                return GoalResolutionResult(
+                    success=False,
+                    prompt=prompt,
+                    rejection_reason=f"Ambiguous goal: Found {len(c_names)} candidates {c_names} {relation} anchor '{anchor_id or anchor_class}'. Please specify explicit entity ID.",
+                )
 
-        # No relational cue or cue did not filter: if only 1 candidate, select it
+        # 4. No relational anchor
         if len(confirmed_candidates) == 1:
             t_id, t_ent = confirmed_candidates[0]
             return self._build_approach_pose(t_id, t_ent, standoff, current_robot_pose, prompt, {"match_type": "unique_class_instance"})
 
-        # Multiple confirmed candidates without distinguishing relation -> Ambiguity
+        # Multiple candidates without distinguishing relation -> Reject ambiguity!
         cand_ids = [c[0] for c in confirmed_candidates]
-        cur_pos = np.array(current_robot_pose[:2])
-        sorted_by_dist = sorted(confirmed_candidates, key=lambda x: np.linalg.norm(np.array(self._get_entity_center(x[1])[:2]) - cur_pos))
-        best_id, best_ent = sorted_by_dist[0]
-        evidence = {
-            "match_type": "closest_instance_fallback",
-            "all_candidates": cand_ids,
-            "selected_proximity_rank": 1,
-        }
-        return self._build_approach_pose(best_id, best_ent, standoff, current_robot_pose, prompt, evidence)
+        return GoalResolutionResult(
+            success=False,
+            prompt=prompt,
+            rejection_reason=f"Ambiguous goal: Found {len(cand_ids)} candidates for '{target_class}': {cand_ids}. Please specify an explicit entity ID or relational anchor.",
+        )
 
     def _build_approach_pose(
         self,
@@ -312,29 +329,27 @@ class GoalResolver:
         prompt: str,
         evidence: Dict[str, Any],
     ) -> GoalResolutionResult:
-        """Calculate collision-free approach pose outside the object footprint."""
+        """Calculate collision-free approach pose outside the object footprint with camera offset correction."""
         cx, cy, cz = self._get_entity_center(entity)
         obj_radius = self._get_entity_radius(entity)
 
         rx, ry, _ = current_robot_pose
-        # Direction vector from object center to current robot position
         dx = rx - cx
         dy = ry - cy
         dist_to_obj = math.hypot(dx, dy)
 
         if dist_to_obj < 1e-4:
-            # Robot is inside object center: back up along -X
             dir_x, dir_y = -1.0, 0.0
         else:
             dir_x, dir_y = dx / dist_to_obj, dy / dist_to_obj
 
-        # Total distance from object center to robot stopping base_link:
-        # object surface radius + requested clearance + robot collision radius
-        total_clearance = obj_radius + standoff_m + self.robot_radius_m
+        # Total distance from object center to vehicle base_link:
+        # object surface radius + requested clearance + camera forward offset + robot radius
+        total_clearance = obj_radius + standoff_m + self.camera_forward_offset_m + self.robot_radius_m
         goal_x = cx + dir_x * total_clearance
         goal_y = cy + dir_y * total_clearance
 
-        # Desired robot yaw facing directly toward object center
+        # Desired robot yaw oriented directly facing toward object center
         desired_yaw = math.atan2(cy - goal_y, cx - goal_x)
 
         evidence.update({

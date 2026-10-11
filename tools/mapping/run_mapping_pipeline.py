@@ -117,20 +117,32 @@ Viewer.ViewpointF: 500.0
     return output_yaml_path
 
 
+from scene_graph.pipeline.trajectory_manager import (
+    load_and_validate_trajectory,
+    TrajectoryResult,
+    TrajectoryValidationError,
+)
+
+
 def execute_orbslam3(
     dataset_dir: Path,
     associations_file: Path,
     settings_yaml: Path,
     trajectory_out_dir: Path,
-    orbslam3_root: str = "/home/saturn/ORB_SLAM3",
+    orbslam3_root: Optional[str] = None,
 ) -> Tuple[Path, Path]:
     """Execute headless ORB-SLAM3 and save trajectories."""
     trajectory_out_dir.mkdir(parents=True, exist_ok=True)
-    vocab_path = Path(orbslam3_root) / "Vocabulary" / "ORBvoc.txt"
-    exec_path = Path(orbslam3_root) / "Examples" / "RGB-D" / "rgbd_tum"
+    root_dir = Path(orbslam3_root or os.getenv("ORB_SLAM3_ROOT", "/home/saturn/ORB_SLAM3"))
+    vocab_path = root_dir / "Vocabulary" / "ORBvoc.txt"
+    exec_path = root_dir / "Examples" / "RGB-D" / "rgbd_tum"
 
     if not exec_path.exists():
-        raise FileNotFoundError(f"ORB-SLAM3 executable not found at {exec_path}")
+        raise FileNotFoundError(
+            f"ORB-SLAM3 executable not found at '{exec_path}'. "
+            f"Set ORB_SLAM3_ROOT environment variable, pass --orbslam3-root, "
+            f"or supply a verified trajectory with --trajectory-file."
+        )
 
     log_path = trajectory_out_dir / "run.log"
     print(f"Executing ORB-SLAM3 on {dataset_dir} (logging to {log_path})...")
@@ -155,47 +167,6 @@ def execute_orbslam3(
         raise RuntimeError(f"ORB-SLAM3 execution failed with returncode {res.returncode}. See {log_path}")
 
     return cam_traj, kf_traj
-
-
-def audit_trajectory(associations_path: Path, trajectory_path: Path) -> Dict[str, Any]:
-    """Audit trajectory frame coverage, continuity, and monotonicity."""
-    assoc_ts = []
-    with open(associations_path, "r", encoding="utf-8") as f:
-        for line in f:
-            line = line.strip()
-            if not line or line.startswith("#"):
-                continue
-            parts = line.split()
-            assoc_ts.append(float(parts[0]))
-
-    traj_poses = []
-    with open(trajectory_path, "r", encoding="utf-8") as f:
-        for line in f:
-            parts = line.strip().split()
-            if not parts:
-                continue
-            t = float(parts[0])
-            tx, ty, tz = float(parts[1]), float(parts[2]), float(parts[3])
-            qx, qy, qz, qw = float(parts[4]), float(parts[5]), float(parts[6]), float(parts[7])
-            traj_poses.append((t, tx, ty, tz, qx, qy, qz, qw))
-
-    total_assoc = len(assoc_ts)
-    total_poses = len(traj_poses)
-    matched = 0
-    t_keys = np.array([p[0] for p in traj_poses])
-
-    for a_t in assoc_ts:
-        if len(t_keys) and np.min(np.abs(t_keys - a_t)) <= 0.05:
-            matched += 1
-
-    coverage_pct = round(matched / total_assoc * 100.0, 2) if total_assoc else 0.0
-    return {
-        "total_dataset_frames": total_assoc,
-        "trajectory_poses_count": total_poses,
-        "tracked_frames_count": matched,
-        "coverage_percentage": coverage_pct,
-        "is_timestamp_monotonic": all(traj_poses[i][0] >= traj_poses[i-1][0] for i in range(1, len(traj_poses))),
-    }
 
 
 def main():
@@ -251,29 +222,52 @@ def main():
     with open(out_dir / "input_manifest.json", "w", encoding="utf-8") as f:
         json.dump(manifest.to_dict(), f, indent=2)
 
-    # 2. ORB-SLAM3 Trajectory
+    # 2. ORB-SLAM3 Trajectory Ingestion, Provenance, & Quality Gate
     print("\n[Stage 2/6] Acquiring Camera Trajectory & Persistent Atlas Map...")
     assoc_file = rec_dir / "associations.txt"
     shutil.copy2(assoc_file, out_dir / "associations.txt")
+    rgb_timestamps = [p[0] for p in manifest.associated_pairs]
+    atlas_save = traj_dir / "atlas.osa"
 
     if args.trajectory_file and Path(args.trajectory_file).exists():
-        cam_traj = Path(args.trajectory_file)
-        print(f"  Using supplied trajectory override: {cam_traj}")
-        shutil.copy2(cam_traj, traj_dir / "CameraTrajectory.txt")
+        raw_traj = Path(args.trajectory_file)
+        print(f"  Validating supplied trajectory override: {raw_traj}")
+        traj_res = load_and_validate_trajectory(
+            trajectory_file=raw_traj,
+            rgb_timestamps=rgb_timestamps,
+            max_dt=0.05,
+            min_coverage_pct=20.0,
+            atlas_path=atlas_save if atlas_save.exists() else None,
+            generated_in_current_run=False,
+        )
+        if not traj_res.is_valid:
+            raise RuntimeError(f"Trajectory Validation FAILED: {traj_res.rejection_reason}")
+        shutil.copy2(raw_traj, traj_dir / "CameraTrajectory.txt")
         cam_traj = traj_dir / "CameraTrajectory.txt"
     else:
-        atlas_save = traj_dir / "atlas.osa"
         slam_yaml = traj_dir / f"d455_{seq_name}_orbslam3.yaml"
         generate_orbslam3_yaml(manifest, slam_yaml, atlas_save_path=atlas_save)
         cam_traj, kf_traj = execute_orbslam3(
             rec_dir, assoc_file, slam_yaml, traj_dir, orbslam3_root=args.orbslam3_root
         )
+        traj_res = load_and_validate_trajectory(
+            trajectory_file=cam_traj,
+            rgb_timestamps=rgb_timestamps,
+            max_dt=0.05,
+            min_coverage_pct=20.0,
+            atlas_path=atlas_save,
+            generated_in_current_run=True,
+        )
+        if not traj_res.is_valid:
+            raise RuntimeError(f"Generated SLAM Trajectory FAILED validation: {traj_res.rejection_reason}")
 
-    # Audit trajectory
-    traj_audit = audit_trajectory(assoc_file, cam_traj)
     with open(traj_dir / "trajectory_audit.json", "w", encoding="utf-8") as f:
-        json.dump(traj_audit, f, indent=2)
-    print(f"  Trajectory Coverage: {traj_audit['coverage_percentage']:.1f}% ({traj_audit['tracked_frames_count']}/{traj_audit['total_dataset_frames']} frames)")
+        json.dump(traj_res.to_dict(), f, indent=2)
+
+    print(f"  Trajectory Status:   {traj_res.status} (SHA256: {traj_res.file_sha256[:12]}...)")
+    print(f"  1-to-1 Coverage:     {traj_res.coverage_percentage:.1f}% ({traj_res.unique_matched_frames}/{traj_res.total_recording_frames} frames)")
+    print(f"  Mean Timestamp Skew: {traj_res.mean_dt_ms:.2f} ms")
+    print(f"  Atlas Loadable:      {'YES' if traj_res.atlas_verified else 'NO (Replay Only)'}")
 
     # 3. Execute Semantic Mapping Pipeline Core
     print("\n[Stage 3/6] Running Semantic Perception, Geometry Fusion, & Floor Alignment...")
@@ -356,8 +350,10 @@ def main():
         "localization": {
             "map_directory": str(out_dir),
             "floor_transform_file": "floor_plane.json",
-            "atlas_file": "trajectory/atlas.osa",
+            "atlas_file": "trajectory/atlas.osa" if traj_res.atlas_verified else None,
+            "status": "READY_FOR_LOCALIZATION" if traj_res.atlas_verified else "REPLAY_ONLY (Atlas not available)",
             "reference_trajectory": "trajectory/CameraTrajectory.txt",
+            "trajectory_sha256": traj_res.file_sha256,
             "max_covariance": 0.05,
             "min_inliers_tracked": 15,
         }

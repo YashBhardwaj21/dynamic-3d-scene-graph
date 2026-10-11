@@ -54,6 +54,8 @@ def main():
     parser.add_argument("--robot-radius", type=float, default=0.18, help="Robot footprint radius in meters")
     parser.add_argument("--start-pose", type=str, default=None, help="Initial robot pose 'X Y YAW_DEG' in floor_map frame")
     parser.add_argument("--output-dir", type=str, default=None, help="Directory to save resolution and route artifacts")
+    parser.add_argument("--allow-unknown", action="store_true", help="Permit navigation across unobserved space (default False)")
+    parser.add_argument("--allow-goal-snap", action="store_true", help="Snap approach pose to nearest free cell if slightly inside costmap inflation")
     args = parser.parse_args()
 
     # If --enable-motion is passed, override dry_run
@@ -125,8 +127,13 @@ def main():
 
     # 4. Plan Collision-Free A* Route on Nav2 Costmap
     sm.start_planning()
-    planner = GridPathPlanner.from_map_dir(map_dir)
-    planned_path = planner.plan(start_pose, res_goal.approach_pose_2d, target_entity_id=res_goal.target_entity_id)
+    planner = GridPathPlanner.from_map_dir(map_dir, allow_unknown=args.allow_unknown)
+    planned_path = planner.plan(
+        start_pose,
+        res_goal.approach_pose_2d,
+        target_entity_id=res_goal.target_entity_id,
+        allow_goal_snap=args.allow_goal_snap,
+    )
 
     route_res_path = out_dir / "planned_route.json"
     with open(route_res_path, "w", encoding="utf-8") as f:

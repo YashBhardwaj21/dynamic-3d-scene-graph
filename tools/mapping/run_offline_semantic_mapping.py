@@ -351,7 +351,23 @@ def run_pipeline(args) -> Dict[str, Any]:
 
     inlier_cnt = int(np.sum(plane_fit.inlier_mask))
     inlier_pct = round(inlier_cnt / len(floor_candidates) * 100.0, 2)
-    cam_start_h = abs(float(d_floor))
+    if inlier_pct < 15.0 or plane_fit.residual_mean > 0.08:
+        raise RuntimeError(
+            f"Floor plane quality gate FAILED: inlier percentage {inlier_pct:.1f}% (< 15%) "
+            f"or residual {plane_fit.residual_mean*1000:.1f}mm (> 80mm). "
+            f"Floor plane cannot be reliably established."
+        )
+
+    # Calculate actual camera height using starting camera center and plane equation: |n . C + d| / ||n||
+    first_posed_f = posed_selected_indices[0]
+    t_first = manifest.associated_pairs[first_posed_f][0]
+    T_wc_0 = find_matching_pose(t_first, poses, pose_keys, tolerance_s=args.pose_tolerance_s)
+    if T_wc_0 is not None:
+        c_cam_0 = T_wc_0[:3, 3]
+        n_unit = n_floor / np.linalg.norm(n_floor)
+        cam_start_h = float(abs(np.dot(n_unit, c_cam_0) + d_floor))
+    else:
+        cam_start_h = abs(float(d_floor))
 
     # Construct UNIFIED 4x4 T_floor_world transform
     T_floor_world, T_world_floor = construct_floor_transform(n_floor, d_floor)
@@ -399,9 +415,11 @@ def run_pipeline(args) -> Dict[str, Any]:
         width_m = parts[2] - parts[0]
         height_m = parts[3] - parts[1]
     else:
-        # Dynamic derivation from observed camera poses + padding
+        # Dynamic derivation from both observed camera positions AND reconstructed geometry
+        pts_floor_samples = transform_points(T_floor_world, accum_world_pts[::10])
+        combined_geo_pts = np.vstack([cam_floor_pts, pts_floor_samples[:, :3]])
         origin_x, origin_y, width_m, height_m = compute_dynamic_map_bounds(
-            camera_positions_floor=cam_floor_pts,
+            camera_positions_floor=combined_geo_pts,
             padding_m=args.map_padding,
             resolution_m=args.map_resolution,
         )
@@ -648,12 +666,35 @@ def run_pipeline(args) -> Dict[str, Any]:
     det_out.close()
     obs_out.close()
 
-    # 8. Geometry Fusion, Confirmation Policy, and Spatial Merge
+    # 8. Geometry Fusion, Confirmation Policy, Spatial Merge, and Canonicalization
     print("\n[Step 6/6] Geometry cleaning, spatial merge, and delivering artifacts...")
     associator.filter_and_fuse_geometries()
     associator.evaluate_confirmation_policy()
-    associator.merge_coincident_entities(merge_distance_threshold_m=0.60)
-    associator.filter_and_fuse_geometries()
+    associator.merge_coincident_entities(merge_distance_threshold_m=0.40)
+    associator.canonicalize_all_records()
+
+    # Export canonical object_observations.jsonl from final authoritative state (zero dangling IDs)
+    with open(out_dir / "object_observations.jsonl", "w", encoding="utf-8") as can_obs_out:
+        all_canonical_entities = list(associator.entities.values()) + list(associator.unconfirmed_entities.values())
+        for ent in all_canonical_entities:
+            for obs_rec in ent.observations:
+                b_min_f = np.min(obs_rec.points_floor, axis=0) if (obs_rec.points_floor is not None and len(obs_rec.points_floor) > 0) else [0, 0, 0]
+                b_max_f = np.max(obs_rec.points_floor, axis=0) if (obs_rec.points_floor is not None and len(obs_rec.points_floor) > 0) else [0, 0, 0]
+                obs_json = {
+                    "obs_id": obs_rec.obs_id,
+                    "frame_index": obs_rec.frame_index,
+                    "timestamp": obs_rec.timestamp,
+                    "class_name": obs_rec.class_name,
+                    "confidence": round(float(obs_rec.confidence), 4),
+                    "local_track_id": obs_rec.local_track_id,
+                    "global_entity_id": ent.entity_id,
+                    "points_count": len(obs_rec.points_floor) if obs_rec.points_floor is not None else 0,
+                    "centroid_camera": [round(float(x), 4) for x in obs_rec.centroid_camera],
+                    "centroid_floor": [round(float(x), 4) for x in obs_rec.centroid_floor] if obs_rec.centroid_floor else [0, 0, 0],
+                    "bbox_min_floor": [round(float(x), 4) for x in b_min_f],
+                    "bbox_max_floor": [round(float(x), 4) for x in b_max_f],
+                }
+                can_obs_out.write(json.dumps(obs_json) + "\n")
 
     # Export point clouds and semantic registry
     associator.export_point_clouds(out_dir)

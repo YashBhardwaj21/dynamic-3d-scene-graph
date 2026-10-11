@@ -213,6 +213,12 @@ def main():
         action="store_true",
         help="Also record native RealSense ROS .bag file alongside TUM dataset",
     )
+    parser.add_argument(
+        "--preview-file",
+        type=str,
+        default=None,
+        help="Optional path to write live preview image for browser dashboards",
+    )
     args = parser.parse_args()
 
     if rs is None:
@@ -409,6 +415,21 @@ def main():
 
 
             recorded_frames += 1
+
+            # Export live preview frame for dashboard if requested
+            if args.preview_file and (recorded_frames % 2 == 0):
+                try:
+                    p_rgb = cv2.resize(color_np, (320, 240))
+                    p_depth = cv2.resize(depth_np, (320, 240))
+                    p_depth_vis = cv2.normalize(p_depth, None, 0, 255, cv2.NORM_MINMAX, dtype=cv2.CV_8U)
+                    p_depth_cmap = cv2.applyColorMap(p_depth_vis, cv2.COLORMAP_JET)
+                    p_comb = np.hstack((p_rgb, p_depth_cmap))
+                    p_tmp = f"{args.preview_file}.tmp.jpg"
+                    cv2.imwrite(p_tmp, p_comb)
+                    import os
+                    os.replace(p_tmp, args.preview_file)
+                except Exception:
+                    pass
 
             # Log progress every second
             if t_now - last_log_time >= 1.0:

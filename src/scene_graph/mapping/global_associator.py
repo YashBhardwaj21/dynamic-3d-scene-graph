@@ -99,6 +99,25 @@ class GlobalObjectAssociator:
         "whiteboard": (0.40, 0.05, 0.30),
     }
 
+    COMPATIBLE_CLASSES: Dict[str, Set[str]] = {
+        "desk": {"desk", "table", "dining table"},
+        "table": {"desk", "table", "dining table"},
+        "dining table": {"desk", "table", "dining table"},
+        "chair": {"chair", "armchair", "seat"},
+        "armchair": {"chair", "armchair", "seat"},
+        "backpack": {"backpack", "bag", "handbag"},
+        "bag": {"backpack", "bag", "handbag"},
+        "handbag": {"backpack", "bag", "handbag"},
+        "laptop": {"laptop", "computer"},
+        "bottle": {"bottle", "cup"},
+    }
+
+    @classmethod
+    def are_classes_compatible(cls, c1: str, c2: str) -> bool:
+        if c1 == c2:
+            return True
+        return c2 in cls.COMPATIBLE_CLASSES.get(c1, set()) or c1 in cls.COMPATIBLE_CLASSES.get(c2, set())
+
     def __init__(
         self,
         association_dist_threshold_m: float = 0.65,
@@ -165,16 +184,17 @@ class GlobalObjectAssociator:
                 if (obs.class_name in self.DYNAMIC_CLASSES) != tgt.is_dynamic:
                     continue
 
-                # Compatible class or spatial proximity
-                class_compat = (obs.class_name == tgt.class_name) or ({obs.class_name, tgt.class_name} == {"table", "desk"})
+                # Strict class compatibility gate: Incompatible classes NEVER match
+                if not self.are_classes_compatible(obs.class_name, tgt.class_name):
+                    continue
+
                 # Horizontal distance in floor plane
                 dist_xy = math.hypot(c_obs[0] - tgt.centroid_floor[0], c_obs[1] - tgt.centroid_floor[1])
                 dist_z = abs(c_obs[2] - tgt.centroid_floor[2])
 
-                # If classes match or surface is ambiguous, allow spatial match within threshold
+                # Match within threshold
                 if dist_xy <= self.association_dist_threshold_m and dist_z <= 1.2:
-                    weight = 1.0 if class_compat else 1.25
-                    cost_matrix[i, j] = dist_xy * weight
+                    cost_matrix[i, j] = dist_xy
 
         row_ind, col_ind = linear_sum_assignment(cost_matrix)
         matched_obs = set()
@@ -383,8 +403,8 @@ class GlobalObjectAssociator:
         for gid in to_promote:
             self.entities[gid] = self.unconfirmed_entities.pop(gid)
 
-    def merge_coincident_entities(self, merge_distance_threshold_m: float = 0.60):
-        """Merge confirmed entities that share nearly coincident locations (duplicate detections/fragments)."""
+    def merge_coincident_entities(self, merge_distance_threshold_m: float = 0.40):
+        """Merge confirmed entities that share compatible class and coincident locations."""
         confirmed_ids = list(self.entities.keys())
         merged_away = set()
 
@@ -400,9 +420,17 @@ class GlobalObjectAssociator:
                     continue
                 e_b = self.entities[id_b]
 
+                # Class compatibility gate: Incompatible classes NEVER merge
+                if not self.are_classes_compatible(e_a.class_name, e_b.class_name):
+                    continue
+
                 # Check horizontal distance in floor plane
                 d_xy = math.hypot(e_a.centroid_floor[0] - e_b.centroid_floor[0], e_a.centroid_floor[1] - e_b.centroid_floor[1])
                 if d_xy <= merge_distance_threshold_m:
+                    # Canonicalize: rewrite global_entity_id on all observations from B
+                    for obs in e_b.observations:
+                        obs.global_entity_id = e_a.entity_id
+
                     # Merge entity B into entity A
                     e_a.observations.extend(e_b.observations)
                     e_a.observation_ids.extend(e_b.observation_ids)
@@ -426,6 +454,19 @@ class GlobalObjectAssociator:
         for mid in merged_away:
             del self.entities[mid]
 
+        # Re-canonicalize observation IDs and re-evaluate confirmation policy after merge
+        self.canonicalize_all_records()
+
+    def canonicalize_all_records(self):
+        """Canonicalize observation global IDs, recompute geometry, and re-evaluate confirmation."""
+        all_entities = {**self.entities, **self.unconfirmed_entities}
+        for eid, ent in all_entities.items():
+            for obs in ent.observations:
+                obs.global_entity_id = eid
+            ent.observation_ids = [obs.obs_id for obs in ent.observations]
+        self.filter_and_fuse_geometries()
+        self.evaluate_confirmation_policy()
+
     def compute_pairwise_distances(self) -> List[Dict[str, Any]]:
         """Compute pairwise distances and derived measurement uncertainties in floor_map frame."""
         results = []
@@ -447,14 +488,14 @@ class GlobalObjectAssociator:
                     e1.centroid_floor[1] - e2.centroid_floor[1]
                 ))
 
-                # Footprint-to-footprint minimum clearance
-                poly1 = np.array(e1.floor_footprint_polygon)
-                poly2 = np.array(e2.floor_footprint_polygon)
-                min_clearance = dist_2d
-                if len(poly1) > 0 and len(poly2) > 0:
-                    diffs = poly1[:, np.newaxis, :] - poly2[np.newaxis, :, :]
-                    vertex_dists = np.sqrt(np.sum(diffs ** 2, axis=-1))
-                    min_clearance = float(np.min(vertex_dists))
+                # Footprint-to-footprint exact clearance
+                if e1.bbox_min_floor is not None and e2.bbox_min_floor is not None:
+                    # Check 2D bounding footprint overlap and distance
+                    dx = max(0.0, max(float(e1.bbox_min_floor[0] - e2.bbox_max_floor[0]), float(e2.bbox_min_floor[0] - e1.bbox_max_floor[0])))
+                    dy = max(0.0, max(float(e1.bbox_min_floor[1] - e2.bbox_max_floor[1]), float(e2.bbox_min_floor[1] - e1.bbox_max_floor[1])))
+                    min_clearance = float(math.hypot(dx, dy))
+                else:
+                    min_clearance = dist_2d
 
                 # DERIVED UNCERTAINTY: propagate positional sample standard deviations
                 s1 = e1.centroid_std_floor or 0.03

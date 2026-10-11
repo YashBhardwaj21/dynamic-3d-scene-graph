@@ -1,7 +1,47 @@
 {
-  "total_dataset_frames": 2492,
-  "trajectory_poses_count": 2492,
-  "tracked_frames_count": 2492,
+  "is_valid": true,
+  "status": "VALID",
+  "source_file": "outputs/orbslam3_d455_trajectory/full_run/CameraTrajectory.txt",
+  "file_sha256": "43f5938cb9123993251b3d26869b0299072698195ba3d140143a2a6eeae63473",
+  "generated_in_current_run": false,
+  "total_poses_in_trajectory": 2492,
+  "atlas_path": null,
+  "atlas_verified": false,
+  "total_recording_frames": 2492,
+  "unique_matched_frames": 2492,
   "coverage_percentage": 100.0,
-  "is_timestamp_monotonic": true
+  "unmatched_frames_count": 0,
+  "gaps_count": 2,
+  "max_gap_s": 0.868,
+  "temporal_overlap_s": 95.21,
+  "temporal_overlap_pct": 100.0,
+  "mean_dt_ms": 0.0,
+  "rejection_reason": null,
+  "audit_summary": {
+    "status": "VALID",
+    "provenance": {
+      "source_path": "outputs/orbslam3_d455_trajectory/full_run/CameraTrajectory.txt",
+      "sha256": "43f5938cb9123993251b3d26869b0299072698195ba3d140143a2a6eeae63473",
+      "generated_in_current_run": false
+    },
+    "coverage": {
+      "total_frames": 2492,
+      "unique_matched_frames": 2492,
+      "coverage_pct": 100.0,
+      "unmatched_frames": 0,
+      "mean_timestamp_skew_ms": 0.0,
+      "gaps_count_gt_500ms": 2,
+      "max_gap_duration_s": 0.868
+    },
+    "temporal": {
+      "trajectory_duration_s": 95.21,
+      "recording_duration_s": 95.21,
+      "overlap_duration_s": 95.21,
+      "overlap_pct": 100.0
+    },
+    "atlas": {
+      "path": null,
+      "verified_loadable": false
+    }
+  }
 }

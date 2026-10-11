@@ -132,16 +132,24 @@ class DifferentialDriveController:
 
         # Acceleration slew rate limit
         now = time.time()
-        dt = max(0.05, min(0.2, now - self.last_update_time))
+        dt = max(0.01, min(0.2, now - self.last_update_time))
         self.last_update_time = now
-        max_dv = max(0.15, self.cfg.max_linear_accel_mps2 * dt)
-        v_cmd = np.clip(v_target, self.last_linear_v - max_dv, self.last_linear_v + max_dv)
+        max_dv = self.cfg.max_linear_accel_mps2 * dt
+        v_cmd = float(np.clip(v_target, self.last_linear_v - max_dv, self.last_linear_v + max_dv))
         if v_cmd > 0.0:
             v_cmd = max(self.cfg.min_linear_speed_mps, v_cmd)
         self.last_linear_v = v_cmd
 
-        # Angular rate: proportional to heading error
-        omega_cmd = np.clip(1.8 * heading_error, -self.cfg.max_angular_speed_radps, self.cfg.max_angular_speed_radps)
+        # Pure-pursuit curvature steering: omega = v * (2 * sin(alpha) / L_d)
+        L_d = max(0.10, self.cfg.lookahead_distance_m)
+        if abs(v_cmd) > 0.01:
+            curvature = (2.0 * math.sin(heading_error)) / L_d
+            omega_cmd = v_cmd * curvature
+        else:
+            # In-place rotation when stationary
+            omega_cmd = 1.8 * heading_error
+
+        omega_cmd = float(np.clip(omega_cmd, -self.cfg.max_angular_speed_radps, self.cfg.max_angular_speed_radps))
 
         # 4. Map into differential wheel speeds
         v_l, v_r, pwm_l, pwm_r = self._diff_drive_kinematics(v_cmd, omega_cmd)

@@ -73,7 +73,7 @@ class GridPathPlanner:
         self.occ_thresh = occupied_threshold
 
     @classmethod
-    def from_map_dir(cls, map_dir: Path) -> "GridPathPlanner":
+    def from_map_dir(cls, map_dir: Path, allow_unknown: bool = False) -> "GridPathPlanner":
         map_dir = Path(map_dir)
         # Prefer inflated navigation costmap if present
         costmap_p = map_dir / "occupancy_costmap.pgm"
@@ -108,9 +108,14 @@ class GridPathPlanner:
         img_aligned = np.flipud(img)
 
         # In ROS PGM: 0=occupied (black), 205=unknown (grey), 254=free (white)
-        # Black (< 128) are lethal/inflated obstacles (cost 255)
+        # Safe Navigation: Unknown cells must be blocked by default unless explicit exploration mode
         obstacle_mask = np.zeros_like(img_aligned, dtype=np.uint8)
-        obstacle_mask[img_aligned < 128] = 255
+        if allow_unknown:
+            # Only lethal obstacles blocked
+            obstacle_mask[img_aligned < 128] = 255
+        else:
+            # Both occupied (<128) and unknown (128-249) blocked for safe navigation
+            obstacle_mask[img_aligned < 250] = 255
 
         return cls(obstacle_mask, res, (ox, oy))
 
@@ -147,6 +152,7 @@ class GridPathPlanner:
         start_pose: Tuple[float, float, float],
         goal_pose: Tuple[float, float, float],
         target_entity_id: Optional[str] = None,
+        allow_goal_snap: bool = False,
     ) -> PlannedPath:
         """Execute A* search on costmap from start_pose (x, y, yaw) to goal_pose (x, y, yaw)."""
         sx, sy, syaw = start_pose
@@ -167,17 +173,25 @@ class GridPathPlanner:
                 )
             sgx, sgy = free_start
 
-        # Check and resolve goal cell
+        # Check and resolve goal cell without silent shifting
         if not self.is_free(ggx, ggy):
-            free_goal = self.find_nearest_free_cell(ggx, ggy)
-            if not free_goal:
+            if allow_goal_snap:
+                free_goal = self.find_nearest_free_cell(ggx, ggy)
+                if not free_goal:
+                    return PlannedPath(
+                        success=False,
+                        start_pose=start_pose,
+                        goal_pose=goal_pose,
+                        rejection_reason=f"Goal position ({gx:.2f}, {gy:.2f}) is blocked by obstacles or outside navigable area",
+                    )
+                ggx, ggy = free_goal
+            else:
                 return PlannedPath(
                     success=False,
                     start_pose=start_pose,
                     goal_pose=goal_pose,
-                    rejection_reason=f"Goal position ({gx:.2f}, {gy:.2f}) is blocked by obstacles or outside navigable area",
+                    rejection_reason=f"Goal position ({gx:.2f}, {gy:.2f}) is blocked by obstacles or unobserved cell. Silent goal shifting is prohibited.",
                 )
-            ggx, ggy = free_goal
 
         # 8-connected A* search
         # Actions: (dx, dy, cost)
@@ -204,16 +218,21 @@ class GridPathPlanner:
                 break
 
             for adx, ady, step_cost in actions:
-                neighbor = (current[0] + adx, current[1] + ady)
-                if not self.is_free(neighbor[0], neighbor[1]):
+                nx, ny = current[0] + adx, current[1] + ady
+                if not self.is_free(nx, ny):
                     continue
 
+                # Prevent diagonal corner cutting (cannot cut between two blocked orthogonal neighbors)
+                if abs(adx) == 1 and abs(ady) == 1:
+                    if not self.is_free(current[0] + adx, current[1]) or not self.is_free(current[0], current[1] + ady):
+                        continue
+
                 tentative_g = current_g + step_cost
-                if neighbor not in g_cost or tentative_g < g_cost[neighbor]:
-                    g_cost[neighbor] = tentative_g
-                    priority = tentative_g + heuristic(neighbor, (ggx, ggy))
-                    heapq.heappush(open_set, (priority, tentative_g, neighbor))
-                    came_from[neighbor] = current
+                if (nx, ny) not in g_cost or tentative_g < g_cost[(nx, ny)]:
+                    g_cost[(nx, ny)] = tentative_g
+                    priority = tentative_g + heuristic((nx, ny), (ggx, ggy))
+                    heapq.heappush(open_set, (priority, tentative_g, (nx, ny)))
+                    came_from[(nx, ny)] = current
 
         if not reached:
             return PlannedPath(

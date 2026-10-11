@@ -1,35 +1,35 @@
 {
   "success": true,
-  "prompt": "go to chair_001 and stop 0.5 metres away",
-  "target_entity_id": "chair_001",
-  "target_class": "chair",
+  "prompt": "go to desk_001 and stop 0.5 metres away",
+  "target_entity_id": "desk_001",
+  "target_class": "desk",
   "standoff_distance_m": 0.5,
   "robot_radius_m": 0.18,
   "target_center_floor": [
-    2.8065,
-    -0.9712,
-    0.5008
+    2.0076,
+    -1.7077,
+    0.6596
   ],
   "approach_pose_2d": {
-    "x_m": 1.5854754547717431,
-    "y_m": -0.5775866491718968,
-    "yaw_rad": -0.31184513684671894,
-    "yaw_deg": -17.86741020299659
+    "x_m": 0.9811692054607808,
+    "y_m": -0.8242788736273129,
+    "yaw_rad": -0.710657668268571,
+    "yaw_deg": -40.717685070397245
   },
   "evidence": {
     "match_type": "explicit_id",
     "object_center_m": [
-      2.8065,
-      -0.9712,
-      0.5008
+      2.0076,
+      -1.7077,
+      0.6596
     ],
-    "estimated_object_radius_m": 0.603,
+    "estimated_object_radius_m": 0.554,
     "robot_radius_m": 0.18,
     "camera_offset_m": 0.12,
     "calculated_standoff_m": 0.5,
     "approach_vector": [
-      -0.952,
-      0.307
+      -0.758,
+      0.652
     ]
   },
   "rejection_reason": null

@@ -1,55 +1,19 @@
 {
-  "success": true,
-  "path_length_m": 2.335,
-  "turn_points_count": 5,
-  "waypoints_count": 7,
+  "success": false,
+  "path_length_m": 0.0,
+  "turn_points_count": 0,
+  "waypoints_count": 0,
   "start_pose": {
     "x": 0.14773328000000002,
     "y": -0.11974992,
     "yaw_rad": 0.0
   },
   "goal_pose": {
-    "x": 0.7749999999999999,
-    "y": 1.8750000000000004,
-    "yaw_rad": 1.28465230849519
+    "x": 1.3350212561005659,
+    "y": 1.8776264030158551,
+    "yaw_rad": 1.0344870797399246
   },
-  "target_entity_id": "desk_003",
-  "waypoints_floor": [
-    {
-      "x": 0.175,
-      "y": -0.075,
-      "yaw_rad": 3.142
-    },
-    {
-      "x": 0.125,
-      "y": -0.075,
-      "yaw_rad": 2.356
-    },
-    {
-      "x": 0.075,
-      "y": -0.025,
-      "yaw_rad": 2.356
-    },
-    {
-      "x": 0.025,
-      "y": 0.025,
-      "yaw_rad": 2.356
-    },
-    {
-      "x": -0.025,
-      "y": 0.075,
-      "yaw_rad": 1.515
-    },
-    {
-      "x": 0.025,
-      "y": 0.975,
-      "yaw_rad": 0.876
-    },
-    {
-      "x": 0.775,
-      "y": 1.875,
-      "yaw_rad": 1.285
-    }
-  ],
-  "rejection_reason": null
+  "target_entity_id": null,
+  "waypoints_floor": [],
+  "rejection_reason": "Goal position (1.34, 1.88) is blocked by obstacles or outside navigable area"
 }
