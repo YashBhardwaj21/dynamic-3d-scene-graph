@@ -36,6 +36,9 @@ class Track:
     predicted_covariance_world: np.ndarray | None = None
     is_in_frustum: bool = True
     visibility_state: VisibilityState = VisibilityState.VISIBLE
+    coordinate_frame: str = "world"
+    centroid_camera: np.ndarray | None = None
+    pose_timestamp: float | None = None
 
     def __post_init__(self):
         if not self.label_belief and self.class_name:
@@ -71,27 +74,32 @@ class Track:
         self.class_name = self.primary_label
 
     @property
-    def centroid_world(self) -> np.ndarray:
+    def centroid_world(self) -> np.ndarray | None:
+        if self.coordinate_frame != "world":
+            return None
         if self.state == TrackState.TEMPORARILY_UNOBSERVED and self.predicted_centroid_world is not None:
             return self.predicted_centroid_world
         if self.kalman_state is not None:
             return self.kalman_state.position
         return self._initial_centroid
 
-
     @property
-    def smoothed_position(self) -> np.ndarray:
+    def smoothed_position(self) -> np.ndarray | None:
         """Alias for centroid_world (Kalman-filtered 3D position)."""
         return self.centroid_world
-        
+
     @property
     def velocity_world(self) -> np.ndarray | None:
+        if self.coordinate_frame != "world":
+            return None
         if self.kalman_state is not None:
             return self.kalman_state.velocity
         return None
-        
+
     @property
     def position_covariance_world(self) -> np.ndarray | None:
+        if self.coordinate_frame != "world":
+            return None
         if self.state == TrackState.TEMPORARILY_UNOBSERVED and self.predicted_covariance_world is not None:
             return self.predicted_covariance_world
         if self.kalman_state is not None:

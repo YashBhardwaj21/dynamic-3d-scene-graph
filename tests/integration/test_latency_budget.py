@@ -71,6 +71,12 @@ def _make_packet(frame_id: int, timestamp: float):
 
 def test_d455_receiver_bounded_latency_under_backpressure():
     """Verify that D455Receiver guarantees low-latency freshness (< 67 ms) when consumer is 6x slower than camera."""
+    try:
+        import rclpy
+        if not rclpy.ok():
+            rclpy.init()
+    except ImportError:
+        rclpy = None
     # Capacity 2 queue: at 30 FPS, queue age is at most 2 * 33.3ms = ~66.7ms
     receiver = D455Receiver(host="127.0.0.1", port=0, queue_size=2)
 
@@ -129,7 +135,10 @@ def test_d455_receiver_bounded_latency_under_backpressure():
         # 2. 50 video frames were dropped to maintain low latency
         assert receiver.dropped_frames == 50
         # 3. Exactly 60 IMU samples were published (zero IMU data loss!)
-        assert receiver.imu_count == 60
+        imu_total = getattr(receiver, "total_imu_published", receiver.imu_count)
+        assert imu_total == 60
 
     finally:
         receiver.destroy_node()
+        if rclpy is not None and rclpy.ok():
+            rclpy.shutdown()

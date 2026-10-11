@@ -68,11 +68,44 @@ temporal:
 
 perception:
   type: yoloe
-  mode: prompt_free
-  model: models/yoloe-26s-seg-pf.pt
+  mode: text
+  model: models/yoloe-26s-seg.pt
   confidence_threshold: 0.25
   image_size: 480
   device: cpu
+  prompts:
+    - person
+    - chair
+    - desk
+    - table
+    - door
+    - backpack
+    - handbag
+    - mobile phone
+    - water bottle
+    - computer monitor
+    - laptop
+    - keyboard
+    - computer mouse
+    - whiteboard
+    - projector
+    - ceiling fan
+    - pedestal fan
+    - quadcopter drone
+    - drone remote controller
+    - drone battery
+    - robot
+    - toolbox
+    - storage box
+  per_class_thresholds:
+    quadcopter drone: 0.20
+    drone remote controller: 0.20
+    drone battery: 0.20
+    mobile phone: 0.20
+    chair: 0.25
+    desk: 0.25
+    table: 0.25
+    person: 0.30
 
 geometry:
   min_valid_points: 20

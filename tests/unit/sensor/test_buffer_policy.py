@@ -7,8 +7,19 @@ Directly validates D455Receiver:
 """
 
 import numpy as np
+import pytest
+import rclpy
 
 from ros2_ws.src.d455_bridge.d455_bridge.d455_receiver import D455Receiver
+
+
+@pytest.fixture(autouse=True)
+def rclpy_lifecycle():
+    if not rclpy.ok():
+        rclpy.init()
+    yield
+    if rclpy.ok():
+        rclpy.shutdown()
 
 
 def _create_synthetic_packet(frame_id: int, timestamp: float, num_imu_samples: int = 2):
@@ -89,7 +100,7 @@ def test_d455_receiver_latest_frame_dispatch():
         assert receiver.dropped_frames == 4
 
         # Invariant: ALL 10 IMU samples (5 frames x 2 samples) were published
-        assert receiver.imu_count == 10
+        assert receiver.total_imu_published == 10
 
         # Queue must now be empty
         assert receiver.frame_queue.empty()
@@ -125,7 +136,7 @@ def test_d455_receiver_overflow_preserves_imu():
         # 2 frames dropped on overflow
         assert receiver.dropped_frames == 2
         # IMU from the 2 overflowed frames was published
-        assert receiver.imu_count == 6
+        assert receiver.total_imu_published == 6
 
         # Dispatch the 2 remaining queued frames
         receiver._dispatch_queued_frames()
@@ -135,7 +146,7 @@ def test_d455_receiver_overflow_preserves_imu():
         assert receiver.dropped_frames == 3  # 2 on overflow + 1 on drain
 
         # All 12 IMU samples from all 4 frames were successfully published
-        assert receiver.imu_count == 12
+        assert receiver.total_imu_published == 12
 
     finally:
         receiver.destroy_node()

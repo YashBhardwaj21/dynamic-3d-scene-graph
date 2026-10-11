@@ -5,7 +5,10 @@ from scene_graph.config import SceneGraphConfig
 from scene_graph.data.frame_packet import FramePacket
 from scene_graph.geometry.camera import CameraIntrinsics, DepthModel
 from scene_graph.pipeline.online_pipeline import OnlinePipeline
-from scene_graph.data.tum_source import TUMReplaySource
+from scene_graph.config import SceneGraphConfig
+from scene_graph.data.frame_packet import FramePacket
+from scene_graph.geometry.camera import CameraIntrinsics, DepthModel
+from scene_graph.pipeline.online_pipeline import OnlinePipeline
 
 
 CAMERA_INTRINSICS = CameraIntrinsics(
@@ -32,13 +35,13 @@ def dummy_packet(index: int) -> FramePacket:
     )
 
 
-def dummy_source(config):
+def dummy_source(config=None):
     return [dummy_packet(i) for i in range(20)]
 
 
 def run_pipeline(config, max_frames: int):
     pipeline = OnlinePipeline(config)
-    source = TUMReplaySource(config)
+    source = dummy_source(config)
 
     for i, packet in enumerate(source):
         if i >= max_frames:
@@ -51,18 +54,15 @@ def run_pipeline(config, max_frames: int):
 def test_prefix_equivalence():
     with patch(
         "scene_graph.pipeline.online_pipeline.YOLOEDetector"
-    ) as MockDetector, patch(
-        "tests.integration.test_causality.TUMReplaySource",
-        side_effect=dummy_source,
-    ):
+    ) as MockDetector:
         MockDetector.return_value.detect.return_value = []
 
-        config = SceneGraphConfig.from_files("configs/tum_fr1_desk.yaml")
+        config = SceneGraphConfig.from_files("configs/runtime/live_d455.yaml")
 
         edges_prefix = run_pipeline(config, max_frames=10)
 
         pipeline_full = OnlinePipeline(config)
-        source_full = TUMReplaySource(config)
+        source_full = dummy_source(config)
 
         edges_at_10 = None
 

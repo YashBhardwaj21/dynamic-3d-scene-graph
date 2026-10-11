@@ -95,23 +95,41 @@ class SceneGraphPipeline:
                 )
             return
 
+        max_age = 0.20
+        if hasattr(self.config, "estimation") and hasattr(self.config.estimation, "max_pose_age"):
+            max_age = self.config.estimation.max_pose_age
+        elif hasattr(self.config, "pose") and hasattr(self.config.pose, "max_pose_age"):
+            max_age = self.config.pose.max_pose_age
+
+        has_pose = packet.world_T_camera is not None and getattr(packet, "transform_valid", False) is True
+        is_stale_source = getattr(packet, "transform_source", "") in ("stale_tf", "stale_slam_tf")
+        age = getattr(packet, "pose_age", float("inf"))
+        is_stale_age = np.isfinite(age) and (age > max_age)
+
+        is_stale = is_stale_source or (has_pose and is_stale_age)
         is_global_valid = (
-            packet.world_T_camera is not None
-            and getattr(packet, "transform_valid", False) is True
+            has_pose
+            and getattr(packet, "is_persistent_world_frame", True) is True
+            and not is_stale
+        )
+        status = (
+            GeometryStatus.VALID
+            if is_global_valid
+            else (GeometryStatus.STALE_POSE if is_stale else GeometryStatus.NO_POSE)
         )
 
         allow_fallback = getattr(packet, "metadata", {}).get("allow_camera_fallback", False)
         if not is_global_valid and packet.localization_mode == LocalizationMode.WORLD_MODE and not allow_fallback:
-            status = (
-                GeometryStatus.STALE_POSE
-                if getattr(packet, "transform_source", "") == "stale_tf"
-                else GeometryStatus.NO_POSE
-            )
             for observation in observations:
-                observation.object_geometry = ObjectGeometry(status=status)
+                observation.object_geometry = ObjectGeometry(
+                    status=status,
+                    coordinate_frame="camera",
+                    localization_status=status.name,
+                    pose_timestamp=getattr(packet.pose_estimate, "pose_timestamp", None) if is_stale else None,
+                )
             return
 
-        effective_pose = packet.world_T_camera if is_global_valid else np.eye(4, dtype=np.float64)
+        effective_pose = packet.world_T_camera if is_global_valid else None
 
         geometry_config = self.config.geometry
 
@@ -120,7 +138,10 @@ class SceneGraphPipeline:
 
             if mask is None:
                 observation.object_geometry = ObjectGeometry(
-                    status=GeometryStatus.INVALID_GEOMETRY
+                    status=GeometryStatus.INVALID_GEOMETRY,
+                    coordinate_frame="camera",
+                    localization_status="invalid_mask",
+                    pose_timestamp=packet.pose_timestamp,
                 )
                 continue
 
@@ -139,9 +160,9 @@ class SceneGraphPipeline:
                 spatial_outlier_sigma=getattr(geometry_config, "spatial_outlier_sigma", 3.0),
             )
 
-            if geom is not None and geom.status == GeometryStatus.VALID:
+            if geom is not None:
                 if not is_global_valid:
-                    # Camera-local fallback for local 2D/3D tracking and spatial relations.
+                    # Camera-local fallback for local 2D/3D tracking.
                     # Strictly clear world-frame coordinates so camera coordinates NEVER pollute the persistent world graph.
                     geom.points_world = None
                     geom.points_world_sampled = None
@@ -152,14 +173,17 @@ class SceneGraphPipeline:
                     geom.obb_axes_world = None
                     geom.obb_extents_world = None
                     geom.position_covariance_world = None
-                    geom.status = (
-                        GeometryStatus.STALE_POSE
-                        if getattr(packet, "transform_source", "") == "stale_tf"
-                        else GeometryStatus.NO_POSE
-                    )
+                    if geom.status == GeometryStatus.VALID:
+                        geom.status = status
+                    geom.coordinate_frame = "camera"
+                    geom.localization_status = status.name
+                    geom.pose_timestamp = getattr(packet.pose_estimate, "pose_timestamp", None) if is_stale else None
                     setattr(geom, "frame", "camera")
                     setattr(geom, "source", "local_fallback")
                 else:
+                    geom.coordinate_frame = "world"
+                    geom.localization_status = "localized"
+                    geom.pose_timestamp = packet.pose_timestamp
                     setattr(geom, "frame", "world")
                     setattr(geom, "source", "slam")
 
@@ -190,45 +214,76 @@ class SceneGraphPipeline:
                 ):
                     continue
 
-                is_local = getattr(object_geometry, "frame", "world") == "camera" or object_geometry.centroid_world is None
-                centroid = object_geometry.centroid_camera if is_local else object_geometry.centroid_world
-                pts = object_geometry.points_camera if is_local else object_geometry.points_world
-                if centroid is None or pts is None:
-                    continue
+                is_local = (
+                    getattr(object_geometry, "coordinate_frame", "world") == "camera"
+                    or getattr(object_geometry, "frame", "world") == "camera"
+                    or object_geometry.centroid_world is None
+                )
 
                 if is_local:
-                    bbox_min = np.min(pts, axis=0)
-                    bbox_max = np.max(pts, axis=0)
-                else:
-                    bbox_min = object_geometry.bbox_min_world
-                    bbox_max = object_geometry.bbox_max_world
+                    pts = object_geometry.points_camera
+                    centroid = object_geometry.centroid_camera
+                    if centroid is None or pts is None:
+                        continue
 
-                geometry[track.object_id] = ObservationGeometry(
-                    obs_id=observation.obs_id,
-                    track_id=track.object_id,
-                    centroid_world=centroid,
-                    position_covariance_world=(
-                        object_geometry.position_covariance_world
-                    ),
-                    bbox_min_world=bbox_min,
-                    bbox_max_world=bbox_max,
-                    obb_center_world=object_geometry.obb_center_world if not is_local else centroid,
-                    obb_axes_world=object_geometry.obb_axes_world,
-                    obb_extents_world=object_geometry.obb_extents_world,
-                    depth_stats=object_geometry.depth_stats,
-                    points_world_sampled=(
-                        object_geometry.points_world_sampled if not is_local else pts
-                    ),
-                    points_world=pts,
-                    points_camera=object_geometry.points_camera,
-                    mask=observation.get_mask(),
-                    valid_point_count=object_geometry.valid_point_count,
-                    geometry_source=GeometrySource.OBSERVED,
-                    is_in_frustum=True,
-                )
+                    geometry[track.object_id] = ObservationGeometry(
+                        obs_id=observation.obs_id,
+                        track_id=track.object_id,
+                        centroid_world=None,
+                        position_covariance_world=None,
+                        bbox_min_world=None,
+                        bbox_max_world=None,
+                        obb_center_world=None,
+                        obb_axes_world=None,
+                        obb_extents_world=None,
+                        depth_stats=object_geometry.depth_stats,
+                        points_world_sampled=None,
+                        points_world=None,
+                        points_camera=pts,
+                        centroid_camera=centroid,
+                        coordinate_frame="camera",
+                        localization_status=getattr(object_geometry, "localization_status", "unlocalized"),
+                        mask=observation.get_mask(),
+                        valid_point_count=object_geometry.valid_point_count,
+                        geometry_source=GeometrySource.OBSERVED,
+                        is_in_frustum=True,
+                    )
+                else:
+                    centroid = object_geometry.centroid_world
+                    pts = object_geometry.points_world
+                    if centroid is None or pts is None:
+                        continue
+
+                    geometry[track.object_id] = ObservationGeometry(
+                        obs_id=observation.obs_id,
+                        track_id=track.object_id,
+                        centroid_world=centroid,
+                        position_covariance_world=object_geometry.position_covariance_world,
+                        bbox_min_world=object_geometry.bbox_min_world,
+                        bbox_max_world=object_geometry.bbox_max_world,
+                        obb_center_world=object_geometry.obb_center_world,
+                        obb_axes_world=object_geometry.obb_axes_world,
+                        obb_extents_world=object_geometry.obb_extents_world,
+                        depth_stats=object_geometry.depth_stats,
+                        points_world_sampled=object_geometry.points_world_sampled,
+                        points_world=pts,
+                        points_camera=object_geometry.points_camera,
+                        centroid_camera=object_geometry.centroid_camera,
+                        coordinate_frame="world",
+                        localization_status="localized",
+                        mask=observation.get_mask(),
+                        valid_point_count=object_geometry.valid_point_count,
+                        geometry_source=GeometrySource.OBSERVED,
+                        is_in_frustum=True,
+                    )
             else:
-                # Synthesize PREDICTED geometry for active unobserved track
-                if track.missing_count > 0 and track.state != TrackState.LOST:
+                # Synthesize PREDICTED geometry for active unobserved track (only if tracked in world frame)
+                if (
+                    track.missing_count > 0 
+                    and track.state != TrackState.LOST
+                    and getattr(track, "coordinate_frame", "world") == "world"
+                    and track.centroid_world is not None
+                ):
                     last_geom = observation.object_geometry
                     centroid = track.centroid_world
                     cov = track.position_covariance_world
@@ -243,7 +298,7 @@ class SceneGraphPipeline:
                     points_world = None
                     points_sampled = None
 
-                    if last_geom is not None and last_geom.status == GeometryStatus.VALID:
+                    if last_geom is not None and last_geom.status == GeometryStatus.VALID and getattr(last_geom, "centroid_world", None) is not None:
                         delta_pos = centroid - last_geom.centroid_world
                         if last_geom.bbox_min_world is not None:
                             bbox_min = last_geom.bbox_min_world + delta_pos
@@ -278,6 +333,9 @@ class SceneGraphPipeline:
                         points_world=points_world,
                         points_world_sampled=points_sampled,
                         points_camera=None,
+                        centroid_camera=None,
+                        coordinate_frame="world",
+                        localization_status="predicted",
                         mask=None,
                         depth_stats=last_geom.depth_stats if last_geom is not None else None,
                         valid_point_count=last_geom.valid_point_count if last_geom is not None else 0,
@@ -350,16 +408,33 @@ class SceneGraphPipeline:
         all_evidences = []
         relation_states = {}
 
+        max_age = 0.20
+        if hasattr(self.config, "estimation") and hasattr(self.config.estimation, "max_pose_age"):
+            max_age = self.config.estimation.max_pose_age
+        elif hasattr(self.config, "pose") and hasattr(self.config.pose, "max_pose_age"):
+            max_age = self.config.pose.max_pose_age
+
+        is_stale = (
+            getattr(packet, "transform_source", "") in ("stale_tf", "stale_slam_tf")
+            or getattr(packet, "pose_age", 0.0) > max_age
+        )
         is_global_valid = (
             packet.world_T_camera is not None
             and getattr(packet, "transform_valid", False) is True
+            and getattr(packet, "is_persistent_world_frame", True) is True
+            and not is_stale
         )
+
         effective_world_T_camera = packet.world_T_camera if is_global_valid else np.eye(4, dtype=np.float64)
         effective_relation_frame = packet.relation_frame
         if effective_relation_frame is None or not is_global_valid:
             effective_relation_frame = RelationReferenceFrame.create("camera", np.eye(4, dtype=np.float64))
 
-        if relation_tracks:
+        # Invariant 3: Camera-relative fallback may produce local geometry, but must never update
+        # global centroids, global bounding boxes, global relations, or global-map state.
+        allow_relations = is_global_valid or (packet.localization_mode == LocalizationMode.CAMERA_LOCAL_MODE)
+
+        if allow_relations and relation_tracks:
             observation_geometry = self._build_observation_geometry(
                 relation_tracks,
                 packet.frame_index,

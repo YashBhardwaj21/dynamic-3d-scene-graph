@@ -218,9 +218,9 @@ def test_config_loader_deterministic():
     assert tuple(cfg.reference_frame.heading_axis) == (1.0, 0.0, 0.0)
 
     # Test override
-    cfg_tum = load_scene_graph_config("configs/tum_fr1_desk.yaml")
-    assert cfg_tum.camera.fx == 525.0
-    assert cfg_tum.depth.scale == 5000.0
+    cfg_d455 = load_scene_graph_config("configs/runtime/live_d455.yaml")
+    assert cfg_d455.depth.scale == 1000.0
+    assert cfg_d455.estimation.backend == "rtabmap"
 
 
 def test_numpy_to_ros_image_roundtrip():

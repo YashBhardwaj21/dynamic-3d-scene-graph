@@ -14,4 +14,5 @@ if [ -d "$HOME/myenv/lib/python$PY_VER/site-packages" ]; then
 fi
 export PYTHONPATH="$SCRIPT_DIR/src:$SCRIPT_DIR/ros2_ws/src/scene_graph_ros:$SCRIPT_DIR/ros2_ws/src/d455_bridge${EXTRA_SITE_PACKAGES}:$PYTHONPATH"
 cd "$SCRIPT_DIR"
+export PYTEST_DISABLE_PLUGIN_AUTOLOAD=1
 python3 -m pytest "$@"

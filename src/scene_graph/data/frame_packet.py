@@ -82,7 +82,10 @@ class FramePacket:
             if self.world_T_camera is None:
                 self.world_T_camera = self.pose_estimate.world_T_camera
             if self.pose_timestamp is None:
-                self.pose_timestamp = self.pose_estimate.pose_timestamp or self.pose_estimate.timestamp
+                if self.pose_estimate.valid or self.pose_estimate.pose_timestamp is not None:
+                    self.pose_timestamp = self.pose_estimate.pose_timestamp
+                else:
+                    self.pose_timestamp = None
             self.pose_age = self.pose_estimate.age
             self.transform_valid = self.pose_estimate.valid
             eff_source = self.pose_estimate.transform_source if self.pose_estimate.transform_source != "unknown" else self.pose_estimate.source

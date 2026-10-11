@@ -19,21 +19,24 @@ class ObservationGeometry:
 
     obs_id: str
     track_id: str
-    centroid_world: np.ndarray
-    bbox_min_world: np.ndarray
-    bbox_max_world: np.ndarray
-    depth_stats: Optional[Dict[str, float]]
-    points_world_sampled: Optional[np.ndarray]
-    points_world: Optional[np.ndarray]
-    points_camera: Optional[np.ndarray]
-    mask: Optional[np.ndarray]
-    valid_point_count: int
+    centroid_world: Optional[np.ndarray] = None
+    bbox_min_world: Optional[np.ndarray] = None
+    bbox_max_world: Optional[np.ndarray] = None
+    depth_stats: Optional[Dict[str, float]] = None
+    points_world_sampled: Optional[np.ndarray] = None
+    points_world: Optional[np.ndarray] = None
+    points_camera: Optional[np.ndarray] = None
+    centroid_camera: Optional[np.ndarray] = None
+    mask: Optional[np.ndarray] = None
+    valid_point_count: int = 0
     geometry_source: GeometrySource = GeometrySource.OBSERVED
     position_covariance_world: Optional[np.ndarray] = None
     obb_center_world: Optional[np.ndarray] = None
     obb_axes_world: Optional[np.ndarray] = None
     obb_extents_world: Optional[np.ndarray] = None
     is_in_frustum: bool = True
+    coordinate_frame: str = "world"
+    localization_status: str = "localized"
 
 
 

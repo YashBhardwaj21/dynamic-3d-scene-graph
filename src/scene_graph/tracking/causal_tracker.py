@@ -252,7 +252,10 @@ class CausalTracker(TrackerInterface):
 
         for track_id, track in self.tracks.items():
             if track.kalman_state is None:
-                position = np.asarray(track.centroid_world, dtype=np.float64)
+                pos = track.centroid_world if track.coordinate_frame == "world" else track.centroid_camera
+                if pos is None:
+                    pos = track._initial_centroid
+                position = np.asarray(pos, dtype=np.float64)
                 covariance = track.position_covariance_world
 
                 if covariance is None:
@@ -275,8 +278,12 @@ class CausalTracker(TrackerInterface):
                 predicted_state.position,
                 predicted_state.position_covariance,
             )
-            track.predicted_centroid_world = predicted_state.position.copy()
-            track.predicted_covariance_world = predicted_state.position_covariance.copy()
+            if getattr(track, "coordinate_frame", "world") == "world":
+                track.predicted_centroid_world = predicted_state.position.copy()
+                track.predicted_covariance_world = predicted_state.position_covariance.copy()
+            else:
+                track.predicted_centroid_world = None
+                track.predicted_covariance_world = None
 
         return predictions
 
@@ -290,8 +297,9 @@ class CausalTracker(TrackerInterface):
 
         for obs_idx, observation in enumerate(observations):
             centroid = self._get_observation_centroid(observation)
+            obs_frame = self._get_observation_frame(observation)
 
-            if centroid is None:
+            if centroid is None or obs_frame == "unknown":
                 continue
 
             observation_size = self._get_observation_size(observation)
@@ -299,6 +307,11 @@ class CausalTracker(TrackerInterface):
 
             for track_idx, track_id in enumerate(track_ids):
                 track = self.tracks[track_id]
+
+                # INVARIANT 5: Tracking must not associate camera-relative geometry
+                # with global geometry as though both use the same coordinate frame.
+                if getattr(track, "coordinate_frame", "world") != obs_frame:
+                    continue
 
                 predicted_position, predicted_covariance = predictions[track_id]
                 innovation = centroid - predicted_position
@@ -376,6 +389,12 @@ class CausalTracker(TrackerInterface):
 
     def _update_track(self, track_id: str, observation: Observation, frame_index: int, timestamp: float) -> None:
         track = self.tracks[track_id]
+        obs_frame = self._get_observation_frame(observation)
+
+        # Invariant 5: Tracking must not associate camera-relative geometry with global geometry
+        if getattr(track, "coordinate_frame", "world") != obs_frame:
+            return
+
         old_state = track.state
         measurement = self._get_observation_centroid(observation)
 
@@ -409,12 +428,22 @@ class CausalTracker(TrackerInterface):
         observation_size = self._get_observation_size(observation)
 
         if observation_size is not None:
-            if track.size_world is None or track.observation_count <= 0:
-                track.size_world = observation_size.copy()
+            if obs_frame == "world":
+                if track.size_world is None or track.observation_count <= 0:
+                    track.size_world = observation_size.copy()
+                else:
+                    count = track.observation_count
+                    track.size_world = ((count * track.size_world) + observation_size) / (count + 1)
             else:
-                count = track.observation_count
-                track.size_world = ((count * track.size_world) + observation_size) / (count + 1)
+                track.size_world = None
 
+        geom = getattr(observation, "object_geometry", None)
+        if obs_frame == "camera":
+            track.centroid_camera = np.copy(measurement)
+        else:
+            track.centroid_camera = getattr(geom, "centroid_camera", None)
+
+        track.pose_timestamp = getattr(geom, "pose_timestamp", None)
         track.last_observed_frame = frame_index
         track.last_timestamp = timestamp
         track.last_observed_timestamp = timestamp
@@ -487,12 +516,15 @@ class CausalTracker(TrackerInterface):
 
     def _create_track(self, observation: Observation, frame_index: int, timestamp: float) -> None:
         measurement = self._get_observation_centroid(observation)
+        obs_frame = self._get_observation_frame(observation)
 
         if measurement is None:
             return
 
         observation_buffer_size = self.config.tracking.history.observation_buffer_size
-        size_world = self._get_observation_size(observation)
+        observation_size = self._get_observation_size(observation)
+        size_world = observation_size.copy() if (observation_size is not None and obs_frame == "world") else None
+
         track_id = f"track_{self.next_track_id:04d}"
         self.next_track_id += 1
 
@@ -502,6 +534,9 @@ class CausalTracker(TrackerInterface):
             if measurement_covariance is not None
             else self.initial_position_variance
         )
+
+        geom = getattr(observation, "object_geometry", None)
+        cam_centroid = np.copy(measurement) if obs_frame == "camera" else getattr(geom, "centroid_camera", None)
 
         track = Track(
             object_id=track_id,
@@ -525,6 +560,9 @@ class CausalTracker(TrackerInterface):
             last_observed_timestamp=timestamp,
             is_in_frustum=True,
             visibility_state=VisibilityState.VISIBLE,
+            coordinate_frame=obs_frame,
+            centroid_camera=cam_centroid,
+            pose_timestamp=getattr(geom, "pose_timestamp", None),
         )
 
         if self.min_hits_to_confirm <= 1:
@@ -539,14 +577,17 @@ class CausalTracker(TrackerInterface):
     def _is_duplicate_detection(self, observation: Observation) -> bool:
         """Check if an unmatched observation spatially duplicates an existing tracked object."""
         meas = self._get_observation_centroid(observation)
-        if meas is None:
+        obs_frame = self._get_observation_frame(observation)
+        if meas is None or obs_frame == "unknown":
             return True
 
         dup_thresh = self.association_threshold_m * 0.75
         for track in self.tracks.values():
             if track.state not in (TrackState.ACTIVE, TrackState.TEMPORARILY_UNOBSERVED, TrackState.CANDIDATE):
                 continue
-            t_center = track.centroid_world
+            if getattr(track, "coordinate_frame", "world") != obs_frame:
+                continue
+            t_center = track.centroid_world if obs_frame == "world" else track.centroid_camera
             if t_center is None:
                 continue
             dist = float(np.linalg.norm(meas - t_center))
@@ -579,6 +620,17 @@ class CausalTracker(TrackerInterface):
                     return self._symmetrize(covariance)
 
         return self.measurement_covariance.copy()
+
+    @staticmethod
+    def _get_observation_frame(observation: Observation) -> str:
+        geometry = getattr(observation, "object_geometry", None)
+        if geometry is None:
+            return "unknown"
+        if getattr(geometry, "status", None) == GeometryStatus.VALID and getattr(geometry, "centroid_world", None) is not None:
+            return "world"
+        if getattr(geometry, "centroid_camera", None) is not None:
+            return "camera"
+        return getattr(geometry, "coordinate_frame", getattr(geometry, "frame", "unknown"))
 
     @staticmethod
     def _get_observation_centroid(observation: Observation) -> np.ndarray | None:

@@ -6,13 +6,14 @@ import pytest
 
 from scene_graph.data.frame_packet import FramePacket
 from scene_graph.geometry.camera import CameraIntrinsics, DepthModel
-from scene_graph.perception.observation import Observation
+from scene_graph.perception.observation import Observation, encode_mask_rle
 from scene_graph.perception.observation_source import ObservationProducer, ObservationSource
 
 
 class MockObservationProducer(ObservationProducer):
     def detect(self, packet: FramePacket) -> List[Observation]:
         if packet.frame_index == 100:
+            mask = np.zeros((10, 10), dtype=bool)
             return [
                 Observation(
                     obs_id="obs_1",
@@ -21,6 +22,7 @@ class MockObservationProducer(ObservationProducer):
                     class_name="cup",
                     confidence=0.95,
                     bbox_xyxy=np.array([10.0, 10.0, 50.0, 50.0], dtype=np.float32),
+                    mask_rle=encode_mask_rle(mask),
                 )
             ]
         return []

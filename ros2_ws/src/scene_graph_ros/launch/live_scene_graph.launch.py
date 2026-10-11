@@ -99,6 +99,7 @@ def launch_setup(context, *args, **kwargs):
                 "rviz": "false",
                 "odom_always_process_most_recent_frame": "true",
                 "use_sim_time": "false",
+                "database_path": LaunchConfiguration("database_path"),
             }.items(),
         )
         actions.append(rtabmap_launch)
@@ -126,6 +127,7 @@ def launch_setup(context, *args, **kwargs):
                 "pose_max_dt": LaunchConfiguration("pose_max_dt"),
                 "telemetry_max_age": LaunchConfiguration("telemetry_max_age"),
                 "telemetry_log_path": LaunchConfiguration("telemetry_log_path"),
+                "export_dir": LaunchConfiguration("export_dir"),
                 "debug_frame_packet_only": False,
                 "use_sim_time": False,
                 "min_hits": LaunchConfiguration("min_hits"),
@@ -279,6 +281,16 @@ def generate_launch_description():
             "telemetry_log_path",
             default_value="",
             description="Optional path to log live CSV telemetry and estimated.tum trajectory",
+        ),
+        DeclareLaunchArgument(
+            "database_path",
+            default_value="~/.ros/rtabmap.db",
+            description="Path to RTAB-Map SQLite database file",
+        ),
+        DeclareLaunchArgument(
+            "export_dir",
+            default_value="",
+            description="Optional output directory to export perception, tracking, geometry, and scene graph artifacts",
         ),
         DeclareLaunchArgument(
             "min_hits",

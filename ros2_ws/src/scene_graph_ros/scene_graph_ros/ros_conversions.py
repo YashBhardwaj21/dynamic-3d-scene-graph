@@ -454,7 +454,7 @@ def ros_messages_to_sensor_frame(
     if source_timestamp is not None:
         frame_metadata["source_timestamp"] = float(source_timestamp)
     if source_domain is not None:
-        frame_metadata["source_domain"] = str(source_domain)
+        frame_metadata["source_domain"] = getattr(source_domain, "value", str(source_domain))
 
     return SensorFrame(
         session_id=session_id,

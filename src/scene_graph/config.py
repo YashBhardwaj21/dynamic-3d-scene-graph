@@ -131,13 +131,41 @@ class PerceptionConfig(BaseModel):
     model_config = ConfigDict(extra="forbid")
 
     type: str = Field("yoloe")
-    model: str = Field("models/yoloe-26m-seg-pf.pt")
+    model: str = Field("models/yoloe-26s-seg.pt")
     model_path: Optional[str] = Field(None)
-    confidence_threshold: float = Field(0.40, ge=0.0, le=1.0)
-    image_size: int = Field(640, gt=0)
+    confidence_threshold: float = Field(0.25, ge=0.0, le=1.0)
+    per_class_thresholds: Dict[str, float] = Field(default_factory=dict)
+    image_size: int = Field(480, gt=0)
     device: str = Field("auto")
-    mode: str = Field("prompt_free")
-    prompts: Optional[Tuple[str, ...]] = None
+    mode: str = Field("text")
+    prompts: Optional[Tuple[str, ...]] = Field(
+        default=(
+            "person",
+            "chair",
+            "desk",
+            "table",
+            "door",
+            "backpack",
+            "handbag",
+            "mobile phone",
+            "water bottle",
+            "computer monitor",
+            "laptop",
+            "keyboard",
+            "computer mouse",
+            "whiteboard",
+            "projector",
+            "ceiling fan",
+            "pedestal fan",
+            "quadcopter drone",
+            "drone remote controller",
+            "drone battery",
+            "robot",
+            "toolbox",
+            "storage box",
+        )
+    )
+    allowed_classes: Optional[Tuple[str, ...]] = None
     classes: Tuple[str, ...] = Field(default_factory=tuple)
     vocabulary: Optional[str] = None
     async_mode: bool = Field(False)

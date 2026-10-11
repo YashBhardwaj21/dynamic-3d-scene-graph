@@ -28,6 +28,8 @@ class ObjectSnapshot:
     spatial_context_id: str = "world"
     is_spatial_anchor: bool = False
     label_belief: dict[str, float] = field(default_factory=dict)
+    coordinate_frame: str = "world"
+    localization_status: str = "localized"
 
     def to_dict(self) -> dict:
         return {
@@ -40,6 +42,8 @@ class ObjectSnapshot:
             "missing_count": int(self.missing_count),
             "spatial_context_id": self.spatial_context_id,
             "is_spatial_anchor": self.is_spatial_anchor,
+            "coordinate_frame": self.coordinate_frame,
+            "localization_status": self.localization_status,
             "centroid_world": list(self.centroid_world) if self.centroid_world else None,
             "velocity_world": list(self.velocity_world) if self.velocity_world else None,
             "obb_center_world": list(self.obb_center_world) if self.obb_center_world else None,
@@ -118,6 +122,7 @@ class SceneGraphSnapshot:
     relations: tuple[RelationSnapshot, ...]
     telemetry: TelemetrySnapshot
     spatial_contexts: dict = field(default_factory=dict)
+    localization: dict = field(default_factory=dict)
 
     def query_objects(
         self,
@@ -161,6 +166,7 @@ class SceneGraphSnapshot:
             "frame_index": self.frame_index,
             "timestamp": self.timestamp,
             "world_T_camera": [list(row) for row in self.world_T_camera] if self.world_T_camera else None,
+            "localization": self.localization,
             "objects": [obj.to_dict() for obj in self.objects],
             "relations": [rel.to_dict() for rel in self.relations],
             "spatial_contexts": self.spatial_contexts,
@@ -211,16 +217,18 @@ def create_snapshot(
         track = node.track
         class_map[track.object_id] = track.class_name
 
+        is_world_track = (getattr(track, "coordinate_frame", "world") == "world" and track.centroid_world is not None)
+
         obb_center = None
         obb_axes = None
         obb_extents = None
         bbox_min = None
         bbox_max = None
 
-        if track.recent_observations:
+        if is_world_track and track.recent_observations:
             latest_obs = track.recent_observations[-1]
             geom = getattr(latest_obs, "object_geometry", None)
-            if geom is not None and geom.status == GeometryStatus.VALID:
+            if geom is not None and geom.status == GeometryStatus.VALID and getattr(geom, "centroid_world", None) is not None:
                 obb_center = _ndarray_to_tuple3(geom.obb_center_world)
                 obb_axes = _ndarray_to_matrix(geom.obb_axes_world)
                 obb_extents = _ndarray_to_tuple3(geom.obb_extents_world)
@@ -228,7 +236,7 @@ def create_snapshot(
                 bbox_max = _ndarray_to_tuple3(geom.bbox_max_world)
 
         velocity = None
-        if track.velocity_world is not None:
+        if is_world_track and track.velocity_world is not None:
             velocity = _ndarray_to_tuple3(track.velocity_world)
 
         label_belief = getattr(track, "label_belief", {})
@@ -236,6 +244,11 @@ def create_snapshot(
             label_belief_dict = {str(k): float(v) for k, v in label_belief.items()}
         else:
             label_belief_dict = {}
+
+        centroid_world = _ndarray_to_tuple3(track.centroid_world) if is_world_track else None
+        spatial_context = getattr(node, "spatial_context_id", "world" if is_world_track else "camera")
+        if not is_world_track:
+            spatial_context = "camera"
 
         objects.append(ObjectSnapshot(
             track_id=track.object_id,
@@ -245,16 +258,18 @@ def create_snapshot(
             confidence=float(track.detection_confidence),
             observation_count=track.observation_count,
             missing_count=track.missing_count,
-            centroid_world=_ndarray_to_tuple3(track.centroid_world),
+            centroid_world=centroid_world,
             velocity_world=velocity,
             obb_center_world=obb_center,
             obb_axes_world=obb_axes,
             obb_extents_world=obb_extents,
             bbox_min_world=bbox_min,
             bbox_max_world=bbox_max,
-            spatial_context_id=getattr(node, "spatial_context_id", "world"),
+            spatial_context_id=spatial_context,
             is_spatial_anchor=getattr(node, "is_spatial_anchor", False),
             label_belief=label_belief_dict,
+            coordinate_frame="world" if is_world_track else "camera",
+            localization_status="localized" if is_world_track else "unlocalized",
         ))
 
     relations: list[RelationSnapshot] = []
@@ -290,7 +305,28 @@ def create_snapshot(
         relation_latency_ms=relation_latency_ms,
     )
 
-    world_T_camera = _ndarray_to_matrix(packet.world_T_camera)
+    has_pose = packet.world_T_camera is not None and getattr(packet, "transform_valid", False) is True
+    is_stale_source = getattr(packet, "transform_source", "") in ("stale_tf", "stale_slam_tf")
+    age = getattr(packet, "pose_age", float("inf"))
+    is_stale_age = np.isfinite(age) and (age > 0.20)
+    is_stale = is_stale_source or (has_pose and is_stale_age)
+
+    is_global_valid = (
+        has_pose
+        and getattr(packet, "is_persistent_world_frame", True) is True
+        and not is_stale
+    )
+    world_T_camera = _ndarray_to_matrix(packet.world_T_camera) if is_global_valid else None
+
+    localization_dict = {
+        "status": "localized" if is_global_valid else ("stale_pose" if is_stale else "no_pose"),
+        "coordinate_frame": "world" if is_global_valid else "camera",
+        "transform_valid": is_global_valid,
+        "transform_source": packet.transform_source,
+        "pose_timestamp": packet.pose_timestamp if is_global_valid else None,
+        "pose_age_sec": round(float(packet.pose_age), 4) if (is_global_valid and np.isfinite(packet.pose_age)) else None,
+        "is_persistent_world_frame": getattr(packet, "is_persistent_world_frame", True),
+    }
 
     contexts_dict = {}
     for cid, ctx in getattr(graph, "spatial_contexts", {}).items():
@@ -312,4 +348,5 @@ def create_snapshot(
         relations=tuple(relations),
         telemetry=telemetry,
         spatial_contexts=contexts_dict,
+        localization=localization_dict,
     )

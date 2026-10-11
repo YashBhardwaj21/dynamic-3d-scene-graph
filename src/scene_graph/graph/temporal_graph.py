@@ -53,6 +53,11 @@ class TemporalSceneGraph:
             if track.state == TrackState.CANDIDATE:
                 continue
 
+            # Invariant 3: Camera-relative fallback may produce local geometry, but must never update
+            # global centroids, global bounding boxes, global relations, or global-map state.
+            if getattr(track, "coordinate_frame", "world") != "world" or track.centroid_world is None:
+                continue
+
             state = object_states.get(track.object_id, ObjectState.UNKNOWN)
 
             if track.state in (TrackState.ACTIVE, TrackState.TEMPORARILY_UNOBSERVED):

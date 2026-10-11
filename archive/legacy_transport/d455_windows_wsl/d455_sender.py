@@ -41,10 +41,17 @@ MAX_TRANSPORT_QUEUE_CAPACITY: int = 1   # Latest-frame policy: queue age <= 33ms
 
 
 def resolve_wsl_host(preferred_host: str, port: int) -> str:
-    """Resolve WSL host IP directly via Hyper-V virtual switch to bypass buggy wslrelay."""
+    """Resolve WSL host IP, checking preferred_host (e.g. 127.0.0.1 for mirrored networking) first."""
     env_host = os.environ.get("WSL_HOST")
     if env_host:
         return env_host.strip()
+
+    # In mirrored networking or local socket, test preferred_host first
+    try:
+        with socket.create_connection((preferred_host, port), timeout=0.2):
+            return preferred_host
+    except OSError:
+        pass
 
     if preferred_host not in ("127.0.0.1", "localhost"):
         return preferred_host
@@ -174,13 +181,8 @@ def create_sender_pipeline(enable_imu: bool = True):
     usb_type = str(dev_info["usb_type"]).strip()
 
     if not usb_type.startswith("3."):
-        try:
-            pipeline.stop()
-        except Exception:
-            pass
-
-        raise RuntimeError(
-            f"Stage 1 requires USB 3.x, but the D455 negotiated USB {usb_type or 'unknown'}."
+        print(
+            f"[Warning] D455 negotiated USB {usb_type or 'unknown'} (USB 3.x recommended). Proceeding in USB 2 compatibility mode..."
         )
 
     align = rs.align(rs.stream.color)
@@ -232,7 +234,7 @@ class D455SenderService:
         while not self.stop_event.is_set():
             if pipeline is None:
                 try:
-                    pipeline, align, depth_scale, intrinsics, imu_enabled, dev_info = create_sender_pipeline(enable_imu=True)
+                    pipeline, align, depth_scale, intrinsics, imu_enabled, dev_info = create_sender_pipeline(enable_imu=False)
                     self.session_id = f"d455_{uuid.uuid4().hex[:8]}_{int(time.time())}"
                     print(f"[D455 Sender] RealSense pipeline started (session={self.session_id}).")
                     print(f"[D455 Sender] Device: {dev_info['name']} (FW: {dev_info['firmware_version']}, USB: {dev_info['usb_type']})")

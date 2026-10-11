@@ -43,24 +43,29 @@ class OnlinePipeline:
                 self.detector = YOLOEDetector(
                     model_path=model_path,
                     confidence_threshold=config.perception.confidence_threshold,
+                    per_class_thresholds=getattr(config.perception, "per_class_thresholds", None),
                     mode=mode,
                     text_prompts=list(prompts) if prompts else None,
+                    allowed_classes=getattr(config.perception, "allowed_classes", None),
                     device=getattr(config.perception, "device", "auto"),
                     image_size=image_size,
                 )
 
             self.core = SceneGraphPipeline(config)
             self.last_observations = None
+            self.new_observations = None
 
     def update(self, packet: FramePacket):
         """Process one frame and update the scene graph."""
         if self._async_impl is not None:
             graph = self._async_impl.update(packet)
             self.last_observations = self._async_impl.last_observations
+            self.new_observations = getattr(self._async_impl, "new_observations", None)
             return graph
 
         observations = self.detector.detect(packet)
         self.last_observations = observations
+        self.new_observations = observations
         return self.core.update(packet, observations)
 
     def stop(self):

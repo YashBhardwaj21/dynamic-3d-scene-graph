@@ -65,4 +65,17 @@ desktop.ini
 experiments/*/frames/
 experiments/*/logs/
 *.part
+*.log
 scratch/
+
+# Archives & Bundles
+archive/
+*.zip
+*.tar.gz
+*.tar
+*.gz
+
+# Additional tool caches
+.ruff_cache/
+.mypy_cache/
+

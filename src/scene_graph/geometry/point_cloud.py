@@ -39,13 +39,16 @@ class ObjectGeometry:
     depth_stats: Optional[Dict[str, float]] = None
     valid_point_count: int = 0
     status: GeometryStatus = GeometryStatus.VALID
+    coordinate_frame: str = "camera"
+    localization_status: str = "unlocalized"
+    pose_timestamp: Optional[float] = None
 
 
 def compute_object_geometry(
     mask: np.ndarray, 
     depth_m: np.ndarray, 
     intrinsics: CameraIntrinsics, 
-    pose: np.ndarray,
+    pose: Optional[np.ndarray] = None,
     min_valid_points: int = 30,
     mad_k: float = 3.5,
     voxel_size_m: float = 0.005,
@@ -79,6 +82,9 @@ def compute_object_geometry(
     if mask.shape != depth_m.shape:
         raise ValueError(f"Shape mismatch: mask {mask.shape} != depth {depth_m.shape}")
         
+    coord_frame = "world" if pose is not None else "camera"
+    loc_status = "localized" if pose is not None else "unlocalized"
+
     # Valid depth mask (positive, finite, and strictly within sensor range)
     valid_depth = (
         (depth_m >= min_depth_m)
@@ -89,7 +95,11 @@ def compute_object_geometry(
     combined_mask = (mask > 0) & valid_depth
     
     if np.sum(combined_mask) < min_valid_points:
-        return ObjectGeometry(status=GeometryStatus.INSUFFICIENT_DEPTH)
+        return ObjectGeometry(
+            status=GeometryStatus.INSUFFICIENT_DEPTH,
+            coordinate_frame=coord_frame,
+            localization_status=loc_status,
+        )
         
     # Extract coordinates
     v, u = np.where(combined_mask)
@@ -104,7 +114,11 @@ def compute_object_geometry(
     band_mask = np.abs(z_m - median) <= mad_k * sigma_robust
     
     if np.sum(band_mask) < min_valid_points:
-        return ObjectGeometry(status=GeometryStatus.INSUFFICIENT_DEPTH)
+        return ObjectGeometry(
+            status=GeometryStatus.INSUFFICIENT_DEPTH,
+            coordinate_frame=coord_frame,
+            localization_status=loc_status,
+        )
         
     u_filt = u[band_mask]
     v_filt = v[band_mask]
@@ -128,14 +142,52 @@ def compute_object_geometry(
             points_camera = points_camera[spatial_mask]
             z_filt = z_filt[spatial_mask]
         else:
-            return ObjectGeometry(status=GeometryStatus.INSUFFICIENT_DEPTH)
+            return ObjectGeometry(
+                status=GeometryStatus.INSUFFICIENT_DEPTH,
+                coordinate_frame=coord_frame,
+                localization_status=loc_status,
+            )
     
+    center_camera = np.mean(points_camera, axis=0)
+
+    # Compute depth statistics
+    depth_stats = {
+        "median": float(np.median(z_filt)),
+        "p05": float(np.percentile(z_filt, 5)),
+        "p25": float(np.percentile(z_filt, 25)),
+        "p75": float(np.percentile(z_filt, 75)),
+        "p95": float(np.percentile(z_filt, 95))
+    }
+
+    if pose is None:
+        N = len(points_camera)
+        geometry_quality = 1.0 if N > min_valid_points * 2 else float(N) / (min_valid_points * 2)
+        return ObjectGeometry(
+            points_camera=points_camera,
+            points_world=None,
+            points_world_sampled=None,
+            centroid_camera=center_camera,
+            centroid_world=None,
+            position_covariance_world=None,
+            point_covariance_world=None,
+            bbox_min_world=None,
+            bbox_max_world=None,
+            obb_center_world=None,
+            obb_axes_world=None,
+            obb_extents_world=None,
+            geometry_quality=geometry_quality,
+            depth_stats=depth_stats,
+            valid_point_count=N,
+            status=GeometryStatus.VALID,
+            coordinate_frame="camera",
+            localization_status="unlocalized",
+        )
+
     # Transform to world coordinates
     points_world = transform_points(pose, points_camera)
     
     # Compute centers (mean, rigid-transform equivariant)
     N = len(points_world)
-    center_camera = np.mean(points_camera, axis=0)
     center_world = np.mean(points_world, axis=0)
     
     # Covariance
@@ -181,15 +233,6 @@ def compute_object_geometry(
         obb_extents = np.zeros(3)
         obb_center = center_world
     
-    # Compute depth statistics
-    depth_stats = {
-        "median": float(np.median(z_filt)),
-        "p05": float(np.percentile(z_filt, 5)),
-        "p25": float(np.percentile(z_filt, 25)),
-        "p75": float(np.percentile(z_filt, 75)),
-        "p95": float(np.percentile(z_filt, 95))
-    }
-    
     # Deterministic voxel downsampling
     from scene_graph.geometry.downsampling import voxel_downsample
     points_world_sampled = voxel_downsample(points_world, voxel_size_m)
@@ -213,5 +256,7 @@ def compute_object_geometry(
         geometry_quality=geometry_quality,
         depth_stats=depth_stats,
         valid_point_count=len(points_world),
-        status=GeometryStatus.VALID
+        status=GeometryStatus.VALID,
+        coordinate_frame="world",
+        localization_status="localized",
     )

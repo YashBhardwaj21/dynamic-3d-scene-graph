@@ -100,9 +100,67 @@ def test_config_resolution_from_arbitrary_cwd(tmp_path):
     original_cwd = os.getcwd()
     try:
         os.chdir(str(tmp_path))
-        # Relative path from external dir should resolve to repo configs
         config = SceneGraphConfig.from_files("configs/default.yaml")
         assert config is not None
-        assert config.perception.mode == "prompt_free"
+        assert config.perception.mode == "text"
     finally:
         os.chdir(original_cwd)
+
+
+def test_frame_packet_accepts_metric_float_depth():
+    from scene_graph.data.frame_packet import FramePacket
+    intrinsics = _dummy_intrinsics()
+    rgb = np.zeros((480, 640, 3), dtype=np.uint8)
+    depth_m = np.ones((480, 640), dtype=np.float32) * 1.5
+
+    packet = FramePacket(
+        frame_index=0,
+        timestamp=100.0,
+        rgb=rgb,
+        depth=depth_m,
+        world_T_camera=np.eye(4),
+        camera_intrinsics=intrinsics,
+        frame_id="camera_color_optical_frame",
+        optical_frame_id="camera_depth_optical_frame",
+        pose_source="groundtruth",
+    )
+    assert packet.has_depth
+    assert packet.depth.dtype == np.float32
+    assert packet.depth[240, 320] == 1.5
+
+
+def test_frame_packet_rejects_raw_integer_depth():
+    from scene_graph.data.frame_packet import FramePacket
+    intrinsics = _dummy_intrinsics()
+    rgb = np.zeros((480, 640, 3), dtype=np.uint8)
+    raw_uint16_depth = np.ones((480, 640), dtype=np.uint16) * 1000
+
+    with pytest.raises(ValueError, match="FramePacket.depth must be metric depth in meters"):
+        FramePacket(
+            frame_index=0,
+            timestamp=100.0,
+            rgb=rgb,
+            depth=raw_uint16_depth,
+            world_T_camera=np.eye(4),
+            camera_intrinsics=intrinsics,
+        )
+
+
+def test_timestamp_valid_creation_and_bounds():
+    from scene_graph.data.timestamp import Timestamp, TimestampDomain, IncompatibleTimestampDomainError
+    ts = Timestamp(value=100.5, domain=TimestampDomain.HARDWARE_CLOCK, source="d455")
+    assert ts.value == 100.5
+    assert ts.domain == TimestampDomain.HARDWARE_CLOCK
+    assert ts.source == "d455"
+
+    with pytest.raises(ValueError, match="must be non-negative and finite"):
+        Timestamp(value=-1.0, domain=TimestampDomain.HARDWARE_CLOCK)
+
+    t1 = Timestamp(value=10.0, domain=TimestampDomain.HARDWARE_CLOCK, source="d455")
+    t2 = Timestamp(value=15.0, domain=TimestampDomain.HARDWARE_CLOCK, source="d455")
+    assert t1 < t2
+    assert t1.delta_to(t2) == pytest.approx(5.0)
+
+    t_sys = Timestamp(value=1700000000.0, domain=TimestampDomain.SYSTEM_TIME, source="windows_os")
+    with pytest.raises(IncompatibleTimestampDomainError):
+        _ = t1.delta_to(t_sys)

@@ -186,8 +186,10 @@ class AsyncOnlinePipeline:
             self.detector = YOLOEDetector(
                 model_path=model_path,
                 confidence_threshold=config.perception.confidence_threshold,
+                per_class_thresholds=getattr(config.perception, "per_class_thresholds", None),
                 mode=mode,
                 text_prompts=list(prompts) if prompts else None,
+                allowed_classes=getattr(config.perception, "allowed_classes", None),
                 device=getattr(config.perception, "device", "auto"),
                 image_size=image_size,
             )
@@ -202,6 +204,7 @@ class AsyncOnlinePipeline:
         self.total_camera_frames = 0
         self.total_detection_frames = 0
         self.last_observations: List[Observation] = []
+        self.new_observations: Optional[List[Observation]] = None
         self.last_graph: Optional[TemporalSceneGraph] = None
 
         self._start_time = time.monotonic()
@@ -226,6 +229,7 @@ class AsyncOnlinePipeline:
                 historical_packet = self.history_buffer.get_by_timestamp(latest_result.timestamp)
 
             self.last_observations = latest_result.observations
+            self.new_observations = latest_result.observations
 
             graph = self.core.update(
                 packet=packet,
@@ -235,6 +239,7 @@ class AsyncOnlinePipeline:
                 obs_packet=historical_packet,
             )
         else:
+            self.new_observations = None
             graph = self.core.update(
                 packet=packet,
                 observations=[],

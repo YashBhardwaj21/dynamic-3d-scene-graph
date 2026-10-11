@@ -204,6 +204,11 @@ def main():
         help="Disable OpenCV real-time visual preview window",
     )
     parser.add_argument(
+        "--enable-imu",
+        action="store_true",
+        help="Enable IMU (accelerometer/gyroscope) recording (disabled by default to prevent USB stall issues)",
+    )
+    parser.add_argument(
         "--record-bag",
         action="store_true",
         help="Also record native RealSense ROS .bag file alongside TUM dataset",
@@ -238,12 +243,16 @@ def main():
     config.enable_stream(rs.stream.depth, WIDTH, HEIGHT, rs.format.z16, FPS)
 
     imu_enabled = False
-    try:
-        config.enable_stream(rs.stream.accel, rs.format.motion_xyz32f, 200)
-        config.enable_stream(rs.stream.gyro, rs.format.motion_xyz32f, 200)
-        imu_enabled = True
-    except Exception as ex:
-        print(f"[D455] Motion streams not available: {ex}")
+    if args.enable_imu:
+        try:
+            config.enable_stream(rs.stream.accel, rs.format.motion_xyz32f, 200)
+            config.enable_stream(rs.stream.gyro, rs.format.motion_xyz32f, 200)
+            imu_enabled = True
+            print("[D455] IMU streams enabled (accel + gyro @ 200Hz)")
+        except Exception as ex:
+            print(f"[D455] Motion streams not available: {ex}")
+    else:
+        print("[D455] IMU streams disabled (pass --enable-imu to record motion data)")
 
     if args.record_bag:
         bag_path = str(seq_dir / "realsense_raw.bag")
@@ -258,8 +267,15 @@ def main():
         print("Make sure no other program (like d455_sender or RealSense Viewer) is using the camera.")
         sys.exit(1)
 
+    # Device info & USB connection
+    device = profile.get_device()
+    usb_type = device.get_info(rs.camera_info.usb_type_descriptor) if device.supports(rs.camera_info.usb_type_descriptor) else "unknown"
+    print(f"[D455] Device: {device.get_info(rs.camera_info.name)} | USB Port: {usb_type}")
+    if str(usb_type).startswith("2."):
+        print("[Warning] Camera is running on USB 2.x! High-bandwidth operations may be limited. Connect to a USB 3.x port for best performance.")
+
     # Depth sensor scale
-    depth_sensor = profile.get_device().first_depth_sensor()
+    depth_sensor = device.first_depth_sensor()
     depth_unit_m = depth_sensor.get_depth_scale()
     depth_scale = 1.0 / depth_unit_m  # Typically 1000.0 (mm)
     print(f"[D455] Depth scale: {depth_scale:.1f} integer units per meter ({depth_unit_m} m/unit)")
@@ -333,10 +349,23 @@ def main():
 
             try:
                 frames = pipeline.wait_for_frames(timeout_ms=5000)
+            except Exception as ex:
+                if t_now - last_log_time >= 2.0:
+                    print(f"\n[Warning] Frame wait timed out or failed: {ex}")
+                continue
+
+            raw_color = frames.get_color_frame()
+            raw_depth = frames.get_depth_frame()
+            if not raw_color or not raw_depth:
+                continue
+
+            try:
                 aligned = align.process(frames)
                 color_frame = aligned.get_color_frame()
                 depth_frame = aligned.get_depth_frame()
-            except Exception:
+            except Exception as ex:
+                if t_now - last_log_time >= 2.0:
+                    print(f"\n[Warning] Stream alignment failed: {ex}")
                 continue
 
             if not color_frame or not depth_frame:
