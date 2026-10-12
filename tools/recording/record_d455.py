@@ -319,6 +319,7 @@ def main():
     # Prepare index files
     rgb_txt = open(seq_dir / "rgb.txt", "w")
     depth_txt = open(seq_dir / "depth.txt", "w")
+    assoc_txt = open(seq_dir / "associations.txt", "w")
     groundtruth_txt = open(seq_dir / "groundtruth.txt", "w")
     accel_txt = open(seq_dir / "accelerometer.txt", "w") if imu_enabled else None
     gyro_txt = open(seq_dir / "gyroscope.txt", "w") if imu_enabled else None
@@ -344,6 +345,8 @@ def main():
     recorded_frames = 0
     t_start = time.time()
     last_log_time = t_start
+    last_color_ts = -1.0
+    last_depth_ts = -1.0
 
     try:
         while True:
@@ -381,6 +384,12 @@ def main():
             color_ts_sec = color_frame.get_timestamp() * 1e-3
             depth_ts_sec = depth_frame.get_timestamp() * 1e-3
 
+            # Strictly enforce timestamp monotonicity (filter camera buffer repeat / duplicate frames)
+            if color_ts_sec <= last_color_ts or depth_ts_sec <= last_depth_ts:
+                continue
+            last_color_ts = color_ts_sec
+            last_depth_ts = depth_ts_sec
+
             color_np = np.asanyarray(color_frame.get_data())
             depth_np = np.asanyarray(depth_frame.get_data())
 
@@ -398,6 +407,7 @@ def main():
             # Write indices
             rgb_txt.write(f"{color_ts_str} {rgb_rel}\n")
             depth_txt.write(f"{depth_ts_str} {depth_rel}\n")
+            assoc_txt.write(f"{color_ts_str} {rgb_rel} {depth_ts_str} {depth_rel}\n")
             groundtruth_txt.write(f"{color_ts_str} 0.0000 0.0000 0.0000 0.0000 0.0000 0.0000 1.0000\n")
 
             # Record 6-Axis IMU (accel + gyro) with individual hardware timestamps
@@ -480,6 +490,7 @@ def main():
         try:
             rgb_txt.close()
             depth_txt.close()
+            assoc_txt.close()
             groundtruth_txt.close()
             if accel_txt:
                 accel_txt.close()

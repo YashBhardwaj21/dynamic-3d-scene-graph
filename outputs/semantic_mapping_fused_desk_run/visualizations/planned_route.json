@@ -1,0 +1,38 @@
+{
+  "success": true,
+  "path_length_m": 0.86,
+  "turn_points_count": 0,
+  "waypoints_count": 2,
+  "start_pose": {
+    "x": 4.3102,
+    "y": -2.6308,
+    "yaw_rad": -3.0444
+  },
+  "goal_pose": {
+    "x": 3.625000000000001,
+    "y": -2.1250000000000018,
+    "yaw_rad": -3.1280472432419075
+  },
+  "original_goal_pose": {
+    "x": 3.6486,
+    "y": -2.1429,
+    "yaw_rad": 3.141592653589793
+  },
+  "endpoint_adjustment_m": 0.0296,
+  "min_clearance_m": 0.05,
+  "is_validated": true,
+  "target_entity_id": "desk_001",
+  "waypoints_floor": [
+    {
+      "x": 4.325,
+      "y": -2.625,
+      "yaw_rad": 2.521
+    },
+    {
+      "x": 3.625,
+      "y": -2.125,
+      "yaw_rad": -3.128
+    }
+  ],
+  "rejection_reason": null
+}

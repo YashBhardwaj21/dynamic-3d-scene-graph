@@ -1,0 +1,38 @@
+{
+  "success": true,
+  "path_length_m": 0.112,
+  "turn_points_count": 0,
+  "waypoints_count": 2,
+  "start_pose": {
+    "x": 4.5,
+    "y": 1.2,
+    "yaw_rad": 0.0
+  },
+  "goal_pose": {
+    "x": 4.575000000000001,
+    "y": 1.3250000000000002,
+    "yaw_rad": -2.191465226971268
+  },
+  "original_goal_pose": {
+    "x": 4.59586053646382,
+    "y": 1.3302739568369388,
+    "yaw_rad": -2.2051720173749754
+  },
+  "endpoint_adjustment_m": 0.0215,
+  "min_clearance_m": 0.05,
+  "is_validated": true,
+  "target_entity_id": "chair_005",
+  "waypoints_floor": [
+    {
+      "x": 4.525,
+      "y": 1.225,
+      "yaw_rad": 1.107
+    },
+    {
+      "x": 4.575,
+      "y": 1.325,
+      "yaw_rad": -2.191
+    }
+  ],
+  "rejection_reason": null
+}

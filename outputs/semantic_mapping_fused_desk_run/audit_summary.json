@@ -1,0 +1,217 @@
+{
+  "fusion_type": "Multi-Session Dynamic Scene Graph & Occupancy Grid Fusion",
+  "reference_session": "semantic_mapping_my_desk_recording_01",
+  "aligned_session": "semantic_mapping_my_desk_recording_02",
+  "coordinate_frame": "floor_map (ROS REP-103: X=Forward, Y=Left, Z=Height, Z=0 on floor)",
+  "registration": {
+    "reference_session": "semantic_mapping_my_desk_recording_01",
+    "aligned_session": "semantic_mapping_my_desk_recording_02",
+    "rotation_deg": -16.13,
+    "translation_m": [
+      -0.0815,
+      0.093
+    ],
+    "anchors": [
+      {
+        "class": "desk",
+        "id1": "desk_001",
+        "id2": "desk_001",
+        "c1": [
+          2.2627,
+          -2.1303
+        ],
+        "c2": [
+          2.9203,
+          -1.4855
+        ]
+      },
+      {
+        "class": "desk",
+        "id1": "desk_004",
+        "id2": "desk_003",
+        "c1": [
+          3.6031,
+          -2.9083
+        ],
+        "c2": [
+          4.4157,
+          -1.7385
+        ]
+      },
+      {
+        "class": "desk",
+        "id1": "desk_005",
+        "id2": "desk_014",
+        "c1": [
+          -0.0916,
+          -5.7598
+        ],
+        "c2": [
+          1.5285,
+          -5.5769
+        ]
+      },
+      {
+        "class": "desk",
+        "id1": "desk_008",
+        "id2": "desk_016",
+        "c1": [
+          1.1598,
+          -6.9984
+        ],
+        "c2": [
+          3.0996,
+          -6.3574
+        ]
+      },
+      {
+        "class": "desk",
+        "id1": "desk_018",
+        "id2": "desk_029",
+        "c1": [
+          -2.5693,
+          -3.0691
+        ],
+        "c2": [
+          -1.5246,
+          -3.5928
+        ]
+      },
+      {
+        "class": "desk",
+        "id1": "desk_023",
+        "id2": "desk_034",
+        "c1": [
+          -1.1698,
+          -1.1884
+        ],
+        "c2": [
+          -0.9879,
+          -2.0203
+        ]
+      },
+      {
+        "class": "desk",
+        "id1": "desk_025",
+        "id2": "desk_006",
+        "c1": [
+          4.3624,
+          -3.2255
+        ],
+        "c2": [
+          5.728,
+          -2.1012
+        ]
+      },
+      {
+        "class": "desk",
+        "id1": "desk_031",
+        "id2": "desk_002",
+        "c1": [
+          0.8647,
+          -1.5765
+        ],
+        "c2": [
+          1.2726,
+          -0.9282
+        ]
+      },
+      {
+        "class": "storage box",
+        "id1": "storage box_001",
+        "id2": "storage box_003",
+        "c1": [
+          1.6722,
+          -2.8057
+        ],
+        "c2": [
+          2.5053,
+          -2.5079
+        ]
+      },
+      {
+        "class": "storage box",
+        "id1": "storage box_007",
+        "id2": "storage box_011",
+        "c1": [
+          -0.7618,
+          -0.3513
+        ],
+        "c2": [
+          -0.6144,
+          -0.5981
+        ]
+      }
+    ]
+  },
+  "entity_statistics": {
+    "session_1_confirmed_count": 41,
+    "session_2_confirmed_count": 69,
+    "fused_confirmed_count": 78,
+    "multi_view_merged_count": 32,
+    "novel_integrated_count": 37,
+    "displaced_count": 3
+  },
+  "occupancy_grid_statistics": {
+    "resolution_m": 0.05,
+    "width_m": 15.0,
+    "height_m": 15.5,
+    "total_cells": 93000,
+    "free_cells": 10605,
+    "free_pct": 11.4,
+    "occupied_cells": 15029,
+    "occupied_pct": 16.16,
+    "unknown_cells": 67366,
+    "unknown_pct": 72.44
+  },
+  "displaced_entities": [
+    {
+      "event_type": "OBJECT_DISPLACED",
+      "entity_id": "chair_003",
+      "class_name": "chair",
+      "displacement_m": 0.386,
+      "old_position": [
+        1.2281,
+        -3.1402,
+        0.4667
+      ],
+      "new_position": [
+        1.0719140716650641,
+        -2.787037437488296,
+        0.4339
+      ]
+    },
+    {
+      "event_type": "OBJECT_DISPLACED",
+      "entity_id": "chair_002",
+      "class_name": "chair",
+      "displacement_m": 0.563,
+      "old_position": [
+        1.7468,
+        -1.9595,
+        0.4229
+      ],
+      "new_position": [
+        2.308006833996805,
+        -1.9999234858198691,
+        0.4346
+      ]
+    },
+    {
+      "event_type": "OBJECT_DISPLACED",
+      "entity_id": "storage box_007",
+      "class_name": "storage box",
+      "displacement_m": 0.396,
+      "old_position": [
+        -0.8174,
+        -0.3217,
+        0.3707
+      ],
+      "new_position": [
+        -0.9934877261818521,
+        -0.6764436789808163,
+        0.793
+      ]
+    }
+  ]
+}

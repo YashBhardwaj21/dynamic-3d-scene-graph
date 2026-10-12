@@ -127,8 +127,12 @@ class DifferentialDriveController:
             v_target = self.cfg.max_linear_speed_mps
             phase = "TRACKING"
 
-        # Reduce forward speed if heading error is large
-        v_target *= max(0.1, math.cos(heading_error))
+        # Skid-steer behavior: Pivot in-place if heading error is large (> 35 deg)
+        if abs(heading_error) > 0.60:
+            v_target = 0.0
+        else:
+            # Scale forward speed by cosine of heading error when aligned
+            v_target *= max(0.2, math.cos(heading_error))
 
         # Acceleration slew rate limit
         now = time.time()
@@ -136,8 +140,10 @@ class DifferentialDriveController:
         self.last_update_time = now
         max_dv = self.cfg.max_linear_accel_mps2 * dt
         v_cmd = float(np.clip(v_target, self.last_linear_v - max_dv, self.last_linear_v + max_dv))
-        if v_cmd > 0.0:
+        if v_target > 0.0 and v_cmd > 0.0:
             v_cmd = max(self.cfg.min_linear_speed_mps, v_cmd)
+        elif v_target == 0.0:
+            v_cmd = 0.0
         self.last_linear_v = v_cmd
 
         # Pure-pursuit curvature steering: omega = v * (2 * sin(alpha) / L_d)

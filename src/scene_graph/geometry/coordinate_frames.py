@@ -182,6 +182,11 @@ class CoordinateFrameContract:
         T_camera_base = self.extrinsics.to_transform_camera_optical_to_base()
         return T_floor_camera @ T_camera_base
 
+    def robot_base_floor_to_camera_floor(self, T_floor_base: np.ndarray) -> np.ndarray:
+        """Convert robot base_link pose in floor_map frame to camera optical pose in floor_map frame."""
+        T_base_camera = self.extrinsics.to_transform_base_to_camera_optical()
+        return T_floor_base @ T_base_camera
+
     def to_dict(self) -> Dict[str, Any]:
         """Serialize contract metadata and matrices for reproducibility."""
         return {

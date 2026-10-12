@@ -89,14 +89,38 @@ class GlobalObjectAssociator:
 
     # Minimum physical size thresholds (width, length, height in meters)
     MIN_DIMENSIONS = {
-        "chair": (0.28, 0.28, 0.35),
-        "desk": (0.40, 0.40, 0.35),
-        "table": (0.40, 0.40, 0.35),
+        "chair": (0.35, 0.35, 0.35),
+        "desk": (0.60, 0.50, 0.40),
+        "table": (0.60, 0.50, 0.40),
         "door": (0.35, 0.10, 0.70),
-        "storage box": (0.20, 0.20, 0.15),
-        "backpack": (0.15, 0.15, 0.15),
-        "computer monitor": (0.20, 0.10, 0.20),
+        "storage box": (0.25, 0.25, 0.15),
+        "backpack": (0.20, 0.15, 0.20),
+        "computer monitor": (0.30, 0.10, 0.25),
+        "laptop": (0.22, 0.16, 0.05),
+        "keyboard": (0.25, 0.08, 0.02),
+        "pedestal fan": (0.30, 0.30, 0.60),
+        "quadcopter drone": (0.15, 0.15, 0.05),
+        "bottle": (0.05, 0.05, 0.15),
+        "trash can": (0.20, 0.20, 0.25),
         "whiteboard": (0.40, 0.05, 0.30),
+    }
+
+    # Maximum physical size bounds (width_x, length_y, height_z in meters)
+    MAX_DIMENSIONS = {
+        "chair": (0.62, 0.62, 1.05),             # Standard office task/swivel chair: 55-60cm
+        "desk": (1.50, 0.80, 0.85),              # Standard office workstation desk: 1.2-1.4m x 0.6-0.75m
+        "table": (1.50, 0.85, 0.85),
+        "door": (1.00, 0.20, 2.10),
+        "storage box": (0.50, 0.45, 0.50),
+        "backpack": (0.38, 0.30, 0.50),
+        "computer monitor": (0.60, 0.20, 0.50),  # Widescreen 24-27" monitor on stand
+        "laptop": (0.35, 0.25, 0.20),            # 14-16" laptop
+        "keyboard": (0.45, 0.16, 0.08),
+        "pedestal fan": (0.45, 0.45, 1.30),
+        "quadcopter drone": (0.30, 0.30, 0.12),
+        "bottle": (0.12, 0.12, 0.30),
+        "trash can": (0.35, 0.35, 0.50),
+        "whiteboard": (1.80, 0.10, 1.20),
     }
 
     COMPATIBLE_CLASSES: Dict[str, Set[str]] = {
@@ -314,16 +338,37 @@ class GlobalObjectAssociator:
                 pts_clean = pts_down
 
             # STORE CLEANED POINTS: The exact same points used for PLY, BBox, and Footprint!
-            entity.points_floor = pts_clean
+            centroid = np.median(pts_clean, axis=0)
 
-            # 3. Compute Bounding Box strictly from the cleaned points
-            b_min = np.min(pts_clean, axis=0)
-            b_max = np.max(pts_clean, axis=0)
-            entity.bbox_min_floor = b_min
-            entity.bbox_max_floor = b_max
-            # Dimensions strictly equal bbox_max - bbox_min
-            entity.dimensions = np.round(b_max - b_min, 4)
-            entity.centroid_floor = np.median(pts_clean, axis=0)
+            # Lookup physical size constraints for class
+            max_b = self.MAX_DIMENSIONS.get(entity.class_name, (1.50, 1.00, 1.20))
+            min_b = self.MIN_DIMENSIONS.get(entity.class_name, (0.20, 0.20, 0.15))
+
+            # Filter background bleed (points too far from median object center)
+            max_radius = 0.5 * math.hypot(max_b[0], max_b[1]) + 0.15
+            dist_xy = np.hypot(pts_clean[:, 0] - centroid[0], pts_clean[:, 1] - centroid[1])
+            in_core = dist_xy <= max_radius
+            pts_core = pts_clean[in_core] if np.sum(in_core) >= 10 else pts_clean
+
+            # Compute robust 8th - 92nd percentile span to eliminate edge bleed
+            q_min = np.percentile(pts_core, 8, axis=0)
+            q_max = np.percentile(pts_core, 92, axis=0)
+            raw_span = q_max - q_min
+
+            # Clamp dimensions tightly to physical reality
+            dim_x = float(np.clip(raw_span[0], min_b[0], max_b[0]))
+            dim_y = float(np.clip(raw_span[1], min_b[1], max_b[1]))
+            dim_z = float(np.clip(raw_span[2], min_b[2], max_b[2]))
+
+            # Tight bounding box centered around verified centroid
+            b_min = np.array([centroid[0] - dim_x / 2.0, centroid[1] - dim_y / 2.0, centroid[2] - dim_z / 2.0])
+            b_max = np.array([centroid[0] + dim_x / 2.0, centroid[1] + dim_y / 2.0, centroid[2] + dim_z / 2.0])
+
+            entity.points_floor = pts_core
+            entity.centroid_floor = np.round(centroid, 4)
+            entity.bbox_min_floor = np.round(b_min, 4)
+            entity.bbox_max_floor = np.round(b_max, 4)
+            entity.dimensions = np.round([dim_x, dim_y, dim_z], 4)
 
             # 4. Compute empirical positional uncertainty standard deviation
             if len(entity.observations) >= 2:
@@ -334,7 +379,7 @@ class GlobalObjectAssociator:
                 entity.centroid_std_floor = 0.05
 
             # 5. Compute conservative 2D floor footprint (X, Y)
-            footprint_2d = pts_clean[:, :2]
+            footprint_2d = pts_core[:, :2]
             if len(footprint_2d) >= 4:
                 try:
                     hull = ConvexHull(footprint_2d)

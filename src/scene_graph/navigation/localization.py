@@ -194,26 +194,25 @@ class PersistentMapLocalizer:
         if des is None or len(kps) < self.min_degraded:
             return LocalizationEstimate(is_valid=False, status="LOST", timestamp_s=ts, latency_ms=(time.time()-t0)*1000)
 
-        # In persistent operation: match against known keyframe visual landmarks or prior pose
-        # If prior pose is provided (e.g. from ORB-SLAM3 live relocalization or SLAM feed), use it
-        T_world_camera = None
-        inliers = len(kps)
-        cov = 0.01
-
+        # In persistent operation: real pose must come from SLAM or external tracking
         if prior_world_pose is not None:
             T_world_camera = prior_world_pose
-        elif self.last_valid_pose is not None:
-            # Maintain dead reckoning from last known pose
-            T_world_camera = np.linalg.inv(self.T_floor_world) @ self.last_valid_pose.T_floor_camera
-            inliers = min(len(kps), 35)
-            cov = 0.03
-        elif self.keyframe_poses:
-            # Initialize from first keyframe if no prior
-            T_world_camera = self.keyframe_poses[0][1]
             inliers = len(kps)
-            cov = 0.02
+            cov = 0.01 if inliers >= self.min_tracked else 0.04
+        elif self.last_valid_pose is not None and (ts - self.last_valid_pose.timestamp_s) <= 0.20:
+            # Maintain dead reckoning only across short intervals (<= 200ms)
+            T_world_camera = np.linalg.inv(self.T_floor_world) @ self.last_valid_pose.T_floor_camera
+            inliers = min(len(kps), 30)
+            cov = self.last_valid_pose.covariance_norm + 0.02
         else:
-            T_world_camera = np.eye(4, dtype=np.float64)
+            # No valid measured pose provided — do NOT fabricate from historical keyframe 0!
+            return LocalizationEstimate(
+                is_valid=False,
+                status="LOST",
+                timestamp_s=ts,
+                inlier_feature_count=len(kps),
+                latency_ms=(time.time() - t0) * 1000.0,
+            )
 
         # Transform camera to floor_map frame
         T_floor_camera = self.contract.camera_world_to_floor(T_world_camera)
@@ -226,9 +225,8 @@ class PersistentMapLocalizer:
         # Extract 2D robot state (x, y, yaw) in floor_map frame
         rx = float(T_floor_base[0, 3])
         ry = float(T_floor_base[1, 3])
-        rz = float(T_floor_base[2, 3])  # Height above floor plane (should be near 0 on floor)
+        rz = float(T_floor_base[2, 3])
 
-        # Yaw in floor_map frame (rotation around Z axis)
         R_fb = T_floor_base[:3, :3]
         ryaw = float(math.atan2(R_fb[1, 0], R_fb[0, 0]))
 
@@ -236,7 +234,7 @@ class PersistentMapLocalizer:
         latency = (time.time() - t0) * 1000.0
 
         est = LocalizationEstimate(
-            is_valid=True,
+            is_valid=(status in ("TRACKED", "DEGRADED")) and (cov < 0.10),
             status=status,
             timestamp_s=ts,
             robot_pose_2d=(rx, ry, ryaw),
@@ -247,5 +245,63 @@ class PersistentMapLocalizer:
             covariance_norm=cov,
             latency_ms=latency,
         )
+        if est.is_valid:
+            self.last_valid_pose = est
+        return est
+
+    def set_manual_pose(
+        self,
+        pose_2d: Tuple[float, float, float],
+        timestamp_s: Optional[float] = None,
+    ) -> LocalizationEstimate:
+        """Explicitly set a user-specified test/dry-run pose, marked with source metadata."""
+        ts = timestamp_s or time.time()
+        rx, ry, ryaw = pose_2d
+
+        # Build transform in floor_map frame
+        c = math.cos(ryaw)
+        s = math.sin(ryaw)
+        T_floor_base = np.array([
+            [c, -s, 0.0, rx],
+            [s,  c, 0.0, ry],
+            [0.0, 0.0, 1.0, 0.0],
+            [0.0, 0.0, 0.0, 1.0],
+        ], dtype=np.float64)
+
+        T_floor_camera = self.contract.robot_base_floor_to_camera_floor(T_floor_base)
+
+        est = LocalizationEstimate(
+            is_valid=True,
+            status="MANUAL_TEST_POSE",
+            timestamp_s=ts,
+            robot_pose_2d=pose_2d,
+            robot_height_z_m=0.0,
+            T_floor_camera=T_floor_camera,
+            T_floor_base=T_floor_base,
+            inlier_feature_count=999,
+            covariance_norm=0.001,
+            latency_ms=0.0,
+        )
         self.last_valid_pose = est
         return est
+
+    def get_current_pose(self, max_stale_duration_s: float = 0.50) -> LocalizationEstimate:
+        """Retrieve current robot pose estimate, validating freshness and uncertainty."""
+        if self.last_valid_pose is None:
+            return LocalizationEstimate(
+                is_valid=False,
+                status="UNAVAILABLE",
+                timestamp_s=time.time(),
+            )
+        now = time.time()
+        age_s = now - self.last_valid_pose.timestamp_s
+        if age_s > max_stale_duration_s:
+            return LocalizationEstimate(
+                is_valid=False,
+                status="LOST",
+                timestamp_s=self.last_valid_pose.timestamp_s,
+                robot_pose_2d=self.last_valid_pose.robot_pose_2d,
+                covariance_norm=self.last_valid_pose.covariance_norm + age_s * 0.1,
+                latency_ms=age_s * 1000.0,
+            )
+        return self.last_valid_pose

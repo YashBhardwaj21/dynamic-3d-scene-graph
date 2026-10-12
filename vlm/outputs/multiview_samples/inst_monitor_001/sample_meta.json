@@ -1,0 +1,78 @@
+{
+  "object_instance_id": "inst_monitor_001",
+  "semantic_class": "computer monitor",
+  "movability_gt": "MOVABLE",
+  "current_motion_gt": "STATIC",
+  "displacement_gt": 0.0,
+  "total_views": 3,
+  "views": [
+    {
+      "view_index": 0,
+      "frame_index": 1570,
+      "timestamp": 1791788709.3458,
+      "viewing_angle_deg": -127.19,
+      "camera_pose": [
+        3.9551,
+        -0.2505,
+        0.0519,
+        -0.0412,
+        0.7179,
+        0.0229,
+        0.6946
+      ],
+      "sharpness_score": 1527.14,
+      "crop_path": "inst_monitor_001/crop_view_0.jpg",
+      "scene_path": "inst_monitor_001/scene_view_0.jpg"
+    },
+    {
+      "view_index": 1,
+      "frame_index": 900,
+      "timestamp": 1791797702.1267,
+      "viewing_angle_deg": -47.93,
+      "camera_pose": [
+        0.4994,
+        -0.1941,
+        1.841,
+        -0.1147,
+        0.7723,
+        0.047,
+        0.6231
+      ],
+      "sharpness_score": 1471.19,
+      "crop_path": "inst_monitor_001/crop_view_1.jpg",
+      "scene_path": "inst_monitor_001/scene_view_1.jpg"
+    },
+    {
+      "view_index": 2,
+      "frame_index": 1575,
+      "timestamp": 1791788709.5123,
+      "viewing_angle_deg": -127.19,
+      "camera_pose": [
+        3.9564,
+        -0.2489,
+        0.0374,
+        -0.0254,
+        0.7149,
+        0.0176,
+        0.6986
+      ],
+      "sharpness_score": 1495.31,
+      "crop_path": "inst_monitor_001/crop_view_2.jpg",
+      "scene_path": "inst_monitor_001/scene_view_2.jpg"
+    }
+  ],
+  "conditions": {
+    "one_view": [
+      "inst_monitor_001/crop_view_0.jpg"
+    ],
+    "two_views": [
+      "inst_monitor_001/crop_view_0.jpg",
+      "inst_monitor_001/crop_view_1.jpg"
+    ],
+    "three_views": [
+      "inst_monitor_001/crop_view_0.jpg",
+      "inst_monitor_001/crop_view_1.jpg",
+      "inst_monitor_001/crop_view_2.jpg"
+    ]
+  }
+}

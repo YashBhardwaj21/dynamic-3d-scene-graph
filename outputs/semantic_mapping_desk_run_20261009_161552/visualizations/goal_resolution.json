@@ -1,0 +1,51 @@
+{
+  "success": true,
+  "prompt": "go to chair_005 and stop 0.5 metres away",
+  "target_entity_id": "chair_005",
+  "target_class": "chair",
+  "standoff_distance_m": 0.5,
+  "robot_radius_m": 0.18,
+  "target_center_floor": [
+    3.9947,
+    0.5133,
+    0.5727
+  ],
+  "target_bbox_floor": [
+    3.5561,
+    0.0707,
+    4.4444,
+    0.7059
+  ],
+  "approach_pose_2d": {
+    "x_m": 4.59586053646382,
+    "y_m": 1.3302739568369388,
+    "yaw_rad": -2.2051720173749754,
+    "yaw_deg": -126.34704969593552
+  },
+  "selected_candidate_face": "direct_approach",
+  "verified_clearance_m": 0.05,
+  "candidate_count": 9,
+  "evidence": {
+    "match_type": "explicit_id",
+    "object_center_m": [
+      3.9947,
+      0.5133,
+      0.5727
+    ],
+    "target_bbox_m": [
+      3.556,
+      0.071,
+      4.444,
+      0.706
+    ],
+    "estimated_object_radius_m": 0.444,
+    "robot_radius_m": 0.18,
+    "camera_offset_m": 0.12,
+    "calculated_standoff_m": 0.5,
+    "selected_face": "direct_approach",
+    "verified_clearance_m": 0.05,
+    "feasible_candidate_count": 3,
+    "total_candidate_count": 9
+  },
+  "rejection_reason": null
+}

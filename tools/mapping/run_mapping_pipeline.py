@@ -130,8 +130,9 @@ def execute_orbslam3(
     settings_yaml: Path,
     trajectory_out_dir: Path,
     orbslam3_root: Optional[str] = None,
+    viewer: bool = False,
 ) -> Tuple[Path, Path]:
-    """Execute headless ORB-SLAM3 and save trajectories."""
+    """Execute ORB-SLAM3 (headless or with Pangolin GUI) and save trajectories."""
     trajectory_out_dir.mkdir(parents=True, exist_ok=True)
     root_dir = Path(orbslam3_root or os.getenv("ORB_SLAM3_ROOT", "/home/saturn/ORB_SLAM3"))
     vocab_path = root_dir / "Vocabulary" / "ORBvoc.txt"
@@ -145,7 +146,7 @@ def execute_orbslam3(
         )
 
     log_path = trajectory_out_dir / "run.log"
-    print(f"Executing ORB-SLAM3 on {dataset_dir} (logging to {log_path})...")
+    print(f"Executing ORB-SLAM3 on {dataset_dir} (Pangolin viewer={'ENABLED' if viewer else 'OFF'}, logging to {log_path})...")
 
     # Command runs in trajectory_out_dir so CameraTrajectory.txt is written there
     cmd = [
@@ -154,19 +155,28 @@ def execute_orbslam3(
         str(settings_yaml),
         str(dataset_dir),
         str(associations_file),
-        "0",  # headless (viewer = false)
+        "1" if viewer else "0",  # 1 = Pangolin viewer enabled, 0 = headless
     ]
 
+    env = os.environ.copy()
+    if viewer:
+        # In WSLg, the hardware D3D12 Gallium driver frequently deadlocks on Pangolin OpenGL context creation,
+        # leaving a ghost taskbar icon while freezing execution. Software rendering bypasses this cleanly.
+        env["LIBGL_ALWAYS_SOFTWARE"] = "1"
+
     with open(log_path, "w") as log_f:
-        res = subprocess.run(cmd, cwd=str(trajectory_out_dir), stdout=log_f, stderr=subprocess.STDOUT)
+        res = subprocess.run(cmd, cwd=str(trajectory_out_dir), stdout=log_f, stderr=subprocess.STDOUT, env=env)
 
     cam_traj = trajectory_out_dir / "CameraTrajectory.txt"
     kf_traj = trajectory_out_dir / "KeyFrameTrajectory.txt"
 
-    if res.returncode != 0 or not cam_traj.exists():
+    if not cam_traj.exists() or cam_traj.stat().st_size < 100:
         raise RuntimeError(f"ORB-SLAM3 execution failed with returncode {res.returncode}. See {log_path}")
+    if res.returncode != 0:
+        print(f"  [Notice] ORB-SLAM3 exited with code {res.returncode}, but CameraTrajectory.txt successfully written ({cam_traj.stat().st_size} bytes).")
 
     return cam_traj, kf_traj
+
 
 
 def main():
@@ -180,6 +190,8 @@ def main():
     parser.add_argument("--model-path", type=str, default="models/yoloe-26s-seg.pt", help="YOLOE weights file")
     parser.add_argument("--robot-radius", type=float, default=0.18, help="Robot footprint radius in meters")
     parser.add_argument("--safety-margin", type=float, default=0.05, help="Safety clearance inflation in meters")
+    parser.add_argument("--save-atlas", action="store_true", default=False, help="Enable ORB-SLAM3 persistent Atlas serialization (.osa). Disabled by default to avoid Boost serialization crash on map merges.")
+    parser.add_argument("--viewer", "--gui", dest="viewer", action="store_true", default=False, help="Display live ORB-SLAM3 tracking in Pangolin GUI window.")
     parser.add_argument("--overwrite", action="store_true", help="Overwrite existing output directory")
     args = parser.parse_args()
 
@@ -225,6 +237,11 @@ def main():
     # 2. ORB-SLAM3 Trajectory Ingestion, Provenance, & Quality Gate
     print("\n[Stage 2/6] Acquiring Camera Trajectory & Persistent Atlas Map...")
     assoc_file = rec_dir / "associations.txt"
+    if not assoc_file.exists():
+        print(f"  Writing {assoc_file.name} ({len(manifest.associated_pairs)} pairs)...")
+        with open(assoc_file, "w", encoding="utf-8") as f:
+            for p in manifest.associated_pairs:
+                f.write(f"{p[0]:.6f} {p[1]} {p[2]:.6f} {p[3]}\n")
     shutil.copy2(assoc_file, out_dir / "associations.txt")
     rgb_timestamps = [p[0] for p in manifest.associated_pairs]
     atlas_save = traj_dir / "atlas.osa"
@@ -246,16 +263,17 @@ def main():
         cam_traj = traj_dir / "CameraTrajectory.txt"
     else:
         slam_yaml = traj_dir / f"d455_{seq_name}_orbslam3.yaml"
-        generate_orbslam3_yaml(manifest, slam_yaml, atlas_save_path=atlas_save)
+        atlas_save_target = atlas_save if args.save_atlas else None
+        generate_orbslam3_yaml(manifest, slam_yaml, atlas_save_path=atlas_save_target)
         cam_traj, kf_traj = execute_orbslam3(
-            rec_dir, assoc_file, slam_yaml, traj_dir, orbslam3_root=args.orbslam3_root
+            rec_dir, assoc_file, slam_yaml, traj_dir, orbslam3_root=args.orbslam3_root, viewer=args.viewer
         )
         traj_res = load_and_validate_trajectory(
             trajectory_file=cam_traj,
             rgb_timestamps=rgb_timestamps,
             max_dt=0.05,
             min_coverage_pct=20.0,
-            atlas_path=atlas_save,
+            atlas_path=atlas_save if (args.save_atlas and atlas_save.exists()) else None,
             generated_in_current_run=True,
         )
         if not traj_res.is_valid:

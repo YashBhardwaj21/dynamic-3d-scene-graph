@@ -29,14 +29,14 @@ logger = logging.getLogger(__name__)
 class L298NPinConfig:
     """Pin mapping for Raspberry Pi 5 GPIO connection to L298N."""
     # Left motor pair (Channel A)
-    ena_pin: int = 12   # Hardware PWM0 (GPIO 12)
-    in1_pin: int = 5    # Direction A1 (GPIO 5)
-    in2_pin: int = 6    # Direction A2 (GPIO 6)
+    ena_pin: int = 18   # Hardware PWM0 (GPIO 18, Physical Pin 12)
+    in1_pin: int = 17   # Direction A1 (GPIO 17, Physical Pin 11)
+    in2_pin: int = 27   # Direction A2 (GPIO 27, Physical Pin 13)
 
     # Right motor pair (Channel B)
-    enb_pin: int = 13   # Hardware PWM1 (GPIO 13)
-    in3_pin: int = 19   # Direction B1 (GPIO 19)
-    in4_pin: int = 26   # Direction B2 (GPIO 26)
+    enb_pin: int = 19   # Hardware PWM1 (GPIO 19, Physical Pin 35)
+    in3_pin: int = 22   # Direction B1 (GPIO 22, Physical Pin 15)
+    in4_pin: int = 23   # Direction B2 (GPIO 23, Physical Pin 16)
 
     pwm_frequency_hz: int = 1000
     max_pwm_duty_pct: float = 75.0      # Safety cap to prevent thermal overload of L298N
@@ -74,13 +74,28 @@ class L298NMotorController:
         self._watchdog_thread.start()
 
     def _init_backend(self):
-        """Initialize GPIO, Serial, or fallback to Mock simulation mode."""
+        """Initialize gpiozero (RPi 5 native), RPi.GPIO, Serial, or fallback to Mock mode."""
         if self.cfg.interface_type == "mock":
             self._backend_mode = "mock"
             logger.info("L298N Controller initialized in MOCK simulation mode")
             return
 
-        # Attempt to detect Raspberry Pi GPIO
+        # 1. Attempt Raspberry Pi 5 gpiozero native backend
+        try:
+            from gpiozero import DigitalOutputDevice, PWMOutputDevice  # type: ignore
+            self.in1 = DigitalOutputDevice(self.cfg.in1_pin)
+            self.in2 = DigitalOutputDevice(self.cfg.in2_pin)
+            self.in3 = DigitalOutputDevice(self.cfg.in3_pin)
+            self.in4 = DigitalOutputDevice(self.cfg.in4_pin)
+            self.ena = PWMOutputDevice(self.cfg.ena_pin, frequency=self.cfg.pwm_frequency_hz, initial_value=0)
+            self.enb = PWMOutputDevice(self.cfg.enb_pin, frequency=self.cfg.pwm_frequency_hz, initial_value=0)
+            self._backend_mode = "gpiozero"
+            logger.info("L298N Controller successfully initialized with Raspberry Pi 5 gpiozero")
+            return
+        except Exception:
+            pass
+
+        # 2. Attempt legacy RPi.GPIO
         try:
             import RPi.GPIO as GPIO  # type: ignore
             GPIO.setmode(GPIO.BCM)
@@ -106,7 +121,7 @@ class L298NMotorController:
         except Exception:
             pass
 
-        # Attempt Arduino Serial fallback if configured
+        # 3. Attempt Arduino Serial fallback if configured
         if self.cfg.interface_type in ("arduino_serial", "auto"):
             try:
                 import serial  # type: ignore
@@ -224,8 +239,33 @@ class L298NMotorController:
             }
 
     def _apply_hardware_drive(self, dir_l: int, pwm_l: float, dir_r: int, pwm_r: float) -> None:
-        """Send physical signals to GPIO or Serial driver."""
-        if self._backend_mode == "gpio" and self._gpio_backend:
+        """Send physical signals to GPIO, gpiozero, or Serial driver."""
+        if self._backend_mode == "gpiozero":
+            # Left motor (IN1, IN2, ENA)
+            if dir_l > 0:
+                self.in1.on()
+                self.in2.off()
+            elif dir_l < 0:
+                self.in1.off()
+                self.in2.on()
+            else:
+                self.in1.off()
+                self.in2.off()
+            self.ena.value = float(max(0.0, min(1.0, pwm_l / 100.0)))
+
+            # Right motor (IN3, IN4, ENB)
+            if dir_r > 0:
+                self.in3.on()
+                self.in4.off()
+            elif dir_r < 0:
+                self.in3.off()
+                self.in4.on()
+            else:
+                self.in3.off()
+                self.in4.off()
+            self.enb.value = float(max(0.0, min(1.0, pwm_r / 100.0)))
+
+        elif self._backend_mode == "gpio" and self._gpio_backend:
             # Left motor (IN1, IN2)
             if dir_l > 0:
                 self._gpio_backend.output(self.cfg.in1_pin, self._gpio_backend.HIGH)
@@ -285,7 +325,23 @@ class L298NMotorController:
         """Gracefully release hardware and stop watchdog."""
         self._watchdog_active = False
         self.disarm()
-        if self._backend_mode == "gpio" and self._gpio_backend:
+        if self._backend_mode == "gpiozero":
+            try:
+                self.ena.off()
+                self.enb.off()
+                self.in1.off()
+                self.in2.off()
+                self.in3.off()
+                self.in4.off()
+                self.ena.close()
+                self.enb.close()
+                self.in1.close()
+                self.in2.close()
+                self.in3.close()
+                self.in4.close()
+            except Exception:
+                pass
+        elif self._backend_mode == "gpio" and self._gpio_backend:
             try:
                 self.pwm_left.stop()
                 self.pwm_right.stop()

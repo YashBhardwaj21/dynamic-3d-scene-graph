@@ -5,16 +5,16 @@ motor_interface:
   # Operation mode: "gpio" (RPi 5 native), "arduino_serial" (microcontroller bridge), or "mock" (simulation)
   interface_type: "mock"
 
-  # Pinout Configuration (Raspberry Pi BCM Pin Numbers)
+  # Pinout Configuration (Raspberry Pi 5 BCM Pin Numbers)
   # Channel A (Left Motor Pair):
-  ena_pin: 12      # Hardware PWM0 (Physical Pin 32)
-  in1_pin: 5       # Direction IN1 (Physical Pin 29)
-  in2_pin: 6       # Direction IN2 (Physical Pin 31)
+  ena_pin: 18      # Hardware PWM0 (Physical Pin 12)
+  in1_pin: 17      # Direction IN1 (Physical Pin 11)
+  in2_pin: 27      # Direction IN2 (Physical Pin 13)
 
   # Channel B (Right Motor Pair):
-  enb_pin: 13      # Hardware PWM1 (Physical Pin 33)
-  in3_pin: 19      # Direction IN3 (Physical Pin 35)
-  in4_pin: 26      # Direction IN4 (Physical Pin 37)
+  enb_pin: 19      # Hardware PWM1 (Physical Pin 35)
+  in3_pin: 22      # Direction IN3 (Physical Pin 15)
+  in4_pin: 23      # Direction IN4 (Physical Pin 16)
 
   # Electrical & Dynamics Safety Caps:
   pwm_frequency_hz: 1000

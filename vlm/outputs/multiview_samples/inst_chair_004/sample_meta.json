@@ -1,0 +1,78 @@
+{
+  "object_instance_id": "inst_chair_004",
+  "semantic_class": "chair",
+  "movability_gt": "MOVABLE",
+  "current_motion_gt": "STATIC",
+  "displacement_gt": 0.0,
+  "total_views": 3,
+  "views": [
+    {
+      "view_index": 0,
+      "frame_index": 3360,
+      "timestamp": 1791788793.3483,
+      "viewing_angle_deg": -43.46,
+      "camera_pose": [
+        1.2466,
+        0.1298,
+        1.2235,
+        -0.1163,
+        0.7035,
+        0.069,
+        0.6977
+      ],
+      "sharpness_score": 1872.03,
+      "crop_path": "inst_chair_004/crop_view_0.jpg",
+      "scene_path": "inst_chair_004/scene_view_0.jpg"
+    },
+    {
+      "view_index": 1,
+      "frame_index": 1150,
+      "timestamp": 1791797711.6974,
+      "viewing_angle_deg": -23.35,
+      "camera_pose": [
+        0.6042,
+        -0.317,
+        2.091,
+        -0.0885,
+        0.6544,
+        -0.0068,
+        0.751
+      ],
+      "sharpness_score": 712.05,
+      "crop_path": "inst_chair_004/crop_view_1.jpg",
+      "scene_path": "inst_chair_004/scene_view_1.jpg"
+    },
+    {
+      "view_index": 2,
+      "frame_index": 1005,
+      "timestamp": 1791788679.5329,
+      "viewing_angle_deg": -57.43,
+      "camera_pose": [
+        1.8655,
+        0.0282,
+        1.267,
+        -0.0472,
+        0.7722,
+        -0.0021,
+        0.6337
+      ],
+      "sharpness_score": 640.94,
+      "crop_path": "inst_chair_004/crop_view_2.jpg",
+      "scene_path": "inst_chair_004/scene_view_2.jpg"
+    }
+  ],
+  "conditions": {
+    "one_view": [
+      "inst_chair_004/crop_view_0.jpg"
+    ],
+    "two_views": [
+      "inst_chair_004/crop_view_0.jpg",
+      "inst_chair_004/crop_view_1.jpg"
+    ],
+    "three_views": [
+      "inst_chair_004/crop_view_0.jpg",
+      "inst_chair_004/crop_view_1.jpg",
+      "inst_chair_004/crop_view_2.jpg"
+    ]
+  }
+}

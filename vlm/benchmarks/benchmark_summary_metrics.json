@@ -1,0 +1,42 @@
+{
+  "version": "2.0.0",
+  "benchmark_sequence": "outputs/semantic_mapping_fused_desk_run",
+  "total_verified_physical_instances": 52,
+  "raw_tracks_resolved": 78,
+  "movability_category_counts": {
+    "IMMOVABLE": 4,
+    "MOVABLE": 45,
+    "MOBILE": 3,
+    "UNKNOWN": 0
+  },
+  "movability_category_percentages": {
+    "IMMOVABLE": 7.69,
+    "MOVABLE": 86.54,
+    "MOBILE": 5.77,
+    "UNKNOWN": 0.0
+  },
+  "percent_known_ground_truth": 100.0,
+  "percent_unknown_ground_truth": 0.0,
+  "inter_annotator_agreement": {
+    "annotators": [
+      "Annotator_A_Robotics",
+      "Annotator_B_ComputerVision"
+    ],
+    "raw_agreement_pct": 98.08,
+    "cohens_kappa": 0.9252,
+    "discrepancies_resolved": 1
+  },
+  "object_identity_accuracy": {
+    "raw_tracks": 78,
+    "verified_instances": 52,
+    "clustering_precision": 0.9231,
+    "clustering_recall": 0.9231,
+    "clustering_f1": 0.9231
+  },
+  "displacement_measurement_uncertainty": {
+    "tape_measure_sigma_m": 0.02,
+    "se2_registration_residual_sigma_m": 0.038,
+    "combined_uncertainty_sigma_m": 0.0429,
+    "significance_threshold_3sigma_m": 0.129
+  }
+}

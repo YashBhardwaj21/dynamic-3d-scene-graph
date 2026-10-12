@@ -27,7 +27,11 @@ class GoalResolutionResult:
     standoff_distance_m: float = 0.5
     robot_radius_m: float = 0.18
     target_center_floor: Optional[Tuple[float, float, float]] = None
+    target_bbox_floor: Optional[Tuple[float, float, float, float]] = None  # (min_x, min_y, max_x, max_y)
     approach_pose_2d: Optional[Tuple[float, float, float]] = None  # (x, y, yaw_rad)
+    candidate_poses: List[Dict[str, Any]] = field(default_factory=list)
+    selected_candidate_face: Optional[str] = None
+    verified_clearance_m: Optional[float] = None
     evidence: Dict[str, Any] = field(default_factory=dict)
     rejection_reason: Optional[str] = None
 
@@ -40,12 +44,16 @@ class GoalResolutionResult:
             "standoff_distance_m": self.standoff_distance_m,
             "robot_radius_m": self.robot_radius_m,
             "target_center_floor": self.target_center_floor,
+            "target_bbox_floor": self.target_bbox_floor,
             "approach_pose_2d": {
                 "x_m": self.approach_pose_2d[0] if self.approach_pose_2d else None,
                 "y_m": self.approach_pose_2d[1] if self.approach_pose_2d else None,
                 "yaw_rad": self.approach_pose_2d[2] if self.approach_pose_2d else None,
                 "yaw_deg": math.degrees(self.approach_pose_2d[2]) if self.approach_pose_2d else None,
             } if self.approach_pose_2d else None,
+            "selected_candidate_face": self.selected_candidate_face,
+            "verified_clearance_m": self.verified_clearance_m,
+            "candidate_count": len(self.candidate_poses),
             "evidence": self.evidence,
             "rejection_reason": self.rejection_reason,
         }
@@ -77,15 +85,22 @@ class GoalResolver:
         object_distances: Optional[Dict[str, Any]] = None,
         robot_radius_m: float = 0.18,
         camera_forward_offset_m: float = 0.12,
+        costmap_planner: Optional[Any] = None,
     ):
         self.semantic_map = semantic_map
         self.object_distances = object_distances or {}
         self.robot_radius_m = robot_radius_m
         self.camera_forward_offset_m = camera_forward_offset_m
+        self.costmap_planner = costmap_planner
         self.entities = semantic_map.get("entities", {})
 
     @classmethod
-    def from_map_dir(cls, map_dir: Path, robot_radius_m: float = 0.18) -> "GoalResolver":
+    def from_map_dir(
+        cls,
+        map_dir: Path,
+        robot_radius_m: float = 0.18,
+        costmap_planner: Optional[Any] = None,
+    ) -> "GoalResolver":
         map_dir = Path(map_dir)
         sem_path = map_dir / "semantic_map.json"
         if not sem_path.exists():
@@ -100,7 +115,19 @@ class GoalResolver:
             with open(dist_path, "r", encoding="utf-8") as f:
                 dist_data = json.load(f)
 
-        return cls(sem_map, object_distances=dist_data, robot_radius_m=robot_radius_m)
+        if costmap_planner is None:
+            try:
+                from scene_graph.navigation.planner import GridPathPlanner
+                costmap_planner = GridPathPlanner.from_map_dir(map_dir)
+            except Exception:
+                costmap_planner = None
+
+        return cls(
+            sem_map,
+            object_distances=dist_data,
+            robot_radius_m=robot_radius_m,
+            costmap_planner=costmap_planner,
+        )
 
     def parse_prompt(self, prompt: str) -> Dict[str, Any]:
         """Extract structured fields: target class, target ID, relation, anchor class, anchor ID, standoff."""
@@ -320,6 +347,199 @@ class GoalResolver:
             rejection_reason=f"Ambiguous goal: Found {len(cand_ids)} candidates for '{target_class}': {cand_ids}. Please specify an explicit entity ID or relational anchor.",
         )
 
+    def _get_entity_bbox_2d(self, entity: Dict[str, Any]) -> Tuple[float, float, float, float]:
+        """Extract [min_x, min_y, max_x, max_y] bounding box in floor frame, tightly clamped to physical size."""
+        cls_name = entity.get("class_name", "")
+        max_w, max_l = 1.40, 0.80
+        min_w, min_l = 0.30, 0.30
+        if cls_name in ("chair", "seat", "armchair"):
+            max_w, max_l = 0.62, 0.62
+            min_w, min_l = 0.35, 0.35
+        elif cls_name in ("desk", "table", "dining table"):
+            max_w, max_l = 1.45, 0.80
+            min_w, min_l = 0.60, 0.50
+        elif cls_name in ("laptop", "computer"):
+            max_w, max_l = 0.35, 0.25
+            min_w, min_l = 0.22, 0.16
+        elif cls_name in ("computer monitor", "monitor"):
+            max_w, max_l = 0.60, 0.20
+            min_w, min_l = 0.30, 0.10
+        elif cls_name in ("backpack", "bag"):
+            max_w, max_l = 0.40, 0.30
+            min_w, min_l = 0.20, 0.15
+        elif cls_name in ("storage box", "box"):
+            max_w, max_l = 0.50, 0.45
+            min_w, min_l = 0.25, 0.25
+
+        cx, cy, _ = self._get_entity_center(entity)
+
+        bmin = entity.get("bbox_min_floor")
+        bmax = entity.get("bbox_max_floor")
+        if bmin and bmax and len(bmin) >= 2 and len(bmax) >= 2:
+            raw_w = abs(float(bmax[0]) - float(bmin[0]))
+            raw_l = abs(float(bmax[1]) - float(bmin[1]))
+            w = max(min_w, min(max_w, raw_w))
+            l = max(min_l, min(max_l, raw_l))
+            return cx - w / 2.0, cy - l / 2.0, cx + w / 2.0, cy + l / 2.0
+
+        fcoords = entity.get("floor_coordinates") or {}
+        bb = fcoords.get("bounding_box_min_max") or {}
+        if "min_x" in bb and "max_x" in bb and "min_y" in bb and "max_y" in bb:
+            raw_w = abs(float(bb["max_x"]) - float(bb["min_x"]))
+            raw_l = abs(float(bb["max_y"]) - float(bb["min_y"]))
+            w = max(min_w, min(max_w, raw_w))
+            l = max(min_l, min(max_l, raw_l))
+            return cx - w / 2.0, cy - l / 2.0, cx + w / 2.0, cy + l / 2.0
+
+        r = self._get_entity_radius(entity)
+        w = max(min_w, min(max_w, 2 * r))
+        l = max(min_l, min(max_l, 2 * r))
+        return cx - w / 2.0, cy - l / 2.0, cx + w / 2.0, cy + l / 2.0
+
+    def generate_approach_candidates(
+        self,
+        entity: Dict[str, Any],
+        standoff_m: float,
+        current_robot_pose: Tuple[float, float, float],
+    ) -> List[Dict[str, Any]]:
+        """Generate footprint-aware candidate robot base poses around target entity."""
+        cx, cy, _ = self._get_entity_center(entity)
+        min_x, min_y, max_x, max_y = self._get_entity_bbox_2d(entity)
+
+        # Base standoff: keeps camera lens at standoff_m from edge, and base footprint outside edge
+        base_offset_m = max(standoff_m + self.camera_forward_offset_m, self.robot_radius_m + 0.05)
+
+        candidates: List[Dict[str, Any]] = []
+
+        # 1. Line-of-sight candidate (direct approach from robot to centroid)
+        rx, ry, _ = current_robot_pose
+        dx = rx - cx
+        dy = ry - cy
+        dist_to_obj = math.hypot(dx, dy)
+        if dist_to_obj > 1e-4:
+            phi = math.atan2(dy, dx)
+            hx = max(0.05, (max_x - min_x) / 2.0)
+            hy = max(0.05, (max_y - min_y) / 2.0)
+            tx = hx / abs(math.cos(phi)) if abs(math.cos(phi)) > 1e-6 else float("inf")
+            ty = hy / abs(math.sin(phi)) if abs(math.sin(phi)) > 1e-6 else float("inf")
+            t_edge = min(tx, ty)
+            edge_x = cx + t_edge * math.cos(phi)
+            edge_y = cy + t_edge * math.sin(phi)
+            px = edge_x + base_offset_m * math.cos(phi)
+            py = edge_y + base_offset_m * math.sin(phi)
+            yaw = math.atan2(cy - py, cx - px)
+            candidates.append({
+                "face": "direct_approach",
+                "edge_point": (round(edge_x, 3), round(edge_y, 3)),
+                "x": px,
+                "y": py,
+                "yaw": yaw,
+                "offset_m": base_offset_m,
+            })
+
+        # 2. Four Cardinal Faces
+        # East (+X face)
+        px_e = max_x + base_offset_m
+        py_e = cy
+        candidates.append({
+            "face": "east_+x",
+            "edge_point": (max_x, cy),
+            "x": px_e,
+            "y": py_e,
+            "yaw": math.atan2(cy - py_e, cx - px_e),
+            "offset_m": base_offset_m,
+        })
+
+        # West (-X face)
+        px_w = min_x - base_offset_m
+        py_w = cy
+        candidates.append({
+            "face": "west_-x",
+            "edge_point": (min_x, cy),
+            "x": px_w,
+            "y": py_w,
+            "yaw": math.atan2(cy - py_w, cx - px_w),
+            "offset_m": base_offset_m,
+        })
+
+        # North (+Y face)
+        px_n = cx
+        py_n = max_y + base_offset_m
+        candidates.append({
+            "face": "north_+y",
+            "edge_point": (cx, max_y),
+            "x": px_n,
+            "y": py_n,
+            "yaw": math.atan2(cy - py_n, cx - px_n),
+            "offset_m": base_offset_m,
+        })
+
+        # South (-Y face)
+        px_s = cx
+        py_s = min_y - base_offset_m
+        candidates.append({
+            "face": "south_-y",
+            "edge_point": (cx, min_y),
+            "x": px_s,
+            "y": py_s,
+            "yaw": math.atan2(cy - py_s, cx - px_s),
+            "offset_m": base_offset_m,
+        })
+
+        # 3. Four Corner / Diagonal Faces
+        inv_sqrt2 = 1.0 / math.sqrt(2.0)
+        diag_offset = base_offset_m * inv_sqrt2
+
+        # NE Corner
+        px_ne = max_x + diag_offset
+        py_ne = max_y + diag_offset
+        candidates.append({
+            "face": "northeast_corner",
+            "edge_point": (max_x, max_y),
+            "x": px_ne,
+            "y": py_ne,
+            "yaw": math.atan2(cy - py_ne, cx - px_ne),
+            "offset_m": base_offset_m,
+        })
+
+        # NW Corner
+        px_nw = min_x - diag_offset
+        py_nw = max_y + diag_offset
+        candidates.append({
+            "face": "northwest_corner",
+            "edge_point": (min_x, max_y),
+            "x": px_nw,
+            "y": py_nw,
+            "yaw": math.atan2(cy - py_nw, cx - px_nw),
+            "offset_m": base_offset_m,
+        })
+
+        # SW Corner
+        px_sw = min_x - diag_offset
+        py_sw = min_y - diag_offset
+        candidates.append({
+            "face": "southwest_corner",
+            "edge_point": (min_x, min_y),
+            "x": px_sw,
+            "y": py_sw,
+            "yaw": math.atan2(cy - py_sw, cx - px_sw),
+            "offset_m": base_offset_m,
+        })
+
+        # SE Corner
+        px_se = max_x + diag_offset
+        py_se = min_y - diag_offset
+        candidates.append({
+            "face": "southeast_corner",
+            "edge_point": (max_x, min_y),
+            "x": px_se,
+            "y": py_se,
+            "yaw": math.atan2(cy - py_se, cx - px_se),
+            "offset_m": base_offset_m,
+        })
+
+        return candidates
+
     def _build_approach_pose(
         self,
         entity_id: str,
@@ -329,36 +549,105 @@ class GoalResolver:
         prompt: str,
         evidence: Dict[str, Any],
     ) -> GoalResolutionResult:
-        """Calculate collision-free approach pose outside the object footprint with camera offset correction."""
+        """Calculate collision-free approach pose outside object footprint with camera offset correction."""
         cx, cy, cz = self._get_entity_center(entity)
+        min_x, min_y, max_x, max_y = self._get_entity_bbox_2d(entity)
         obj_radius = self._get_entity_radius(entity)
 
+        candidates = self.generate_approach_candidates(entity, standoff_m, current_robot_pose)
         rx, ry, _ = current_robot_pose
-        dx = rx - cx
-        dy = ry - cy
-        dist_to_obj = math.hypot(dx, dy)
 
-        if dist_to_obj < 1e-4:
-            dir_x, dir_y = -1.0, 0.0
+        feasible_candidates: List[Dict[str, Any]] = []
+
+        if self.costmap_planner is not None:
+            p = self.costmap_planner
+            r_cells = int(math.ceil(self.robot_radius_m / p.res))
+
+            for cand in candidates:
+                cand_x, cand_y = cand["x"], cand["y"]
+                gx, gy = p.world_to_grid(cand_x, cand_y)
+
+                # 1. Bounds check
+                if not (0 <= gx < p.width and 0 <= gy < p.height):
+                    cand["is_feasible"] = False
+                    cand["rejection_reason"] = "out_of_bounds"
+                    continue
+
+                # 2. Costmap cell check
+                if not p.is_free(gx, gy):
+                    cand["is_feasible"] = False
+                    cand["rejection_reason"] = "occupied_or_inflated"
+                    continue
+
+                # 3. Measure obstacle clearance from nearest inflated boundary
+                clearance_cells = 1
+                found_wall = False
+                for r_search in range(1, 15):
+                    for dx_c in range(-r_search, r_search + 1):
+                        for dy_c in range(-r_search, r_search + 1):
+                            if abs(dx_c) == r_search or abs(dy_c) == r_search:
+                                nx, ny = gx + dx_c, gy + dy_c
+                                if not (0 <= nx < p.width and 0 <= ny < p.height) or p.grid[ny, nx] >= p.occ_thresh:
+                                    clearance_cells = r_search
+                                    found_wall = True
+                                    break
+                        if found_wall:
+                            break
+                    if found_wall:
+                        break
+
+                clearance_m = clearance_cells * p.res
+                cand["is_feasible"] = True
+                cand["clearance_m"] = round(clearance_m, 3)
+                dist_to_robot = math.hypot(cand_x - rx, cand_y - ry)
+                cand["dist_to_robot_m"] = round(dist_to_robot, 3)
+                # Score combines route distance with clearance bonus
+                cand["score"] = -dist_to_robot + 1.5 * clearance_m
+                feasible_candidates.append(cand)
+
+            if not feasible_candidates:
+                return GoalResolutionResult(
+                    success=False,
+                    prompt=prompt,
+                    target_entity_id=entity_id,
+                    target_class=entity.get("class_name", "unknown"),
+                    standoff_distance_m=standoff_m,
+                    robot_radius_m=self.robot_radius_m,
+                    target_center_floor=(cx, cy, cz),
+                    target_bbox_floor=(min_x, min_y, max_x, max_y),
+                    candidate_poses=candidates,
+                    rejection_reason=(
+                        f"No collision-free approach pose exists around '{entity_id}' "
+                        f"under current costmap clearance constraints (all {len(candidates)} candidates blocked by obstacles/inflation)."
+                    ),
+                )
+
+            feasible_candidates.sort(key=lambda c: c["score"], reverse=True)
+            best_cand = feasible_candidates[0]
         else:
-            dir_x, dir_y = dx / dist_to_obj, dy / dist_to_obj
+            for cand in candidates:
+                cand["dist_to_robot_m"] = round(math.hypot(cand["x"] - rx, cand["y"] - ry), 3)
+                cand["is_feasible"] = True
+                cand["clearance_m"] = round(standoff_m, 3)
+            direct = [c for c in candidates if c["face"] == "direct_approach"]
+            best_cand = direct[0] if direct else min(candidates, key=lambda c: c["dist_to_robot_m"])
+            feasible_candidates = candidates
 
-        # Total distance from object center to vehicle base_link:
-        # object surface radius + requested clearance + camera forward offset + robot radius
-        total_clearance = obj_radius + standoff_m + self.camera_forward_offset_m + self.robot_radius_m
-        goal_x = cx + dir_x * total_clearance
-        goal_y = cy + dir_y * total_clearance
-
-        # Desired robot yaw oriented directly facing toward object center
-        desired_yaw = math.atan2(cy - goal_y, cx - goal_x)
+        goal_x = best_cand["x"]
+        goal_y = best_cand["y"]
+        desired_yaw = best_cand["yaw"]
 
         evidence.update({
             "object_center_m": [cx, cy, cz],
+            "target_bbox_m": [round(min_x, 3), round(min_y, 3), round(max_x, 3), round(max_y, 3)],
             "estimated_object_radius_m": round(obj_radius, 3),
             "robot_radius_m": self.robot_radius_m,
             "camera_offset_m": self.camera_forward_offset_m,
             "calculated_standoff_m": standoff_m,
-            "approach_vector": [round(dir_x, 3), round(dir_y, 3)],
+            "selected_face": best_cand["face"],
+            "verified_clearance_m": best_cand.get("clearance_m"),
+            "feasible_candidate_count": len(feasible_candidates),
+            "total_candidate_count": len(candidates),
         })
 
         return GoalResolutionResult(
@@ -369,6 +658,10 @@ class GoalResolver:
             standoff_distance_m=standoff_m,
             robot_radius_m=self.robot_radius_m,
             target_center_floor=(cx, cy, cz),
+            target_bbox_floor=(min_x, min_y, max_x, max_y),
             approach_pose_2d=(goal_x, goal_y, desired_yaw),
+            candidate_poses=candidates,
+            selected_candidate_face=best_cand["face"],
+            verified_clearance_m=best_cand.get("clearance_m"),
             evidence=evidence,
         )

@@ -1,36 +1,25 @@
 {
-  "success": true,
-  "prompt": "go to chair_012 and stop 0.5 metres away",
-  "target_entity_id": "chair_012",
+  "success": false,
+  "prompt": "go to chair_004 and stop 0.5 metres away",
+  "target_entity_id": "chair_004",
   "target_class": "chair",
   "standoff_distance_m": 0.5,
   "robot_radius_m": 0.18,
   "target_center_floor": [
-    2.182,
-    3.3025,
-    0.4309
+    2.9323,
+    0.106,
+    0.558
   ],
-  "approach_pose_2d": {
-    "x_m": 1.3350212561005659,
-    "y_m": 1.8776264030158551,
-    "yaw_rad": 1.0344870797399246,
-    "yaw_deg": 59.27174362991113
-  },
-  "evidence": {
-    "match_type": "explicit_id",
-    "object_center_m": [
-      2.182,
-      3.3025,
-      0.4309
-    ],
-    "estimated_object_radius_m": 0.858,
-    "robot_radius_m": 0.18,
-    "camera_offset_m": 0.12,
-    "calculated_standoff_m": 0.5,
-    "approach_vector": [
-      -0.511,
-      -0.86
-    ]
-  },
-  "rejection_reason": null
+  "target_bbox_floor": [
+    2.523,
+    -0.2283,
+    3.4283,
+    0.3323
+  ],
+  "approach_pose_2d": null,
+  "selected_candidate_face": null,
+  "verified_clearance_m": null,
+  "candidate_count": 9,
+  "evidence": {},
+  "rejection_reason": "No collision-free approach pose exists around 'chair_004' under current costmap clearance constraints (all 9 candidates blocked by obstacles/inflation)."
 }

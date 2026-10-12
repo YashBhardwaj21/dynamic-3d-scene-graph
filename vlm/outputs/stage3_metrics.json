@@ -1,0 +1,49 @@
+{
+  "dataset_summary": {
+    "total_verified_physical_objects": 52,
+    "objects_with_multiview_samples": 39,
+    "total_views_extracted": 117,
+    "mean_views_per_physical_instance": 3.0,
+    "mean_image_sharpness_score": 2137.52
+  },
+  "detection_performance": {
+    "eval_sample_size": 150,
+    "true_positives": 141,
+    "false_positives": 6,
+    "false_negatives": 9,
+    "precision": 0.9592,
+    "recall": 0.94,
+    "f1_score": 0.9495
+  },
+  "object_association_performance": {
+    "eval_pairs_checked": 240,
+    "correct_associations": 231,
+    "false_merges": 3,
+    "false_splits": 6,
+    "association_precision": 0.9872,
+    "association_recall": 0.9747,
+    "association_f1": 0.9809
+  },
+  "track_continuity_and_fragmentation": {
+    "total_tracks": 52,
+    "track_id_switches": 2,
+    "fragmentation_rate_pct": 2.56,
+    "track_coverage_pct": 94.8,
+    "frequency_of_identity_errors_pct": 1.28
+  },
+  "viewpoint_diversity": {
+    "angular_spread_min_deg": 12.0,
+    "mean_angular_spread_deg": 38.4,
+    "max_angular_spread_deg": 94.2,
+    "quality_filtered_out_pct": 18.5
+  },
+  "robustness_under_occlusion_and_pose_shift": {
+    "association_retention_under_partial_occlusion_pct": 92.4,
+    "association_retention_under_large_viewpoint_shift_pct": 89.6
+  },
+  "conditions_supported": {
+    "one_view": "Single clear crop with surrounding scene context",
+    "two_views": "Two views separated by >12 deg viewing angle or distinct timestamps",
+    "three_views": "Three diverse viewpoints covering different object facets"
+  }
+}

@@ -1,34 +1,52 @@
 {
   "success": true,
-  "path_length_m": 0.831,
-  "turn_points_count": 1,
-  "waypoints_count": 3,
+  "path_length_m": 1.838,
+  "turn_points_count": 3,
+  "waypoints_count": 5,
   "start_pose": {
-    "x": 0.16101247999999999,
-    "y": -0.11839224,
+    "x": 0.16,
+    "y": -0.12,
     "yaw_rad": 0.0
   },
   "goal_pose": {
-    "x": 0.8250000000000002,
-    "y": -0.5750000000000002,
-    "yaw_rad": -0.710657668268571
+    "x": -0.7749999999999999,
+    "y": -0.9249999999999998,
+    "yaw_rad": -2.232999113703055
   },
-  "target_entity_id": "desk_001",
+  "original_goal_pose": {
+    "x": -0.7747151519016502,
+    "y": -0.93171515190165,
+    "yaw_rad": -2.2371603982871124
+  },
+  "endpoint_adjustment_m": 0.0067,
+  "min_clearance_m": 0.05,
+  "is_validated": true,
+  "target_entity_id": "backpack_001",
   "waypoints_floor": [
     {
       "x": 0.175,
-      "y": -0.075,
-      "yaw_rad": -0.322
-    },
-    {
-      "x": 0.325,
       "y": -0.125,
-      "yaw_rad": -0.733
+      "yaw_rad": -0.785
     },
     {
-      "x": 0.825,
-      "y": -0.575,
-      "yaw_rad": -0.711
+      "x": 0.475,
+      "y": -0.425,
+      "yaw_rad": -1.571
+    },
+    {
+      "x": 0.475,
+      "y": -0.525,
+      "yaw_rad": -2.85
+    },
+    {
+      "x": -0.525,
+      "y": -0.825,
+      "yaw_rad": -2.761
+    },
+    {
+      "x": -0.775,
+      "y": -0.925,
+      "yaw_rad": -2.233
     }
   ],
   "rejection_reason": null
