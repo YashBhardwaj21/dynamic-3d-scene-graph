@@ -1,49 +1,78 @@
-# Datasets and Large Media
+# ==============================================================================
+# Perception & Navigation .gitignore
+# ==============================================================================
+
+# ------------------------------------------------------------------------------
+# 1. Heavy Datasets, Raw Captures & Streaming Media
+# ------------------------------------------------------------------------------
 rgbd_dataset_freiburg1_desk/
 data/raw/
 data/processed/
+archive/
 *.bag
 *.mcap
 *.db3
+*.mp4
+*.avi
+*.mov
+*.mkv
+*.h264
+*.part
+*.zip
+*.tar
+*.tar.gz
+*.gz
 
-# Model weights & checkpoints
+# ------------------------------------------------------------------------------
+# 2. Point Clouds & Heavy 3D Geometry
+# ------------------------------------------------------------------------------
+*.ply
+*.pcd
+*.las
+outputs/**/MapPoints.ply
+outputs/**/world_objects.ply
+outputs/**/objects/*.ply
+outputs/**/trajectory/
+
+# ------------------------------------------------------------------------------
+# 3. Heavy Streaming Records, Trajectory Dumps & Detection Logs
+# ------------------------------------------------------------------------------
+*.jsonl
+outputs/**/*.jsonl
+vlm/outputs/*.jsonl
+outputs/**/CameraTrajectory.txt
+outputs/**/KeyFrameTrajectory.txt
+outputs/**/associations*.txt
+outputs/**/associations.txt
+
+# ------------------------------------------------------------------------------
+# 4. Neural Network Model Weights, Checkpoints & TorchScript
+# ------------------------------------------------------------------------------
 models/
 *.pt
 *.pth
 *.onnx
 *.engine
 *.bin
+*.ts
 mobileclip2_b.ts
 yolov8n*.pt
 yolov8s*.pt
 .ultralytics/
 runs/
+wandb/
 
-# Virtual environments
+# ------------------------------------------------------------------------------
+# 5. Virtual Environments & Binary Builds
+# ------------------------------------------------------------------------------
 .venv/
 venv/
 env/
 myenv/
-
-# Python artifacts & caches
-__pycache__/
-**/__pycache__/
-*.py[cod]
-*$py.class
-*.egg-info/
-.eggs/
 build/
 dist/
 install/
 log/
-.coverage
-htmlcov/
-.pytest-tmp/
-.pytest_cache/
-pytest_temp/
-*.ipynb
-
-# ROS 2 / Colcon build artifacts
 ros2_ws/build/
 ros2_ws/install/
 ros2_ws/log/
@@ -51,7 +80,28 @@ ros2_ws/**/build/
 ros2_ws/**/install/
 ros2_ws/**/log/
 
-# IDE & OS files
+# ------------------------------------------------------------------------------
+# 6. Python Artifacts, Tests & Caches
+# ------------------------------------------------------------------------------
+__pycache__/
+**/__pycache__/
+*.py[cod]
+*$py.class
+*.egg-info/
+.eggs/
+.coverage
+htmlcov/
+.pytest-tmp/
+.pytest_cache/
+pytest_temp/
+*.ipynb
+.ruff_cache/
+.mypy_cache/
+*.log
+
+# ------------------------------------------------------------------------------
+# 7. IDE, OS & Agent System Files
+# ------------------------------------------------------------------------------
 .vscode/
 .idea/
 *.swp
@@ -60,24 +110,43 @@ ros2_ws/**/log/
 .DS_Store
 Thumbs.db
 desktop.ini
+.agents/
 
-# Experiments & temporary logs
-experiments/*/frames/
-experiments/*/logs/
-*.part
-*.log
+# ------------------------------------------------------------------------------
+# 8. Environment Secrets & Configs
+# ------------------------------------------------------------------------------
+.env
+.env.local
+.env.*.local
+
+# ------------------------------------------------------------------------------
+# 9. Dynamic Robot Runtime States & Temporary Files
+# ------------------------------------------------------------------------------
+robot_state.json
+robot_navigation_state.json
+outputs/**/robot_navigation_state.json
+*.tmp
+*.corrupted
+*.tmp.jpg
+.dashboard_preview.jpg
 scratch/
 
-# Archives & Bundles
-archive/
-*.zip
-*.tar.gz
-*.tar
-*.gz
-
-# Additional tool caches
-.ruff_cache/
-.mypy_cache/
-.dashboard_preview.jpg
-*.tmp.jpg
-
+# ------------------------------------------------------------------------------
+# 10. Whitelist / Keep All Visual Deliverables & Documentation Images
+# ------------------------------------------------------------------------------
+!*.png
+!*.jpg
+!*.jpeg
+!*.svg
+!*.gif
+!outputs/**/visualizations/
+!outputs/**/visualizations/*.png
+!outputs/**/visualizations/*.jpg
+!outputs/**/visualizations/*.jpeg
+!vlm/benchmarks/
+!vlm/benchmarks/*.json
+!vlm/benchmarks/*.md
+!vlm/outputs/*.md
+!vlm/outputs/*.json
+!outputs/**/*.yaml
+!outputs/**/*.pgm
