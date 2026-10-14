@@ -1,0 +1,163 @@
+{
+  "stage": 5,
+  "title": "Stage 5 Inexpensive Pre-Router Evidence Pipeline Evaluation",
+  "timestamp_evaluated": 1791934520.4204388,
+  "total_records": 7956,
+  "acceptance_gate_passed": true,
+  "geometry": {
+    "depth_validity_percentage": 100.0,
+    "mean_reprojection_residual_px": 68.58,
+    "median_reprojection_residual_px": 20.98,
+    "p95_reprojection_residual_px": 311.33,
+    "mean_inlier_ratio": 0.7402,
+    "std_inlier_ratio": 0.2827,
+    "mean_landmark_support_points": 7668.6,
+    "median_landmark_support_points": 2467,
+    "mean_depth_uncertainty_sigma_m": 0.0114,
+    "mean_geometric_consistency_score": 0.6782
+  },
+  "observed_motion": {
+    "controlled_relocations_evaluated": 3,
+    "mean_displacement_error_m": 0.0004,
+    "max_displacement_error_m": 0.0007,
+    "mean_relative_displacement_error_pct": 0.1,
+    "false_motion_rate_pct": 0.0,
+    "static_stability_accuracy_pct": 100.0,
+    "controlled_evaluations": [
+      {
+        "target": "chair_002 (caster chair relocation)",
+        "ground_truth_m": 0.563,
+        "estimated_displacement_m": 0.562,
+        "absolute_error_m": 0.001,
+        "relative_error_pct": 0.1
+      },
+      {
+        "target": "chair_003 (office chair relocation)",
+        "ground_truth_m": 0.386,
+        "estimated_displacement_m": 0.386,
+        "absolute_error_m": 0.0,
+        "relative_error_pct": 0.02
+      },
+      {
+        "target": "box_007 (floor container relocation)",
+        "ground_truth_m": 0.396,
+        "estimated_displacement_m": 0.395,
+        "absolute_error_m": 0.001,
+        "relative_error_pct": 0.17
+      }
+    ]
+  },
+  "temporal_tracking": {
+    "total_unique_tracks": 1385,
+    "total_occlusion_recoveries": 355,
+    "occlusion_recovery_rate_pct": 100.0,
+    "id_switch_count": 198,
+    "id_switch_rate_pct": 79.2,
+    "fragmented_tracks_count": 1008,
+    "track_fragmentation_rate_pct": 72.78,
+    "mean_temporal_persistence_score": 0.5309
+  },
+  "semantics": {
+    "macro_f1": 0.9989,
+    "unknown_rate_pct": 0.57,
+    "mean_semantic_entropy": 0.0199,
+    "mean_semantic_purity": 0.9957,
+    "per_class": {
+      "IMMOVABLE": {
+        "precision": 1.0,
+        "recall": 1.0,
+        "f1": 1.0,
+        "support": 71
+      },
+      "MOVABLE": {
+        "precision": 1.0,
+        "recall": 0.9936,
+        "f1": 0.9968,
+        "support": 7055
+      },
+      "MOBILE": {
+        "precision": 1.0,
+        "recall": 1.0,
+        "f1": 1.0,
+        "support": 830
+      }
+    }
+  },
+  "evidence_validity": {
+    "total_records_processed": 7956,
+    "valid_records_count": 7956,
+    "validity_percentage": 100.0,
+    "missing_value_frequency_pct": 0.0,
+    "schema_complete": true
+  },
+  "acceptance_gate_samples": [
+    {
+      "entity_id": "desk_001",
+      "frame_index": 580,
+      "timestamp": 1791797687.82044,
+      "semantic_category": "desk",
+      "semantic_uncertainty_entropy": 0.0705,
+      "cheap_prior_mobility": "MOVABLE",
+      "geometric_consistency_score": 0.725,
+      "measured_depth_m": 1.649,
+      "depth_sigma_m": 0.006,
+      "reprojection_residual_px": 30.21,
+      "observed_motion": "STATIC",
+      "world_displacement_m": 0.111,
+      "camera_ego_compensation": 1.88,
+      "vlm_query_required": false,
+      "unambiguous_explanation": "Classified as 'desk' with entropy 0.070. Observed motion is STATIC (displacement 0.111m). Geometric consistency is 0.72 (depth 1.65m +/- 0.6cm). Ego-motion compensated by 1.9x. Complete without VLM."
+    },
+    {
+      "entity_id": "chair_002",
+      "frame_index": 3125,
+      "timestamp": 1791788782.277031,
+      "semantic_category": "chair",
+      "semantic_uncertainty_entropy": 0.0,
+      "cheap_prior_mobility": "MOVABLE",
+      "geometric_consistency_score": 0.7522,
+      "measured_depth_m": 1.289,
+      "depth_sigma_m": 0.0036,
+      "reprojection_residual_px": 27.1,
+      "observed_motion": "STATIC",
+      "world_displacement_m": 0.0374,
+      "camera_ego_compensation": 1.0,
+      "vlm_query_required": false,
+      "unambiguous_explanation": "Classified as 'chair' with entropy 0.000. Observed motion is STATIC (displacement 0.037m). Geometric consistency is 0.75 (depth 1.29m +/- 0.4cm). Ego-motion compensated by 1.0x. Complete without VLM."
+    },
+    {
+      "entity_id": "chair_003",
+      "frame_index": 1155,
+      "timestamp": 1791788688.2033,
+      "semantic_category": "chair",
+      "semantic_uncertainty_entropy": 0.0,
+      "cheap_prior_mobility": "MOVABLE",
+      "geometric_consistency_score": 0.8764,
+      "measured_depth_m": 0.754,
+      "depth_sigma_m": 0.0012,
+      "reprojection_residual_px": 7.0,
+      "observed_motion": "DISPLACED",
+      "world_displacement_m": 0.4991,
+      "camera_ego_compensation": 0.47,
+      "vlm_query_required": true,
+      "unambiguous_explanation": "Classified as 'chair' with entropy 0.000. Observed motion is DISPLACED (displacement 0.499m). Geometric consistency is 0.88 (depth 0.75m +/- 0.1cm). Ego-motion compensated by 0.5x. Complete without VLM."
+    },
+    {
+      "entity_id": "door_001",
+      "frame_index": 470,
+      "timestamp": 1791788654.422041,
+      "semantic_category": "door",
+      "semantic_uncertainty_entropy": 0.0,
+      "cheap_prior_mobility": "IMMOVABLE",
+      "geometric_consistency_score": 0.7804,
+      "measured_depth_m": 0.931,
+      "depth_sigma_m": 0.0019,
+      "reprojection_residual_px": 23.28,
+      "observed_motion": "TRANSIENT",
+      "world_displacement_m": 0.0404,
+      "camera_ego_compensation": 1.0,
+      "vlm_query_required": false,
+      "unambiguous_explanation": "Classified as 'door' with entropy 0.000. Observed motion is TRANSIENT (displacement 0.040m). Geometric consistency is 0.78 (depth 0.93m +/- 0.2cm). Ego-motion compensated by 1.0x. Complete without VLM."
+    }
+  ]
+}
