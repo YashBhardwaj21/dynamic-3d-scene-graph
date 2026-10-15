@@ -480,10 +480,10 @@ class Stage5EvidenceAdapter:
 
         elif sem_class in ["person", "robot"]:
             observed_motion = "DYNAMIC"
-            estimated_disp_m = 0.50
-            disp_uncertainty_m = 0.05
+            estimated_disp_m = None
+            disp_uncertainty_m = None
             relocation_evaluable = False
-            diagnostics.append("Cross-session displacement not evaluable: dynamic class prior heuristic without cross-session registration.")
+            diagnostics.append("Cross-session displacement not evaluable: dynamic class affordance prior indicates MOBILE entity, but displacement was not measured from geometric observations.")
 
         # 5. Extract Semantic & Geometric Aggregates from Fused Evidence
         entropy_vals = [f["semantics"]["semantic_entropy"] for f in all_fused if "semantics" in f and "semantic_entropy" in f["semantics"]]

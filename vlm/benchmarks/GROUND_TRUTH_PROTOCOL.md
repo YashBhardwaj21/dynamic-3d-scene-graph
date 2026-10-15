@@ -65,16 +65,16 @@ Ground truth is established using a multi-phase controlled experiment:
 
 [Phase 4: Rigid Reference Registration & Verification]
    └── Distance-preserving RANSAC SE(2) registration solves coordinate alignment
-   └── Alignment residual evaluated across rigid anchors (residual sigma = 0.038 m)
+   └── Alignment residual evaluated across rigid anchors (inlier residual sigma = 0.1198 m, all-anchor sigma = 0.3054 m)
    └── Measured displacement independently corroborated against tape-measure ground truth
 ```
 
 ### Measurement Uncertainty Quantification
 - **Physical Tape Measure**: Calibrated steel tape precision: $\sigma_{\text{tape}} = \pm 0.020\text{ m}$.
-- **SE(2) Anchor Residual**: Rigid Procrustes registration residual across 10 verified static anchors: $\sigma_{\text{reg}} = \pm 0.038\text{ m}$.
+- **SE(2) Anchor Residual**: RANSAC SE(2) inlier registration residual across verified static anchors: $\sigma_{\text{reg}} = \pm 0.1198\text{ m}$ (all-anchor RMS = $0.3054\text{ m}$).
 - **Total Combined Uncertainty**:
-  $$\sigma_{\text{total}} = \sqrt{\sigma_{\text{tape}}^2 + \sigma_{\text{reg}}^2} = \sqrt{0.020^2 + 0.038^2} \approx \pm 0.043\text{ m}$$
-Displacements exceeding $3\sigma_{\text{total}} \approx 0.13\text{ m}$ are categorized as statistically significant motion events.
+  $$\sigma_{\text{total}} = \sqrt{\sigma_{\text{tape}}^2 + \sigma_{\text{reg}}^2} = \sqrt{0.020^2 + 0.1198^2} \approx \pm 0.1215\text{ m}$$
+Displacements exceeding $3\sigma_{\text{total}} \approx 0.364\text{ m}$ are categorized as statistically significant motion events.
 
 ---
 

@@ -470,6 +470,11 @@ def test_fusion_relocated_object_lifecycle_and_displacement():
     assert set(node_updated.source_track_ids) == {"chair_002", "chair_001"}
     assert set(node_updated.source_sessions) == {"rec01", "rec02"}
 
+    # Decouple current pose from historical poses: do NOT average across relocation
+    np.testing.assert_allclose(node_updated.centroid_world, np.array([1.65, 2.0, 0.45]), atol=1e-3)
+    assert len(node_updated.pose_history) == 1
+    assert node_updated.pose_history[0]["centroid_world"] == [1.0, 2.0, 0.45]
+
 
 def test_fusion_single_session_and_unmatched_objects():
     """Verify single-session entities (present in S1 only or S2 only) retain independent identities without false merges."""
@@ -680,6 +685,124 @@ def test_scene_graph_end_to_end_orchestration():
     assert node_2d.centroid_world is None
     persistent_2d = node_2d.to_persistent_entity()
     assert persistent_2d.lifecycle_state == EntityLifecycleState.TENTATIVE
+
+
+def test_relocation_decouples_current_pose_from_pose_history():
+    """Stage 10 Core Contract: Confirmed relocation decouples current pose from historical poses.
+    
+    Verifies that when an object physically moves (e.g. chair pushed by 0.563m),
+    its current pose reflects the new measurement rather than an arithmetic average
+    (which would construct a phantom landmark in the middle of the floor).
+    """
+    fusion = ContextualSceneGraphFusion()
+
+    # Initial resting pose (p1)
+    p1 = np.array([1.747, -1.960, 0.423], dtype=np.float64)
+    obs_1 = {
+        "timestamp": 10.0,
+        "source_session": "session_01",
+        "obs_id": "obs_p1_01",
+        "local_track_id": "trk_chair_s1",
+        "centroid": p1.tolist(),
+        "spatial_extent_m": 0.55,
+        "coordinate_frame": "reference_frame",
+    }
+    routed_1 = {
+        "prediction": "MOVABLE",
+        "observed_motion": "STATIC",
+        "world_displacement_m": 0.0,
+    }
+    node = fusion.update_or_create_node("inst_chair_002", "chair", routed_1, obs_1)
+    np.testing.assert_allclose(node.centroid_world, p1)
+    assert len(node.pose_history) == 0
+
+    # Physical relocation event (p2)
+    p2 = np.array([2.308, -2.000, 0.435], dtype=np.float64)
+    disp = float(np.linalg.norm(p2 - p1))  # ~0.563m
+    assert disp > 0.50
+
+    obs_2 = {
+        "timestamp": 120.0,
+        "source_session": "session_02",
+        "obs_id": "obs_p2_01",
+        "local_track_id": "trk_chair_s2",
+        "centroid": p2.tolist(),
+        "spatial_extent_m": 0.55,
+        "coordinate_frame": "reference_frame",
+        "is_relocation_event": True,
+    }
+    routed_2 = {
+        "prediction": "MOVABLE",
+        "observed_motion": "DISPLACED",
+        "world_displacement_m": disp,
+    }
+    node_updated = fusion.update_or_create_node("inst_chair_002", "chair", routed_2, obs_2)
+
+    # 1. Current pose must be p2, NOT the phantom mean (p1 + p2)/2
+    phantom_mean = (p1 + p2) / 2.0
+    assert not np.allclose(node_updated.centroid_world, phantom_mean, atol=0.05)
+    np.testing.assert_allclose(node_updated.centroid_world, p2, atol=1e-3)
+
+    # 2. Pose history must contain previous pose p1
+    assert len(node_updated.pose_history) == 1
+    h_entry = node_updated.pose_history[0]
+    np.testing.assert_allclose(h_entry["centroid_world"], [round(float(x), 4) for x in p1])
+    assert h_entry["relocation_displacement_m"] == pytest.approx(disp, abs=0.01)
+
+    # 3. Subsequent observation at the new location (p2 + small noise) updates mean at p2
+    p2_noise = np.array([2.312, -1.998, 0.436], dtype=np.float64)
+    obs_3 = {
+        "timestamp": 122.0,
+        "source_session": "session_02",
+        "obs_id": "obs_p2_02",
+        "local_track_id": "trk_chair_s2",
+        "centroid": p2_noise.tolist(),
+        "spatial_extent_m": 0.55,
+        "coordinate_frame": "reference_frame",
+    }
+    node_updated_3 = fusion.update_or_create_node("inst_chair_002", "chair", routed_2, obs_3)
+    expected_new_mean = (p2 + p2_noise) / 2.0
+    np.testing.assert_allclose(node_updated_3.centroid_world, expected_new_mean, atol=1e-3)
+    # Pose history count should remain 1 (no second relocation occurred)
+    assert len(node_updated_3.pose_history) == 1
+
+
+def test_class_prior_does_not_fabricate_measured_displacement():
+    """Stage 10 Core Contract: Class prior affordances must not fabricate world displacement evidence."""
+    adapter = Stage5EvidenceAdapter(repo_root=root_dir)
+
+    # 1. Real robot entity from manifest has observed motion without fake 0.50m prior leakage
+    manifest_path = root_dir / "vlm" / "benchmarks" / "router_evaluation_manifest.json"
+    with open(manifest_path, "r", encoding="utf-8") as f:
+        manifest = json.load(f)["evaluation_instances"]
+    robot_entry = next(item for item in manifest if item["entity_id"] == "inst_rc_car_robot_001")
+    evidence = adapter.build_instance_evidence(robot_entry)
+
+    # Verify no hardcoded 0.50m prior displacement was injected
+    assert evidence["semantic_class"] == "robot"
+    assert evidence["world_displacement_m"] != 0.50
+    assert evidence["relocation_evaluable"] is False
+
+    # 2. When an entity has unknown/missing displacement, router handles it explicitly via class prior
+    evidence_missing_disp = {
+        "entity_id": "inst_synthetic_robot_099",
+        "semantic_class": "robot",
+        "observed_motion": "DYNAMIC",
+        "world_displacement_m": None,  # Explicitly None (no measurement)
+        "displacement_uncertainty_m": None,
+        "relocation_evaluable": False,
+        "has_valid_pose": True,
+        "depth_valid": True,
+        "has_images": False,
+        "views_count": 0,
+    }
+
+    from vlm.src.router_policy import evaluate_router_policy
+    decision = evaluate_router_policy(evidence_missing_disp)
+
+    assert decision.decision == "RESOLVE_CHEAP"
+    assert decision.cheap_label == "MOBILE"
+    assert "CANONICAL_MOBILE_AGENT_PRIOR" in decision.reason_codes
 
 
 

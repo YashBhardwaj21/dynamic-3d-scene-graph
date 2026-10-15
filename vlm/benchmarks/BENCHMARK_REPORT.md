@@ -63,7 +63,7 @@ The benchmark dataset includes `vlm/benchmarks/controlled_scene_events.json`, de
 3. `EVT_003`: Calibrated relocation of Task Chair 003 ($0.386\text{ m}$ northward).
 4. `EVT_004`: Calibrated relocation of Storage Box 007 ($0.396\text{ m}$).
 5. `EVT_005`: RC car autonomous traversal across modified scene.
-6. `EVT_006`: SE(2) distance-preserving RANSAC registration on 10 static anchors ($\sigma = 0.038\text{ m}$).
+6. `EVT_006`: SE(2) distance-preserving RANSAC registration on 10 static anchors ($\sigma_{\text{inlier}} = 0.1198\text{ m}, \sigma_{\text{all}} = 0.3054\text{ m}$).
 
 ---
 

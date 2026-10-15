@@ -60,10 +60,22 @@ class PhysicalInstanceMatch:
     extent_diff_m: float
     match_score: float
     confidence: float
-    status: str  # "MATCHED", "AMBIGUOUS", "DISPLACED_CANDIDATE", "GATED_OUT"
+    status: str  # "MATCHED", "MATCHED_STATIC", "MATCHED_RELOCATED", "AMBIGUOUS", "DISPLACED_CANDIDATE", "GATED_OUT"
     s1_obs_count: int
     s2_obs_count: int
+    match_type: str = "MATCHED_STATIC"
     diagnostics: List[str] = field(default_factory=list)
+
+    @property
+    def outcome(self) -> str:
+        """Standardized outcome category according to Stage 10 contract."""
+        if self.status == "AMBIGUOUS":
+            return "AMBIGUOUS"
+        if self.status in ["MATCHED_RELOCATED", "RELOCATED"]:
+            return "MATCHED_RELOCATED"
+        if self.status in ["MATCHED", "MATCHED_STATIC"]:
+            return "MATCHED_STATIC"
+        return self.status
 
 
 @dataclass
@@ -87,12 +99,18 @@ class CrossSessionCandidateMatcher:
     def __init__(
         self,
         max_static_distance_m: float = 0.45,
+        max_relocation_distance_m: float = 1.20,
+        min_relocation_distance_m: float = 0.25,
         max_extent_relative_diff: float = 0.60,
+        max_relocation_extent_relative_diff: float = 0.35,
         ambiguity_margin_m: float = 0.15,
         min_cluster_observations: int = 2,
     ):
         self.max_static_distance_m = max_static_distance_m
+        self.max_relocation_distance_m = max_relocation_distance_m
+        self.min_relocation_distance_m = min_relocation_distance_m
         self.max_extent_relative_diff = max_extent_relative_diff
+        self.max_relocation_extent_relative_diff = max_relocation_extent_relative_diff
         self.ambiguity_margin_m = ambiguity_margin_m
         self.min_cluster_observations = min_cluster_observations
 
@@ -296,7 +314,24 @@ class CrossSessionCandidateMatcher:
             s2_clusters=s2_clusters,
             registration=registration,
             enable_ambiguity_rejection=True,
+            enable_relocation_matching=False,
             algorithm_name="PROPOSED_UNCERTAINTY_SYMMETRIC_AMBIGUITY",
+        )
+
+    def match_entities_relocation_aware(
+        self,
+        s1_clusters: Dict[str, EntityCluster],
+        s2_clusters: Dict[str, EntityCluster],
+        registration: RegistrationInfo,
+    ) -> AssociationResult:
+        """Stage 10 Relocation-Aware Method: Multi-stage Hungarian assignment handling static proximity and relocated objects."""
+        return self._match_entities_internal(
+            s1_clusters=s1_clusters,
+            s2_clusters=s2_clusters,
+            registration=registration,
+            enable_ambiguity_rejection=True,
+            enable_relocation_matching=True,
+            algorithm_name="PROPOSED_RELOCATION_AWARE_ASSOCIATION",
         )
 
     def _match_entities_internal(
@@ -306,8 +341,9 @@ class CrossSessionCandidateMatcher:
         registration: RegistrationInfo,
         enable_ambiguity_rejection: bool,
         algorithm_name: str,
+        enable_relocation_matching: bool = False,
     ) -> AssociationResult:
-        """Internal worker executing global Hungarian assignment with configurable ambiguity gating."""
+        """Internal worker executing global Hungarian assignment with configurable ambiguity gating and relocation hypothesis testing."""
         diagnostics: List[str] = []
         if not registration.is_valid:
             return self._invalid_registration_result(s1_clusters, s2_clusters, registration, algorithm_name)
@@ -434,6 +470,7 @@ class CrossSessionCandidateMatcher:
                 status="AMBIGUOUS" if is_ambiguous else "MATCHED",
                 s1_obs_count=c1.observations_count,
                 s2_obs_count=c2.observations_count,
+                match_type="MATCHED_STATIC",
                 diagnostics=ambiguity_reasons,
             )
 
@@ -443,6 +480,105 @@ class CrossSessionCandidateMatcher:
                 matched_pairs.append(match_obj)
                 matched_s1_idx.add(r)
                 matched_s2_idx.add(c)
+
+        # Stage 2: Relocation candidate matching for unassigned entities beyond the static gate
+        if enable_relocation_matching:
+            unassigned_s1 = [i for i in range(n1) if i not in matched_s1_idx]
+            unassigned_s2 = [j for j in range(n2) if j not in matched_s2_idx]
+
+            if unassigned_s1 and unassigned_s2:
+                nu1 = len(unassigned_s1)
+                nu2 = len(unassigned_s2)
+                reloc_cost_matrix = np.full((nu1, nu2), INFTY_COST, dtype=np.float64)
+                reloc_dist_matrix = np.full((nu1, nu2), INFTY_COST, dtype=np.float64)
+
+                for ui, r in enumerate(unassigned_s1):
+                    c1 = s1_clusters[s1_keys[r]]
+                    for vj, c in enumerate(unassigned_s2):
+                        c2 = s2_aligned[s2_keys[c]]
+
+                        if c1.semantic_class.lower().strip() != c2.semantic_class.lower().strip():
+                            continue
+
+                        dist = float(np.linalg.norm(c1.centroid_floor - c2.centroid_aligned))
+                        reloc_dist_matrix[ui, vj] = dist
+
+                        # Relocation distance gate: beyond static gate, within max relocation distance
+                        if not (self.min_relocation_distance_m <= dist <= self.max_relocation_distance_m):
+                            continue
+
+                        # Strict extent consistency: relocated physical objects maintain dimensions
+                        max_ext = max(c1.spatial_extent_m, c2.spatial_extent_m, 0.10)
+                        ext_diff = abs(c1.spatial_extent_m - c2.spatial_extent_m)
+                        rel_ext = ext_diff / max_ext
+                        if rel_ext > self.max_relocation_extent_relative_diff:
+                            continue
+
+                        # Reject relocation hypotheses if local registration uncertainty is excessive (>0.40m)
+                        if c2.position_uncertainty_m > 0.40:
+                            continue
+
+                        combined_unc = math.sqrt(c1.position_uncertainty_m**2 + c2.position_uncertainty_m**2)
+                        norm_dist = dist / max(0.05, combined_unc)
+                        reloc_cost_matrix[ui, vj] = norm_dist + 3.0 * rel_ext
+
+                r_rows, r_cols = linear_sum_assignment(reloc_cost_matrix)
+                for ru, cv in zip(r_rows, r_cols):
+                    rcost = reloc_cost_matrix[ru, cv]
+                    if rcost >= INFTY_COST:
+                        continue
+
+                    r_orig = unassigned_s1[ru]
+                    c_orig = unassigned_s2[cv]
+                    rdist = reloc_dist_matrix[ru, cv]
+                    k1 = s1_keys[r_orig]
+                    k2 = s2_keys[c_orig]
+                    c1 = s1_clusters[k1]
+                    c2 = s2_aligned[k2]
+
+                    # Ambiguity check for relocation candidates
+                    is_reloc_ambiguous = False
+                    competing_s1 = [
+                        reloc_dist_matrix[other_u, cv] for other_u in range(nu1)
+                        if other_u != ru and reloc_dist_matrix[other_u, cv] < INFTY_COST
+                    ]
+                    competing_s2 = [
+                        reloc_dist_matrix[ru, other_v] for other_v in range(nu2)
+                        if other_v != cv and reloc_dist_matrix[ru, other_v] < INFTY_COST
+                    ]
+
+                    if competing_s1 and abs(min(competing_s1) - rdist) < self.ambiguity_margin_m:
+                        is_reloc_ambiguous = True
+                    if competing_s2 and abs(min(competing_s2) - rdist) < self.ambiguity_margin_m:
+                        is_reloc_ambiguous = True
+
+                    combined_unc = math.sqrt(c1.position_uncertainty_m**2 + c2.position_uncertainty_m**2)
+                    ext_diff = abs(c1.spatial_extent_m - c2.spatial_extent_m)
+                    confidence = max(0.20, min(0.95, 1.0 - (rdist / self.max_relocation_distance_m) * 0.4 - (rcost / 10.0) * 0.3))
+
+                    reloc_match = PhysicalInstanceMatch(
+                        persistent_entity_id=f"phys_{k1}",
+                        s1_entity_id=k1,
+                        s2_entity_id=k2,
+                        semantic_class=c1.semantic_class,
+                        distance_m=round(rdist, 4),
+                        position_uncertainty_m=round(combined_unc, 4),
+                        extent_diff_m=round(ext_diff, 4),
+                        match_score=round(float(rcost), 4),
+                        confidence=round(confidence, 4),
+                        status="AMBIGUOUS" if is_reloc_ambiguous else "MATCHED_RELOCATED",
+                        s1_obs_count=c1.observations_count,
+                        s2_obs_count=c2.observations_count,
+                        match_type="MATCHED_RELOCATED",
+                        diagnostics=[f"RELOCATION_CONFIRMED: displacement={rdist:.3f}m beyond static gate {self.max_static_distance_m}m"] if not is_reloc_ambiguous else ["RELOCATION_AMBIGUOUS_COMPETING_CANDIDATE"],
+                    )
+
+                    if is_reloc_ambiguous:
+                        ambiguous_pairs.append(reloc_match)
+                    else:
+                        matched_pairs.append(reloc_match)
+                        matched_s1_idx.add(r_orig)
+                        matched_s2_idx.add(c_orig)
 
         unmatched_s1 = [s1_keys[i] for i in range(n1) if i not in matched_s1_idx]
         unmatched_s2 = [s2_keys[j] for j in range(n2) if j not in matched_s2_idx]
@@ -655,12 +791,17 @@ def compare_association_baselines(
     res_b2 = matcher.match_entities_hungarian_gated(s1_clusters, s2_clusters, registration)
     eval_b2 = evaluate_matcher_against_ground_truth(res_b2, gt_path)
 
-    # 3. Proposed Method
+    # 3. Proposed Method (Static Proximity + Uncertainty + Ambiguity)
     res_b3 = matcher.match_entities(s1_clusters, s2_clusters, registration)
     eval_b3 = evaluate_matcher_against_ground_truth(res_b3, gt_path)
+
+    # 4. Proposed Relocation-Aware Method (Static Proximity + Relocation Hypotheses)
+    res_b4 = matcher.match_entities_relocation_aware(s1_clusters, s2_clusters, registration)
+    eval_b4 = evaluate_matcher_against_ground_truth(res_b4, gt_path)
 
     return {
         "baseline_1_nearest_centroid": {"result": res_b1, "evaluation": eval_b1},
         "baseline_2_hungarian_gated": {"result": res_b2, "evaluation": eval_b2},
         "proposed_uncertainty_symmetric": {"result": res_b3, "evaluation": eval_b3},
+        "proposed_relocation_aware": {"result": res_b4, "evaluation": eval_b4},
     }

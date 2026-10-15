@@ -83,10 +83,11 @@ class ContextualSceneGraphNode:
     total_observations_count: int = 0
     valid_geometry_observations_count: int = 0
     
-    # Cross-session relocation
+    # Cross-session relocation and pose history
     relocation_evaluable: bool = False
     measured_displacement_m: Optional[float] = None
     displacement_uncertainty_m: Optional[float] = None
+    pose_history: List[Dict[str, Any]] = field(default_factory=list)
 
     # Selective router metadata
     vlm_query_requested: bool = False
@@ -116,6 +117,7 @@ class ContextualSceneGraphNode:
             "relocation_evaluable": self.relocation_evaluable,
             "measured_displacement_m": self.measured_displacement_m,
             "displacement_uncertainty_m": self.displacement_uncertainty_m,
+            "pose_history": list(self.pose_history),
             "first_seen": self.first_seen,
             "last_seen": self.last_seen,
             "vlm_decision": self.vlm_decision,
@@ -158,6 +160,7 @@ class ContextualSceneGraphNode:
             "relocation_evaluable": self.relocation_evaluable,
             "measured_displacement_m": self.measured_displacement_m,
             "displacement_uncertainty_m": self.displacement_uncertainty_m,
+            "pose_history": list(self.pose_history),
             "contributing_observation_ids": list(self.contributing_observation_ids[:50]),
             "vlm_decision": self.vlm_decision,
             "vlm_reason_codes": self.vlm_reason_codes,
@@ -304,26 +307,65 @@ class ContextualSceneGraphFusion:
         if obs_id and obs_id not in node.contributing_observation_ids:
             node.contributing_observation_ids.append(obs_id)
 
-        # 1. Exact incremental geometric mean (m_k = m_{k-1} + (x_k - m_{k-1}) / k)
+        # 1. Relocation-Aware Geometry and Pose History Maintenance
+        # If an object is confirmed relocated (significant displacement >= 0.25m in common frame
+        # accompanied by displacement evidence or inter-session relocation),
+        # do NOT average old and new poses together (which creates phantom landmarks).
+        # Instead, record the old pose in pose_history and update the current pose to the new measurement.
+        is_relocation = False
+        if node.centroid_world is not None and centroid_arr is not None:
+            spatial_shift = float(np.linalg.norm(centroid_arr[:2] - node.centroid_world[:2]))
+            has_relocation_signal = (
+                new_motion == ObservedMotionState.DISPLACED
+                or routed_result.get("observed_motion") == "DISPLACED"
+                or bool(obs_meta.get("is_relocation_event", False))
+                or (session and session not in node.source_sessions)
+            )
+            if spatial_shift >= 0.25 and has_relocation_signal:
+                is_relocation = True
+
         if geometry_valid and centroid_arr is not None:
-            node.valid_geometry_observations_count += 1
-            k = node.valid_geometry_observations_count
-            if node.centroid_world is None:
+            if is_relocation and node.centroid_world is not None:
+                # Confirmed relocation: preserve previous pose in time-stamped history
+                old_pose_record = {
+                    "centroid_world": [round(float(x), 4) for x in node.centroid_world],
+                    "spatial_extent_m": round(float(node.spatial_extent_m), 4) if node.spatial_extent_m is not None else None,
+                    "first_seen": node.first_seen,
+                    "last_seen": node.last_seen,
+                    "valid_observations_count": node.valid_geometry_observations_count,
+                    "coordinate_frame": node.coordinate_frame,
+                    "relocation_displacement_m": round(float(np.linalg.norm(centroid_arr - node.centroid_world)), 4),
+                }
+                node.pose_history.append(old_pose_record)
+
+                # Reset current pose strictly to the new measurement
                 node.centroid_world = centroid_arr.copy()
+                node.valid_geometry_observations_count = 1
                 node.geometry_valid = True
                 node.geometric_confidence = 0.85
-            else:
-                node.centroid_world = node.centroid_world + (centroid_arr - node.centroid_world) / k
-
-            if extent is not None:
-                if node.spatial_extent_m is None:
+                if extent is not None:
                     node.spatial_extent_m = extent
+            else:
+                # Stationary compatible observations: exact incremental running mean
+                node.valid_geometry_observations_count += 1
+                k = node.valid_geometry_observations_count
+                if node.centroid_world is None:
+                    node.centroid_world = centroid_arr.copy()
+                    node.geometry_valid = True
+                    node.geometric_confidence = 0.85
                 else:
-                    node.spatial_extent_m = node.spatial_extent_m + (extent - node.spatial_extent_m) / k
+                    node.centroid_world = node.centroid_world + (centroid_arr - node.centroid_world) / k
+
+                if extent is not None:
+                    if node.spatial_extent_m is None:
+                        node.spatial_extent_m = extent
+                    else:
+                        node.spatial_extent_m = node.spatial_extent_m + (extent - node.spatial_extent_m) / k
 
         # 2. Observed motion update
-        if new_motion == ObservedMotionState.DISPLACED:
+        if is_relocation or new_motion == ObservedMotionState.DISPLACED:
             node.observed_motion = ObservedMotionState.DISPLACED
+            node.relocation_evaluable = True
         elif new_motion == ObservedMotionState.DYNAMIC:
             node.observed_motion = ObservedMotionState.DYNAMIC
 

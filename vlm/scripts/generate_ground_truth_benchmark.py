@@ -881,7 +881,8 @@ def build_benchmark() -> None:
 
     # Measurement uncertainty
     tape_uncertainty_m = 0.020
-    registration_residual_m = 0.038
+    registration_residual_m = 0.1198
+    all_anchor_residual_m = 0.3054
     combined_displacement_uncertainty_m = round(
         math.sqrt(tape_uncertainty_m**2 + registration_residual_m**2), 4
     )
@@ -911,6 +912,7 @@ def build_benchmark() -> None:
             "measurement_uncertainty": {
                 "tape_measure_sigma_m": tape_uncertainty_m,
                 "ransac_registration_residual_m": registration_residual_m,
+                "all_anchor_rms_residual_m": all_anchor_residual_m,
                 "combined_displacement_uncertainty_m": combined_displacement_uncertainty_m
             }
         },
@@ -1007,10 +1009,14 @@ def build_benchmark() -> None:
                 "timestamp_approx": "Post-processing",
                 "event_type": "RIGID_ANCHOR_REGISTRATION",
                 "description": "RANSAC SE(2) rigid Procrustes alignment across 10 static desk/box anchors establishes multi-session alignment.",
-                "rotation_deg": -16.13,
-                "translation_m": [-0.0815, 0.0930],
+                "rotation_deg": -15.558,
+                "translation_m": [-0.1059, 0.0486],
+                "inlier_rms_residual_m": registration_residual_m,
+                "all_anchor_rms_residual_m": all_anchor_residual_m,
                 "mean_anchor_residual_m": registration_residual_m,
-                "verified_anchor_count": 10
+                "verified_anchor_count": 10,
+                "inlier_anchor_count": 7,
+                "outlier_anchor_count": 3
             }
         ]
     }
@@ -1034,7 +1040,7 @@ def build_benchmark() -> None:
             "annotators": ["Annotator_A_Robotics", "Annotator_B_ComputerVision"],
             "raw_agreement_pct": round(p_0 * 100.0, 2),
             "cohens_kappa": round(kappa, 4),
-            "discrepancies_resolved": 1
+            "discrepancies_resolved": total_instances - agreements
         },
         "object_identity_accuracy": {
             "raw_tracks": raw_tracks_count,
@@ -1046,8 +1052,9 @@ def build_benchmark() -> None:
         "displacement_measurement_uncertainty": {
             "tape_measure_sigma_m": tape_uncertainty_m,
             "se2_registration_residual_sigma_m": registration_residual_m,
+            "all_anchor_rms_residual_sigma_m": all_anchor_residual_m,
             "combined_uncertainty_sigma_m": combined_displacement_uncertainty_m,
-            "significance_threshold_3sigma_m": round(3 * combined_displacement_uncertainty_m, 3)
+            "significance_threshold_3sigma_m": round(3 * combined_displacement_uncertainty_m, 4)
         }
     }
 
@@ -1122,7 +1129,7 @@ def build_benchmark() -> None:
 
 ### Q3: Did its movement make old SLAM observations unreliable? (`slam_invalidated`)
 - Displaced objects invalidate past geometric landmark observations (`slam_invalidated = true`).
-- Stationary anchors retain full validity (`slam_invalidated = false`), anchoring the SE(2) registration ($R = -16.13^\\circ, T = [-0.081, 0.093]\\text{{ m}}$).
+- Stationary anchors retain full validity (`slam_invalidated = false`), anchoring the SE(2) registration ($R = -15.558^\\circ, T = [-0.1059, 0.0486]\\text{{ m}}$).
 
 ---
 
@@ -1134,7 +1141,7 @@ The benchmark dataset includes `vlm/benchmarks/controlled_scene_events.json`, de
 3. `EVT_003`: Calibrated relocation of Task Chair 003 ($0.386\\text{{ m}}$ northward).
 4. `EVT_004`: Calibrated relocation of Storage Box 007 ($0.396\\text{{ m}}$).
 5. `EVT_005`: RC car autonomous traversal across modified scene.
-6. `EVT_006`: SE(2) distance-preserving RANSAC registration on 10 static anchors ($\sigma = 0.038\\text{{ m}}$).
+6. `EVT_006`: SE(2) distance-preserving RANSAC registration on 10 static anchors ($\\sigma_{{\\text{{inlier}}}} = 0.1198\\text{{ m}}, \\sigma_{{\\text{{all}}}} = 0.3054\\text{{ m}}$).
 
 ---
 

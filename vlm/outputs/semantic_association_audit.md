@@ -130,20 +130,21 @@ The unmatched observations correspond to legitimate physical objects that receiv
 - **RANSAC Inliers:** 7 / 10 correspondences (70.0% inlier ratio).
 - **Inlier Residuals:** Median = **`0.0925 m`**, RMS = **`0.1198 m`**, Max = **`0.1983 m`**.
 - **Aggregate Residuals (All 10 Anchors):** Median = `0.1113 m`, RMS = `0.3087 m`, Max = `0.6181 m`.
-- **Held-Out Cross-Validation:** 5-fold cross-validation on correspondences yields held-out mean test error of **`0.2974 m`**.
+- **Held-Out Cross-Validation (5-Fold):** Arithmetic mean of fold RMS values = **`0.3021 m`**; Pooled held-out RMSE = **`0.3538 m`** (resolving historical 0.2974 m artifact).
 - **Empirical Residual Dispersion vs Calibrated Covariance:** Registration uncertainty is derived from empirical inlier anchor dispersion ($0.1198\text{ m}$). It is **not** modelled as an uncalibrated heuristic Gaussian covariance, preserving spatial gate rigor without statistical overclaiming.
 
-### 6.2 Comparative Evaluation of Three Association Baselines
-All three methods are evaluated on identical clusters extracted from real recordings against the canonical physical instance benchmark:
+### 6.2 Comparative Evaluation of Association Baselines
+All methods are evaluated on identical clusters extracted from real recordings against the canonical physical instance benchmark:
 
 | Association Method | Total Matched | Ambiguous Rejected | Annotated Evaluated | True Positives (TP) | False Merges (FM) | Annotated Precision | Static GT Recall | Macro-F1 (Annotated) |
 |---|:---:|:---:|:---:|:---:|:---:|:---:|:---:|:---:|
 | **Baseline 1: Nearest Centroid** | 48 | 0 | 12 | 7 | 5 | **`58.3%`** | 23.1% | 33.1% |
 | **Baseline 2: Hungarian Gated** | 43 | 0 | 12 | 7 | 5 | **`58.3%`** | 23.1% | 33.1% |
 | **Proposed: Uncertainty + Ambiguity Rejection** | **33** | **10** | **11** | **7** | **4** | **`63.6%`** | **23.1%** | **`33.9%`** |
+| **Proposed: Relocation-Aware (Multi-Stage)** | **41** | **21** | **12** | **7** | **5** | **`58.3%`** | **23.1%** | **`33.1%`** |
 
 > [!NOTE]
-> **Symmetric Ambiguity Benefit:** The proposed method rejects 8 ambiguous candidate pairs where competing nearby clusters prevent confident matching. By doing so, it successfully filters out a false merge on the annotated evaluation benchmark, improving precision from 58.3% to **63.6%** without degrading true positives on verified persistent instances.
+> **Symmetric Ambiguity Benefit:** The proposed method rejects 10 ambiguous candidate pairs where competing nearby clusters prevent confident matching. By doing so, it successfully filters out a false merge on the annotated evaluation benchmark, improving precision from 58.3% to **63.6%** without degrading true positives on verified persistent instances.
 
 ### 6.3 Sample Verified Physical Matches (Proposed Method)
 

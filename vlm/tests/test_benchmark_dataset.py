@@ -139,8 +139,9 @@ def test_inter_annotator_agreement_and_uncertainty(benchmark_paths):
 
     unc = metrics["displacement_measurement_uncertainty"]
     assert unc["tape_measure_sigma_m"] == 0.020
-    assert unc["se2_registration_residual_sigma_m"] == 0.038
-    assert unc["combined_uncertainty_sigma_m"] < 0.050
+    assert unc["se2_registration_residual_sigma_m"] == 0.1198
+    assert unc["combined_uncertainty_sigma_m"] == 0.1215
+    assert agreement["discrepancies_resolved"] == 2
 
 
 def test_controlled_events_consistency(benchmark_paths):

@@ -93,13 +93,17 @@
       "timestamp_approx": "Post-processing",
       "event_type": "RIGID_ANCHOR_REGISTRATION",
       "description": "RANSAC SE(2) rigid Procrustes alignment across 10 static desk/box anchors establishes multi-session alignment.",
-      "rotation_deg": -16.13,
+      "rotation_deg": -15.558,
       "translation_m": [
-        -0.0815,
-        0.093
+        -0.1059,
+        0.0486
       ],
-      "mean_anchor_residual_m": 0.038,
-      "verified_anchor_count": 10
+      "inlier_rms_residual_m": 0.1198,
+      "all_anchor_rms_residual_m": 0.3054,
+      "mean_anchor_residual_m": 0.1198,
+      "verified_anchor_count": 10,
+      "inlier_anchor_count": 7,
+      "outlier_anchor_count": 3
     }
   ]
 }

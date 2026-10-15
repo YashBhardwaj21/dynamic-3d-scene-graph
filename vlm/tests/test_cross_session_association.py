@@ -417,4 +417,42 @@ def test_canonical_benchmark_missing_fails_closed(tmp_path):
         build_canonical_session_track_mapping(missing_file)
 
 
+def test_relocation_aware_candidate_matching():
+    """Stage 10 Core Contract: Relocation-aware matching associates moved objects beyond static gate.
+    
+    Verifies that an object relocated by 0.563m (e.g. chair_002) is gated out by static matching,
+    but successfully resolved as MATCHED_RELOCATED by the relocation-aware matcher.
+    """
+    # S1 chair at (1.747, -1.960)
+    s1 = {"chair_002": _make_cluster("chair_002", "chair", 1.747, -1.960, extent=0.55, session="rec01")}
+    # S2 chair after 0.563m relocation at (2.308, -2.000)
+    s2 = {"chair_010": _make_cluster("chair_010", "chair", 2.308, -2.000, extent=0.55, session="rec02")}
+
+    reg = _make_reg()  # Identity transform for unit test
+
+    matcher = CrossSessionCandidateMatcher(
+        max_static_distance_m=0.45,
+        max_relocation_distance_m=1.20,
+        min_relocation_distance_m=0.25,
+    )
+
+    # 1. Static matcher must NOT match (0.563m > 0.45m static gate)
+    res_static = matcher.match_entities(s1, s2, reg)
+    assert len(res_static.matched_pairs) == 0
+    assert "chair_002" in res_static.unmatched_s1
+    assert "chair_010" in res_static.unmatched_s2
+
+    # 2. Relocation-aware matcher recognizes the moved physical instance
+    res_reloc = matcher.match_entities_relocation_aware(s1, s2, reg)
+    assert len(res_reloc.matched_pairs) == 1
+    m = res_reloc.matched_pairs[0]
+    assert m.s1_entity_id == "chair_002"
+    assert m.s2_entity_id == "chair_010"
+    assert m.status == "MATCHED_RELOCATED"
+    assert m.outcome == "MATCHED_RELOCATED"
+    assert m.distance_m == pytest.approx(0.563, abs=0.01)
+    assert len(res_reloc.unmatched_s1) == 0
+    assert len(res_reloc.unmatched_s2) == 0
+
+
 

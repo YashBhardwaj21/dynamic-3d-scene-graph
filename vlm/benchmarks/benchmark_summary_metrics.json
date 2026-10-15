@@ -24,7 +24,7 @@
     ],
     "raw_agreement_pct": 96.15,
     "cohens_kappa": 0.8587,
-    "discrepancies_resolved": 1
+    "discrepancies_resolved": 2
   },
   "object_identity_accuracy": {
     "raw_tracks": 78,
@@ -35,8 +35,9 @@
   },
   "displacement_measurement_uncertainty": {
     "tape_measure_sigma_m": 0.02,
-    "se2_registration_residual_sigma_m": 0.038,
-    "combined_uncertainty_sigma_m": 0.0429,
-    "significance_threshold_3sigma_m": 0.129
+    "se2_registration_residual_sigma_m": 0.1198,
+    "all_anchor_rms_residual_sigma_m": 0.3054,
+    "combined_uncertainty_sigma_m": 0.1215,
+    "significance_threshold_3sigma_m": 0.3644
   }
 }

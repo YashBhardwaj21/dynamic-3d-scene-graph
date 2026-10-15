@@ -21,8 +21,9 @@
     },
     "measurement_uncertainty": {
       "tape_measure_sigma_m": 0.02,
-      "ransac_registration_residual_m": 0.038,
-      "combined_displacement_uncertainty_m": 0.0429
+      "ransac_registration_residual_m": 0.1198,
+      "all_anchor_rms_residual_m": 0.3054,
+      "combined_displacement_uncertainty_m": 0.1215
     }
   },
   "statistics": {
