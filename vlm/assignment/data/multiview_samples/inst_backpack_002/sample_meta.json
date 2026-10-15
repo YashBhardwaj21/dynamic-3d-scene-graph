@@ -1,0 +1,57 @@
+{
+  "object_instance_id": "inst_backpack_002",
+  "semantic_class": "backpack",
+  "movability_gt": "MOVABLE",
+  "current_motion_gt": "STATIC",
+  "displacement_gt": 0.0,
+  "total_views": 2,
+  "angular_diversity_verified": true,
+  "views": [
+    {
+      "view_index": 0,
+      "frame_index": 4715,
+      "timestamp": 1791788866.4462,
+      "viewing_angle_deg": 192.71,
+      "camera_pose": [
+        1.7513,
+        -0.2117,
+        -0.6581,
+        -0.1546,
+        -0.4796,
+        -0.0769,
+        0.8603
+      ],
+      "sharpness_score": 700.94,
+      "crop_path": "inst_backpack_002/crop_view_0.jpg",
+      "scene_path": "inst_backpack_002/scene_view_0.jpg"
+    },
+    {
+      "view_index": 1,
+      "frame_index": 2960,
+      "timestamp": 1791788769.8716,
+      "viewing_angle_deg": 207.69,
+      "camera_pose": [
+        0.3278,
+        -0.0456,
+        -0.0175,
+        -0.1752,
+        -0.5467,
+        -0.0148,
+        0.8186
+      ],
+      "sharpness_score": 200.91,
+      "crop_path": "inst_backpack_002/crop_view_1.jpg",
+      "scene_path": "inst_backpack_002/scene_view_1.jpg"
+    }
+  ],
+  "conditions": {
+    "one_view": [
+      "inst_backpack_002/crop_view_0.jpg"
+    ],
+    "two_views": [
+      "inst_backpack_002/crop_view_0.jpg",
+      "inst_backpack_002/crop_view_1.jpg"
+    ],
+    "three_views": []
+  }
+}

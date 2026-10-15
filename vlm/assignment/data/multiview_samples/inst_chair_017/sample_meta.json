@@ -1,0 +1,36 @@
+{
+  "object_instance_id": "inst_chair_017",
+  "semantic_class": "chair",
+  "movability_gt": "MOVABLE",
+  "current_motion_gt": "STATIC",
+  "displacement_gt": 0.0,
+  "total_views": 1,
+  "angular_diversity_verified": false,
+  "views": [
+    {
+      "view_index": 0,
+      "frame_index": 4200,
+      "timestamp": 1791788830.8977,
+      "viewing_angle_deg": 204.82,
+      "camera_pose": [
+        4.4324,
+        -0.3322,
+        -0.1981,
+        -0.0454,
+        -0.9267,
+        -0.1047,
+        0.3581
+      ],
+      "sharpness_score": 1060.99,
+      "crop_path": "inst_chair_017/crop_view_0.jpg",
+      "scene_path": "inst_chair_017/scene_view_0.jpg"
+    }
+  ],
+  "conditions": {
+    "one_view": [
+      "inst_chair_017/crop_view_0.jpg"
+    ],
+    "two_views": [],
+    "three_views": []
+  }
+}

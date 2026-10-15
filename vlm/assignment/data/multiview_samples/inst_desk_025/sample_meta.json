@@ -1,0 +1,36 @@
+{
+  "object_instance_id": "inst_desk_025",
+  "semantic_class": "desk",
+  "movability_gt": "MOVABLE",
+  "current_motion_gt": "STATIC",
+  "displacement_gt": 0.0,
+  "total_views": 1,
+  "angular_diversity_verified": false,
+  "views": [
+    {
+      "view_index": 0,
+      "frame_index": 3250,
+      "timestamp": 1791788788.2794,
+      "viewing_angle_deg": 315.7,
+      "camera_pose": [
+        0.8969,
+        0.1552,
+        1.1883,
+        -0.1913,
+        0.3208,
+        0.0054,
+        0.9276
+      ],
+      "sharpness_score": 1212.68,
+      "crop_path": "inst_desk_025/crop_view_0.jpg",
+      "scene_path": "inst_desk_025/scene_view_0.jpg"
+    }
+  ],
+  "conditions": {
+    "one_view": [
+      "inst_desk_025/crop_view_0.jpg"
+    ],
+    "two_views": [],
+    "three_views": []
+  }
+}
