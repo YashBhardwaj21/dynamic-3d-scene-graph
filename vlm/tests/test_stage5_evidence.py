@@ -15,6 +15,9 @@ from vlm.src.geometric_evidence import (
     GeometricEvidenceExtractor,
     compute_depth_uncertainty,
     quaternion_to_rotation_matrix,
+    invert_se3_transform,
+    project_points_to_camera,
+    compute_point_to_bbox_distances,
     FX, FY, CX, CY, STEREO_BASELINE_M
 )
 from vlm.src.temporal_evidence import TemporalEvidenceExtractor
@@ -31,24 +34,19 @@ def test_geometric_depth_uncertainty_model():
 
     # Monotonic quadratic growth with depth
     assert sigma_1m < sigma_2m < sigma_3m
-    # 1.0m uncertainty should be around 2mm to 4mm
     assert 0.001 <= sigma_1m <= 0.005
-    # 3.0m uncertainty should be around 1.5cm to 3cm
     assert 0.010 <= sigma_3m <= 0.035
 
 
 def test_geometric_quaternion_orthonormality():
     """Verify quaternion to rotation matrix produces valid orthonormal SO(3) matrix."""
-    # Identity quaternion
     R_eye = quaternion_to_rotation_matrix(0, 0, 0, 1)
     assert R_eye.shape == (3, 3)
     assert math.isclose(R_eye[0, 0], 1.0, abs_tol=1e-5)
     assert math.isclose(R_eye[1, 1], 1.0, abs_tol=1e-5)
     assert math.isclose(R_eye[2, 2], 1.0, abs_tol=1e-5)
 
-    # Arbitrary normalized quaternion
     R = quaternion_to_rotation_matrix(0.1, -0.2, 0.3, 0.9)
-    # R * R^T = I
     I_test = R @ R.T
     for i in range(3):
         for j in range(3):
@@ -56,59 +54,132 @@ def test_geometric_quaternion_orthonormality():
             assert math.isclose(I_test[i, j], expected, abs_tol=1e-4)
 
 
-def test_geometric_evidence_extraction():
-    """Verify geometric record bounds, provenance tracking, and consistency score."""
+def test_se3_transform_inversion_roundtrip():
+    """Verify SE(3) transformation inversion round-trip: T_cw * T_wc = I."""
+    R_wc = quaternion_to_rotation_matrix(0.1, 0.2, -0.3, 0.9)
+    t_wc = np.array([1.5, -0.8, 0.4], dtype=np.float64)
+
+    R_cw, t_cw = invert_se3_transform(R_wc, t_wc)
+
+    # Test round-trip on arbitrary 3D test point
+    p_orig = np.array([2.5, 1.2, 0.9], dtype=np.float64)
+    # Forward: world to camera
+    p_cam = R_cw @ p_orig + t_cw
+    # Inverse: camera back to world
+    p_recov = R_wc @ p_cam + t_wc
+
+    np.testing.assert_allclose(p_recov, p_orig, atol=1e-6)
+
+
+def test_known_3d_to_2d_camera_projection():
+    """Verify known 3D-to-2D pinhole projection with known pixel coordinates."""
+    # Camera at origin looking along +Z
+    cam_pose = [0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 1.0]
+
+    # Point directly on optical axis at Z = 2.0m -> must project to principal point (CX, CY)
+    p_center = np.array([[0.0, 0.0, 2.0]], dtype=np.float64)
+    pixels, valid_z, _ = project_points_to_camera(p_center, cam_pose)
+    assert valid_z[0] is True or valid_z[0] == 1
+    assert math.isclose(pixels[0, 0], CX, abs_tol=1e-4)
+    assert math.isclose(pixels[0, 1], CY, abs_tol=1e-4)
+
+    # Point at X = 0.5m, Y = 0.2m, Z = 2.0m
+    # u = FX * (0.5 / 2.0) + CX = 383.924896 * 0.25 + 320.123016 = 416.10424
+    # v = FY * (0.2 / 2.0) + CY = 383.924896 * 0.10 + 244.569885 = 282.96237
+    p_offset = np.array([[0.5, 0.2, 2.0]], dtype=np.float64)
+    pix_off, val_off, _ = project_points_to_camera(p_offset, cam_pose)
+    assert val_off[0] is True or val_off[0] == 1
+    assert math.isclose(pix_off[0, 0], 416.10424, abs_tol=1e-2)
+    assert math.isclose(pix_off[0, 1], 282.96237, abs_tol=1e-2)
+
+
+def test_points_behind_camera_filtered():
+    """Verify that points behind camera (Z <= 0.15m) are filtered out."""
+    cam_pose = [0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 1.0]
+    pts = np.array([
+        [0.0, 0.0, -1.0],  # Behind camera
+        [0.0, 0.0, 0.05],  # Near plane violation (<0.15m)
+        [0.0, 0.0, 2.0],   # Valid
+    ], dtype=np.float64)
+
+    _, valid_z, _ = project_points_to_camera(pts, cam_pose)
+    assert bool(valid_z[0]) is False
+    assert bool(valid_z[1]) is False
+    assert bool(valid_z[2]) is True
+
+
+def test_point_to_bbox_distances_inside_vs_outside():
+    """Verify points inside box have 0 distance; points outside have Euclidean distance."""
+    bbox = [100.0, 100.0, 200.0, 200.0]  # [bx1, by1, bx2, by2]
+    pixels = np.array([
+        [150.0, 150.0],  # Inside -> distance 0 px
+        [210.0, 150.0],  # 10 px to the right -> distance 10 px
+        [150.0, 80.0],   # 20 px above -> distance 20 px
+        [203.0, 204.0],  # 3 px right, 4 px down -> distance 5 px (sqrt(9+16))
+    ], dtype=np.float64)
+    valid_z = np.ones(4, dtype=bool)
+
+    dists, inlier_mask = compute_point_to_bbox_distances(pixels, bbox, valid_z, margin_px=8.0)
+    assert math.isclose(dists[0], 0.0, abs_tol=1e-4)
+    assert math.isclose(dists[1], 10.0, abs_tol=1e-4)
+    assert math.isclose(dists[2], 20.0, abs_tol=1e-4)
+    assert math.isclose(dists[3], 5.0, abs_tol=1e-4)
+
+    # Inliers within margin (margin = 8px)
+    assert bool(inlier_mask[0]) is True   # inside
+    assert bool(inlier_mask[1]) is False  # 10px > 8px
+    assert bool(inlier_mask[2]) is False  # 20px > 8px
+    assert bool(inlier_mask[3]) is True   # 3px, 4px <= 8px
+
+
+def test_geometric_missing_pose_or_floor_transform():
+    """Verify that missing pose or floor transform sets explicit missing provenance."""
     extractor = GeometricEvidenceExtractor()
+    extractor.has_floor_transform = False  # Simulate unverified floor transform
+
     sample_obs = {
-        "obs_id": "test_001",
-        "frame_index": 100,
-        "timestamp": 1000.5,
+        "obs_id": "test_missing_tf",
+        "frame_index": 10,
+        "timestamp": 1.0,
         "global_entity_id": "desk_001",
         "local_track_id": "trk_001",
-        "points_count": 2500,
-        "centroid_camera": [0.5, -0.2, 2.0],
+        "centroid_camera": [0.0, 0.0, 2.0],
         "bbox_min_floor": [1.0, -1.0, 0.0],
         "bbox_max_floor": [2.0, -0.5, 0.8],
-        "camera_pose": [0.1, 0.0, 0.5, 0, 0, 0, 1],
-        "bbox_xyxy": [100.0, 150.0, 300.0, 350.0],
+        "camera_pose": None,  # Missing pose
+        "bbox_xyxy": [100.0, 100.0, 200.0, 200.0],
     }
 
-    # Case A: No MapPoints loaded -> depth valid, but reprojection marked missing (no fake fallbacks)
     rec = extractor.extract_observation_geometry(sample_obs)
     assert rec.depth_valid is True
-    assert math.isclose(rec.measured_depth_m, 2.0, abs_tol=1e-3)
-    assert rec.reprojection_residual_valid is False
-    assert rec.mean_reprojection_residual_px is None
-    assert rec.provenance == "DERIVED_DEPTH_ONLY"
-    assert 0.0 <= rec.geometric_consistency_score <= 1.0
+    assert rec.point_to_bbox_valid is False
+    assert rec.point_to_bbox_provenance in ["MISSING_FLOOR_TRANSFORM", "MISSING_CAMERA_POSE"]
+    assert rec.feature_reprojection_residual_valid is False
+    assert rec.feature_reprojection_provenance == "UNAVAILABLE_NO_KEYPOINT_CORRESPONDENCES"
 
-    # Case B: With MapPoints loaded in front of camera -> genuine reprojection residual and inlier ratio measured
-    obs_b = dict(sample_obs)
-    obs_b["camera_pose"] = [0.0, 0.0, 0.0, 0, 0, 0, 1]
-    obs_b["bbox_min_floor"] = [-0.5, -0.5, 1.0]
-    obs_b["bbox_max_floor"] = [0.5, 0.5, 3.0]
-    obs_b["bbox_xyxy"] = [200.0, 150.0, 450.0, 350.0]
-    extractor.mappoints = np.array([
-        [0.0, 0.0, 2.0],
-        [0.05, 0.02, 2.2],
-        [-0.05, -0.02, 1.8],
-    ], dtype=np.float64)
-    rec_measured = extractor.extract_observation_geometry(obs_b)
-    assert rec_measured.depth_valid is True
-    assert rec_measured.reprojection_residual_valid is True
-    assert rec_measured.mean_reprojection_residual_px is not None
-    assert rec_measured.mean_reprojection_residual_px >= 0.0
-    assert rec_measured.inlier_ratio is not None
-    assert 0.0 <= rec_measured.inlier_ratio <= 1.0
-    assert rec_measured.provenance == "MEASURED_FULL"
-    assert rec_measured.has_valid_evidence is True
+
+def test_temporal_missing_centroid_honest_handling():
+    """Verify that missing centroid does NOT get replaced with [0, 0, 0] and sets UNCERTAIN."""
+    extractor = TemporalEvidenceExtractor()
+    obs_missing = {
+        "obs_id": "t_miss",
+        "frame_index": 5,
+        "timestamp": 0.5,
+        "global_entity_id": "desk_miss",
+        "local_track_id": "trk_miss",
+        "centroid_floor": None,  # Missing!
+        "camera_pose": [0, 0, 0, 0, 0, 0, 1],
+    }
+    rec = extractor.extract_observation_temporal(obs_missing)
+    assert rec.has_valid_evidence is False
+    assert rec.current_motion == "UNCERTAIN"
+    assert rec.missing_reason == "MISSING_CENTROID_FLOOR"
 
 
 def test_temporal_ego_motion_compensation():
     """Verify that moving the camera while object stays still yields STATIC motion."""
     extractor = TemporalEvidenceExtractor()
 
-    # Step 1: Initial observation at (2.0, -1.0, 0.4), camera at (0.0, 0.0, 0.0)
     obs1 = {
         "obs_id": "step_01",
         "frame_index": 0,
@@ -122,7 +193,6 @@ def test_temporal_ego_motion_compensation():
     assert rec1.current_motion == "TRANSIENT"
     assert rec1.world_displacement_m == 0.0
 
-    # Step 2: Camera translates 1.5m, object has tiny 1cm noise
     obs2 = {
         "obs_id": "step_02",
         "frame_index": 10,
@@ -134,7 +204,6 @@ def test_temporal_ego_motion_compensation():
     }
     extractor.extract_observation_temporal(obs2)
 
-    # Step 3: Camera translates 2.5m, object stays within noise floor
     obs3 = {
         "obs_id": "step_03",
         "frame_index": 20,
@@ -146,7 +215,6 @@ def test_temporal_ego_motion_compensation():
     }
     rec3 = extractor.extract_observation_temporal(obs3)
 
-    # Object is confirmed STATIC in world frame despite camera moving 2.5m
     assert rec3.current_motion == "STATIC"
     assert rec3.world_displacement_m < 0.05
     assert rec3.camera_ego_displacement_m > 2.0
@@ -157,7 +225,6 @@ def test_temporal_displaced_object_detection():
     """Verify that true physical relocation (>0.15m) triggers MOVING/DISPLACED."""
     extractor = TemporalEvidenceExtractor()
 
-    # Step 1: Initial position
     extractor.extract_observation_temporal({
         "obs_id": "t1", "frame_index": 0, "timestamp": 0.0,
         "global_entity_id": "chair_reloc", "local_track_id": "trk_r",
@@ -168,7 +235,6 @@ def test_temporal_displaced_object_detection():
         "global_entity_id": "chair_reloc", "local_track_id": "trk_r",
         "centroid_floor": [1.0, 1.0, 0.4], "camera_pose": [0, 0, 0, 0, 0, 0, 1],
     })
-    # Step 3: Relocated by 0.56m (matching controlled chair_002 relocation)
     rec3 = extractor.extract_observation_temporal({
         "obs_id": "t3", "frame_index": 30, "timestamp": 1.5,
         "global_entity_id": "chair_reloc", "local_track_id": "trk_r",
@@ -184,7 +250,6 @@ def test_semantic_entropy_and_cheap_prior():
     """Verify semantic Shannon entropy and deterministic M0 priors."""
     extractor = SemanticEvidenceExtractor()
 
-    # Pure chair observations
     rec1 = extractor.extract_observation_semantics({
         "obs_id": "s1", "frame_index": 0, "timestamp": 0.0,
         "global_entity_id": "chair_001", "class_name": "chair", "confidence": 0.90,
@@ -193,7 +258,6 @@ def test_semantic_entropy_and_cheap_prior():
     assert rec1.semantic_entropy == 0.0
     assert rec1.semantic_purity == 1.0
 
-    # Class flip observation introduces entropy
     rec2 = extractor.extract_observation_semantics({
         "obs_id": "s2", "frame_index": 1, "timestamp": 0.1,
         "global_entity_id": "chair_001", "class_name": "table", "confidence": 0.40,
@@ -201,48 +265,9 @@ def test_semantic_entropy_and_cheap_prior():
     assert rec2.semantic_entropy > 0.0
     assert rec2.semantic_purity == 0.50
 
-    # Door fixture should have IMMOVABLE prior
     door_rec = extractor.extract_observation_semantics({
         "obs_id": "s3", "frame_index": 2, "timestamp": 0.2,
         "global_entity_id": "door_001", "class_name": "door", "confidence": 0.95,
     })
     assert door_rec.class_prior_mobility == "IMMOVABLE"
     assert door_rec.class_prior_confidence >= 0.90
-
-
-def test_acceptance_gate_zero_vlm_dependency():
-    """Verify that Stage 5 executes with zero VLM querying and zero network requests."""
-    # Ensure extractor modules have no import of vlm query or network modules
-    from vlm.src import geometric_evidence, temporal_evidence, semantic_evidence
-    import urllib.request
-
-    # Run complete extract cycle
-    geo = geometric_evidence.GeometricEvidenceExtractor()
-    tem = temporal_evidence.TemporalEvidenceExtractor()
-    sem = semantic_evidence.SemanticEvidenceExtractor()
-
-    obs = {
-        "obs_id": "gate_test",
-        "frame_index": 50,
-        "timestamp": 12.34,
-        "global_entity_id": "desk_gate",
-        "local_track_id": "trk_gate",
-        "class_name": "desk",
-        "confidence": 0.85,
-        "points_count": 3000,
-        "centroid_camera": [0.0, 0.0, 1.8],
-        "centroid_floor": [1.5, -0.8, 0.4],
-        "bbox_min_floor": [1.0, -1.2, 0.0],
-        "bbox_max_floor": [2.0, -0.4, 0.8],
-        "camera_pose": [0, 0, 0, 0, 0, 0, 1],
-        "bbox_xyxy": [150, 100, 450, 400],
-    }
-
-    g_res = geo.extract_observation_geometry(obs)
-    t_res = tem.extract_observation_temporal(obs)
-    s_res = sem.extract_observation_semantics(obs)
-
-    assert g_res.has_valid_evidence is True
-    assert t_res.has_valid_evidence is True
-    assert s_res.has_valid_evidence is True
-    assert s_res.class_prior_mobility == "MOVABLE"

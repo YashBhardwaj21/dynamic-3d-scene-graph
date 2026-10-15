@@ -1,9 +1,9 @@
 """Stage 5: Integrated Pipeline for Non-VLM Pre-Routing Evidence Generation.
 
 Coordinates:
-- Geometric evidence extraction (MapPoints, reprojections, depth uncertainty, inliers).
-- Temporal evidence extraction (ego-motion compensation, world displacement, persistence).
-- Semantic evidence extraction (YOLOE detections, entropy, cheap priors).
+- Geometric evidence extraction (MapPoints, point_to_bbox consistency, depth uncertainty, inliers).
+- Temporal evidence extraction (world-relative displacement, ego-motion compensation, persistence).
+- Semantic evidence extraction (YOLOE detections, Shannon entropy, class priors).
 - Exports timestamp-aligned records strictly into vlm/outputs/.
 """
 
@@ -68,8 +68,8 @@ def run_stage5_pipeline(
     sem_out_path = output_dir / "stage5_semantic_evidence.jsonl"
     fused_out_path = output_dir / "stage5_fused_evidence.jsonl"
 
-    print(f"Loading MapPoints from: {mappoints_ply_path}")
-    geo_extractor = GeometricEvidenceExtractor(mappoints_ply_path)
+    print(f"Initializing multi-session GeometricEvidenceExtractor (repo: {repo_root})")
+    geo_extractor = GeometricEvidenceExtractor(mappoints_ply_path, repo_root=repo_root)
     temp_extractor = TemporalEvidenceExtractor()
     sem_extractor = SemanticEvidenceExtractor()
 
@@ -103,6 +103,13 @@ def run_stage5_pipeline(
             t_dict = temp_rec.to_dict()
             s_dict = sem_rec.to_dict()
 
+            # Dynamic evidence completeness check (never hardcoded True)
+            depth_valid = bool(g_dict.get("depth_valid", False))
+            pose_valid = bool(obs.get("has_valid_pose", False) and obs.get("camera_pose") is not None)
+            cfloor_valid = bool(obs.get("centroid_floor") is not None and len(obs.get("centroid_floor")) >= 3)
+            sem_valid = bool(s_dict.get("yoloe_class_name") != "unknown" and s_dict.get("class_prior_mobility") != "UNKNOWN")
+            evidence_complete = bool(depth_valid and pose_valid and cfloor_valid and sem_valid)
+
             # Fused comprehensive evidence record for the router
             fused_dict = {
                 "obs_id": obs.get("obs_id", ""),
@@ -111,16 +118,20 @@ def run_stage5_pipeline(
                 "entity_id": obs.get("global_entity_id", ""),
                 "track_id": obs.get("local_track_id", ""),
                 "source_session": obs.get("source_session", ""),
+                "has_valid_evidence": geo_rec.has_valid_evidence and temp_rec.has_valid_evidence,
                 # Geometry branch
                 "geometry": {
                     "depth_valid": g_dict["depth_valid"],
                     "measured_depth_m": g_dict["measured_depth_m"],
                     "depth_uncertainty_sigma_m": g_dict["depth_uncertainty_sigma_m"],
+                    "point_to_bbox_valid": g_dict["point_to_bbox_valid"],
+                    "point_to_bbox_distance_px": g_dict["point_to_bbox_distance_px"],
+                    "point_to_bbox_inlier_ratio": g_dict["point_to_bbox_inlier_ratio"],
                     "inlier_ratio": g_dict["inlier_ratio"],
                     "mean_residual_px": g_dict["mean_reprojection_residual_px"],
-                    "p95_residual_px": g_dict["p95_reprojection_residual_px"],
                     "landmark_support": g_dict["landmark_support_count"],
                     "geometric_consistency_score": g_dict["geometric_consistency_score"],
+                    "provenance": g_dict["provenance"],
                 },
                 # Temporal branch
                 "temporal": {
@@ -134,6 +145,7 @@ def run_stage5_pipeline(
                     "occlusion_events_count": t_dict["occlusion_events_count"],
                     "is_reappearance_after_occlusion": t_dict["is_reappearance_after_occlusion"],
                     "temporal_persistence_score": t_dict["temporal_persistence_score"],
+                    "missing_reason": t_dict.get("missing_reason"),
                 },
                 # Semantic branch
                 "semantics": {
@@ -147,7 +159,7 @@ def run_stage5_pipeline(
                 },
                 # Router readiness summary
                 "router_summary": {
-                    "evidence_complete": True,
+                    "evidence_complete": evidence_complete,
                     "requires_vlm_query": (
                         t_dict["current_motion"] in ["MOVING", "DISPLACED"]
                         or s_dict["semantic_entropy"] > 0.45

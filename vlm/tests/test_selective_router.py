@@ -1,4 +1,4 @@
-"""Unit tests for Stage 6 Selective Router Policy and Dispatcher."""
+"""Unit tests for Stage 6 Selective Router Policy, Dispatcher, and Adapter."""
 
 import pytest
 import sys
@@ -11,6 +11,7 @@ sys.path.insert(0, str(root_dir / "vlm"))
 
 from vlm.src.router_policy import evaluate_router_policy, RouterDecision
 from vlm.src.selective_router import SelectiveRouter, clean_json_text, parse_vlm_output
+from vlm.src.stage5_adapter import Stage5EvidenceAdapter
 
 
 def test_gate1_invalid_pose_deferred():
@@ -174,4 +175,69 @@ def test_router_output_contract():
     assert res["decision"] == "RESOLVE_CHEAP"
     assert res["prediction"] == "MOVABLE"
     assert not res["abstained"]
-    assert res["decision_latency_ms"] < 5.0  # Must be fast sub-millisecond execution
+    assert res["decision_latency_ms"] < 5.0
+
+
+def test_stage5_adapter_zero_leakage():
+    """Verify that Stage5EvidenceAdapter produces evidence WITHOUT target ground truth fields."""
+    adapter = Stage5EvidenceAdapter(repo_root=root_dir)
+    manifest_entry = {
+        "entity_id": "inst_chair_002",
+        "s1_obs_id": "chair_002",
+        "s2_obs_id": "chair_001",
+        "semantic_class": "chair",
+        "contextual_movability_gt": "MOVABLE",
+        "observed_motion_gt": "DISPLACED",
+        "expected_decision": "ESCALATE",
+        "expected_reason": "SIGNIFICANT_DISPLACEMENT_AFFORDANCE_UNRESOLVED",
+        "has_images": True,
+        "views_count": 1,
+        "crops_dir": "vlm/outputs/multiview_samples/inst_chair_002",
+    }
+
+    evidence = adapter.build_instance_evidence(manifest_entry)
+
+    # Benchmark target fields MUST be absent from routing evidence
+    forbidden_keys = [
+        "contextual_movability_gt",
+        "observed_motion_gt",
+        "expected_decision",
+        "expected_reason",
+    ]
+    for k in forbidden_keys:
+        assert k not in evidence
+
+    # Estimated fields must be present and correctly typed
+    assert evidence["entity_id"] == "inst_chair_002"
+    assert evidence["semantic_class"] == "chair"
+    assert isinstance(evidence["world_displacement_m"], float)
+    assert evidence["world_displacement_m"] > 0.30  # Estimated displacement from real observations
+    assert evidence["observed_motion"] in ["DISPLACED", "MOVING"]
+    assert evidence["has_valid_pose"] is True
+    assert evidence["depth_valid"] is True
+
+
+def test_vlm_output_validation_and_safe_fallback():
+    """Verify that malformed or adversarial VLM outputs fail gracefully."""
+    # Case 1: Malformed JSON
+    res, is_json, is_schema = parse_vlm_output("not valid json at all", "inst_01", "chair")
+    assert not is_json
+    assert not is_schema
+    assert res["abstain"] is True
+    assert res["movability"] == "UNKNOWN"
+
+    # Case 2: Invalid movability label (e.g. "FRUIT")
+    raw_invalid = '{"object_id": "inst_01", "object_class": "chair", "movability": "FRUIT"}'
+    res2, is_json2, is_schema2 = parse_vlm_output(raw_invalid, "inst_01", "chair")
+    assert is_json2
+    assert res2["abstain"] is True
+    assert res2["movability"] == "UNKNOWN"
+
+    # Case 3: Valid structured response
+    raw_valid = '{"object_id": "inst_01", "object_class": "chair", "movability": "MOVABLE", "abstain": false, "physical_support": "freestanding_on_surface"}'
+    res3, is_json3, is_schema3 = parse_vlm_output(raw_valid, "inst_01", "chair")
+    assert is_json3
+    assert is_schema3
+    assert res3["abstain"] is False
+    assert res3["movability"] == "MOVABLE"
+    assert res3["physical_support"] == "freestanding_on_surface"

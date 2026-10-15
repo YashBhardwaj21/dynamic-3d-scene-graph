@@ -3,6 +3,11 @@
 Aggregates evidence at the physical object instance level, checks validity gates,
 executes deterministic routing policies, and selectively dispatches ambiguous
 cases to the local VLM (Qwen2.5-VL-3B-Instruct) using M3 structured affordance prompting.
+
+Includes:
+- Robust SHA-256 cache fingerprinting based on evidence, prompt, model, and image contents.
+- Strict schema and ID validation preventing malformed VLM outputs from corrupting predictions.
+- Explicit query, execution, cache, and validation telemetry.
 """
 
 from __future__ import annotations
@@ -28,6 +33,7 @@ from vlm.src.router_policy import RouterDecision, evaluate_router_policy
 CLASSES = ["IMMOVABLE", "MOVABLE", "MOBILE"]
 DEFAULT_SERVER_URL = "http://127.0.0.1:8089/v1/chat/completions"
 DEFAULT_MODEL_NAME = "Qwen2.5-VL-3B-Instruct (GGUF Q4_K_M)"
+PROMPT_TEMPLATE_VERSION = "v1_structured_affordance"
 
 
 def encode_image(path: Path, max_dim: int = 240) -> str:
@@ -37,6 +43,15 @@ def encode_image(path: Path, max_dim: int = 240) -> str:
     buf = io.BytesIO()
     im.save(buf, format="JPEG", quality=80)
     return base64.b64encode(buf.getvalue()).decode("utf-8")
+
+
+def hash_file_sha256(path: Path) -> str:
+    """Compute SHA-256 hash of a file's raw contents."""
+    h = hashlib.sha256()
+    with open(path, "rb") as f:
+        while chunk := f.read(65536):
+            h.update(chunk)
+    return h.hexdigest()[:16]
 
 
 def clean_json_text(text: str) -> str:
@@ -203,13 +218,18 @@ class SelectiveRouter:
             "reason_codes": decision.reason_codes,
             "evidence_valid": (decision.decision != "DEFER"),
             "evidence_provenance": provenance,
+            "vlm_query_requested": decision.vlm_required,
+            "vlm_inference_executed": False,
+            "vlm_cache_hit": False,
+            "vlm_output_valid": True,
+            "vlm_prediction_accepted": True,
             "vlm_required": decision.vlm_required,
             "vlm_model": self.model_name if decision.vlm_required else None,
             "views_used": 0,
             "prediction": decision.cheap_label,
             "abstained": (decision.decision in ["DEFER", "ABSTAIN"]),
             "decision_latency_ms": round(t_pol_elapsed_ms, 3),
-            "inference_latency_ms": None,
+            "inference_latency_ms": 0.0,
             "token_usage": None,
         }
 
@@ -233,20 +253,7 @@ class SelectiveRouter:
             result["abstained"] = True
             return result
 
-        # Check Cache
-        ev_hash = hashlib.md5(json.dumps(evidence, sort_keys=True, default=str).encode()).hexdigest()[:12]
-        cache_key = f"{entity_id}_{ev_hash}"
-
-        if cache_key in self.cache:
-            cached = self.cache[cache_key]
-            result["prediction"] = cached.get("movability")
-            result["abstained"] = cached.get("abstain", False)
-            result["views_used"] = cached.get("total_views", 1)
-            result["inference_latency_ms"] = round(cached.get("latency_s", 0.0) * 1000.0, 2)
-            result["token_usage"] = cached.get("token_usage")
-            return result
-
-        # Execute Live VLM Query
+        # Resolve image crops directory
         crops_dir = evidence.get("crops_dir")
         if repo_root and crops_dir:
             sample_dir = repo_root / crops_dir
@@ -256,6 +263,42 @@ class SelectiveRouter:
             sample_dir = None
 
         views_to_use = min(views_count, 2) if views_count > 0 else 1
+
+        # Compute robust image content hash
+        img_hashes = []
+        if sample_dir and sample_dir.exists():
+            for v_idx in range(views_to_use):
+                c_p = sample_dir / f"crop_view_{v_idx}.jpg"
+                s_p = sample_dir / f"scene_view_{v_idx}.jpg"
+                if c_p.exists():
+                    img_hashes.append(hash_file_sha256(c_p))
+                if s_p.exists():
+                    img_hashes.append(hash_file_sha256(s_p))
+
+        # Check Cache with full fingerprint
+        cache_data = {
+            "entity_id": entity_id,
+            "semantic_class": sem_class,
+            "model_name": self.model_name,
+            "prompt_version": PROMPT_TEMPLATE_VERSION,
+            "views_to_use": views_to_use,
+            "img_hashes": img_hashes,
+        }
+        cache_key = hashlib.sha256(json.dumps(cache_data, sort_keys=True).encode()).hexdigest()[:20]
+
+        if cache_key in self.cache:
+            cached = self.cache[cache_key]
+            result["vlm_cache_hit"] = True
+            result["prediction"] = cached.get("movability")
+            result["abstained"] = cached.get("abstain", False)
+            result["views_used"] = cached.get("total_views", 1)
+            result["inference_latency_ms"] = round(cached.get("latency_s", 0.0) * 1000.0, 2)
+            result["token_usage"] = cached.get("token_usage")
+            return result
+
+        # Execute Live VLM Query
+        result["vlm_inference_executed"] = True
+
         prompt = (
             f"You are evaluating physical mounting affordance and contextual movability for an indoor object.\n"
             f"Object ID: {entity_id}\n"
@@ -293,11 +336,15 @@ class SelectiveRouter:
             parsed, is_json, is_schema = parse_vlm_output(raw_text, entity_id, sem_class)
             pred = parsed.get("movability", "UNKNOWN")
             abstained = parsed.get("abstain", False) or pred == "UNKNOWN"
+            result["vlm_output_valid"] = is_json and is_schema
+            result["vlm_prediction_accepted"] = (not abstained and pred in CLASSES)
         except Exception as e:
             lat_s = 0.0
             usage = {"error": str(e)}
             pred = "UNKNOWN"
             abstained = True
+            result["vlm_output_valid"] = False
+            result["vlm_prediction_accepted"] = False
 
         result["prediction"] = pred
         result["abstained"] = abstained
@@ -305,7 +352,7 @@ class SelectiveRouter:
         result["inference_latency_ms"] = round(lat_s * 1000.0, 2)
         result["token_usage"] = usage
 
-        # Cache result
+        # Cache result under fingerprint
         self.cache[cache_key] = {
             "entity_id": entity_id,
             "movability": pred,

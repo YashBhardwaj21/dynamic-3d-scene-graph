@@ -23,6 +23,7 @@ if sys.stdout and hasattr(sys.stdout, "reconfigure"):
         pass
 
 from vlm.src.selective_router import SelectiveRouter
+from vlm.src.stage5_adapter import Stage5EvidenceAdapter
 
 
 CLASSES = ["IMMOVABLE", "MOVABLE", "MOBILE"]
@@ -141,55 +142,46 @@ def run_selective_router_evaluation(
         enable_vlm=enable_vlm,
     )
 
+    adapter = Stage5EvidenceAdapter(repo_root=repo_root)
     instances = manifest["evaluation_instances"]
     print(f"\nEvaluating Selective Router on {len(instances)} physical instances (VLM Enabled: {enable_vlm})...")
 
     results = []
     for inst in instances:
-        evidence = {
-            "entity_id": inst["entity_id"],
-            "semantic_class": inst["semantic_class"],
-            "observed_motion": inst["observed_motion_gt"],
-            "world_displacement_m": 0.563 if inst["observed_motion_gt"] == "DISPLACED" and "chair_002" in inst["entity_id"] else (
-                0.386 if inst["observed_motion_gt"] == "DISPLACED" and "chair_003" in inst["entity_id"] else (
-                    0.396 if inst["observed_motion_gt"] == "DISPLACED" else 0.02
-                )
-            ),
-            "displacement_uncertainty_m": 0.04,
-            "has_valid_pose": True,
-            "depth_valid": True,
-            "has_images": inst["has_images"],
-            "views_count": inst["views_count"],
-            "crops_dir": inst["crops_dir"],
-        }
+        # Obtain evidence strictly through Stage 5 adapter (zero ground-truth leakage)
+        evidence = adapter.build_instance_evidence(inst)
+        routed = router.route_entity(evidence, repo_root=repo_root)
 
-        res = router.route_entity(evidence, repo_root=repo_root)
-        res["ground_truth"] = inst["contextual_movability_gt"]
-        res["observed_motion_gt"] = inst["observed_motion_gt"]
-        results.append(res)
-
-        status_flag = "CHEAP" if res["decision"] == "RESOLVE_CHEAP" else ("VLM-QUERY" if res["decision"] == "ESCALATE" else "DEFER")
-        print(f"  • {inst['entity_id']:<26} [{inst['semantic_class']:<14}] -> {res['decision']:<14} | Pred={res['prediction']} (GT={inst['contextual_movability_gt']}) | {status_flag}")
+        routed["ground_truth"] = inst["contextual_movability_gt"]
+        routed["semantic_class"] = inst["semantic_class"]
+        results.append(routed)
 
     metrics = compute_metrics(results)
-    output_dir = repo_root / "vlm" / "outputs" / "stage6"
-    output_dir.mkdir(parents=True, exist_ok=True)
+    out_dir = repo_root / "vlm" / "outputs" / "stage6"
+    out_dir.mkdir(parents=True, exist_ok=True)
+    suffix = "vlm_enabled" if enable_vlm else "vlm_disabled"
+    out_json = out_dir / f"router_evaluation_{suffix}.json"
 
     summary = {
-        "evaluation_title": "Stage 6 Selective Router Evaluation",
+        "evaluation_name": f"Stage 6 Selective Router ({suffix})",
         "timestamp": time.time(),
-        "enable_vlm": enable_vlm,
         "metrics": metrics,
-        "evaluation_records": results,
+        "records": results,
     }
 
-    out_file = output_dir / ("router_evaluation_vlm_enabled.json" if enable_vlm else "router_evaluation_cheap_only.json")
-    with open(out_file, "w", encoding="utf-8") as f:
+    with open(out_json, "w", encoding="utf-8") as f:
         json.dump(summary, f, indent=2)
-    print(f"\nSaved evaluation metrics to: {out_file}")
+
+    print(f"Results saved to: {out_json}")
+    print(f"  • Balanced Accuracy: {metrics['quality']['balanced_accuracy']*100:.1f}%")
+    print(f"  • Macro-F1:          {metrics['quality']['macro_f1']*100:.1f}%")
+    print(f"  • VLM Query Rate:    {metrics['efficiency']['vlm_query_rate_pct']}% ({metrics['efficiency']['vlm_queries_invoked']}/{metrics['efficiency']['total_instances']})")
+    print(f"  • Mean Latency:      {metrics['efficiency']['end_to_end_latency_s']['mean']:.2f} s")
+    print(f"  • Abstention Rate:   {metrics['quality']['abstention_rate_pct']}%")
 
     return summary
 
 
 if __name__ == "__main__":
-    run_selective_router_evaluation(enable_vlm=True)
+    enable = "--no-vlm" not in sys.argv
+    run_selective_router_evaluation(enable_vlm=enable)

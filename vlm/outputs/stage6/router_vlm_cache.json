@@ -223,5 +223,65 @@
         "cached_tokens": 0
       }
     }
+  },
+  "82bff002be761dcbc552": {
+    "entity_id": "inst_ceiling_fan_001",
+    "movability": "IMMOVABLE",
+    "abstain": false,
+    "total_views": 1,
+    "latency_s": 15.872989892959595,
+    "token_usage": {
+      "completion_tokens": 57,
+      "prompt_tokens": 292,
+      "total_tokens": 349,
+      "prompt_tokens_details": {
+        "cached_tokens": 291
+      }
+    }
+  },
+  "14012f7c4c825ca0b69d": {
+    "entity_id": "inst_chair_002",
+    "movability": "MOVABLE",
+    "abstain": false,
+    "total_views": 1,
+    "latency_s": 6.396125793457031,
+    "token_usage": {
+      "completion_tokens": 54,
+      "prompt_tokens": 301,
+      "total_tokens": 355,
+      "prompt_tokens_details": {
+        "cached_tokens": 300
+      }
+    }
+  },
+  "d5a0cca4ad165a0394b6": {
+    "entity_id": "inst_storage_box_007",
+    "movability": "MOVABLE",
+    "abstain": false,
+    "total_views": 2,
+    "latency_s": 6.81728982925415,
+    "token_usage": {
+      "completion_tokens": 55,
+      "prompt_tokens": 389,
+      "total_tokens": 444,
+      "prompt_tokens_details": {
+        "cached_tokens": 388
+      }
+    }
+  },
+  "1bf8f288a387640874be": {
+    "entity_id": "inst_pedestal_fan_001",
+    "movability": "MOVABLE",
+    "abstain": false,
+    "total_views": 1,
+    "latency_s": 6.81585693359375,
+    "token_usage": {
+      "completion_tokens": 60,
+      "prompt_tokens": 311,
+      "total_tokens": 371,
+      "prompt_tokens_details": {
+        "cached_tokens": 310
+      }
+    }
   }
 }

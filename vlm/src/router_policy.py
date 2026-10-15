@@ -3,6 +3,10 @@
 This module contains pure, deterministic decision logic. It accepts structured
 evidence and returns a decision plus machine-readable reasons without invoking
 a VLM, accessing files, or altering state estimators.
+
+Gates:
+  Gate 1 (Estimator & Evidence Validity): Check coordinate frames, depth, and pose.
+  Gate 2 (Visual Context Utility): Check image availability if escalation is needed.
 """
 
 from __future__ import annotations
@@ -14,7 +18,7 @@ from typing import Any, Dict, List, Literal, Optional
 DecisionType = Literal["RESOLVE_CHEAP", "ESCALATE", "DEFER", "ABSTAIN"]
 
 CANONICAL_IMMOVABLE = {
-    "door", "wall", "ceiling fan", "window", "floor", "ceiling", "pillar", "whiteboard"
+    "door", "wall", "ceiling fan", "window", "floor", "ceiling", "pillar"
 }
 
 CANONICAL_MOBILE = {
@@ -58,28 +62,25 @@ class RouterDecision:
 
 
 def evaluate_router_policy(evidence: Dict[str, Any]) -> RouterDecision:
-    """Evaluate pure deterministic routing policy on an aggregated entity evidence record.
-
-    Gates:
-      Gate 1 (Estimator & Evidence Validity): Check coordinate frames, depth, and pose.
-      Gate 2 (Visual Context Utility): Check image availability if escalation is needed.
-    """
+    """Evaluate pure deterministic routing policy on an aggregated entity evidence record."""
     entity_id = str(evidence.get("entity_id", "unknown"))
     sem_class = str(evidence.get("semantic_class", "object")).lower().strip()
     prior_mobility = evidence.get("class_prior_mobility")
     observed_motion = str(evidence.get("observed_motion", "STATIC")).upper()
-    world_disp = float(evidence.get("world_displacement_m", 0.0) or 0.0)
-    disp_sigma = float(evidence.get("displacement_uncertainty_m", 0.04) or 0.04)
+    world_disp = evidence.get("world_displacement_m")
+    disp_sigma = evidence.get("displacement_uncertainty_m", 0.04) or 0.04
     semantic_entropy = float(evidence.get("semantic_entropy", 0.0) or 0.0)
-    has_valid_depth = bool(evidence.get("depth_valid", True))
-    has_valid_pose = bool(evidence.get("has_valid_pose", True))
+
+    # Pose and depth validity checks
+    has_valid_pose = evidence.get("has_valid_pose")
+    has_valid_depth = evidence.get("depth_valid")
     has_images = bool(evidence.get("has_images", False))
     views_count = int(evidence.get("views_count", 0))
 
     # -------------------------------------------------------------
     # GATE 1: Estimator & Evidence Validity Check
     # -------------------------------------------------------------
-    if not has_valid_pose:
+    if has_valid_pose is False:
         return RouterDecision(
             entity_id=entity_id,
             decision="DEFER",
@@ -89,7 +90,7 @@ def evaluate_router_policy(evidence: Dict[str, Any]) -> RouterDecision:
             confidence=0.0,
         )
 
-    if not has_valid_depth and observed_motion in ["MOVING", "DISPLACED"]:
+    if has_valid_depth is False and observed_motion in ["MOVING", "DISPLACED"]:
         return RouterDecision(
             entity_id=entity_id,
             decision="DEFER",
@@ -117,13 +118,15 @@ def evaluate_router_policy(evidence: Dict[str, Any]) -> RouterDecision:
     # -------------------------------------------------------------
     # Rule B: Check for Significant Physical Relocation / Motion
     # -------------------------------------------------------------
-    is_significantly_displaced = (
-        world_disp >= MIN_SIGNIFICANT_DISPLACEMENT_M
-        and world_disp >= 3.0 * max(0.02, disp_sigma)
-        and observed_motion in ["DISPLACED", "MOVING"]
-    )
-
-    if is_significantly_displaced:
+    if world_disp is not None:
+        is_significantly_displaced = (
+            world_disp >= MIN_SIGNIFICANT_DISPLACEMENT_M
+            and world_disp >= 3.0 * max(0.02, disp_sigma)
+            and observed_motion in ["DISPLACED", "MOVING"]
+        )
+        if is_significantly_displaced:
+            reasons.append("SIGNIFICANT_DISPLACEMENT_AFFORDANCE_UNRESOLVED")
+    elif observed_motion in ["DISPLACED", "MOVING"]:
         reasons.append("SIGNIFICANT_DISPLACEMENT_AFFORDANCE_UNRESOLVED")
 
     # -------------------------------------------------------------
