@@ -9,6 +9,8 @@ from vlm.src.cross_session_association import (
     EntityCluster,
     CrossSessionCandidateMatcher,
     evaluate_matcher_against_ground_truth,
+    build_canonical_session_track_mapping,
+    compare_association_baselines,
 )
 
 
@@ -294,4 +296,95 @@ def test_duplicate_track_ids_different_objects():
     assert m.s1_entity_id == "chair_001"
     assert m.s2_entity_id == "chair_010"
     assert "chair_001" in res.unmatched_s2
+
+
+def test_canonical_session_track_mapping_loads_verified_annotations():
+    """Verify loading the canonical ground truth mapping with 113 explicit session-track annotations."""
+    mapping, pairs = build_canonical_session_track_mapping()
+    assert len(mapping) == 113, f"Expected exactly 113 canonical mappings, got {len(mapping)}"
+
+    # Check known entries
+    assert mapping[("semantic_mapping_my_desk_recording_01", "desk_001")] == "inst_desk_001"
+    assert mapping[("semantic_mapping_my_desk_recording_02", "desk_001")] == "inst_desk_001"
+
+
+def test_canonical_mapping_detects_contradictions(tmp_path):
+    """Verify that contradictory or conflicting annotations raise a ValueError."""
+    import json
+
+    conflict_data = {
+        "annotations": [
+            {
+                "source_session": "rec01",
+                "local_track_id": "desk_001",
+                "physical_instance_id": "inst_desk_001",
+            },
+            {
+                "source_session": "rec01",
+                "local_track_id": "desk_001",
+                "physical_instance_id": "inst_desk_CONTRADICTING",
+            },
+        ]
+    }
+    p = tmp_path / "conflict_annotations.json"
+    with open(p, "w", encoding="utf-8") as f:
+        json.dump(conflict_data, f)
+
+    with pytest.raises(ValueError, match="Contradictory annotation for"):
+        build_canonical_session_track_mapping(p)
+
+
+def test_canonical_mapping_track_name_reuse_clean_separation():
+    """Verify that tracker ID reuse across sessions maps to different physical instances."""
+    mapping, _ = build_canonical_session_track_mapping()
+    # desk_016 in Session 1 is inst_desk_016; desk_016 in Session 2 is inst_desk_008
+    assert mapping[("semantic_mapping_my_desk_recording_01", "desk_016")] == "inst_desk_016"
+    assert mapping[("semantic_mapping_my_desk_recording_02", "desk_016")] == "inst_desk_008"
+
+
+def test_canonical_mapping_single_session_and_multi_track_support():
+    """Verify single-session objects and multiple track IDs per physical instance."""
+    mapping, _ = build_canonical_session_track_mapping()
+
+    # Single-session object (quadcopter drone only in recording 02; chair_004 only in recording 01)
+    assert ("semantic_mapping_my_desk_recording_02", "quadcopter drone_001") in mapping
+    assert ("semantic_mapping_my_desk_recording_01", "quadcopter drone_001") not in mapping
+    assert ("semantic_mapping_my_desk_recording_01", "chair_004") in mapping
+    assert ("semantic_mapping_my_desk_recording_02", "chair_004") not in mapping
+
+    # Multi-track object across sessions (robot platform observed as robot_platform_base in S1 and robot_001 in S2)
+    assert mapping[("semantic_mapping_my_desk_recording_01", "robot_platform_base")] == "inst_rc_car_robot_001"
+    assert mapping[("semantic_mapping_my_desk_recording_02", "robot_001")] == "inst_rc_car_robot_001"
+
+
+def test_compare_association_baselines_contract():
+    """Verify the 3-baseline comparison contract on synthetic clusters."""
+    # Synthetic clusters with 1 clear match and 1 ambiguous pair
+    s1 = {
+        "desk_01": _make_cluster("desk_01", "desk", 1.0, 1.0),
+        "chair_A": _make_cluster("chair_A", "chair", 3.0, 3.0),
+        "chair_B": _make_cluster("chair_B", "chair", 3.05, 3.0),
+    }
+    s2 = {
+        "desk_01": _make_cluster("desk_01", "desk", 1.02, 1.01),
+        "chair_1": _make_cluster("chair_1", "chair", 3.02, 3.0),
+    }
+    reg = _make_reg()
+
+    results = compare_association_baselines(s1, s2, reg)
+
+    assert "baseline_1_nearest_centroid" in results
+    assert "baseline_2_hungarian_gated" in results
+    assert "proposed_uncertainty_symmetric" in results
+
+    for key, data in results.items():
+        res = data["result"]
+        eval_dict = data["evaluation"]
+        assert hasattr(res, "matched_pairs")
+        assert "algorithm_name" in eval_dict
+        assert "precision_on_annotated_subset_pct" in eval_dict
+        assert "true_positive_matches" in eval_dict
+        assert "false_merges" in eval_dict
+        assert "annotated_eval_pairs_count" in eval_dict
+
 

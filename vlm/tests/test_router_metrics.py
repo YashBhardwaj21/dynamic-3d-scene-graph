@@ -177,3 +177,60 @@ def test_report_to_json_agreement(tmp_path):
     sel_f1 = f"{sel['quality']['macro_f1']*100:.1f}%"
     assert sel_acc in content
     assert sel_f1 in content
+
+
+def test_router_decision_invariant_to_ground_truth_mutation():
+    """Verify that mutating benchmark ground truth labels cannot alter the selective routing decision.
+
+    Ground-truth motion, displacement, and movability labels must strictly belong to reference
+    evaluation and never leak into policy decisions.
+    """
+    from vlm.src.stage5_adapter import Stage5EvidenceAdapter
+    from vlm.src.router_policy import evaluate_router_policy
+
+    adapter = Stage5EvidenceAdapter(repo_root=root_dir)
+
+    entry = {
+        "entity_id": "inst_chair_002",
+        "semantic_class": "chair",
+        "s1_obs_id": "chair_002",
+        "s2_obs_id": "chair_001",
+        # Benign manifest target fields
+        "contextual_movability_gt": "MOVABLE",
+        "observed_motion_gt": "STATIC",
+        "displacement_gt": 0.0,
+    }
+
+    # Build evidence strictly from SLAM observations & registration
+    ev_original = adapter.build_instance_evidence(entry)
+    decision_original = evaluate_router_policy(ev_original)
+
+    # 1. Mutate ground truth target fields in entry
+    mutated_entry = dict(entry)
+    mutated_entry["contextual_movability_gt"] = "IMMOVABLE"
+    mutated_entry["observed_motion_gt"] = "DYNAMIC_FLYING"
+    mutated_entry["displacement_gt"] = 12.345
+    mutated_entry["current_motion_gt"] = "DISPLACED_RUNAWAY"
+
+    ev_after_gt_mutation = adapter.build_instance_evidence(mutated_entry)
+    decision_after_gt_mutation = evaluate_router_policy(ev_after_gt_mutation)
+
+    assert ev_original["observed_motion"] == ev_after_gt_mutation["observed_motion"]
+    assert ev_original["world_displacement_m"] == ev_after_gt_mutation["world_displacement_m"]
+    assert decision_original.decision == decision_after_gt_mutation.decision
+    assert decision_original.vlm_required == decision_after_gt_mutation.vlm_required
+    assert decision_original.reason_codes == decision_after_gt_mutation.reason_codes
+    assert decision_original.cheap_label == decision_after_gt_mutation.cheap_label
+
+    # 2. Even if ground-truth fields are injected directly into the evidence dict,
+    # evaluate_router_policy must ignore them and evaluate only estimator evidence
+    ev_with_gt_injection = dict(ev_original)
+    ev_with_gt_injection["current_motion_gt"] = "STATIC"
+    ev_with_gt_injection["displacement_gt"] = 0.00
+    ev_with_gt_injection["movability_gt"] = "IMMOVABLE"
+
+    decision_injected = evaluate_router_policy(ev_with_gt_injection)
+    assert decision_injected.decision == decision_original.decision
+    assert decision_injected.vlm_required == decision_original.vlm_required
+    assert decision_injected.reason_codes == decision_original.reason_codes
+

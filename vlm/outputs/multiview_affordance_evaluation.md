@@ -16,14 +16,17 @@ This evaluation benchmarks contextual movability and physical affordance reasoni
 
 **Population:** 39 physical objects (`IMMOVABLE`: 2, `MOVABLE`: 37, `MOBILE`: 0) with verified crops.
 
-| Condition | Balanced Accuracy | Macro-F1 | IMMOVABLE Recall | MOVABLE Recall | Abstention Rate | VLM Query Rate | Mean E2E Latency | Mean Tokens |
-|---|:---:|:---:|:---:|:---:|:---:|:---:|:---:|:---:|
-| **A. Semantic Prior Only (M0)** | **100.0%** | **100.0%** | `100.0%` | `100.0%` | `0.0%` | **`0.0%`** | **`0.00 s`** | `0` |
-| **B. Single-View VLM (Crop + Scene - M1)** | **48.6%** | **48.0%** | `0.0%` | `97.3%` | `2.6%` | **`100.0%`** | **`15.96 s`** | `333` |
-| **C. Multi-View VLM (Standard 2-View Prompt - M2)** | **48.6%** | **48.0%** | `0.0%` | `97.3%` | `2.6%` | **`100.0%`** | **`110.44 s`** | `424` |
-| **D. Multi-View Structured VLM (Affordance Grounding - M3)** | **50.0%** | **48.7%** | `0.0%` | `100.0%` | `0.0%` | **`100.0%`** | **`20.77 s`** | `456` |
-| **E. Selective Multi-View Router (Deployable Policy)** | **100.0%** | **100.0%** | `100.0%` | `100.0%` | `0.0%` | **`10.3%`** | **`3.20 s`** | `48` |
-| **F. Oracle Diagnostic (Upper Bound)** | **100.0%** | **100.0%** | `100.0%` | `100.0%` | `0.0%` | **`0.0%`** | **`0.00 s`** | `0` |
+| Condition | Balanced Accuracy | Macro-F1 | IMMOVABLE Recall | MOVABLE Recall | Abstention Rate | VLM Query Rate | Median Latency (p50) | Mean Latency | Mean Tokens |
+|---|:---:|:---:|:---:|:---:|:---:|:---:|:---:|:---:|:---:|
+| **A. Semantic Prior Only (M0)** | **100.0%** | **100.0%** | `100.0%` | `100.0%` | `0.0%` | **`0.0%`** | **`0.00 s`** | `0.00 s` | `0` |
+| **B. Single-View VLM (Crop + Scene - M1)** | **48.6%** | **48.0%** | `0.0%` | `97.3%` | `2.6%` | **`100.0%`** | **`16.05 s`** | `15.96 s` | `333` |
+| **C. Multi-View VLM (Standard 2-View Prompt - M2)** | **48.6%** | **48.0%** | `0.0%` | `97.3%` | `2.6%` | **`100.0%`** | **`24.19 s`** | `110.44 s` | `424` |
+| **D. Multi-View Structured VLM (Affordance Grounding - M3)** | **50.0%** | **48.7%** | `0.0%` | `100.0%` | `0.0%` | **`100.0%`** | **`23.22 s`** | `20.77 s` | `456` |
+| **E. Selective Multi-View Router (Deployable Policy)** | **50.0%** | **48.7%** | `0.0%` | `100.0%` | `0.0%` | **`84.6%`** | **`22.41 s`** | `16.82 s` | `386` |
+| **F. Oracle Diagnostic (Upper Bound)** | **100.0%** | **100.0%** | `100.0%` | `100.0%` | `0.0%` | **`0.0%`** | **`0.00 s`** | `0.00 s` | `0` |
+
+> [!NOTE]
+> **Condition C Latency Distribution & Outlier Disclosure:** In Condition C (Standard Multi-View M2), the median latency across 39 physical objects is **24.19 s** ($p_{95} = 26.85\text{ s}$ on nominal queries). Two queries (`inst_chair_007` at 1419.07 s and `inst_chair_035` at 1942.92 s) encountered subagent connection pause / network throttling during offline data collection, pulling the arithmetic mean to 110.45 s while the typical query latency remains 24.19 s. Both the robust median ($p_{50}$) and arithmetic mean are explicitly reported here for scientific transparency.
 
 ---
 
@@ -34,14 +37,14 @@ This evaluation benchmarks contextual movability and physical affordance reasoni
 > [!IMPORTANT]
 > **Single-Class Evaluation Scope Notice:** The 28 held-out instances consist entirely of `MOVABLE` indoor furniture (28 `MOVABLE`, 0 `IMMOVABLE`, 0 `MOBILE`). The 100% Balanced Accuracy and Macro-F1 scores on this held-out split reflect performance on this single-class furniture subset and must not be interpreted as evidence of general three-class recognition. General multi-class affordance classification across `IMMOVABLE` fixtures and `MOVABLE` objects is evaluated on the full 39-instance benchmark in Section 2, while mobile-agent classification is evaluated on the Stage 6 benchmark.
 
-| Condition | Balanced Accuracy | Macro-F1 | MOVABLE Recall | Abstention Rate | VLM Query Rate | Mean E2E Latency | Mean Tokens |
-|---|:---:|:---:|:---:|:---:|:---:|:---:|:---:|
-| **A. Semantic Prior Only (M0)** | **100.0%** | **100.0%** | `100.0%` | `0.0%` | **`0.0%`** | **`0.00 s`** | `0` |
-| **B. Single-View VLM (Crop + Scene - M1)** | **100.0%** | **100.0%** | `100.0%` | `0.0%` | **`100.0%`** | **`15.93 s`** | `332` |
-| **C. Multi-View VLM (Standard 2-View Prompt - M2)** | **100.0%** | **100.0%** | `100.0%` | `0.0%` | **`100.0%`** | **`144.61 s`** | `425` |
-| **D. Multi-View Structured VLM (Affordance Grounding - M3)** | **100.0%** | **100.0%** | `100.0%` | `0.0%` | **`100.0%`** | **`18.59 s`** | `457` |
-| **E. Selective Multi-View Router (Deployable Policy)** | **100.0%** | **100.0%** | `100.0%` | `0.0%` | **`0.0%`** | **`0.00 s`** | `0` |
-| **F. Oracle Diagnostic (Upper Bound)** | **100.0%** | **100.0%** | `100.0%` | `0.0%` | **`0.0%`** | **`0.00 s`** | `0` |
+| Condition | Balanced Accuracy | Macro-F1 | MOVABLE Recall | Abstention Rate | VLM Query Rate | Median Latency (p50) | Mean Latency | Mean Tokens |
+|---|:---:|:---:|:---:|:---:|:---:|:---:|:---:|:---:|
+| **A. Semantic Prior Only (M0)** | **100.0%** | **100.0%** | `100.0%` | `0.0%` | **`0.0%`** | **`0.00 s`** | `0.00 s` | `0` |
+| **B. Single-View VLM (Crop + Scene - M1)** | **100.0%** | **100.0%** | `100.0%` | `0.0%` | **`100.0%`** | **`15.98 s`** | `15.93 s` | `332` |
+| **C. Multi-View VLM (Standard 2-View Prompt - M2)** | **100.0%** | **100.0%** | `100.0%` | `0.0%` | **`100.0%`** | **`25.09 s`** | `144.61 s` | `425` |
+| **D. Multi-View Structured VLM (Affordance Grounding - M3)** | **100.0%** | **100.0%** | `100.0%` | `0.0%` | **`100.0%`** | **`22.52 s`** | `18.59 s` | `457` |
+| **E. Selective Multi-View Router (Deployable Policy)** | **100.0%** | **100.0%** | `100.0%` | `0.0%` | **`89.3%`** | **`22.44 s`** | `16.00 s` | `407` |
+| **F. Oracle Diagnostic (Upper Bound)** | **100.0%** | **100.0%** | `100.0%` | `0.0%` | **`0.0%`** | **`0.00 s`** | `0.00 s` | `0` |
 
 ---
 
@@ -53,7 +56,7 @@ This evaluation benchmarks contextual movability and physical affordance reasoni
 
 ### 4.2 The Selective Router Efficiency Advantage (Condition E)
 - The estimator-aware selective router resolves canonical static objects cheaply using validated SLAM priors (<0.1ms, 0 tokens), and escalates only ambiguous entities to multi-view VLM.
-- On the full population, Condition E drops mean latency from **20.77s down to 3.20s** while saving **`89.5%` of total inference tokens**.
+- On the full population, Condition E drops mean latency from **20.77s down to 16.82s** while saving **`15.3%` of total inference tokens**.
 
 ---
 *Report generated automatically by `vlm/scripts/evaluate_multiview_affordance.py`.*

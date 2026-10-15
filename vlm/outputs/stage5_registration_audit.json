@@ -361,5 +361,176 @@
   "outlier_analysis": {
     "summary": "Anchors 1-5 and 10 exhibit small residuals (0.0508m to 0.1365m), aligning closely with the 0.1325m median. Peripheral anchors 6 (desk_023 <-> desk_034, 0.5711m) and 7 (desk_025 <-> desk_006, 0.5572m) drive the aggregate RMS up to 0.3054m due to localized non-rigid SLAM drift at the trajectory boundary. Excluding anchor 6 drops training RMS to 0.2422m.",
     "implication_for_data_association": "The 0.1325m median residual easily fits inside the 0.45m static association gate. However, objects near peripheral anchors may experience registration errors exceeding 0.45m, requiring identity candidates to be flagged as ambiguous or relocation candidates rather than incorrectly merged."
+  },
+  "robust_estimation": {
+    "method": "RANSAC_SE2_SVD",
+    "inlier_threshold_m": 0.2,
+    "total_anchors": 10,
+    "inlier_count": 7,
+    "outlier_count": 3,
+    "robust_transform": {
+      "rotation_deg": -15.558,
+      "translation_m": [
+        -0.1059,
+        0.0486
+      ],
+      "R_12": [
+        [
+          0.9634,
+          0.2682
+        ],
+        [
+          -0.2682,
+          0.9634
+        ]
+      ]
+    },
+    "inlier_rms_residual_m": 0.1198,
+    "inlier_median_residual_m": 0.0925,
+    "outliers": [
+      {
+        "anchor_index": 6,
+        "class": "desk",
+        "id1": "desk_023",
+        "id2": "desk_034",
+        "residual_full_m": 0.5711,
+        "residual_robust_m": 0.618,
+        "diagnostics": "Peripheral anchor near sequence trajectory boundary with localized non-rigid drift."
+      },
+      {
+        "anchor_index": 7,
+        "class": "desk",
+        "id1": "desk_025",
+        "id2": "desk_006",
+        "residual_full_m": 0.5572,
+        "residual_robust_m": 0.5643,
+        "diagnostics": "Peripheral anchor near sequence trajectory boundary with localized non-rigid drift."
+      },
+      {
+        "anchor_index": 8,
+        "class": "desk",
+        "id1": "desk_031",
+        "id2": "desk_002",
+        "residual_full_m": 0.4247,
+        "residual_robust_m": 0.3897,
+        "diagnostics": "Peripheral anchor near sequence trajectory boundary with localized non-rigid drift."
+      }
+    ],
+    "inliers": [
+      {
+        "anchor_index": 1,
+        "class": "desk",
+        "id1": "desk_001",
+        "id2": "desk_001",
+        "residual_full_m": 0.0508,
+        "residual_robust_m": 0.0583
+      },
+      {
+        "anchor_index": 2,
+        "class": "desk",
+        "id1": "desk_004",
+        "id2": "desk_003",
+        "residual_full_m": 0.1284,
+        "residual_robust_m": 0.1255
+      },
+      {
+        "anchor_index": 3,
+        "class": "desk",
+        "id1": "desk_005",
+        "id2": "desk_014",
+        "residual_full_m": 0.1,
+        "residual_robust_m": 0.0456
+      },
+      {
+        "anchor_index": 4,
+        "class": "desk",
+        "id1": "desk_008",
+        "id2": "desk_016",
+        "residual_full_m": 0.1267,
+        "residual_robust_m": 0.0925
+      },
+      {
+        "anchor_index": 5,
+        "class": "desk",
+        "id1": "desk_018",
+        "id2": "desk_029",
+        "residual_full_m": 0.1365,
+        "residual_robust_m": 0.0725
+      },
+      {
+        "anchor_index": 9,
+        "class": "storage box",
+        "id1": "storage box_001",
+        "id2": "storage box_003",
+        "residual_full_m": 0.211,
+        "residual_robust_m": 0.2366
+      },
+      {
+        "anchor_index": 10,
+        "class": "storage box",
+        "id1": "storage box_007",
+        "id2": "storage box_011",
+        "residual_full_m": 0.0861,
+        "residual_robust_m": 0.0971
+      }
+    ],
+    "held_out_kfold_evaluation": [
+      {
+        "held_out_anchor_indices": [
+          1,
+          2
+        ],
+        "held_out_residuals_m": [
+          0.0605,
+          0.155
+        ],
+        "held_out_rms_m": 0.1177
+      },
+      {
+        "held_out_anchor_indices": [
+          3,
+          4
+        ],
+        "held_out_residuals_m": [
+          0.1563,
+          0.1695
+        ],
+        "held_out_rms_m": 0.163
+      },
+      {
+        "held_out_anchor_indices": [
+          5,
+          6
+        ],
+        "held_out_residuals_m": [
+          0.0293,
+          0.7116
+        ],
+        "held_out_rms_m": 0.5036
+      },
+      {
+        "held_out_anchor_indices": [
+          7,
+          8
+        ],
+        "held_out_residuals_m": [
+          0.6314,
+          0.4481
+        ],
+        "held_out_rms_m": 0.5475
+      },
+      {
+        "held_out_anchor_indices": [
+          9,
+          10
+        ],
+        "held_out_residuals_m": [
+          0.2343,
+          0.095
+        ],
+        "held_out_rms_m": 0.1788
+      }
+    ],
+    "uncertainty_characterization": "Empirical spatial residual dispersion from robust inlier set (sigma_inlier=0.1198m, sigma_full=0.3054m). Must NOT be labeled as calibrated covariance."
   }
 }

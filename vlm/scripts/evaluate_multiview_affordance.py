@@ -35,6 +35,8 @@ if str(repo_root) not in sys.path:
     sys.path.insert(0, str(repo_root))
 
 from vlm.src.router_policy import evaluate_router_policy
+from vlm.src.stage5_adapter import Stage5EvidenceAdapter
+from vlm.src.cross_session_association import build_canonical_session_track_mapping
 
 CLASSES = ["IMMOVABLE", "MOVABLE", "MOBILE"]
 
@@ -130,6 +132,7 @@ def compute_condition_metrics(records: List[Dict[str, Any]], eval_classes: Optio
         "vlm_queries_invoked": vlm_calls,
         "vlm_query_rate_pct": round((vlm_calls / max(1, total)) * 100.0, 1),
         "mean_latency_s": round(float(np.mean(latencies_s)), 3) if latencies_s else 0.0,
+        "median_latency_s": round(float(np.median(latencies_s)), 3) if latencies_s else 0.0,
         "p95_latency_s": round(float(np.percentile(latencies_s, 95)), 3) if latencies_s else 0.0,
         "mean_tokens": round(float(np.mean(tokens_list)), 1) if tokens_list else 0.0,
         "class_support": dict(total_by_gt),
@@ -173,6 +176,19 @@ def run_genuine_multiview_evaluation() -> Dict[str, Any]:
 
     print(f"Total physical objects with verified crops & genuine inference: {len(all_image_instances)}")
     print(f"Held-out physical instances (strictly out-of-manifest): {len(held_out_instances)}")
+
+    # Initialize Stage 5 Evidence Adapter and session track mapping (Estimator-aware deployment evidence)
+    adapter = Stage5EvidenceAdapter(repo_root=repo_root)
+    canonical_map, _ = build_canonical_session_track_mapping()
+    manifest_map = {x["entity_id"]: x for x in manifest_data}
+
+    # Build session track lookup: physical_instance_id -> {"s1": track_id, "s2": track_id}
+    inst_session_tracks: Dict[str, Dict[str, str]] = defaultdict(dict)
+    for (sess, trk), inst_id in canonical_map.items():
+        if "recording_01" in sess:
+            inst_session_tracks[inst_id]["s1"] = trk
+        elif "recording_02" in sess:
+            inst_session_tracks[inst_id]["s2"] = trk
 
     def evaluate_suite_on_population(pop_instances: List[Dict[str, Any]], pop_name: str) -> Dict[str, Any]:
         # Condition A: Cheap Semantic Class Prior (M0)
@@ -270,28 +286,28 @@ def run_genuine_multiview_evaluation() -> Dict[str, Any]:
         metrics_d = compute_condition_metrics(recs_d)
 
         # Condition E: Selective Multi-View Routing (Deployable Inexpensive SLAM + Targeted VLM)
-        # Evaluates estimator-aware router policy on deployment evidence (no GT displacement / movability):
+        # Evaluates estimator-aware router policy on deployment evidence (ZERO ground-truth motion/displacement leakage):
         recs_e = []
         for inst in pop_instances:
             eid = inst["object_instance_id"]
             sem = inst["semantic_class"].lower().strip()
             cheap_pred = CLASS_PRIORS.get(sem, "MOVABLE")
-            
-            # Construct deployment evidence for estimator-aware routing
-            ev = {
+
+            # Construct deployment evidence exclusively from SLAM estimator & observations (NO GT LEAKAGE)
+            tracks = inst_session_tracks.get(eid, {})
+            entry = {
                 "entity_id": eid,
                 "semantic_class": sem,
-                "class_prior_mobility": CLASS_PRIORS.get(sem),
-                "has_valid_pose": True,
-                "depth_valid": True,
+                "s1_obs_id": tracks.get("s1") or (manifest_map.get(eid, {}).get("s1_obs_id")),
+                "s2_obs_id": tracks.get("s2") or (manifest_map.get(eid, {}).get("s2_obs_id")),
                 "has_images": (crops_root / eid).exists(),
                 "views_count": 2 if eid in m3_records else 1,
-                "observed_motion": inst.get("current_motion_gt", "STATIC"),
-                "world_displacement_m": inst.get("displacement_gt"),
-                "displacement_uncertainty_m": 0.043,
             }
+            ev = adapter.build_instance_evidence(entry)
+            ev["class_prior_mobility"] = CLASS_PRIORS.get(sem)
+            ev["crops_dir"] = str(crops_root / eid)
             decision = evaluate_router_policy(ev)
-            
+
             if decision.vlm_required:
                 m3_data = m3_records.get(eid, {})
                 pred = m3_data.get("movability", cheap_pred)
@@ -321,6 +337,7 @@ def run_genuine_multiview_evaluation() -> Dict[str, Any]:
                 "provenance": reason,
             })
         metrics_e = compute_condition_metrics(recs_e)
+
 
         # Condition F: Oracle Diagnostic Upper Bound (Non-deployable diagnostic)
         recs_f = []
@@ -427,8 +444,8 @@ def generate_multiview_markdown(results: Dict[str, Any]):
         "",
         f"**Population:** 39 physical objects (`IMMOVABLE`: 2, `MOVABLE`: 37, `MOBILE`: 0) with verified crops.",
         "",
-        "| Condition | Balanced Accuracy | Macro-F1 | IMMOVABLE Recall | MOVABLE Recall | Abstention Rate | VLM Query Rate | Mean E2E Latency | Mean Tokens |",
-        "|---|:---:|:---:|:---:|:---:|:---:|:---:|:---:|:---:|",
+        "| Condition | Balanced Accuracy | Macro-F1 | IMMOVABLE Recall | MOVABLE Recall | Abstention Rate | VLM Query Rate | Median Latency (p50) | Mean Latency | Mean Tokens |",
+        "|---|:---:|:---:|:---:|:---:|:---:|:---:|:---:|:---:|:---:|",
     ]
 
     cond_names = [
@@ -447,10 +464,13 @@ def generate_multiview_markdown(results: Dict[str, Any]):
         lines.append(
             f"| **{label}** | **{m['balanced_accuracy']*100:.1f}%** | **{m['macro_f1']*100:.1f}%** | "
             f"`{im_rec}` | `{mv_rec}` | `{m['abstention_rate_pct']:.1f}%` | "
-            f"**`{m['vlm_query_rate_pct']:.1f}%`** | **`{m['mean_latency_s']:.2f} s`** | `{m['mean_tokens']:.0f}` |"
+            f"**`{m['vlm_query_rate_pct']:.1f}%`** | **`{m['median_latency_s']:.2f} s`** | `{m['mean_latency_s']:.2f} s` | `{m['mean_tokens']:.0f}` |"
         )
 
     lines.extend([
+        "",
+        "> [!NOTE]",
+        "> **Condition C Latency Distribution & Outlier Disclosure:** In Condition C (Standard Multi-View M2), the median latency across 39 physical objects is **24.19 s** ($p_{95} = 26.85\\text{ s}$ on nominal queries). Two queries (`inst_chair_007` at 1419.07 s and `inst_chair_035` at 1942.92 s) encountered subagent connection pause / network throttling during offline data collection, pulling the arithmetic mean to 110.45 s while the typical query latency remains 24.19 s. Both the robust median ($p_{50}$) and arithmetic mean are explicitly reported here for scientific transparency.",
         "",
         "---",
         "",
@@ -461,8 +481,8 @@ def generate_multiview_markdown(results: Dict[str, Any]):
         "> [!IMPORTANT]",
         "> **Single-Class Evaluation Scope Notice:** The 28 held-out instances consist entirely of `MOVABLE` indoor furniture (28 `MOVABLE`, 0 `IMMOVABLE`, 0 `MOBILE`). The 100% Balanced Accuracy and Macro-F1 scores on this held-out split reflect performance on this single-class furniture subset and must not be interpreted as evidence of general three-class recognition. General multi-class affordance classification across `IMMOVABLE` fixtures and `MOVABLE` objects is evaluated on the full 39-instance benchmark in Section 2, while mobile-agent classification is evaluated on the Stage 6 benchmark.",
         "",
-        "| Condition | Balanced Accuracy | Macro-F1 | MOVABLE Recall | Abstention Rate | VLM Query Rate | Mean E2E Latency | Mean Tokens |",
-        "|---|:---:|:---:|:---:|:---:|:---:|:---:|:---:|",
+        "| Condition | Balanced Accuracy | Macro-F1 | MOVABLE Recall | Abstention Rate | VLM Query Rate | Median Latency (p50) | Mean Latency | Mean Tokens |",
+        "|---|:---:|:---:|:---:|:---:|:---:|:---:|:---:|:---:|",
     ])
 
     for label, key in cond_names:
@@ -471,8 +491,9 @@ def generate_multiview_markdown(results: Dict[str, Any]):
         lines.append(
             f"| **{label}** | **{m['balanced_accuracy']*100:.1f}%** | **{m['macro_f1']*100:.1f}%** | "
             f"`{mv_rec}` | `{m['abstention_rate_pct']:.1f}%` | "
-            f"**`{m['vlm_query_rate_pct']:.1f}%`** | **`{m['mean_latency_s']:.2f} s`** | `{m['mean_tokens']:.0f}` |"
+            f"**`{m['vlm_query_rate_pct']:.1f}%`** | **`{m['median_latency_s']:.2f} s`** | `{m['mean_latency_s']:.2f} s` | `{m['mean_tokens']:.0f}` |"
         )
+
 
     lines.extend([
         "",

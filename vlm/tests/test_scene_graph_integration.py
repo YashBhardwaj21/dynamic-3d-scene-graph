@@ -242,13 +242,15 @@ def test_cross_session_physical_identity_scene_graph_fusion():
     fusion = ContextualSceneGraphFusion()
 
     # Feed Session 1 observation
+    # Feed Session 1 observation with true measured 3D centroid
     c1 = s1_clusters[s1_eid]
+    c1_3d = c1.centroid_3d.tolist() if c1.centroid_3d is not None else [float(c1.centroid_floor[0]), float(c1.centroid_floor[1]), 0.0]
     obs_meta_s1 = {
         "timestamp": 10.0,
         "source_session": "semantic_mapping_my_desk_recording_01",
         "obs_id": c1.observation_ids[0] if c1.observation_ids else "obs_s1_001",
         "local_track_id": s1_eid,
-        "centroid": [c1.centroid_floor[0], c1.centroid_floor[1], 0.72],
+        "centroid": c1_3d,
         "spatial_extent_m": c1.spatial_extent_m,
         "coordinate_frame": "reference_frame",
         "registration": reg,
@@ -265,15 +267,17 @@ def test_cross_session_physical_identity_scene_graph_fusion():
     assert node.total_observations_count == 1
     assert "semantic_mapping_my_desk_recording_01" in node.source_sessions
     assert s1_eid in node.source_track_ids
+    assert node.centroid_world[2] == pytest.approx(c1_3d[2], abs=1e-4)
 
-    # Feed Session 2 observation (in S2 local coordinates, should be transformed to reference frame via reg)
+    # Feed Session 2 observation with true measured 3D centroid
     c2 = s2_clusters[s2_eid]
+    c2_3d = c2.centroid_3d.tolist() if c2.centroid_3d is not None else [float(c2.centroid_floor[0]), float(c2.centroid_floor[1]), 0.0]
     obs_meta_s2 = {
         "timestamp": 25.0,
         "source_session": "semantic_mapping_my_desk_recording_02",
         "obs_id": c2.observation_ids[0] if c2.observation_ids else "obs_s2_001",
         "local_track_id": s2_eid,
-        "centroid": [c2.centroid_floor[0], c2.centroid_floor[1], 0.72],
+        "centroid": c2_3d,
         "spatial_extent_m": c2.spatial_extent_m,
         "coordinate_frame": "session_02_local",
         "registration": reg,
@@ -294,9 +298,11 @@ def test_cross_session_physical_identity_scene_graph_fusion():
     assert s1_eid in node_merged.source_track_ids
     assert s2_eid in node_merged.source_track_ids
 
-    # Geometry preservation: merged centroid should be in reference frame within small delta of S1 centroid
+    # True 3D geometry preservation: 2D floor within small delta, 3D height is running mean of measured z coordinates
     dist_to_s1 = np.linalg.norm(node_merged.centroid_world[:2] - c1.centroid_floor[:2])
     assert dist_to_s1 < 0.25, f"Merged centroid drifted too far from reference frame: {dist_to_s1}m"
+    expected_height = (c1_3d[2] + c2_3d[2]) / 2.0
+    assert node_merged.centroid_world[2] == pytest.approx(expected_height, abs=1e-4)
 
     # Serialize to JSON and PersistentEntity
     serialized = fusion.serialize_to_json()
@@ -352,7 +358,7 @@ def test_fusion_exact_se2_transform_application():
 
 
 def test_fusion_rejects_unaligned_session2_geometry_when_reg_invalid():
-    """Verify that unaligned Session 2 points are strictly rejected when registration is missing or invalid."""
+    """Verify that unaligned Session 2 points are strictly rejected and retain TENTATIVE identity across updates."""
     from vlm.src.stage5_adapter import RegistrationInfo
 
     reg_invalid = RegistrationInfo(
@@ -370,22 +376,174 @@ def test_fusion_rejects_unaligned_session2_geometry_when_reg_invalid():
     fusion = ContextualSceneGraphFusion()
     routed = {"prediction": "MOVABLE", "observed_motion": "STATIC"}
 
-    obs_meta = {
+    obs_meta_1 = {
         "timestamp": 60.0,
         "source_session": "rec02",
-        "obs_id": "obs_unaligned",
+        "obs_id": "obs_unaligned_1",
         "local_track_id": "trk_unaligned",
         "centroid": [2.5, 3.5, 0.70],
         "coordinate_frame": "session_02_local",
         "registration": reg_invalid,
     }
 
-    node = fusion.update_or_create_node("phys_unaligned", "desk", routed, obs_meta)
+    node = fusion.update_or_create_node("phys_unaligned", "desk", routed, obs_meta_1)
 
-    # Must reject geometry to prevent unaligned coordinate corruption!
+    # Must reject geometry to prevent unaligned coordinate corruption while preserving physical identity!
     assert node.geometry_valid is False
     assert node.centroid_world is None
+    assert node.total_observations_count == 1
+    assert "trk_unaligned" in node.source_track_ids
     persistent = node.to_persistent_entity()
     assert persistent.lifecycle_state == EntityLifecycleState.TENTATIVE
+
+    # Subsequent update with still-invalid registration must NOT confirm node or fabricate geometry
+    obs_meta_2 = {
+        "timestamp": 62.0,
+        "source_session": "rec02",
+        "obs_id": "obs_unaligned_2",
+        "local_track_id": "trk_unaligned",
+        "centroid": [2.55, 3.52, 0.71],
+        "coordinate_frame": "session_02_local",
+        "registration": reg_invalid,
+    }
+    node_updated = fusion.update_or_create_node("phys_unaligned", "desk", routed, obs_meta_2)
+    assert node_updated.geometry_valid is False
+    assert node_updated.centroid_world is None
+    assert node_updated.total_observations_count == 2
+    persistent_updated = node_updated.to_persistent_entity()
+    assert persistent_updated.lifecycle_state == EntityLifecycleState.TENTATIVE
+
+
+def test_fusion_relocated_object_lifecycle_and_displacement():
+    """Verify that a relocated object preserves physical identity, updates displacement, and does not duplicate."""
+    fusion = ContextualSceneGraphFusion()
+
+    # Session 1: Chair observed at [1.0, 2.0, 0.45]
+    obs_s1 = {
+        "timestamp": 10.0,
+        "source_session": "rec01",
+        "obs_id": "obs_s1_c1",
+        "local_track_id": "chair_002",
+        "centroid": [1.0, 2.0, 0.45],
+        "spatial_extent_m": 0.55,
+        "coordinate_frame": "reference_frame",
+    }
+    routed_s1 = {
+        "decision": "RESOLVE_CHEAP",
+        "prediction": "MOVABLE",
+        "observed_motion": "STATIC",
+        "world_displacement_m": 0.0,
+        "relocation_evaluable": True,
+    }
+    node = fusion.update_or_create_node("inst_chair_002", "chair", routed_s1, obs_s1)
+    assert node.entity_id == "inst_chair_002"
+    assert node.observed_motion == ObservedMotionState.STATIC
+    assert len(fusion.nodes) == 1
+
+    # Session 2: Same chair physically relocated by 0.65m to [1.65, 2.0, 0.45]
+    obs_s2 = {
+        "timestamp": 120.0,
+        "source_session": "rec02",
+        "obs_id": "obs_s2_c1",
+        "local_track_id": "chair_001",
+        "centroid": [1.65, 2.0, 0.45],
+        "spatial_extent_m": 0.56,
+        "coordinate_frame": "reference_frame",  # already in common frame
+    }
+    routed_s2 = {
+        "decision": "ESCALATE",
+        "prediction": "MOVABLE",
+        "observed_motion": "DISPLACED",
+        "world_displacement_m": 0.65,
+        "displacement_uncertainty_m": 0.038,
+        "relocation_evaluable": True,
+    }
+    node_updated = fusion.update_or_create_node("inst_chair_002", "chair", routed_s2, obs_s2)
+
+    # Must preserve identity and NOT create a duplicate node
+    assert len(fusion.nodes) == 1
+    assert node_updated.entity_id == "inst_chair_002"
+    assert node_updated.observed_motion == ObservedMotionState.DISPLACED
+    assert node_updated.measured_displacement_m == 0.65
+    assert node_updated.displacement_uncertainty_m == 0.038
+    assert node_updated.relocation_evaluable is True
+    assert set(node_updated.source_track_ids) == {"chair_002", "chair_001"}
+    assert set(node_updated.source_sessions) == {"rec01", "rec02"}
+
+
+def test_fusion_single_session_and_unmatched_objects():
+    """Verify single-session entities (present in S1 only or S2 only) retain independent identities without false merges."""
+    fusion = ContextualSceneGraphFusion()
+
+    # Object 1: Present only in Session 1 (e.g. laptop taken away)
+    obs_s1 = {
+        "timestamp": 15.0,
+        "source_session": "rec01",
+        "obs_id": "obs_laptop_s1",
+        "local_track_id": "laptop_006",
+        "centroid": [2.10, 1.30, 0.75],
+        "spatial_extent_m": 0.35,
+        "coordinate_frame": "reference_frame",
+    }
+    node_s1 = fusion.update_or_create_node("inst_laptop_001", "laptop", {"prediction": "MOVABLE", "observed_motion": "STATIC"}, obs_s1)
+    assert node_s1.source_sessions == ["rec01"]
+
+    # Object 2: Present only in Session 2 (e.g. new backpack brought into room)
+    obs_s2 = {
+        "timestamp": 200.0,
+        "source_session": "rec02",
+        "obs_id": "obs_backpack_s2",
+        "local_track_id": "backpack_002",
+        "centroid": [3.40, -0.80, 0.40],
+        "spatial_extent_m": 0.45,
+        "coordinate_frame": "reference_frame",
+    }
+    node_s2 = fusion.update_or_create_node("inst_backpack_002", "backpack", {"prediction": "MOVABLE", "observed_motion": "STATIC"}, obs_s2)
+    assert node_s2.source_sessions == ["rec02"]
+
+    assert len(fusion.nodes) == 2
+    assert "inst_laptop_001" in fusion.nodes
+    assert "inst_backpack_002" in fusion.nodes
+    # Verify no accidental cross-merging
+    assert fusion.nodes["inst_laptop_001"].source_sessions == ["rec01"]
+    assert fusion.nodes["inst_backpack_002"].source_sessions == ["rec02"]
+
+
+def test_fusion_duplicate_tracker_id_different_physical_instances():
+    """Verify tracker ID reuse across sessions: 'desk_016' in S1 is inst_desk_016; 'desk_016' in S2 is inst_desk_008."""
+    fusion = ContextualSceneGraphFusion()
+
+    # S1 tracker desk_016 -> inst_desk_016 at [1.0, 3.0, 0.72]
+    obs_s1 = {
+        "timestamp": 12.0,
+        "source_session": "rec01",
+        "obs_id": "obs_d16_s1",
+        "local_track_id": "desk_016",
+        "centroid": [1.0, 3.0, 0.72],
+        "spatial_extent_m": 0.90,
+        "coordinate_frame": "reference_frame",
+    }
+    node_1 = fusion.update_or_create_node("inst_desk_016", "desk", {"prediction": "MOVABLE", "observed_motion": "STATIC"}, obs_s1)
+
+    # S2 tracker desk_016 -> inst_desk_008 at [4.5, -2.0, 0.72]
+    obs_s2 = {
+        "timestamp": 210.0,
+        "source_session": "rec02",
+        "obs_id": "obs_d16_s2",
+        "local_track_id": "desk_016",
+        "centroid": [4.5, -2.0, 0.72],
+        "spatial_extent_m": 0.92,
+        "coordinate_frame": "reference_frame",
+    }
+    node_2 = fusion.update_or_create_node("inst_desk_008", "desk", {"prediction": "MOVABLE", "observed_motion": "STATIC"}, obs_s2)
+
+    assert len(fusion.nodes) == 2
+    assert "inst_desk_016" in fusion.nodes
+    assert "inst_desk_008" in fusion.nodes
+    # Both share local tracker name 'desk_016', but represent completely different physical instances!
+    assert fusion.nodes["inst_desk_016"].source_track_ids == ["desk_016"]
+    assert fusion.nodes["inst_desk_008"].source_track_ids == ["desk_016"]
+    assert np.linalg.norm(fusion.nodes["inst_desk_016"].centroid_world[:2] - fusion.nodes["inst_desk_008"].centroid_world[:2]) > 4.0
+
 
 

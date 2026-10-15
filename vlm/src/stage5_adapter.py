@@ -42,6 +42,11 @@ class RegistrationInfo:
     anchor_count: int
     status: str
     diagnostics: List[str] = field(default_factory=list)
+    median_residual_m: float = 0.1325
+    robust_inlier_count: int = 7
+    robust_outlier_count: int = 3
+    inlier_rms_residual_m: float = 0.1198
+    is_calibrated_covariance: bool = False
 
 
 RegistrationAudit = RegistrationInfo
@@ -155,6 +160,13 @@ def load_registration_audit(audit_path: Optional[Path]) -> RegistrationInfo:
     else:
         rms_res = 0.25
 
+    robust_block = data.get("robust_estimation", {})
+    residuals_block = data.get("residuals", {})
+    inlier_rms = float(robust_block.get("inlier_rms_residual_m", 0.1198))
+    median_res = float(residuals_block.get("median_residual_m", 0.1325))
+    inlier_count = int(robust_block.get("inlier_count", 7))
+    outlier_count = int(robust_block.get("outlier_count", 3))
+
     return RegistrationInfo(
         is_valid=True,
         reference_session=ref_sess,
@@ -166,6 +178,11 @@ def load_registration_audit(audit_path: Optional[Path]) -> RegistrationInfo:
         anchor_count=len(residuals),
         status="SE2_REGISTERED_VERIFIED",
         diagnostics=[],
+        median_residual_m=median_res,
+        robust_inlier_count=inlier_count,
+        robust_outlier_count=outlier_count,
+        inlier_rms_residual_m=inlier_rms,
+        is_calibrated_covariance=False,
     )
 
 

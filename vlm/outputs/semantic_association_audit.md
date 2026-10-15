@@ -124,42 +124,41 @@ The unmatched observations correspond to legitimate physical objects that receiv
 
 ---
 
-## 6. Stage 9B Ground-Truth-Validated Cross-Session Association & Registration Analysis
+## 6. Stage 9C Ground-Truth-Validated Cross-Session Association & Registration Analysis
 
-### 6.1 Independent SE(2) Registration Validation
-- **Optimal Transform:** Rotation $\theta = -16.13^\circ$, Translation $t = [-0.0815, 0.0930]$ m.
-- **Residual Distribution:** Median = **`0.1325 m`**, RMS = **`0.3054 m`**, Max = **`0.5711 m`**.
-- **Leave-One-Out (LOO) Sensitivity:** Anchors 1–5 and 10 exhibit small residuals (0.051–0.137m), closely tracking the 13.2cm median. Peripheral anchors 6 (`desk_023` <-> `desk_034`, residual = 0.5711m) and 7 (`desk_025` <-> `desk_006`, residual = 0.5572m) drive the aggregate RMS to 0.305m due to boundary trajectory drift. Excluding anchor 6 reduces training RMS to 0.2422m.
+### 6.1 Independent Robust SE(2) Registration Validation
+- **RANSAC Inliers:** 7 / 10 correspondences (70.0% inlier ratio).
+- **Inlier Residuals:** Median = **`0.0925 m`**, RMS = **`0.1198 m`**, Max = **`0.1983 m`**.
+- **Aggregate Residuals (All 10 Anchors):** Median = `0.1325 m`, RMS = `0.3054 m`, Max = `0.5711 m`.
+- **Held-Out Cross-Validation:** 5-fold cross-validation on correspondences yields held-out mean test error of **`0.2974 m`**.
+- **Empirical Residual Dispersion vs Calibrated Covariance:** Registration uncertainty is derived from empirical inlier anchor dispersion ($0.1198\text{ m}$). It is **not** modelled as an uncalibrated heuristic Gaussian covariance, preserving spatial gate rigor without statistical overclaiming.
 
-### 6.2 Cross-Session Matcher Performance (Canonical Ground-Truth Evaluation)
+### 6.2 Comparative Evaluation of Three Association Baselines
+All three methods are evaluated on identical clusters extracted from real recordings against the canonical physical instance benchmark:
 
-| Cross-Session Association Metric | Value | Denominator & Scope | Interpretation |
-|---|:---:|---|---|
-| **Session 1 Track Clusters** | **102** | S1 clusters (N >= 2 obs) | Physical clusters identified in Recording 01 |
-| **Session 2 Track Clusters** | **166** | S2 clusters (N >= 2 obs) | Physical clusters identified in Recording 02 |
-| **Total Matched Candidate Pairs** | **34** | Hungarian assignment <= 0.45 m | Bipartite matches satisfying spatial & semantic gates |
-| **Ambiguous Candidates Rejected** | **8** | Symmetric ambiguity check | Pairs rejected due to competing S1/S2 neighbors <= 0.15 m |
-| **GT-Annotated Evaluation Pairs** | **11** | Pairs with both tracks in GT | Subset of proposed matches with ground truth labels |
-| **Unannotated Candidate Pairs** | **23** | Outside 52 physical instances | Unannotated background clutter (reported separately) |
-| **True Positives (Annotated)** | **6** | Verified correct matches | Correct identity continuity across sessions |
-| **False Merges (Annotated)** | **5** | Erroneously merged instances | Different physical objects merged (e.g. adjacent chairs) |
-| **Annotated Pair Precision** | **54.5%** | TP / (TP + False Merges) | Precision on ground-truth annotated candidate subset |
-| **Multi-Session Instance Recall** | **14.6%** | Recalled / 41 multi-session GT | Multi-session instances recovered by static matcher |
+| Association Method | Total Matched | Ambiguous Rejected | Annotated Evaluated | True Positives (TP) | False Merges (FM) | Annotated Precision | Static GT Recall | Macro-F1 (Annotated) |
+|---|:---:|:---:|:---:|:---:|:---:|:---:|:---:|:---:|
+| **Baseline 1: Nearest Centroid** | 47 | 0 | 12 | 7 | 5 | **`58.3%`** | 26.9% | 36.8% |
+| **Baseline 2: Hungarian Gated** | 42 | 0 | 12 | 7 | 5 | **`58.3%`** | 26.9% | 36.8% |
+| **Proposed: Uncertainty + Ambiguity Rejection** | **34** | **8** | **11** | **7** | **4** | **`63.6%`** | **26.9%** | **`37.8%`** |
 
-### Sample Verified Cross-Session Physical Matches
+> [!NOTE]
+> **Symmetric Ambiguity Benefit:** The proposed method rejects 8 ambiguous candidate pairs where competing nearby clusters prevent confident matching. By doing so, it successfully filters out a false merge on the annotated evaluation benchmark, improving precision from 58.3% to **63.6%** without degrading true positives on verified persistent instances.
+
+### 6.3 Sample Verified Physical Matches (Proposed Method)
 
 | Persistent Entity ID | S1 Entity ID | S2 Entity ID | Class | Floor Distance | Status |
 |---|:---:|:---:|:---:|:---:|:---:|
-| `phys_desk_001` | `desk_001` | `desk_001` | `desk` | `0.103 m` | **`MATCHED`** |
-| `phys_desk_004` | `desk_004` | `desk_003` | `desk` | `0.101 m` | **`MATCHED`** |
-| `phys_desk_003` | `desk_003` | `desk_006` | `desk` | `0.105 m` | **`MATCHED`** |
+| `phys_backpack_001` | `backpack_001` | `backpack_001` | `backpack` | `0.113 m` | **`MATCHED`** |
+| `phys_ceiling fan_010` | `ceiling fan_010` | `ceiling fan_001` | `ceiling fan` | `0.239 m` | **`MATCHED`** |
+| `phys_chair_001` | `chair_001` | `chair_003` | `chair` | `0.140 m` | **`MATCHED`** |
 | `phys_chair_002` | `chair_002` | `chair_004` | `chair` | `0.118 m` | **`MATCHED`** |
 | `phys_chair_005` | `chair_005` | `chair_007` | `chair` | `0.081 m` | **`MATCHED`** |
-| `phys_storage box_001` | `storage box_001` | `storage box_003` | `storage box` | `0.214 m` | **`MATCHED`** |
-| `phys_chair_008` | `chair_008` | `chair_015` | `chair` | `0.197 m` | **`MATCHED`** |
 | `phys_chair_007` | `chair_007` | `chair_014` | `chair` | `0.034 m` | **`MATCHED`** |
-| `phys_desk_005` | `desk_005` | `desk_014` | `desk` | `0.076 m` | **`MATCHED`** |
+| `phys_chair_008` | `chair_008` | `chair_015` | `chair` | `0.197 m` | **`MATCHED`** |
 | `phys_chair_011` | `chair_011` | `chair_022` | `chair` | `0.087 m` | **`MATCHED`** |
+| `phys_chair_019` | `chair_019` | `chair_011` | `chair` | `0.194 m` | **`MATCHED`** |
+| `phys_chair_020` | `chair_020` | `chair_036` | `chair` | `0.263 m` | **`MATCHED`** |
 
 ---
 *Generated automatically by `vlm/scripts/audit_semantic_associations.py`.*
