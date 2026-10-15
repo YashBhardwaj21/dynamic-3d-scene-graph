@@ -85,6 +85,7 @@ class ContextualSceneGraphNode:
     
     # Cross-session relocation and pose history
     relocation_evaluable: bool = False
+    slam_invalidated: bool = False
     measured_displacement_m: Optional[float] = None
     displacement_uncertainty_m: Optional[float] = None
     pose_history: List[Dict[str, Any]] = field(default_factory=list)
@@ -102,6 +103,7 @@ class ContextualSceneGraphNode:
             "semantic_class": self.semantic_class,
             "contextual_movability": self.contextual_movability.value if isinstance(self.contextual_movability, ContextualMovability) else str(self.contextual_movability),
             "observed_motion": self.observed_motion.value if isinstance(self.observed_motion, ObservedMotionState) else str(self.observed_motion),
+            "slam_invalidated": self.slam_invalidated,
             "physical_support": self.physical_support,
             "geometry_valid": self.geometry_valid,
             "centroid_world": [round(float(x), 4) for x in self.centroid_world] if self.centroid_world is not None else None,
@@ -326,7 +328,8 @@ class ContextualSceneGraphFusion:
 
         if geometry_valid and centroid_arr is not None:
             if is_relocation and node.centroid_world is not None:
-                # Confirmed relocation: preserve previous pose in time-stamped history
+                # Confirmed relocation: preserve previous pose in time-stamped history and invalidate old landmark
+                node.slam_invalidated = True
                 old_pose_record = {
                     "centroid_world": [round(float(x), 4) for x in node.centroid_world],
                     "spatial_extent_m": round(float(node.spatial_extent_m), 4) if node.spatial_extent_m is not None else None,
@@ -335,6 +338,8 @@ class ContextualSceneGraphFusion:
                     "valid_observations_count": node.valid_geometry_observations_count,
                     "coordinate_frame": node.coordinate_frame,
                     "relocation_displacement_m": round(float(np.linalg.norm(centroid_arr - node.centroid_world)), 4),
+                    "slam_invalidated": True,
+                    "landmark_status": "INVALIDATED_RELOCATED",
                 }
                 node.pose_history.append(old_pose_record)
 
@@ -409,3 +414,7 @@ class ContextualSceneGraphFusion:
             "timestamp": time.time(),
             "nodes": {eid: node.to_dict() for eid, node in self.nodes.items()},
         }
+
+    def to_dict(self) -> Dict[str, Any]:
+        """Alias for serialize_to_json."""
+        return self.serialize_to_json()

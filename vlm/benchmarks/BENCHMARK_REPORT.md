@@ -43,15 +43,15 @@
 ### Q2: Did it move during this experiment? (`current_motion_gt`)
 - **`STATIC`**: 47 objects (90.4%) maintained position within measurement noise floor.
 - **`MOVING`**: 5 objects (9.6%) underwent verified physical displacement:
-  - `inst_chair_002`: $\Delta p = 0.563\text{ m}$ ($>13\sigma$)
-  - `inst_chair_003`: $\Delta p = 0.386\text{ m}$ ($>8.9\sigma$)
-  - `inst_storage_box_007`: $\Delta p = 0.396\text{ m}$ ($>9.2\sigma$)
+  - `inst_chair_002`: Tape-measured $\Delta p = 0.563\text{ m}$ (controlled relocation)
+  - `inst_chair_003`: Tape-measured $\Delta p = 0.386\text{ m}$ (controlled relocation)
+  - `inst_storage_box_007`: Tape-measured $\Delta p = 0.396\text{ m}$ (controlled relocation)
   - `inst_rc_car_robot_001`: Trajectory traversal ($4.912\text{ m}$)
   - `inst_human_operator_001`: Intervention traversal ($3.450\text{ m}$)
 
 ### Q3: Did its movement make old SLAM observations unreliable? (`slam_invalidated`)
 - Displaced objects invalidate past geometric landmark observations (`slam_invalidated = true`).
-- Stationary anchors retain full validity (`slam_invalidated = false`), anchoring the SE(2) registration ($R = -16.13^\circ, T = [-0.081, 0.093]\text{ m}$).
+- Stationary anchors retain full validity (`slam_invalidated = false`), anchoring the robust SE(2) registration ($R = -15.558^\circ, T = [-0.1059, 0.0486]\text{ m}$, inlier RMS $= 0.1198\text{ m}$).
 
 ---
 

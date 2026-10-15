@@ -196,7 +196,12 @@ def run_genuine_multiview_evaluation() -> Dict[str, Any]:
         for inst in pop_instances:
             eid = inst["object_instance_id"]
             sem = inst["semantic_class"].lower().strip()
-            pred = CLASS_PRIORS.get(sem, "MOVABLE")
+            if sem in CLASS_PRIORS:
+                pred = CLASS_PRIORS[sem]
+                abstained = False
+            else:
+                pred = "UNKNOWN"
+                abstained = True
             recs_a.append({
                 "entity_id": eid,
                 "semantic_class": sem,
@@ -206,8 +211,8 @@ def run_genuine_multiview_evaluation() -> Dict[str, Any]:
                 "total_tokens": 0,
                 "views_used": 0,
                 "vlm_queried": False,
-                "abstained": False,
-                "provenance": "DETERMINISTIC_CLASS_PRIOR",
+                "abstained": abstained,
+                "provenance": "DETERMINISTIC_CLASS_PRIOR" if not abstained else "UNSEEN_CLASS_ABSTAIN",
             })
         metrics_a = compute_condition_metrics(recs_a)
 

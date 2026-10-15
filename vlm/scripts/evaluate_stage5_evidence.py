@@ -34,6 +34,7 @@ sys.path.insert(0, str(repo_root))
 sys.path.insert(0, str(repo_root / "vlm"))
 
 from vlm.src.stage5_pipeline import run_stage5_pipeline
+from vlm.src.stage5_adapter import load_registration_audit
 
 
 def eval_status(val: Optional[float], thresh: float, op: str = "<=") -> str:
@@ -60,26 +61,26 @@ def evaluate_stage5() -> Dict[str, Any]:
 
     # Load ground truth benchmarks
     gt_bench_path = repo_root / "vlm" / "benchmarks" / "movability_ground_truth.json"
-    audit_file = repo_root / "outputs" / "semantic_mapping_fused_desk_run" / "audit_summary.json"
+    audit_file = repo_root / "vlm" / "outputs" / "stage5_registration_audit.json"
 
     gt_data = {}
     if gt_bench_path.exists():
         with open(gt_bench_path, "r", encoding="utf-8") as f:
             gt_data = json.load(f)
 
-    # Load registration transform for multi-session observation alignment
-    reg_data = {}
-    if audit_file.exists():
-        with open(audit_file, "r", encoding="utf-8") as f:
-            reg_data = json.load(f).get("registration", {})
+    # Load authoritative registration transform for multi-session observation alignment
+    if not audit_file.exists():
+        raise FileNotFoundError(
+            f"Authoritative registration audit missing: {audit_file}. "
+            "Cannot evaluate cross-session evidence without authoritative registration."
+        )
+    reg_info = load_registration_audit(audit_file)
+    if not reg_info.is_valid:
+        raise ValueError(f"Authoritative registration is invalid: {reg_info.diagnostics}")
 
-    theta_deg = reg_data.get("rotation_deg", -16.13)
-    t_vec = np.array(reg_data.get("translation_m", [-0.0815, 0.0930]))
-    theta_rad = math.radians(theta_deg)
-    R_12 = np.array([
-        [math.cos(theta_rad), -math.sin(theta_rad)],
-        [math.sin(theta_rad),  math.cos(theta_rad)]
-    ])
+    theta_deg = reg_info.rotation_deg
+    t_vec = reg_info.translation_m
+    R_12 = reg_info.R_12
 
     # Load all generated evidence records
     geo_records: List[Dict[str, Any]] = []
@@ -400,8 +401,12 @@ def evaluate_stage5() -> Dict[str, Any]:
     entropies = [r.get("semantic_entropy", 0.0) for r in sem_records]
     purities = [r.get("semantic_purity", 1.0) for r in sem_records]
 
+    cov_pct = (len(y_true) / max(1, n_total)) * 100.0
     semantic_metrics = {
         "macro_f1": round(macro_f1, 4),
+        "matched_support_macro_f1": round(macro_f1, 4),
+        "matched_observations_count": len(y_true),
+        "evaluation_coverage_pct": round(cov_pct, 2),
         "classes_evaluated": len(f1_list),
         "total_classes": len(classes),
         "unknown_rate_pct": round(unknown_rate, 2),

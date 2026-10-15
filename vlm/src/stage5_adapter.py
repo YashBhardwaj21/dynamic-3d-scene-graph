@@ -210,7 +210,7 @@ class Stage5EvidenceAdapter:
         self.repo_root = Path(repo_root)
 
         if audit_path is None:
-            audit_path = self.repo_root / "outputs" / "semantic_mapping_fused_desk_run" / "audit_summary.json"
+            audit_path = self.repo_root / "vlm" / "outputs" / "stage5_registration_audit.json"
         self.registration = load_registration_audit(audit_path)
 
         # Primary indexing dictionaries
@@ -504,6 +504,11 @@ class Stage5EvidenceAdapter:
             "observed_motion": observed_motion,
             "world_displacement_m": round(estimated_disp_m, 4) if estimated_disp_m is not None else None,
             "displacement_uncertainty_m": round(disp_uncertainty_m, 4) if disp_uncertainty_m is not None else None,
+            "displacement_uncertainty_heuristic_m": round(disp_uncertainty_m, 4) if disp_uncertainty_m is not None else None,
+            "registration_residual_dispersion_m": round(reg_disp, 4) if 'reg_disp' in locals() else None,
+            "centroid_dispersion_s1_m": round(std1, 4) if 'std1' in locals() else None,
+            "centroid_dispersion_s2_m": round(std2, 4) if 'std2' in locals() else None,
+            "is_calibrated_uncertainty": False,
             "relocation_evaluable": relocation_evaluable,
             "depth_valid": depth_valid,
             "has_valid_pose": has_valid_pose,

@@ -140,7 +140,10 @@
         -2.5079
       ],
       "residual_m": 0.2366,
-      "is_robust_inlier": true
+      "is_robust_inlier": true,
+      "pre_refit_consensus_inlier": true,
+      "post_refit_inlier_at_0_20m": false,
+      "inlier_provenance_note": "Consensus inlier during RANSAC selection; post-refit residual 0.2366m marginally exceeds strict 0.20m threshold."
     },
     {
       "class": "storage box",
@@ -164,8 +167,11 @@
     "max_residual_m": 0.6181,
     "min_residual_m": 0.0456,
     "inlier_count": 7,
+    "consensus_inlier_count": 7,
+    "post_refit_strict_inlier_count_at_0_20m": 6,
     "outlier_count": 3,
     "inlier_rms_residual_m": 0.1198,
+    "post_refit_strict_inlier_rms_residual_m": 0.0864,
     "inlier_median_residual_m": 0.0924,
     "inlier_max_residual_m": 0.2366
   },
@@ -484,6 +490,11 @@
         "held_out_rms_m": 0.1788
       }
     ],
+    "kfold_evaluation_summary": {
+      "mean_fold_rms_m": 0.3021,
+      "pooled_held_out_rmse_m": 0.3538,
+      "aggregation_protocol": "Arithmetic mean of 5 fold RMS values is 0.3021m; pooled held-out RMSE over all 10 residuals is 0.3538m (resolving historical 0.2974m artifact)."
+    },
     "uncertainty_characterization": "Empirical spatial residual dispersion from robust inlier set (sigma_inlier=0.1198m, sigma_full=0.3054m). Must NOT be labeled as calibrated covariance."
   },
   "R_12": [

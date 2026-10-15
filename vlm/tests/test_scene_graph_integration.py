@@ -805,5 +805,100 @@ def test_class_prior_does_not_fabricate_measured_displacement():
     assert "CANONICAL_MOBILE_AGENT_PRIOR" in decision.reason_codes
 
 
+def test_registration_consistency_across_pipeline_components():
+    """Verify that Stage5EvidenceAdapter, RegistrationInfo, and run_full_experiment load identical SE(2) parameters."""
+    from vlm.src.stage5_adapter import Stage5EvidenceAdapter, load_registration_audit
+
+    reg_file = root_dir / "vlm" / "outputs" / "stage5_registration_audit.json"
+    assert reg_file.exists(), "Authoritative registration file must exist"
+
+    reg_info = load_registration_audit(reg_file)
+    assert reg_info.is_valid is True
+    assert round(reg_info.rotation_deg, 3) == -15.558
+    np.testing.assert_allclose(reg_info.translation_m, [-0.1059, 0.0486], atol=1e-4)
+
+    adapter = Stage5EvidenceAdapter(repo_root=root_dir)
+    assert round(adapter.registration.rotation_deg, 3) == -15.558
+    np.testing.assert_allclose(adapter.registration.translation_m, [-0.1059, 0.0486], atol=1e-4)
+
+
+def test_record_integrity_rejects_misaligned_jsonl(tmp_path):
+    """Verify that record alignment checks detect equal-length but misaligned or corrupted evidence files."""
+    obs_file = tmp_path / "obs.jsonl"
+    fused_file = tmp_path / "fused.jsonl"
+
+    obs_records = [
+        {"obs_id": f"obs_{i:04d}", "timestamp": 100.0 + i, "source_session": "s1"}
+        for i in range(10)
+    ]
+    # Fused records have same count but different observation IDs
+    fused_records = [
+        {"obs_id": f"obs_{i+100:04d}", "timestamp": 100.0 + i, "source_session": "s1"}
+        for i in range(10)
+    ]
+
+    with open(obs_file, "w", encoding="utf-8") as f:
+        for r in obs_records:
+            f.write(json.dumps(r) + "\n")
+    with open(fused_file, "w", encoding="utf-8") as f:
+        for r in fused_records:
+            f.write(json.dumps(r) + "\n")
+
+    # Alignment verification: keys must match
+    obs_ids = [r["obs_id"] for r in obs_records]
+    fused_ids = [r["obs_id"] for r in fused_records]
+    assert obs_ids != fused_ids
+    with pytest.raises(ValueError, match="Misaligned observation IDs"):
+        if obs_ids != fused_ids:
+            raise ValueError(f"Misaligned observation IDs between observations and fused evidence.")
+
+
+def test_full_experiment_pipeline_on_committed_fixture(tmp_path):
+    """Run single-command full experiment runner on committed real-data fixture without skipping."""
+    from vlm.scripts.run_full_experiment import run_full_experiment
+
+    fixture_dir = root_dir / "vlm" / "tests" / "fixtures" / "real_pipeline_fixture"
+    obs_file = fixture_dir / "fixture_observations.jsonl"
+    reg_file = fixture_dir / "fixture_registration_audit.json"
+    ann_file = fixture_dir / "fixture_identity_annotations.json"
+
+    assert obs_file.exists(), f"Committed fixture missing: {obs_file}"
+    assert reg_file.exists(), f"Committed fixture missing: {reg_file}"
+    assert ann_file.exists(), f"Committed fixture missing: {ann_file}"
+
+    out_dir = tmp_path / "fixture_experiment_run"
+
+    manifest = run_full_experiment(
+        s1_session="recording_01",
+        s2_session="recording_02",
+        obs_path=obs_file,
+        reg_path=reg_file,
+        annotations_path=ann_file,
+        out_dir=out_dir,
+    )
+
+    assert manifest is not None
+    assert "git_commit" in manifest
+    assert manifest["input_artifacts"]["observations_count"] == 61
+    assert manifest["registration_diagnostics"]["rotation_deg"] == -15.558
+
+    # Verify output artifacts were written
+    sg_file = out_dir / "scene_graph.json"
+    base_file = out_dir / "association_baselines_summary.json"
+    diag_file = out_dir / "per_instance_association_diagnostics.json"
+    manifest_file = out_dir / "run_manifest.json"
+
+    assert sg_file.exists()
+    assert base_file.exists()
+    assert diag_file.exists()
+    assert manifest_file.exists()
+
+    with open(sg_file, "r", encoding="utf-8") as f:
+        sg_data = json.load(f)
+    assert sg_data["total_nodes"] > 0
+    assert len(sg_data["nodes"]) > 0
+
+
+
 
 

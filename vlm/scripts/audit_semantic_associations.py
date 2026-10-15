@@ -107,8 +107,11 @@ def run_comprehensive_association_audit() -> Dict[str, Any]:
     # Instance to tracks mapping for false split detection
     instance_to_tracks_observed: Dict[str, Set[str]] = defaultdict(set)
 
-    # Short track accounting (< 5 frames)
-    track_lifespans: Dict[str, int] = defaultdict(int)
+    from vlm.src.cross_session_association import build_canonical_session_track_mapping
+    canonical_map, gt_cross_pairs = build_canonical_session_track_mapping()
+
+    # Short track accounting (< 5 frames) keyed on (session, track_id)
+    track_lifespans: Dict[Tuple[str, str], int] = defaultdict(int)
 
     for obs, sem in zip(observations, sem_records):
         eid = obs.get("global_entity_id", "")
@@ -117,22 +120,30 @@ def run_comprehensive_association_audit() -> Dict[str, Any]:
         sem_cls = obs.get("semantic_class", "unknown")
         pred_mob = sem.get("class_prior_mobility", "UNKNOWN")
 
+        track_key = (sess, tid) if tid else (sess, eid)
         if tid:
-            track_lifespans[tid] += 1
+            track_lifespans[track_key] += 1
 
-        gt_match = entity_to_gt.get(eid)
+        # Use canonical session-qualified mapping to eliminate cross-session local track collisions
+        inst_id = canonical_map.get((sess, tid)) or canonical_map.get((sess, eid))
+        gt_match = None
+        if inst_id and inst_id in gt_instance_records:
+            gt_match = gt_instance_records[inst_id]
+        elif eid in entity_to_gt:
+            gt_match = entity_to_gt[eid]
+
         if gt_match:
             matched_count += 1
             matched_by_session[sess] += 1
             matched_by_class[sem_cls] += 1
 
-            inst_id = gt_match["instance_id"]
+            matched_inst_id = gt_match["instance_id"]
             gt_match["mapped_observations_count"] += 1
             gt_match["sessions_observed_actual"].add(sess)
             if tid:
-                gt_match["local_track_ids_seen"].add(tid)
-                track_to_gt_instances[tid].add(inst_id)
-                instance_to_tracks_observed[inst_id].add(tid)
+                gt_match["local_track_ids_seen"].add(track_key)
+                track_to_gt_instances[track_key].add(matched_inst_id)
+                instance_to_tracks_observed[matched_inst_id].add(track_key)
 
             y_true_matched.append(gt_match["movability_gt"])
             y_pred_matched.append(pred_mob)
@@ -335,24 +346,24 @@ def run_comprehensive_association_audit() -> Dict[str, Any]:
         "### 6.2 Comparative Evaluation of Association Baselines",
         "All methods are evaluated on identical clusters extracted from real recordings against the canonical physical instance benchmark:",
         "",
-        "| Association Method | Total Matched | Ambiguous Rejected | Annotated Evaluated | True Positives (TP) | False Merges (FM) | Annotated Precision | Static GT Recall | Macro-F1 (Annotated) |",
-        "|---|:---:|:---:|:---:|:---:|:---:|:---:|:---:|:---:|",
-        f"| **Baseline 1: Nearest Centroid** | {len(baselines['baseline_1_nearest_centroid']['result'].matched_pairs)} | 0 | {b1_eval['annotated_eval_pairs_count']} | {b1_eval['true_positive_matches']} | {b1_eval['false_merges']} | **`{b1_eval['precision_on_annotated_subset_pct']:.1f}%`** | {b1_eval['recall_on_static_multi_session_pct']:.1f}% | {b1_eval['f1_on_annotated_subset_pct']:.1f}% |",
-        f"| **Baseline 2: Hungarian Gated** | {len(baselines['baseline_2_hungarian_gated']['result'].matched_pairs)} | 0 | {b2_eval['annotated_eval_pairs_count']} | {b2_eval['true_positive_matches']} | {b2_eval['false_merges']} | **`{b2_eval['precision_on_annotated_subset_pct']:.1f}%`** | {b2_eval['recall_on_static_multi_session_pct']:.1f}% | {b2_eval['f1_on_annotated_subset_pct']:.1f}% |",
-        f"| **Proposed: Uncertainty + Ambiguity Rejection** | **{len(b3_res.matched_pairs)}** | **{len(b3_res.ambiguous_pairs)}** | **{b3_eval['annotated_eval_pairs_count']}** | **{b3_eval['true_positive_matches']}** | **{b3_eval['false_merges']}** | **`{b3_eval['precision_on_annotated_subset_pct']:.1f}%`** | **{b3_eval['recall_on_static_multi_session_pct']:.1f}%** | **`{b3_eval['f1_on_annotated_subset_pct']:.1f}%`** |",
+        "| Association Method | Matched Pairs | Ambiguous Rej | Evaluated Pairs | True Pos (TP) | False Merges (FM) | Candidate Precision | Static Inst Recall | Relocated Inst Recall | Instance F1 |",
+        "|---|:---:|:---:|:---:|:---:|:---:|:---:|:---:|:---:|:---:|",
+        f"| **Baseline 1: Nearest Centroid** | {len(baselines['baseline_1_nearest_centroid']['result'].matched_pairs)} | 0 | {b1_eval['annotated_eval_pairs_count']} | {b1_eval['true_positive_matches']} | {b1_eval['false_merges']} | **`{b1_eval['precision_on_annotated_subset_pct']:.1f}%`** | {b1_eval['recall_on_static_multi_session_pct']:.1f}% | {b1_eval.get('relocated_instance_recall_pct', 0.0):.1f}% | {b1_eval.get('instance_level_f1_pct', b1_eval['f1_on_annotated_subset_pct']):.1f}% |",
+        f"| **Baseline 2: Hungarian Gated** | {len(baselines['baseline_2_hungarian_gated']['result'].matched_pairs)} | 0 | {b2_eval['annotated_eval_pairs_count']} | {b2_eval['true_positive_matches']} | {b2_eval['false_merges']} | **`{b2_eval['precision_on_annotated_subset_pct']:.1f}%`** | {b2_eval['recall_on_static_multi_session_pct']:.1f}% | {b2_eval.get('relocated_instance_recall_pct', 0.0):.1f}% | {b2_eval.get('instance_level_f1_pct', b2_eval['f1_on_annotated_subset_pct']):.1f}% |",
+        f"| **Proposed: Uncertainty + Ambiguity Rejection** | **{len(b3_res.matched_pairs)}** | **{len(b3_res.ambiguous_pairs)}** | **{b3_eval['annotated_eval_pairs_count']}** | **{b3_eval['true_positive_matches']}** | **{b3_eval['false_merges']}** | **`{b3_eval['precision_on_annotated_subset_pct']:.1f}%`** | **{b3_eval['recall_on_static_multi_session_pct']:.1f}%** | {b3_eval.get('relocated_instance_recall_pct', 0.0):.1f}% | **`{b3_eval.get('instance_level_f1_pct', b3_eval['f1_on_annotated_subset_pct']):.1f}%`** |",
     ])
 
     if "proposed_relocation_aware" in baselines:
         b4_eval = baselines["proposed_relocation_aware"]["evaluation"]
         b4_res = baselines["proposed_relocation_aware"]["result"]
         lines.append(
-            f"| **Proposed: Relocation-Aware (Multi-Stage)** | **{len(b4_res.matched_pairs)}** | **{len(b4_res.ambiguous_pairs)}** | **{b4_eval['annotated_eval_pairs_count']}** | **{b4_eval['true_positive_matches']}** | **{b4_eval['false_merges']}** | **`{b4_eval['precision_on_annotated_subset_pct']:.1f}%`** | **{b4_eval['recall_on_static_multi_session_pct']:.1f}%** | **`{b4_eval['f1_on_annotated_subset_pct']:.1f}%`** |"
+            f"| **Proposed: Relocation-Aware (Multi-Stage)** | **{len(b4_res.matched_pairs)}** | **{len(b4_res.ambiguous_pairs)}** | **{b4_eval['annotated_eval_pairs_count']}** | **{b4_eval['true_positive_matches']}** | **{b4_eval['false_merges']}** | **`{b4_eval['precision_on_annotated_subset_pct']:.1f}%`** | **{b4_eval['recall_on_static_multi_session_pct']:.1f}%** | **`{b4_eval.get('relocated_instance_recall_pct', 0.0):.1f}%`** | **`{b4_eval.get('instance_level_f1_pct', b4_eval['f1_on_annotated_subset_pct']):.1f}%`** |"
         )
 
     lines.extend([
         "",
         "> [!NOTE]",
-        f"> **Symmetric Ambiguity Benefit:** The proposed method rejects {len(b3_res.ambiguous_pairs)} ambiguous candidate pairs where competing nearby clusters prevent confident matching. By doing so, it successfully filters out a false merge on the annotated evaluation benchmark, improving precision from 58.3% to **{b3_eval['precision_on_annotated_subset_pct']:.1f}%** without degrading true positives on verified persistent instances.",
+        f"> **Symmetric Ambiguity Benefit:** The proposed method rejects {len(b3_res.ambiguous_pairs)} ambiguous candidate pairs where competing nearby clusters prevent confident matching. By doing so, it successfully filters out a false merge on the annotated evaluation benchmark, improving candidate precision from 58.3% to **{b3_eval['precision_on_annotated_subset_pct']:.1f}%** without degrading true positives on verified persistent instances.",
         "",
         "### 6.3 Sample Verified Physical Matches (Proposed Method)",
         "",
@@ -365,6 +376,26 @@ def run_comprehensive_association_audit() -> Dict[str, Any]:
             f"| `{m.persistent_entity_id}` | `{m.s1_entity_id}` | `{m.s2_entity_id}` | "
             f"`{m.semantic_class}` | `{m.distance_m:.3f} m` | **`{m.status}`** |"
         )
+
+    # 6.4 Complete Per-Instance Diagnostic Breakdown
+    eval_for_table = baselines.get("proposed_relocation_aware", baselines.get("proposed_uncertainty_symmetric", {}))["evaluation"]
+    per_inst_records = eval_for_table.get("per_instance_results", [])
+    if per_inst_records:
+        lines.extend([
+            "",
+            "### 6.4 Complete Per-Instance Benchmark Diagnostic Breakdown",
+            "Audits the association outcome and failure/rejection reasons for all physical multi-session ground truth instances:",
+            "",
+            "| Physical Instance ID | Motion State | S1 Track | S2 Track | Association Outcome | Correct? | Distance | Rejection / Failure Reason |",
+            "|---|:---:|:---:|:---:|:---:|:---:|:---:|---|",
+        ])
+        for row in per_inst_records:
+            is_corr_str = "✅ YES" if row["is_correct"] else "❌ NO"
+            dist_str = f"{row['distance_m']:.3f} m" if row["distance_m"] is not None else "N/A"
+            reason_str = row["rejection_reason"] or "Resolved"
+            lines.append(
+                f"| `{row['physical_instance_id']}` | **`{row['motion_state']}`** | `{row['s1_track_id']}` | `{row['s2_track_id']}` | `{row['outcome']}` | {is_corr_str} | {dist_str} | {reason_str} |"
+            )
 
 
     lines.extend([

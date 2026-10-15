@@ -734,15 +734,112 @@ def evaluate_matcher_against_ground_truth(
     missed_relocated_instances = sorted(relocated_multi_session_instances - recovered_relocated_instances)
 
     n_static = max(1, len(static_multi_session_instances))
+    n_reloc = max(1, len(relocated_multi_session_instances))
     n_all = max(1, len(all_multi_session_instances))
+    n_gt_pairs = max(1, len(gt_cross_pairs))
 
+    # 1. Annotated Candidate Pair-level Metrics (Denominator: Annotated Evaluated Pairs)
     precision_on_annotated = (true_positives / max(1, total_annotated)) * 100.0 if total_annotated > 0 else 0.0
+    false_merge_rate = (false_merges / max(1, total_annotated)) * 100.0 if total_annotated > 0 else 0.0
+    pair_recall = (true_positives / n_gt_pairs) * 100.0
+    pair_f1 = (2 * precision_on_annotated * pair_recall / (precision_on_annotated + pair_recall)) if (precision_on_annotated + pair_recall) > 0 else 0.0
+
+    # 2. Physical-Instance Level Metrics (Denominator: Ground Truth Physical Instances)
     recall_on_static = (len(recovered_static_instances) / n_static) * 100.0
+    recall_on_relocated = (len(recovered_relocated_instances) / n_reloc) * 100.0
     recall_on_all = (len(recovered_instances) / n_all) * 100.0
-    f1_on_annotated = (
-        (2 * precision_on_annotated * recall_on_static / (precision_on_annotated + recall_on_static))
-        if (precision_on_annotated + recall_on_static) > 0 else 0.0
+    false_split_rate = ((n_all - len(recovered_instances)) / n_all) * 100.0
+
+    # Instance-level precision: recovered instances vs predicted unique instances in annotated scope
+    claimed_instances = set()
+    for rec in annotated_eval_matches:
+        if rec.get("s1_gt_instance"):
+            claimed_instances.add(rec["s1_gt_instance"])
+        if rec.get("s2_gt_instance"):
+            claimed_instances.add(rec["s2_gt_instance"])
+    instance_precision = (len(recovered_instances) / max(1, len(claimed_instances))) * 100.0 if claimed_instances else 0.0
+    instance_f1 = (
+        (2 * instance_precision * recall_on_all / (instance_precision + recall_on_all))
+        if (instance_precision + recall_on_all) > 0 else 0.0
     )
+
+    # 3. Per-Instance Detailed Diagnostic Table
+    matched_by_pair = {(m.s1_entity_id, m.s2_entity_id): m for m in association_result.matched_pairs}
+    ambiguous_set = {(m.s1_entity_id, m.s2_entity_id) for m in association_result.ambiguous_pairs}
+    s1_matched_map = {m.s1_entity_id: m for m in association_result.matched_pairs}
+    s2_matched_map = {m.s2_entity_id: m for m in association_result.matched_pairs}
+
+    per_instance_table = []
+    for inst_id in sorted(all_multi_session_instances):
+        s1_trks = sorted(set(trk for (sess, trk), i in canonical_map.items() if i == inst_id and "recording_01" in sess))
+        s2_trks = sorted(set(trk for (sess, trk), i in canonical_map.items() if i == inst_id and "recording_02" in sess))
+        motion_state = "STATIC" if inst_id in static_multi_session_instances else "RELOCATED"
+
+        # Check if any valid (s1, s2) pair was recovered
+        found_match = None
+        for t1 in s1_trks:
+            for t2 in s2_trks:
+                if (t1, t2) in matched_by_pair:
+                    found_match = matched_by_pair[(t1, t2)]
+                    break
+            if found_match:
+                break
+
+        if found_match is not None:
+            per_instance_table.append({
+                "physical_instance_id": inst_id,
+                "motion_state": motion_state,
+                "s1_track_id": found_match.s1_entity_id,
+                "s2_track_id": found_match.s2_entity_id,
+                "outcome": getattr(found_match, "outcome", found_match.status),
+                "is_correct": True,
+                "distance_m": round(found_match.distance_m, 4),
+                "rejection_reason": None,
+            })
+        else:
+            # Analyze failure mode
+            false_merge_info = None
+            is_ambig = False
+            for t1 in s1_trks:
+                if t1 in s1_matched_map:
+                    other_m = s1_matched_map[t1]
+                    other_inst = canonical_map.get(("semantic_mapping_my_desk_recording_02", other_m.s2_entity_id))
+                    if other_inst and other_inst != inst_id:
+                        false_merge_info = f"S1 track {t1} falsely merged with {other_inst} ({other_m.s2_entity_id})"
+                        break
+                for t2 in s2_trks:
+                    if (t1, t2) in ambiguous_set:
+                        is_ambig = True
+
+            if not false_merge_info:
+                for t2 in s2_trks:
+                    if t2 in s2_matched_map:
+                        other_m = s2_matched_map[t2]
+                        other_inst = canonical_map.get(("semantic_mapping_my_desk_recording_01", other_m.s1_entity_id))
+                        if other_inst and other_inst != inst_id:
+                            false_merge_info = f"S2 track {t2} falsely merged with {other_inst} ({other_m.s1_entity_id})"
+                            break
+
+            if false_merge_info:
+                outcome = "FALSE_MERGE"
+                reason = false_merge_info
+            elif is_ambig:
+                outcome = "AMBIGUOUS_REJECTED"
+                reason = "Ambiguity rejection: competing nearby clusters within ambiguity margin."
+            else:
+                outcome = "UNMATCHED_GATE"
+                reason = "Displacement exceeds gate threshold or no candidate cluster survived feature gating."
+
+            per_instance_table.append({
+                "physical_instance_id": inst_id,
+                "motion_state": motion_state,
+                "s1_track_id": s1_trks[0] if s1_trks else "NONE",
+                "s2_track_id": s2_trks[0] if s2_trks else "NONE",
+                "outcome": outcome,
+                "is_correct": False,
+                "distance_m": None,
+                "rejection_reason": reason,
+            })
 
     return {
         "algorithm_name": association_result.algorithm_name,
@@ -750,27 +847,37 @@ def evaluate_matcher_against_ground_truth(
         "annotated_eval_pairs_count": total_annotated,
         "true_positive_matches": true_positives,
         "false_merges": false_merges,
+        "false_merge_rate_pct": round(false_merge_rate, 2),
+        "false_split_rate_pct": round(false_split_rate, 2),
         "unannotated_candidate_pairs_count": len(unannotated_matches),
         "total_multi_session_instances": len(all_multi_session_instances),
         "static_multi_session_instances": len(static_multi_session_instances),
         "relocated_multi_session_instances": len(relocated_multi_session_instances),
         "recovered_static_instances_count": len(recovered_static_instances),
+        "recovered_relocated_instances_count": len(recovered_relocated_instances),
         "recovered_all_instances_count": len(recovered_instances),
         "missed_static_instances_count": len(missed_static_instances),
         "missed_static_instances": missed_static_instances,
         "missed_relocated_instances": missed_relocated_instances,
-        "total_ground_truth_cross_session_pairs": len(all_multi_session_instances),
+        "total_ground_truth_cross_session_pairs": len(gt_cross_pairs),
         "static_ground_truth_cross_session_pairs": len(static_multi_session_instances),
         "relocated_ground_truth_cross_session_pairs": len(relocated_multi_session_instances),
         "precision_on_annotated_subset_pct": round(precision_on_annotated, 2),
+        "candidate_pair_precision_pct": round(precision_on_annotated, 2),
+        "pair_level_recall_pct": round(pair_recall, 2),
+        "pair_level_f1_pct": round(pair_f1, 2),
         "recall_on_static_multi_session_pct": round(recall_on_static, 2),
         "static_instance_recall_pct": round(recall_on_static, 2),
+        "relocated_instance_recall_pct": round(recall_on_relocated, 2),
         "recall_on_all_multi_session_pct": round(recall_on_all, 2),
         "all_instance_recall_pct": round(recall_on_all, 2),
-        "f1_on_annotated_subset_pct": round(f1_on_annotated, 2),
+        "instance_level_precision_pct": round(instance_precision, 2),
+        "instance_level_f1_pct": round(instance_f1, 2),
+        "f1_on_annotated_subset_pct": round(instance_f1, 2),
         "ambiguous_pairs_rejected_count": len(association_result.ambiguous_pairs),
         "annotated_evaluated_matches": annotated_eval_matches,
         "unannotated_matches_sample": unannotated_matches[:10],
+        "per_instance_results": per_instance_table,
     }
 
 

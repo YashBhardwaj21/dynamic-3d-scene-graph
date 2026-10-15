@@ -57,12 +57,18 @@ def compute_metrics(records: List[Dict[str, Any]]) -> Dict[str, Any]:
         gt = r["ground_truth"]
         pred = r["prediction"]
         abstained = r.get("abstained", False) or pred in ["UNKNOWN", None]
-        decision_latencies_ms.append(r.get("decision_latency_ms", 0.05))
+        d_lat = r.get("decision_latency_ms")
+        if d_lat is not None and isinstance(d_lat, (int, float)):
+            decision_latencies_ms.append(float(d_lat))
 
         # End to end latency: decision time + inference time if queried
-        inf_ms = r.get("inference_latency_ms") or 0.0
-        e2e_s = (r.get("decision_latency_ms", 0.05) + inf_ms) / 1000.0
-        end_to_end_latencies_s.append(e2e_s)
+        inf_ms = r.get("inference_latency_ms")
+        if d_lat is not None and isinstance(d_lat, (int, float)):
+            if r.get("vlm_required", False):
+                if inf_ms is not None and isinstance(inf_ms, (int, float)):
+                    end_to_end_latencies_s.append((float(d_lat) + float(inf_ms)) / 1000.0)
+            else:
+                end_to_end_latencies_s.append(float(d_lat) / 1000.0)
 
         # Detailed query accounting
         if r.get("vlm_required", False):
