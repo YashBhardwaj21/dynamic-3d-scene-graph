@@ -3,6 +3,7 @@
 import pytest
 import sys
 from pathlib import Path
+from PIL import Image
 
 # Add project root and vlm to sys.path
 root_dir = Path(__file__).resolve().parent.parent.parent
@@ -241,3 +242,136 @@ def test_vlm_output_validation_and_safe_fallback():
     assert res3["abstain"] is False
     assert res3["movability"] == "MOVABLE"
     assert res3["physical_support"] == "freestanding_on_surface"
+
+
+def test_wrong_object_id_rejected():
+    """Phase 2: A response naming the wrong object must not be accepted as valid."""
+    raw_mismatched = '{"object_id": "inst_wrong_999", "object_class": "chair", "movability": "MOVABLE", "abstain": false}'
+    res, is_json, is_schema = parse_vlm_output(raw_mismatched, "inst_chair_001", "chair")
+    assert is_json
+    assert not is_schema
+    assert not res["id_matched"]
+    assert res["abstain"] is True
+    assert res["movability"] == "UNKNOWN"
+    assert res["validation_error"] == "object_id_mismatch"
+
+
+def test_ontology_alias_normalization():
+    """Phase 2: Verify alias normalization to Rüdt et al. canonical classes."""
+    # IMMOVABLE aliases
+    for alias in ["FIXED", "STRUCTURAL", "ARCHITECTURAL", "WALL_MOUNTED"]:
+        raw = f'{{"object_id": "inst_01", "object_class": "door", "movability": "{alias}", "abstain": false}}'
+        res, is_json, is_schema = parse_vlm_output(raw, "inst_01", "door")
+        assert res["movability"] == "IMMOVABLE"
+        assert not res["abstain"]
+
+    # MOVABLE aliases
+    for alias in ["PORTABLE", "RELOCATABLE", "FURNITURE", "FREESTANDING"]:
+        raw = f'{{"object_id": "inst_01", "object_class": "chair", "movability": "{alias}", "abstain": false}}'
+        res, is_json, is_schema = parse_vlm_output(raw, "inst_01", "chair")
+        assert res["movability"] == "MOVABLE"
+        assert not res["abstain"]
+
+    # MOBILE aliases
+    for alias in ["DYNAMIC", "SELF_PROPELLED", "ROBOT", "AGENT"]:
+        raw = f'{{"object_id": "inst_01", "object_class": "robot", "movability": "{alias}", "abstain": false}}'
+        res, is_json, is_schema = parse_vlm_output(raw, "inst_01", "robot")
+        assert res["movability"] == "MOBILE"
+        assert not res["abstain"]
+
+
+def test_missing_views_rejected_before_inference(tmp_path):
+    """Phase 2: Empty visual context must cause DEFER and never execute text-only inference."""
+    router = SelectiveRouter(enable_vlm=True, mode="replay")
+    empty_dir = tmp_path / "empty_crops"
+    empty_dir.mkdir()
+
+    ev = {
+        "entity_id": "inst_chair_002",
+        "semantic_class": "chair",
+        "has_valid_pose": True,
+        "depth_valid": True,
+        "observed_motion": "DISPLACED",
+        "world_displacement_m": 0.563,
+        "displacement_uncertainty_m": 0.04,
+        "has_images": True,
+        "views_count": 2,
+        "crops_dir": str(empty_dir),
+    }
+
+    res = router.route_entity(ev)
+    assert res["decision"] == "DEFER"
+    assert "MISSING_REQUIRED_VISUAL_CONTEXT" in res["reason_codes"]
+    assert not res["vlm_inference_executed"]
+    assert res["prediction"] == "UNKNOWN"
+    assert res["abstained"] is True
+
+
+def test_replay_mode_cache_miss_semantics():
+    """Phase 2: Replay mode must record explicit cache miss rather than calling server."""
+    router = SelectiveRouter(enable_vlm=True, mode="replay", cache_path=None)
+    ev = {
+        "entity_id": "inst_pedestal_fan_001",
+        "semantic_class": "pedestal fan",
+        "has_valid_pose": True,
+        "depth_valid": True,
+        "observed_motion": "STATIC",
+        "has_images": True,
+        "views_count": 1,
+        "crops_dir": "vlm/outputs/multiview_samples/inst_pedestal_fan_001",
+    }
+    res = router.route_entity(ev, repo_root=root_dir)
+    # If the key is not in cache, replay mode cleanly returns miss without network
+    assert res["execution_mode"] == "replay"
+    assert not res["vlm_inference_executed"]
+
+
+def test_wrong_object_class_rejected():
+    """Phase 9: Response naming the wrong semantic class must be rejected."""
+    raw_class_mismatch = '{"object_id": "inst_chair_001", "object_class": "refrigerator", "movability": "MOVABLE", "abstain": false}'
+    res, is_json, is_schema = parse_vlm_output(raw_class_mismatch, "inst_chair_001", "chair")
+    assert is_json
+    assert not is_schema
+    assert not res["class_matched"]
+    assert res["abstain"] is True
+    assert res["movability"] == "UNKNOWN"
+    assert res["validation_error"] == "object_class_mismatch"
+
+
+def test_corrupt_unreadable_image_rejected(tmp_path):
+    """Phase 9: Corrupt or unreadable image must fail decoding validation and prevent inference."""
+    router = SelectiveRouter(enable_vlm=True, mode="replay")
+    corrupt_dir = tmp_path / "corrupt_inst"
+    corrupt_dir.mkdir()
+    corrupt_crop = corrupt_dir / "crop_view_0.jpg"
+    corrupt_crop.write_bytes(b"NOT_A_VALID_JPEG_HEADER_CORRUPTED_BYTES")
+
+    valid_images, telemetry = router.validate_image_inputs(corrupt_dir, expected_views=1)
+    assert len(valid_images) == 0
+    assert len(telemetry["decoding_failures"]) == 1
+    assert "crop_view_0.jpg" in telemetry["decoding_failures"][0]
+
+
+def test_cache_invalidation_on_image_modification(tmp_path):
+    """Phase 9: Changing image binary contents must alter fingerprint and invalidate cache."""
+    router = SelectiveRouter(enable_vlm=True, mode="replay")
+    test_dir = tmp_path / "mod_inst"
+    test_dir.mkdir()
+    crop_file = test_dir / "crop_view_0.jpg"
+
+    # Create valid dummy image 1
+    im1 = Image.new("RGB", (64, 64), color="red")
+    im1.save(crop_file, format="JPEG")
+    imgs1, tel1 = router.validate_image_inputs(test_dir, expected_views=1)
+    key1 = router._compute_cache_key("inst_mod", {"semantic_class": "chair"}, imgs1)
+
+    # Modify image binary
+    im2 = Image.new("RGB", (64, 64), color="blue")
+    im2.save(crop_file, format="JPEG")
+    imgs2, tel2 = router.validate_image_inputs(test_dir, expected_views=1)
+    key2 = router._compute_cache_key("inst_mod", {"semantic_class": "chair"}, imgs2)
+
+    assert key1 != key2
+    assert tel1["image_hashes"][0] != tel2["image_hashes"][0]
+
+

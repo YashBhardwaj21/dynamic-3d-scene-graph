@@ -1,0 +1,620 @@
+{
+  "metadata": {
+    "title": "Phase 6 Controlled VLM Ablation Study",
+    "timestamp": 1792095207.9823377,
+    "model": "Qwen2.5-VL-3B-Instruct (GGUF Q4_K_M)",
+    "total_image_eligible_instances": 39
+  },
+  "ablations": {
+    "prompt_ablation_39": {
+      "description": "Comparison of prompt formulations on all 39 image-eligible instances",
+      "conditions": {
+        "P1_structured_affordance_v2": {
+          "total_instances": 39,
+          "balanced_accuracy": 0.5,
+          "macro_f1": 0.4869,
+          "per_class_recall": {
+            "IMMOVABLE": 0.0,
+            "MOVABLE": 1.0,
+            "MOBILE": 0.0
+          },
+          "per_class_precision": {
+            "IMMOVABLE": 0.0,
+            "MOVABLE": 0.9487,
+            "MOBILE": 0.0
+          },
+          "per_class_f1": {
+            "IMMOVABLE": 0.0,
+            "MOVABLE": 0.9737,
+            "MOBILE": 0.0
+          },
+          "confusion_matrix": {
+            "IMMOVABLE": {
+              "IMMOVABLE": 0,
+              "MOVABLE": 2,
+              "MOBILE": 0,
+              "UNKNOWN": 0
+            },
+            "MOVABLE": {
+              "IMMOVABLE": 0,
+              "MOVABLE": 37,
+              "MOBILE": 0,
+              "UNKNOWN": 0
+            },
+            "MOBILE": {
+              "IMMOVABLE": 0,
+              "MOVABLE": 0,
+              "MOBILE": 0,
+              "UNKNOWN": 0
+            }
+          },
+          "abstention_rate_pct": 0.0,
+          "latency_s": {
+            "mean": 20.77,
+            "p50": 23.22,
+            "p95": 27.13
+          },
+          "token_usage": {
+            "mean": 455.9,
+            "max": 505
+          }
+        },
+        "P2_direct_json_v1": {
+          "total_instances": 39,
+          "balanced_accuracy": 0.4865,
+          "macro_f1": 0.48,
+          "per_class_recall": {
+            "IMMOVABLE": 0.0,
+            "MOVABLE": 0.973,
+            "MOBILE": 0.0
+          },
+          "per_class_precision": {
+            "IMMOVABLE": 0.0,
+            "MOVABLE": 0.9474,
+            "MOBILE": 0.0
+          },
+          "per_class_f1": {
+            "IMMOVABLE": 0.0,
+            "MOVABLE": 0.96,
+            "MOBILE": 0.0
+          },
+          "confusion_matrix": {
+            "IMMOVABLE": {
+              "IMMOVABLE": 0,
+              "MOVABLE": 2,
+              "MOBILE": 0,
+              "UNKNOWN": 0
+            },
+            "MOVABLE": {
+              "IMMOVABLE": 0,
+              "MOVABLE": 36,
+              "MOBILE": 0,
+              "UNKNOWN": 1
+            },
+            "MOBILE": {
+              "IMMOVABLE": 0,
+              "MOVABLE": 0,
+              "MOBILE": 0,
+              "UNKNOWN": 0
+            }
+          },
+          "abstention_rate_pct": 2.56,
+          "latency_s": {
+            "mean": 110.44,
+            "p50": 24.19,
+            "p95": 173.06
+          },
+          "token_usage": {
+            "mean": 423.8,
+            "max": 470
+          }
+        },
+        "P3_evidence_grounded_abstention": {
+          "total_instances": 39,
+          "balanced_accuracy": 0.4865,
+          "macro_f1": 0.48,
+          "per_class_recall": {
+            "IMMOVABLE": 0.0,
+            "MOVABLE": 0.973,
+            "MOBILE": 0.0
+          },
+          "per_class_precision": {
+            "IMMOVABLE": 0.0,
+            "MOVABLE": 0.9474,
+            "MOBILE": 0.0
+          },
+          "per_class_f1": {
+            "IMMOVABLE": 0.0,
+            "MOVABLE": 0.96,
+            "MOBILE": 0.0
+          },
+          "confusion_matrix": {
+            "IMMOVABLE": {
+              "IMMOVABLE": 0,
+              "MOVABLE": 2,
+              "MOBILE": 0,
+              "UNKNOWN": 0
+            },
+            "MOVABLE": {
+              "IMMOVABLE": 0,
+              "MOVABLE": 36,
+              "MOBILE": 0,
+              "UNKNOWN": 1
+            },
+            "MOBILE": {
+              "IMMOVABLE": 0,
+              "MOVABLE": 0,
+              "MOBILE": 0,
+              "UNKNOWN": 0
+            }
+          },
+          "abstention_rate_pct": 2.56,
+          "latency_s": {
+            "mean": 20.77,
+            "p50": 23.22,
+            "p95": 27.13
+          },
+          "token_usage": {
+            "mean": 455.9,
+            "max": 505
+          }
+        }
+      }
+    },
+    "view_count_ablation_matched_3views": {
+      "description": "Strictly matched comparison on N = 8 instances supporting 1, 2, and 3 views",
+      "population_count": 8,
+      "conditions": {
+        "1_composite_view": {
+          "total_instances": 8,
+          "balanced_accuracy": 1.0,
+          "macro_f1": 1.0,
+          "per_class_recall": {
+            "IMMOVABLE": 0.0,
+            "MOVABLE": 1.0,
+            "MOBILE": 0.0
+          },
+          "per_class_precision": {
+            "IMMOVABLE": 0.0,
+            "MOVABLE": 1.0,
+            "MOBILE": 0.0
+          },
+          "per_class_f1": {
+            "IMMOVABLE": 0.0,
+            "MOVABLE": 1.0,
+            "MOBILE": 0.0
+          },
+          "confusion_matrix": {
+            "IMMOVABLE": {
+              "IMMOVABLE": 0,
+              "MOVABLE": 0,
+              "MOBILE": 0,
+              "UNKNOWN": 0
+            },
+            "MOVABLE": {
+              "IMMOVABLE": 0,
+              "MOVABLE": 8,
+              "MOBILE": 0,
+              "UNKNOWN": 0
+            },
+            "MOBILE": {
+              "IMMOVABLE": 0,
+              "MOVABLE": 0,
+              "MOBILE": 0,
+              "UNKNOWN": 0
+            }
+          },
+          "abstention_rate_pct": 0.0,
+          "latency_s": {
+            "mean": 15.87,
+            "p50": 16.0,
+            "p95": 17.48
+          },
+          "token_usage": {
+            "mean": 331.5,
+            "max": 352
+          }
+        },
+        "2_composite_views": {
+          "total_instances": 8,
+          "balanced_accuracy": 1.0,
+          "macro_f1": 1.0,
+          "per_class_recall": {
+            "IMMOVABLE": 0.0,
+            "MOVABLE": 1.0,
+            "MOBILE": 0.0
+          },
+          "per_class_precision": {
+            "IMMOVABLE": 0.0,
+            "MOVABLE": 1.0,
+            "MOBILE": 0.0
+          },
+          "per_class_f1": {
+            "IMMOVABLE": 0.0,
+            "MOVABLE": 1.0,
+            "MOBILE": 0.0
+          },
+          "confusion_matrix": {
+            "IMMOVABLE": {
+              "IMMOVABLE": 0,
+              "MOVABLE": 0,
+              "MOBILE": 0,
+              "UNKNOWN": 0
+            },
+            "MOVABLE": {
+              "IMMOVABLE": 0,
+              "MOVABLE": 8,
+              "MOBILE": 0,
+              "UNKNOWN": 0
+            },
+            "MOBILE": {
+              "IMMOVABLE": 0,
+              "MOVABLE": 0,
+              "MOBILE": 0,
+              "UNKNOWN": 0
+            }
+          },
+          "abstention_rate_pct": 0.0,
+          "latency_s": {
+            "mean": 199.21,
+            "p50": 23.05,
+            "p95": 933.52
+          },
+          "token_usage": {
+            "mean": 420.0,
+            "max": 434
+          }
+        },
+        "3_composite_views": {
+          "total_instances": 8,
+          "balanced_accuracy": 1.0,
+          "macro_f1": 1.0,
+          "per_class_recall": {
+            "IMMOVABLE": 0.0,
+            "MOVABLE": 1.0,
+            "MOBILE": 0.0
+          },
+          "per_class_precision": {
+            "IMMOVABLE": 0.0,
+            "MOVABLE": 1.0,
+            "MOBILE": 0.0
+          },
+          "per_class_f1": {
+            "IMMOVABLE": 0.0,
+            "MOVABLE": 1.0,
+            "MOBILE": 0.0
+          },
+          "confusion_matrix": {
+            "IMMOVABLE": {
+              "IMMOVABLE": 0,
+              "MOVABLE": 0,
+              "MOBILE": 0,
+              "UNKNOWN": 0
+            },
+            "MOVABLE": {
+              "IMMOVABLE": 0,
+              "MOVABLE": 8,
+              "MOBILE": 0,
+              "UNKNOWN": 0
+            },
+            "MOBILE": {
+              "IMMOVABLE": 0,
+              "MOVABLE": 0,
+              "MOBILE": 0,
+              "UNKNOWN": 0
+            }
+          },
+          "abstention_rate_pct": 0.0,
+          "latency_s": {
+            "mean": 30.78,
+            "p50": 31.42,
+            "p95": 46.59
+          },
+          "token_usage": {
+            "mean": 564.4,
+            "max": 582
+          }
+        }
+      }
+    },
+    "view_count_ablation_matched_2views": {
+      "description": "Strictly matched comparison on N = 24 instances supporting >= 2 views",
+      "population_count": 24,
+      "conditions": {
+        "1_composite_view": {
+          "total_instances": 24,
+          "balanced_accuracy": 1.0,
+          "macro_f1": 1.0,
+          "per_class_recall": {
+            "IMMOVABLE": 0.0,
+            "MOVABLE": 1.0,
+            "MOBILE": 0.0
+          },
+          "per_class_precision": {
+            "IMMOVABLE": 0.0,
+            "MOVABLE": 1.0,
+            "MOBILE": 0.0
+          },
+          "per_class_f1": {
+            "IMMOVABLE": 0.0,
+            "MOVABLE": 1.0,
+            "MOBILE": 0.0
+          },
+          "confusion_matrix": {
+            "IMMOVABLE": {
+              "IMMOVABLE": 0,
+              "MOVABLE": 0,
+              "MOBILE": 0,
+              "UNKNOWN": 0
+            },
+            "MOVABLE": {
+              "IMMOVABLE": 0,
+              "MOVABLE": 24,
+              "MOBILE": 0,
+              "UNKNOWN": 0
+            },
+            "MOBILE": {
+              "IMMOVABLE": 0,
+              "MOVABLE": 0,
+              "MOBILE": 0,
+              "UNKNOWN": 0
+            }
+          },
+          "abstention_rate_pct": 0.0,
+          "latency_s": {
+            "mean": 15.78,
+            "p50": 15.95,
+            "p95": 17.82
+          },
+          "token_usage": {
+            "mean": 330.5,
+            "max": 352
+          }
+        },
+        "2_composite_views": {
+          "total_instances": 24,
+          "balanced_accuracy": 1.0,
+          "macro_f1": 1.0,
+          "per_class_recall": {
+            "IMMOVABLE": 0.0,
+            "MOVABLE": 1.0,
+            "MOBILE": 0.0
+          },
+          "per_class_precision": {
+            "IMMOVABLE": 0.0,
+            "MOVABLE": 1.0,
+            "MOBILE": 0.0
+          },
+          "per_class_f1": {
+            "IMMOVABLE": 0.0,
+            "MOVABLE": 1.0,
+            "MOBILE": 0.0
+          },
+          "confusion_matrix": {
+            "IMMOVABLE": {
+              "IMMOVABLE": 0,
+              "MOVABLE": 0,
+              "MOBILE": 0,
+              "UNKNOWN": 0
+            },
+            "MOVABLE": {
+              "IMMOVABLE": 0,
+              "MOVABLE": 24,
+              "MOBILE": 0,
+              "UNKNOWN": 0
+            },
+            "MOBILE": {
+              "IMMOVABLE": 0,
+              "MOVABLE": 0,
+              "MOBILE": 0,
+              "UNKNOWN": 0
+            }
+          },
+          "abstention_rate_pct": 0.0,
+          "latency_s": {
+            "mean": 83.49,
+            "p50": 23.78,
+            "p95": 32.4
+          },
+          "token_usage": {
+            "mean": 421.6,
+            "max": 445
+          }
+        }
+      }
+    },
+    "input_representation_ablation_39": {
+      "description": "Comparison of crop-only vs crop+scene vs multi-view on N = 39 instances",
+      "conditions": {
+        "crop_only": {
+          "total_instances": 39,
+          "balanced_accuracy": 0.4865,
+          "macro_f1": 0.48,
+          "per_class_recall": {
+            "IMMOVABLE": 0.0,
+            "MOVABLE": 0.973,
+            "MOBILE": 0.0
+          },
+          "per_class_precision": {
+            "IMMOVABLE": 0.0,
+            "MOVABLE": 0.9474,
+            "MOBILE": 0.0
+          },
+          "per_class_f1": {
+            "IMMOVABLE": 0.0,
+            "MOVABLE": 0.96,
+            "MOBILE": 0.0
+          },
+          "confusion_matrix": {
+            "IMMOVABLE": {
+              "IMMOVABLE": 0,
+              "MOVABLE": 2,
+              "MOBILE": 0,
+              "UNKNOWN": 0
+            },
+            "MOVABLE": {
+              "IMMOVABLE": 0,
+              "MOVABLE": 36,
+              "MOBILE": 0,
+              "UNKNOWN": 1
+            },
+            "MOBILE": {
+              "IMMOVABLE": 0,
+              "MOVABLE": 0,
+              "MOBILE": 0,
+              "UNKNOWN": 0
+            }
+          },
+          "abstention_rate_pct": 2.56,
+          "latency_s": {
+            "mean": 11.97,
+            "p50": 12.03,
+            "p95": 13.69
+          },
+          "token_usage": {
+            "mean": 215.9,
+            "max": 237
+          }
+        },
+        "composite_single_view": {
+          "total_instances": 39,
+          "balanced_accuracy": 0.4865,
+          "macro_f1": 0.48,
+          "per_class_recall": {
+            "IMMOVABLE": 0.0,
+            "MOVABLE": 0.973,
+            "MOBILE": 0.0
+          },
+          "per_class_precision": {
+            "IMMOVABLE": 0.0,
+            "MOVABLE": 0.9474,
+            "MOBILE": 0.0
+          },
+          "per_class_f1": {
+            "IMMOVABLE": 0.0,
+            "MOVABLE": 0.96,
+            "MOBILE": 0.0
+          },
+          "confusion_matrix": {
+            "IMMOVABLE": {
+              "IMMOVABLE": 0,
+              "MOVABLE": 2,
+              "MOBILE": 0,
+              "UNKNOWN": 0
+            },
+            "MOVABLE": {
+              "IMMOVABLE": 0,
+              "MOVABLE": 36,
+              "MOBILE": 0,
+              "UNKNOWN": 1
+            },
+            "MOBILE": {
+              "IMMOVABLE": 0,
+              "MOVABLE": 0,
+              "MOBILE": 0,
+              "UNKNOWN": 0
+            }
+          },
+          "abstention_rate_pct": 2.56,
+          "latency_s": {
+            "mean": 110.44,
+            "p50": 24.19,
+            "p95": 173.06
+          },
+          "token_usage": {
+            "mean": 423.8,
+            "max": 470
+          }
+        },
+        "composite_multi_view": {
+          "total_instances": 39,
+          "balanced_accuracy": 0.5,
+          "macro_f1": 0.4869,
+          "per_class_recall": {
+            "IMMOVABLE": 0.0,
+            "MOVABLE": 1.0,
+            "MOBILE": 0.0
+          },
+          "per_class_precision": {
+            "IMMOVABLE": 0.0,
+            "MOVABLE": 0.9487,
+            "MOBILE": 0.0
+          },
+          "per_class_f1": {
+            "IMMOVABLE": 0.0,
+            "MOVABLE": 0.9737,
+            "MOBILE": 0.0
+          },
+          "confusion_matrix": {
+            "IMMOVABLE": {
+              "IMMOVABLE": 0,
+              "MOVABLE": 2,
+              "MOBILE": 0,
+              "UNKNOWN": 0
+            },
+            "MOVABLE": {
+              "IMMOVABLE": 0,
+              "MOVABLE": 37,
+              "MOBILE": 0,
+              "UNKNOWN": 0
+            },
+            "MOBILE": {
+              "IMMOVABLE": 0,
+              "MOVABLE": 0,
+              "MOBILE": 0,
+              "UNKNOWN": 0
+            }
+          },
+          "abstention_rate_pct": 0.0,
+          "latency_s": {
+            "mean": 20.77,
+            "p50": 23.22,
+            "p95": 27.13
+          },
+          "token_usage": {
+            "mean": 455.9,
+            "max": 505
+          }
+        }
+      }
+    }
+  },
+  "failure_taxonomy": {
+    "linguistic_contextual_mobility_bias": {
+      "category": "Contextual Reasoning Failure",
+      "count": 2,
+      "instances": [
+        "inst_door_001",
+        "inst_ceiling_fan_001"
+      ],
+      "ground_truth": "IMMOVABLE",
+      "vlm_prediction": "MOVABLE",
+      "root_cause": "Vision-language models exhibit strong prior word associations with dynamic actions ('doors open and close', 'fans spin and rotate'). Despite overhead concrete mounting and door frame jambs clearly visible in scene crops, the model prioritizes object name affordance.",
+      "remediation": "Estimator-aware selective router resolves architectural fixtures cheaply via canonical prior."
+    },
+    "support_ambiguity_abstention": {
+      "category": "Visual Support Ambiguity",
+      "count": 1,
+      "instances": [
+        "inst_pedestal_fan_001"
+      ],
+      "ground_truth": "MOVABLE",
+      "vlm_prediction": "UNKNOWN (M1/M2) / MOVABLE (M3)",
+      "root_cause": "Pedestal fan base is partially obscured by desk shadow. M1 and M2 abstain due to ambiguous support evidence, while M3 resolves as MOVABLE under forced affordance demonstration.",
+      "remediation": "Multi-view composite reasoning with explicit support schema clarifies freestanding base."
+    },
+    "foreground_clutter_interference": {
+      "category": "Input Quality / 2D Bounding Clutter",
+      "count": 3,
+      "instances": [
+        "inst_chair_004",
+        "inst_chair_007",
+        "inst_chair_019"
+      ],
+      "ground_truth": "MOVABLE",
+      "vlm_prediction": "MOVABLE",
+      "root_cause": "2D bounding boxes capture foreground desk edges and monitor cables, adding visual clutter. While classification succeeded because chairs are movable, visual feature saliency was degraded.",
+      "remediation": "Requires 3D point cloud segmentation or instance mask cropping."
+    }
+  }
+}

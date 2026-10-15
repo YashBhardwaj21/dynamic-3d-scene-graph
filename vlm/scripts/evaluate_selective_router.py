@@ -210,7 +210,7 @@ def run_selective_router_evaluation(
     }
 
     with open(out_json, "w", encoding="utf-8") as f:
-        json.dump(summary, f, indent=2)
+        json.dump(summary, f, indent=2, default=str)
 
     print(f"Results saved to: {out_json}")
     print(f"  • Balanced Accuracy: {metrics['quality']['balanced_accuracy']*100:.1f}%")
