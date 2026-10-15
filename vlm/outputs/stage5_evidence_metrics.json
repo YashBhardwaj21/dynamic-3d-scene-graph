@@ -1,65 +1,68 @@
 {
   "stage": 5,
   "title": "Stage 5 Inexpensive Pre-Router Evidence Pipeline Evaluation",
-  "timestamp_evaluated": 1792022209.71584,
+  "timestamp_evaluated": 1792024402.6458414,
   "total_records": 7956,
   "acceptance_gate_passed": false,
   "geometry": {
     "depth_validity_percentage": 100.0,
-    "mean_reprojection_residual_px": 364.08,
-    "median_reprojection_residual_px": 277.41,
-    "p95_reprojection_residual_px": 924.37,
-    "mean_inlier_ratio": 0.0301,
-    "std_inlier_ratio": 0.1208,
+    "mean_reprojection_residual_px": 225.66,
+    "median_reprojection_residual_px": 130.65,
+    "p95_reprojection_residual_px": 720.28,
+    "mean_inlier_ratio": 0.0331,
+    "std_inlier_ratio": 0.1242,
     "mean_landmark_support_points": 7668.6,
     "median_landmark_support_points": 2467,
     "mean_depth_uncertainty_sigma_m": 0.0114,
-    "mean_geometric_consistency_score": 0.6663,
+    "mean_geometric_consistency_score": 0.6764,
     "provenance_breakdown": {
-      "DERIVED_DEPTH_ONLY": 6891,
-      "MEASURED_FULL": 1065
+      "DERIVED_DEPTH_ONLY": 7034,
+      "MEASURED_FULL": 922
     }
   },
   "observed_motion": {
     "controlled_relocations_evaluated": 3,
-    "mean_displacement_error_m": 1.2588,
-    "max_displacement_error_m": 1.9143,
-    "mean_relative_displacement_error_pct": 310.38,
+    "mean_displacement_error_m": 0.1011,
+    "max_displacement_error_m": 0.141,
+    "mean_relative_displacement_error_pct": 24.41,
     "false_motion_rate_pct": 0.0,
     "static_stability_accuracy_pct": 100.0,
     "controlled_evaluations": [
       {
         "target": "chair_002 (caster chair relocation)",
-        "target_id": "chair_002",
+        "s1_id": "chair_002",
+        "s2_id": "chair_001",
         "ground_truth_m": 0.563,
-        "estimated_displacement_m": 1.031,
-        "absolute_error_m": 0.468,
-        "relative_error_pct": 83.13,
+        "estimated_displacement_m": 0.618,
+        "absolute_error_m": 0.055,
+        "relative_error_pct": 9.7,
         "session1_obs_count": 91,
-        "session2_obs_count": 4,
-        "centroid_std_m": 0.24
+        "session2_obs_count": 9,
+        "centroid_std_m": 0.198
       },
       {
         "target": "chair_003 (office chair relocation)",
-        "target_id": "chair_003",
+        "s1_id": "chair_003",
+        "s2_id": "chair_006",
         "ground_truth_m": 0.386,
-        "estimated_displacement_m": 2.3,
-        "absolute_error_m": 1.914,
-        "relative_error_pct": 495.93,
+        "estimated_displacement_m": 0.278,
+        "absolute_error_m": 0.108,
+        "relative_error_pct": 27.92,
         "session1_obs_count": 182,
-        "session2_obs_count": 7,
-        "centroid_std_m": 0.224
+        "session2_obs_count": 315,
+        "centroid_std_m": 0.184
       },
       {
         "target": "box_007 (floor container relocation)",
-        "target_id": "storage box_007",
+        "s1_id": "storage box_007",
+        "s2_id": "storage box_013",
         "ground_truth_m": 0.396,
-        "estimated_displacement_m": 1.79,
-        "absolute_error_m": 1.394,
-        "relative_error_pct": 352.07,
+        "estimated_displacement_m": 0.537,
+        "absolute_error_m": 0.141,
+        "relative_error_pct": 35.61,
         "session1_obs_count": 11,
-        "session2_obs_count": 8,
-        "centroid_std_m": 0.174
+        "session2_obs_count": 9,
+        "centroid_std_m": 0.049
       }
     ]
   },
@@ -105,8 +108,8 @@
     "validity_percentage": 100.0,
     "missing_value_frequency_pct": 0.0,
     "provenance_breakdown": {
-      "DERIVED_DEPTH_ONLY": 6891,
-      "MEASURED_FULL": 1065
+      "DERIVED_DEPTH_ONLY": 7034,
+      "MEASURED_FULL": 922
     }
   },
   "acceptance_gate_samples": [

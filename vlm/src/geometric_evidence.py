@@ -96,10 +96,31 @@ def compute_depth_uncertainty(depth_z: float) -> float:
 class GeometricEvidenceExtractor:
     """Extracts geometric consistency evidence for object observations."""
 
-    def __init__(self, mappoints_path: Optional[Path] = None):
+    def __init__(
+        self,
+        mappoints_path: Optional[Path] = None,
+        floor_plane_path: Optional[Path] = None,
+    ):
         self.mappoints = np.empty((0, 3), dtype=np.float64)
+        self.T_world_floor = np.eye(4, dtype=np.float64)
+        self.has_floor_transform = False
+
         if mappoints_path and Path(mappoints_path).exists():
             self._load_mappoints_ply(Path(mappoints_path))
+            if floor_plane_path is None:
+                auto_fp = Path(mappoints_path).parent.parent / "floor_plane.json"
+                if auto_fp.exists():
+                    floor_plane_path = auto_fp
+
+        if floor_plane_path and Path(floor_plane_path).exists():
+            try:
+                with open(floor_plane_path, "r", encoding="utf-8") as f:
+                    fp_data = json.load(f)
+                    if "T_world_floor" in fp_data:
+                        self.T_world_floor = np.array(fp_data["T_world_floor"], dtype=np.float64)
+                        self.has_floor_transform = True
+            except Exception:
+                pass
 
     def _load_mappoints_ply(self, path: Path):
         """Load 3D MapPoints from PLY file."""
@@ -164,36 +185,54 @@ class GeometricEvidenceExtractor:
         has_pose = (cam_pose is not None and len(cam_pose) >= 7)
 
         # 4. MapPoint projection & reprojection residual calculation
-        candidate_pts = []
+        candidate_pts = np.empty((0, 3), dtype=np.float64)
         if has_pose and len(self.mappoints) > 0 and b_min is not None and b_max is not None:
-            mask = np.all((self.mappoints >= b_min - 0.10) & (self.mappoints <= b_max + 0.10), axis=1)
+            if self.has_floor_transform:
+                # Transform 8 corners from floor_map to slam_world
+                corners_floor = np.array([
+                    [b_min[0], b_min[1], b_min[2], 1.0], [b_min[0], b_min[1], b_max[2], 1.0],
+                    [b_min[0], b_max[1], b_min[2], 1.0], [b_min[0], b_max[1], b_max[2], 1.0],
+                    [b_max[0], b_min[1], b_min[2], 1.0], [b_max[0], b_min[1], b_max[2], 1.0],
+                    [b_max[0], b_max[1], b_min[2], 1.0], [b_max[0], b_max[1], b_max[2], 1.0],
+                ], dtype=np.float64)
+                corners_world = (self.T_world_floor @ corners_floor.T).T[:, :3]
+                w_min = np.min(corners_world, axis=0) - 0.05
+                w_max = np.max(corners_world, axis=0) + 0.05
+            else:
+                w_min = b_min - 0.10
+                w_max = b_max + 0.10
+
+            mask = np.all((self.mappoints >= w_min) & (self.mappoints <= w_max), axis=1)
             candidate_pts = self.mappoints[mask]
 
         n_candidates = len(candidate_pts)
         residuals: List[float] = []
         inliers = 0
 
-        if n_candidates > 0 and has_pose and bbox_xyxy is not None and len(bbox_xyxy) == 4:
+        if n_candidates >= 3 and has_pose and bbox_xyxy is not None and len(bbox_xyxy) == 4:
             t_wc = np.array(cam_pose[:3], dtype=np.float64)
             R_wc = quaternion_to_rotation_matrix(cam_pose[3], cam_pose[4], cam_pose[5], cam_pose[6])
             R_cw = R_wc.T
             t_cw = -R_cw @ t_wc
 
             bx1, by1, bx2, by2 = bbox_xyxy
-            bcx = (bx1 + bx2) / 2.0
-            bcy = (by1 + by2) / 2.0
-
             p_cam = (R_cw @ candidate_pts.T).T + t_cw
             valid_z = p_cam[:, 2] > 0.15
 
-            for p in p_cam[valid_z]:
-                u = FX * (p[0] / p[2]) + CX
-                v = FY * (p[1] / p[2]) + CY
-                px_res = math.hypot(u - bcx, v - bcy)
-                residuals.append(px_res)
+            if np.sum(valid_z) >= 3:
+                p_valid = p_cam[valid_z]
+                u = FX * (p_valid[:, 0] / p_valid[:, 2]) + CX
+                v = FY * (p_valid[:, 1] / p_valid[:, 2]) + CY
 
-                if bx1 - 8.0 <= u <= bx2 + 8.0 and by1 - 8.0 <= v <= by2 + 8.0:
-                    inliers += 1
+                # Distance outside 2D bounding box (0 px if inside)
+                du = np.maximum(0.0, np.maximum(bx1 - u, u - bx2))
+                dv = np.maximum(0.0, np.maximum(by1 - v, v - by2))
+                pt_residuals = np.sqrt(du**2 + dv**2)
+                residuals = pt_residuals.tolist()
+
+                # Inliers lie within box bounds (+8px margin)
+                inlier_mask = (u >= bx1 - 8.0) & (u <= bx2 + 8.0) & (v >= by1 - 8.0) & (v <= by2 + 8.0)
+                inliers = int(np.sum(inlier_mask))
 
         # 5. Honest Provenance & Fallback-Free Residuals
         if residuals:
@@ -201,7 +240,7 @@ class GeometricEvidenceExtractor:
             mean_res = float(np.mean(res_arr))
             med_res = float(np.median(res_arr))
             p95_res = float(np.percentile(res_arr, 95))
-            inlier_ratio = float(inliers / max(1, n_candidates))
+            inlier_ratio = float(inliers / max(1, len(residuals)))
             reproj_valid = True
             reproj_prov = "MEASURED_MAPPOINTS"
             provenance = "MEASURED_FULL"

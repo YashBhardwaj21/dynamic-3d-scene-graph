@@ -14,11 +14,11 @@ Stage 5 establishes a validated, inexpensive evidence pipeline supplying geometr
 | Evidence Dimension | Target Metric | Measured Value | Benchmark Threshold | Status |
 |---|---|:---:|:---:|:---:|
 | **Geometry** | Depth Validity | **100.0%** | $\ge 95.0\%$ | **PASS ✅** |
-| **Geometry** | Reprojection Residual (Mean) | **364.08 px** | $< 25.0\text{ px}$ | **FAIL ❌** |
-| **Geometry** | Inlier Ratio (Mean) | **3.0%** | $\ge 70.0\%$ | **FAIL ❌** |
+| **Geometry** | Reprojection Residual (Mean) | **225.66 px** | $< 25.0\text{ px}$ | **FAIL ❌** |
+| **Geometry** | Inlier Ratio (Mean) | **3.3%** | $\ge 70.0\%$ | **FAIL ❌** |
 | **Geometry** | Landmark Support (Median) | **2467 pts** | $\ge 500\text{ pts}$ | **PASS ✅** |
-| **Observed Motion** | Controlled Displacement Error | **125.9 cm** | $< 5.0\text{ cm}$ | **FAIL ❌** |
-| **Observed Motion** | Relative Displacement Error | **310.4%** | $< 10.0\%$ | **FAIL ❌** |
+| **Observed Motion** | Controlled Displacement Error | **10.1 cm** | $< 5.0\text{ cm}$ | **FAIL ❌** |
+| **Observed Motion** | Relative Displacement Error | **24.4%** | $< 10.0\%$ | **FAIL ❌** |
 | **Observed Motion** | False-Motion Rate | **0.0%** | $< 2.0\%$ | **PASS ✅** |
 | **Temporal Tracking** | Occlusion Recovery Rate | **100.0%** | $\ge 90.0\%$ | **PASS ✅** |
 | **Temporal Tracking** | Track Fragmentation Rate | **72.78%** | $< 15.0\%$ | **FAIL ❌** |
@@ -33,7 +33,7 @@ Stage 5 establishes a validated, inexpensive evidence pipeline supplying geometr
 ### 3.1 Geometric Evidence & Provenance
 - **Physical Stereo Depth Uncertainty**: Rigorously modeled via $\sigma_z = \frac{z^2}{f_x B} \sigma_d$ ($B=0.095\text{m}$, $f_x=383.92\text{px}$, $\sigma_d=0.08\text{px}$).
 - **Mean Depth Uncertainty**: $\pm 1.14\text{ cm}$ across all valid sensor target centroids.
-- **Provenance Breakdown**: `{'DERIVED_DEPTH_ONLY': 6891, 'MEASURED_FULL': 1065}`
+- **Provenance Breakdown**: `{'DERIVED_DEPTH_ONLY': 7034, 'MEASURED_FULL': 922}`
 - **Zero Synthetic Fallbacks**: Missing MapPoints are reported as None/unmeasured rather than filled with synthetic residuals.
 
 ### 3.2 Observed Motion & Controlled Relocations
@@ -41,9 +41,9 @@ Displacement estimates derived directly from observation clusters across Session
 
 | Target Entity | Ground Truth Disp | Estimated Disp | Absolute Error | Relative Error | Session 1 Obs | Session 2 Obs | Centroid $\sigma$ |
 |---|:---:|:---:|:---:|:---:|:---:|:---:|:---:|
-| `chair_002 (caster chair relocation)` | `0.563 m` | `1.031 m` | **`46.8 cm`** | **`83.1%`** | `91` | `4` | `±24.0 cm` |
-| `chair_003 (office chair relocation)` | `0.386 m` | `2.3 m` | **`191.4 cm`** | **`495.9%`** | `182` | `7` | `±22.4 cm` |
-| `box_007 (floor container relocation)` | `0.396 m` | `1.79 m` | **`139.4 cm`** | **`352.1%`** | `11` | `8` | `±17.4 cm` |
+| `chair_002 (caster chair relocation)` | `0.563 m` | `0.618 m` | **`5.5 cm`** | **`9.7%`** | `91` | `9` | `±19.8 cm` |
+| `chair_003 (office chair relocation)` | `0.386 m` | `0.278 m` | **`10.8 cm`** | **`27.9%`** | `182` | `315` | `±18.4 cm` |
+| `box_007 (floor container relocation)` | `0.396 m` | `0.537 m` | **`14.1 cm`** | **`35.6%`** | `11` | `9` | `±4.9 cm` |
 
 - **Ego-Motion Compensation**: Decoupled from camera movement, yielding a **0.0% false-motion rate** on static structures.
 

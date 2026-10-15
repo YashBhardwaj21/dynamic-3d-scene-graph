@@ -1,0 +1,2014 @@
+{
+  "title": "Stage 6 Selective Router Ablation Matrix",
+  "timestamp": 1792024966.202336,
+  "total_instances": 15,
+  "experiments": {
+    "m0_class_prior": {
+      "name": "M0: Semantic Class Prior",
+      "metrics": {
+        "quality": {
+          "balanced_accuracy": 1.0,
+          "macro_f1": 1.0,
+          "per_class_recall": {
+            "IMMOVABLE": 1.0,
+            "MOVABLE": 1.0,
+            "MOBILE": 1.0
+          },
+          "per_class_precision": {
+            "IMMOVABLE": 1.0,
+            "MOVABLE": 1.0,
+            "MOBILE": 1.0
+          },
+          "per_class_f1": {
+            "IMMOVABLE": 1.0,
+            "MOVABLE": 1.0,
+            "MOBILE": 1.0
+          },
+          "confusion_matrix": {
+            "IMMOVABLE": {
+              "IMMOVABLE": 3,
+              "MOVABLE": 0,
+              "MOBILE": 0,
+              "UNKNOWN": 0
+            },
+            "MOVABLE": {
+              "IMMOVABLE": 0,
+              "MOVABLE": 9,
+              "MOBILE": 0,
+              "UNKNOWN": 0
+            },
+            "MOBILE": {
+              "IMMOVABLE": 0,
+              "MOVABLE": 0,
+              "MOBILE": 3,
+              "UNKNOWN": 0
+            }
+          },
+          "abstention_rate_pct": 0.0
+        },
+        "efficiency": {
+          "total_instances": 15,
+          "vlm_queries_invoked": 0,
+          "vlm_queries_avoided": 15,
+          "vlm_query_rate_pct": 0.0,
+          "decision_latency_ms": {
+            "mean": 0.001,
+            "p50": 0.0,
+            "p95": 0.002
+          },
+          "end_to_end_latency_s": {
+            "mean": 0.0,
+            "p50": 0.0,
+            "p95": 0.0
+          }
+        },
+        "reliability": {
+          "false_cheap_resolutions": 0,
+          "invalid_evidence_escalations": 0,
+          "vlm_abstentions": 0
+        }
+      },
+      "records": [
+        {
+          "entity_id": "inst_door_001",
+          "decision": "RESOLVE_CHEAP",
+          "prediction": "IMMOVABLE",
+          "ground_truth": "IMMOVABLE",
+          "abstained": false,
+          "vlm_required": false,
+          "views_used": 0,
+          "evidence_valid": true,
+          "decision_latency_ms": 0.003,
+          "inference_latency_ms": 0.0
+        },
+        {
+          "entity_id": "inst_ceiling_fan_001",
+          "decision": "RESOLVE_CHEAP",
+          "prediction": "IMMOVABLE",
+          "ground_truth": "IMMOVABLE",
+          "abstained": false,
+          "vlm_required": false,
+          "views_used": 0,
+          "evidence_valid": true,
+          "decision_latency_ms": 0.002,
+          "inference_latency_ms": 0.0
+        },
+        {
+          "entity_id": "inst_whiteboard_001",
+          "decision": "RESOLVE_CHEAP",
+          "prediction": "IMMOVABLE",
+          "ground_truth": "IMMOVABLE",
+          "abstained": false,
+          "vlm_required": false,
+          "views_used": 0,
+          "evidence_valid": true,
+          "decision_latency_ms": 0.001,
+          "inference_latency_ms": 0.0
+        },
+        {
+          "entity_id": "inst_human_operator_001",
+          "decision": "RESOLVE_CHEAP",
+          "prediction": "MOBILE",
+          "ground_truth": "MOBILE",
+          "abstained": false,
+          "vlm_required": false,
+          "views_used": 0,
+          "evidence_valid": true,
+          "decision_latency_ms": 0.0,
+          "inference_latency_ms": 0.0
+        },
+        {
+          "entity_id": "inst_rc_car_robot_001",
+          "decision": "RESOLVE_CHEAP",
+          "prediction": "MOBILE",
+          "ground_truth": "MOBILE",
+          "abstained": false,
+          "vlm_required": false,
+          "views_used": 0,
+          "evidence_valid": true,
+          "decision_latency_ms": 0.0,
+          "inference_latency_ms": 0.0
+        },
+        {
+          "entity_id": "inst_quadcopter_drone_001",
+          "decision": "RESOLVE_CHEAP",
+          "prediction": "MOBILE",
+          "ground_truth": "MOBILE",
+          "abstained": false,
+          "vlm_required": false,
+          "views_used": 0,
+          "evidence_valid": true,
+          "decision_latency_ms": 0.0,
+          "inference_latency_ms": 0.0
+        },
+        {
+          "entity_id": "inst_desk_001",
+          "decision": "RESOLVE_CHEAP",
+          "prediction": "MOVABLE",
+          "ground_truth": "MOVABLE",
+          "abstained": false,
+          "vlm_required": false,
+          "views_used": 0,
+          "evidence_valid": true,
+          "decision_latency_ms": 0.001,
+          "inference_latency_ms": 0.0
+        },
+        {
+          "entity_id": "inst_desk_018",
+          "decision": "RESOLVE_CHEAP",
+          "prediction": "MOVABLE",
+          "ground_truth": "MOVABLE",
+          "abstained": false,
+          "vlm_required": false,
+          "views_used": 0,
+          "evidence_valid": true,
+          "decision_latency_ms": 0.0,
+          "inference_latency_ms": 0.0
+        },
+        {
+          "entity_id": "inst_laptop_001",
+          "decision": "RESOLVE_CHEAP",
+          "prediction": "MOVABLE",
+          "ground_truth": "MOVABLE",
+          "abstained": false,
+          "vlm_required": false,
+          "views_used": 0,
+          "evidence_valid": true,
+          "decision_latency_ms": 0.0,
+          "inference_latency_ms": 0.0
+        },
+        {
+          "entity_id": "inst_backpack_001",
+          "decision": "RESOLVE_CHEAP",
+          "prediction": "MOVABLE",
+          "ground_truth": "MOVABLE",
+          "abstained": false,
+          "vlm_required": false,
+          "views_used": 0,
+          "evidence_valid": true,
+          "decision_latency_ms": 0.0,
+          "inference_latency_ms": 0.0
+        },
+        {
+          "entity_id": "inst_chair_002",
+          "decision": "RESOLVE_CHEAP",
+          "prediction": "MOVABLE",
+          "ground_truth": "MOVABLE",
+          "abstained": false,
+          "vlm_required": false,
+          "views_used": 0,
+          "evidence_valid": true,
+          "decision_latency_ms": 0.0,
+          "inference_latency_ms": 0.0
+        },
+        {
+          "entity_id": "inst_chair_003",
+          "decision": "RESOLVE_CHEAP",
+          "prediction": "MOVABLE",
+          "ground_truth": "MOVABLE",
+          "abstained": false,
+          "vlm_required": false,
+          "views_used": 0,
+          "evidence_valid": true,
+          "decision_latency_ms": 0.0,
+          "inference_latency_ms": 0.0
+        },
+        {
+          "entity_id": "inst_storage_box_007",
+          "decision": "RESOLVE_CHEAP",
+          "prediction": "MOVABLE",
+          "ground_truth": "MOVABLE",
+          "abstained": false,
+          "vlm_required": false,
+          "views_used": 0,
+          "evidence_valid": true,
+          "decision_latency_ms": 0.0,
+          "inference_latency_ms": 0.0
+        },
+        {
+          "entity_id": "inst_pedestal_fan_001",
+          "decision": "RESOLVE_CHEAP",
+          "prediction": "MOVABLE",
+          "ground_truth": "MOVABLE",
+          "abstained": false,
+          "vlm_required": false,
+          "views_used": 0,
+          "evidence_valid": true,
+          "decision_latency_ms": 0.0,
+          "inference_latency_ms": 0.0
+        },
+        {
+          "entity_id": "inst_monitor_001",
+          "decision": "RESOLVE_CHEAP",
+          "prediction": "MOVABLE",
+          "ground_truth": "MOVABLE",
+          "abstained": false,
+          "vlm_required": false,
+          "views_used": 0,
+          "evidence_valid": true,
+          "decision_latency_ms": 0.001,
+          "inference_latency_ms": 0.0
+        }
+      ]
+    },
+    "m3_all_vlm": {
+      "name": "M3: All-VLM Baseline (Structured)",
+      "metrics": {
+        "quality": {
+          "balanced_accuracy": 0.4444,
+          "macro_f1": 0.4825,
+          "per_class_recall": {
+            "IMMOVABLE": 0.3333,
+            "MOVABLE": 1.0,
+            "MOBILE": 0.0
+          },
+          "per_class_precision": {
+            "IMMOVABLE": 1.0,
+            "MOVABLE": 0.9,
+            "MOBILE": 0.0
+          },
+          "per_class_f1": {
+            "IMMOVABLE": 0.5,
+            "MOVABLE": 0.9474,
+            "MOBILE": 0.0
+          },
+          "confusion_matrix": {
+            "IMMOVABLE": {
+              "IMMOVABLE": 1,
+              "MOVABLE": 1,
+              "MOBILE": 0,
+              "UNKNOWN": 1
+            },
+            "MOVABLE": {
+              "IMMOVABLE": 0,
+              "MOVABLE": 9,
+              "MOBILE": 0,
+              "UNKNOWN": 0
+            },
+            "MOBILE": {
+              "IMMOVABLE": 0,
+              "MOVABLE": 0,
+              "MOBILE": 0,
+              "UNKNOWN": 3
+            }
+          },
+          "abstention_rate_pct": 26.67
+        },
+        "efficiency": {
+          "total_instances": 15,
+          "vlm_queries_invoked": 11,
+          "vlm_queries_avoided": 4,
+          "vlm_query_rate_pct": 73.33,
+          "decision_latency_ms": {
+            "mean": 0.032,
+            "p50": 0.026,
+            "p95": 0.05
+          },
+          "end_to_end_latency_s": {
+            "mean": 11.575,
+            "p50": 5.609,
+            "p95": 26.722
+          }
+        },
+        "reliability": {
+          "false_cheap_resolutions": 0,
+          "invalid_evidence_escalations": 0,
+          "vlm_abstentions": 0
+        }
+      },
+      "records": [
+        {
+          "entity_id": "inst_door_001",
+          "decision": "ESCALATE",
+          "reason_codes": [
+            "SIGNIFICANT_DISPLACEMENT_AFFORDANCE_UNRESOLVED"
+          ],
+          "evidence_valid": true,
+          "evidence_provenance": "MISSING",
+          "vlm_required": true,
+          "vlm_model": "Qwen2.5-VL-3B-Instruct (GGUF Q4_K_M)",
+          "views_used": 1,
+          "prediction": "MOVABLE",
+          "abstained": false,
+          "decision_latency_ms": 0.025,
+          "inference_latency_ms": 14816.16,
+          "token_usage": {
+            "completion_tokens": 53,
+            "prompt_tokens": 292,
+            "total_tokens": 345,
+            "prompt_tokens_details": {
+              "cached_tokens": 34
+            }
+          },
+          "ground_truth": "IMMOVABLE"
+        },
+        {
+          "entity_id": "inst_ceiling_fan_001",
+          "decision": "ESCALATE",
+          "reason_codes": [
+            "SIGNIFICANT_DISPLACEMENT_AFFORDANCE_UNRESOLVED"
+          ],
+          "evidence_valid": true,
+          "evidence_provenance": "MISSING",
+          "vlm_required": true,
+          "vlm_model": "Qwen2.5-VL-3B-Instruct (GGUF Q4_K_M)",
+          "views_used": 1,
+          "prediction": "IMMOVABLE",
+          "abstained": false,
+          "decision_latency_ms": 0.03,
+          "inference_latency_ms": 15985.7,
+          "token_usage": {
+            "completion_tokens": 57,
+            "prompt_tokens": 292,
+            "total_tokens": 349,
+            "prompt_tokens_details": {
+              "cached_tokens": 34
+            }
+          },
+          "ground_truth": "IMMOVABLE"
+        },
+        {
+          "entity_id": "inst_whiteboard_001",
+          "decision": "DEFER",
+          "prediction": "UNKNOWN",
+          "abstained": true,
+          "vlm_required": false,
+          "views_used": 0,
+          "evidence_valid": false,
+          "decision_latency_ms": 0.05,
+          "inference_latency_ms": 0.0,
+          "ground_truth": "IMMOVABLE"
+        },
+        {
+          "entity_id": "inst_human_operator_001",
+          "decision": "DEFER",
+          "prediction": "UNKNOWN",
+          "abstained": true,
+          "vlm_required": false,
+          "views_used": 0,
+          "evidence_valid": false,
+          "decision_latency_ms": 0.05,
+          "inference_latency_ms": 0.0,
+          "ground_truth": "MOBILE"
+        },
+        {
+          "entity_id": "inst_rc_car_robot_001",
+          "decision": "DEFER",
+          "prediction": "UNKNOWN",
+          "abstained": true,
+          "vlm_required": false,
+          "views_used": 0,
+          "evidence_valid": false,
+          "decision_latency_ms": 0.05,
+          "inference_latency_ms": 0.0,
+          "ground_truth": "MOBILE"
+        },
+        {
+          "entity_id": "inst_quadcopter_drone_001",
+          "decision": "DEFER",
+          "prediction": "UNKNOWN",
+          "abstained": true,
+          "vlm_required": false,
+          "views_used": 0,
+          "evidence_valid": false,
+          "decision_latency_ms": 0.05,
+          "inference_latency_ms": 0.0,
+          "ground_truth": "MOBILE"
+        },
+        {
+          "entity_id": "inst_desk_001",
+          "decision": "ESCALATE",
+          "reason_codes": [
+            "SIGNIFICANT_DISPLACEMENT_AFFORDANCE_UNRESOLVED"
+          ],
+          "evidence_valid": true,
+          "evidence_provenance": "MISSING",
+          "vlm_required": true,
+          "vlm_model": "Qwen2.5-VL-3B-Instruct (GGUF Q4_K_M)",
+          "views_used": 2,
+          "prediction": "MOVABLE",
+          "abstained": false,
+          "decision_latency_ms": 0.024,
+          "inference_latency_ms": 27023.73,
+          "token_usage": {
+            "completion_tokens": 54,
+            "prompt_tokens": 381,
+            "total_tokens": 435,
+            "prompt_tokens_details": {
+              "cached_tokens": 0
+            }
+          },
+          "ground_truth": "MOVABLE"
+        },
+        {
+          "entity_id": "inst_desk_018",
+          "decision": "ESCALATE",
+          "reason_codes": [
+            "SIGNIFICANT_DISPLACEMENT_AFFORDANCE_UNRESOLVED"
+          ],
+          "evidence_valid": true,
+          "evidence_provenance": "MISSING",
+          "vlm_required": true,
+          "vlm_model": "Qwen2.5-VL-3B-Instruct (GGUF Q4_K_M)",
+          "views_used": 1,
+          "prediction": "MOVABLE",
+          "abstained": false,
+          "decision_latency_ms": 0.022,
+          "inference_latency_ms": 17157.32,
+          "token_usage": {
+            "completion_tokens": 54,
+            "prompt_tokens": 285,
+            "total_tokens": 339,
+            "prompt_tokens_details": {
+              "cached_tokens": 38
+            }
+          },
+          "ground_truth": "MOVABLE"
+        },
+        {
+          "entity_id": "inst_laptop_001",
+          "decision": "ESCALATE",
+          "reason_codes": [
+            "SIGNIFICANT_DISPLACEMENT_AFFORDANCE_UNRESOLVED"
+          ],
+          "evidence_valid": true,
+          "evidence_provenance": "MISSING",
+          "vlm_required": true,
+          "vlm_model": "Qwen2.5-VL-3B-Instruct (GGUF Q4_K_M)",
+          "views_used": 2,
+          "prediction": "MOVABLE",
+          "abstained": false,
+          "decision_latency_ms": 0.026,
+          "inference_latency_ms": 25459.48,
+          "token_usage": {
+            "completion_tokens": 55,
+            "prompt_tokens": 398,
+            "total_tokens": 453,
+            "prompt_tokens_details": {
+              "cached_tokens": 0
+            }
+          },
+          "ground_truth": "MOVABLE"
+        },
+        {
+          "entity_id": "inst_backpack_001",
+          "decision": "ESCALATE",
+          "reason_codes": [
+            "SIGNIFICANT_DISPLACEMENT_AFFORDANCE_UNRESOLVED"
+          ],
+          "evidence_valid": true,
+          "evidence_provenance": "MISSING",
+          "vlm_required": true,
+          "vlm_model": "Qwen2.5-VL-3B-Instruct (GGUF Q4_K_M)",
+          "views_used": 2,
+          "prediction": "MOVABLE",
+          "abstained": false,
+          "decision_latency_ms": 0.023,
+          "inference_latency_ms": 25323.04,
+          "token_usage": {
+            "completion_tokens": 55,
+            "prompt_tokens": 379,
+            "total_tokens": 434,
+            "prompt_tokens_details": {
+              "cached_tokens": 0
+            }
+          },
+          "ground_truth": "MOVABLE"
+        },
+        {
+          "entity_id": "inst_chair_002",
+          "decision": "ESCALATE",
+          "reason_codes": [
+            "SIGNIFICANT_DISPLACEMENT_AFFORDANCE_UNRESOLVED"
+          ],
+          "evidence_valid": true,
+          "evidence_provenance": "MISSING",
+          "vlm_required": true,
+          "vlm_model": "Qwen2.5-VL-3B-Instruct (GGUF Q4_K_M)",
+          "views_used": 1,
+          "prediction": "MOVABLE",
+          "abstained": false,
+          "decision_latency_ms": 0.023,
+          "inference_latency_ms": 5057.52,
+          "token_usage": {
+            "completion_tokens": 54,
+            "prompt_tokens": 301,
+            "total_tokens": 355,
+            "prompt_tokens_details": {
+              "cached_tokens": 300
+            }
+          },
+          "ground_truth": "MOVABLE"
+        },
+        {
+          "entity_id": "inst_chair_003",
+          "decision": "ESCALATE",
+          "reason_codes": [
+            "SIGNIFICANT_DISPLACEMENT_AFFORDANCE_UNRESOLVED"
+          ],
+          "evidence_valid": true,
+          "evidence_provenance": "MISSING",
+          "vlm_required": true,
+          "vlm_model": "Qwen2.5-VL-3B-Instruct (GGUF Q4_K_M)",
+          "views_used": 1,
+          "prediction": "MOVABLE",
+          "abstained": false,
+          "decision_latency_ms": 0.025,
+          "inference_latency_ms": 5315.7,
+          "token_usage": {
+            "completion_tokens": 54,
+            "prompt_tokens": 282,
+            "total_tokens": 336,
+            "prompt_tokens_details": {
+              "cached_tokens": 281
+            }
+          },
+          "ground_truth": "MOVABLE"
+        },
+        {
+          "entity_id": "inst_storage_box_007",
+          "decision": "ESCALATE",
+          "reason_codes": [
+            "SIGNIFICANT_DISPLACEMENT_AFFORDANCE_UNRESOLVED"
+          ],
+          "evidence_valid": true,
+          "evidence_provenance": "MISSING",
+          "vlm_required": true,
+          "vlm_model": "Qwen2.5-VL-3B-Instruct (GGUF Q4_K_M)",
+          "views_used": 2,
+          "prediction": "MOVABLE",
+          "abstained": false,
+          "decision_latency_ms": 0.027,
+          "inference_latency_ms": 5290.28,
+          "token_usage": {
+            "completion_tokens": 55,
+            "prompt_tokens": 389,
+            "total_tokens": 444,
+            "prompt_tokens_details": {
+              "cached_tokens": 388
+            }
+          },
+          "ground_truth": "MOVABLE"
+        },
+        {
+          "entity_id": "inst_pedestal_fan_001",
+          "decision": "ESCALATE",
+          "reason_codes": [
+            "SIGNIFICANT_DISPLACEMENT_AFFORDANCE_UNRESOLVED",
+            "AMBIGUOUS_PHYSICAL_SUPPORT_AFFORDANCE"
+          ],
+          "evidence_valid": true,
+          "evidence_provenance": "MISSING",
+          "vlm_required": true,
+          "vlm_model": "Qwen2.5-VL-3B-Instruct (GGUF Q4_K_M)",
+          "views_used": 1,
+          "prediction": "MOVABLE",
+          "abstained": false,
+          "decision_latency_ms": 0.026,
+          "inference_latency_ms": 5608.87,
+          "token_usage": {
+            "completion_tokens": 60,
+            "prompt_tokens": 311,
+            "total_tokens": 371,
+            "prompt_tokens_details": {
+              "cached_tokens": 310
+            }
+          },
+          "ground_truth": "MOVABLE"
+        },
+        {
+          "entity_id": "inst_monitor_001",
+          "decision": "ESCALATE",
+          "reason_codes": [
+            "SIGNIFICANT_DISPLACEMENT_AFFORDANCE_UNRESOLVED"
+          ],
+          "evidence_valid": true,
+          "evidence_provenance": "MISSING",
+          "vlm_required": true,
+          "vlm_model": "Qwen2.5-VL-3B-Instruct (GGUF Q4_K_M)",
+          "views_used": 2,
+          "prediction": "MOVABLE",
+          "abstained": false,
+          "decision_latency_ms": 0.023,
+          "inference_latency_ms": 26593.16,
+          "token_usage": {
+            "completion_tokens": 54,
+            "prompt_tokens": 416,
+            "total_tokens": 470,
+            "prompt_tokens_details": {
+              "cached_tokens": 0
+            }
+          },
+          "ground_truth": "MOVABLE"
+        }
+      ]
+    },
+    "router_cheap_only": {
+      "name": "Router (VLM Disabled - Cheap Only)",
+      "metrics": {
+        "quality": {
+          "balanced_accuracy": 0.7408,
+          "macro_f1": 0.8381,
+          "per_class_recall": {
+            "IMMOVABLE": 0.6667,
+            "MOVABLE": 0.5556,
+            "MOBILE": 1.0
+          },
+          "per_class_precision": {
+            "IMMOVABLE": 1.0,
+            "MOVABLE": 1.0,
+            "MOBILE": 1.0
+          },
+          "per_class_f1": {
+            "IMMOVABLE": 0.8,
+            "MOVABLE": 0.7143,
+            "MOBILE": 1.0
+          },
+          "confusion_matrix": {
+            "IMMOVABLE": {
+              "IMMOVABLE": 2,
+              "MOVABLE": 0,
+              "MOBILE": 0,
+              "UNKNOWN": 1
+            },
+            "MOVABLE": {
+              "IMMOVABLE": 0,
+              "MOVABLE": 5,
+              "MOBILE": 0,
+              "UNKNOWN": 4
+            },
+            "MOBILE": {
+              "IMMOVABLE": 0,
+              "MOVABLE": 0,
+              "MOBILE": 3,
+              "UNKNOWN": 0
+            }
+          },
+          "abstention_rate_pct": 33.33
+        },
+        "efficiency": {
+          "total_instances": 15,
+          "vlm_queries_invoked": 0,
+          "vlm_queries_avoided": 15,
+          "vlm_query_rate_pct": 0.0,
+          "decision_latency_ms": {
+            "mean": 0.007,
+            "p50": 0.005,
+            "p95": 0.012
+          },
+          "end_to_end_latency_s": {
+            "mean": 0.0,
+            "p50": 0.0,
+            "p95": 0.0
+          }
+        },
+        "reliability": {
+          "false_cheap_resolutions": 0,
+          "invalid_evidence_escalations": 0,
+          "vlm_abstentions": 4
+        }
+      },
+      "records": [
+        {
+          "entity_id": "inst_door_001",
+          "decision": "RESOLVE_CHEAP",
+          "reason_codes": [
+            "CANONICAL_IMMOVABLE_ARCHITECTURAL_PRIOR"
+          ],
+          "evidence_valid": true,
+          "evidence_provenance": "MEASURED_FULL",
+          "vlm_required": false,
+          "vlm_model": null,
+          "views_used": 0,
+          "prediction": "IMMOVABLE",
+          "abstained": false,
+          "decision_latency_ms": 0.02,
+          "inference_latency_ms": null,
+          "token_usage": null,
+          "ground_truth": "IMMOVABLE",
+          "observed_motion_gt": "STATIC",
+          "semantic_class": "door"
+        },
+        {
+          "entity_id": "inst_ceiling_fan_001",
+          "decision": "RESOLVE_CHEAP",
+          "reason_codes": [
+            "CANONICAL_IMMOVABLE_ARCHITECTURAL_PRIOR"
+          ],
+          "evidence_valid": true,
+          "evidence_provenance": "MEASURED_FULL",
+          "vlm_required": false,
+          "vlm_model": null,
+          "views_used": 0,
+          "prediction": "IMMOVABLE",
+          "abstained": false,
+          "decision_latency_ms": 0.009,
+          "inference_latency_ms": null,
+          "token_usage": null,
+          "ground_truth": "IMMOVABLE",
+          "observed_motion_gt": "STATIC",
+          "semantic_class": "ceiling fan"
+        },
+        {
+          "entity_id": "inst_whiteboard_001",
+          "decision": "DEFER",
+          "reason_codes": [
+            "AMBIGUOUS_PHYSICAL_SUPPORT_AFFORDANCE",
+            "MISSING_REQUIRED_VISUAL_CONTEXT"
+          ],
+          "evidence_valid": false,
+          "evidence_provenance": "MEASURED_FULL",
+          "vlm_required": false,
+          "vlm_model": null,
+          "views_used": 0,
+          "prediction": "UNKNOWN",
+          "abstained": true,
+          "decision_latency_ms": 0.008,
+          "inference_latency_ms": null,
+          "token_usage": null,
+          "ground_truth": "IMMOVABLE",
+          "observed_motion_gt": "STATIC",
+          "semantic_class": "whiteboard"
+        },
+        {
+          "entity_id": "inst_human_operator_001",
+          "decision": "RESOLVE_CHEAP",
+          "reason_codes": [
+            "CANONICAL_MOBILE_AGENT_PRIOR"
+          ],
+          "evidence_valid": true,
+          "evidence_provenance": "MEASURED_FULL",
+          "vlm_required": false,
+          "vlm_model": null,
+          "views_used": 0,
+          "prediction": "MOBILE",
+          "abstained": false,
+          "decision_latency_ms": 0.006,
+          "inference_latency_ms": null,
+          "token_usage": null,
+          "ground_truth": "MOBILE",
+          "observed_motion_gt": "DYNAMIC",
+          "semantic_class": "person"
+        },
+        {
+          "entity_id": "inst_rc_car_robot_001",
+          "decision": "RESOLVE_CHEAP",
+          "reason_codes": [
+            "CANONICAL_MOBILE_AGENT_PRIOR"
+          ],
+          "evidence_valid": true,
+          "evidence_provenance": "MEASURED_FULL",
+          "vlm_required": false,
+          "vlm_model": null,
+          "views_used": 0,
+          "prediction": "MOBILE",
+          "abstained": false,
+          "decision_latency_ms": 0.005,
+          "inference_latency_ms": null,
+          "token_usage": null,
+          "ground_truth": "MOBILE",
+          "observed_motion_gt": "DYNAMIC",
+          "semantic_class": "robot"
+        },
+        {
+          "entity_id": "inst_quadcopter_drone_001",
+          "decision": "RESOLVE_CHEAP",
+          "reason_codes": [
+            "CANONICAL_MOBILE_AGENT_PRIOR"
+          ],
+          "evidence_valid": true,
+          "evidence_provenance": "MEASURED_FULL",
+          "vlm_required": false,
+          "vlm_model": null,
+          "views_used": 0,
+          "prediction": "MOBILE",
+          "abstained": false,
+          "decision_latency_ms": 0.004,
+          "inference_latency_ms": null,
+          "token_usage": null,
+          "ground_truth": "MOBILE",
+          "observed_motion_gt": "DYNAMIC",
+          "semantic_class": "robot"
+        },
+        {
+          "entity_id": "inst_desk_001",
+          "decision": "RESOLVE_CHEAP",
+          "reason_codes": [
+            "STATIC_CANONICAL_MOVABLE_PRIOR"
+          ],
+          "evidence_valid": true,
+          "evidence_provenance": "MEASURED_FULL",
+          "vlm_required": false,
+          "vlm_model": null,
+          "views_used": 0,
+          "prediction": "MOVABLE",
+          "abstained": false,
+          "decision_latency_ms": 0.006,
+          "inference_latency_ms": null,
+          "token_usage": null,
+          "ground_truth": "MOVABLE",
+          "observed_motion_gt": "STATIC",
+          "semantic_class": "desk"
+        },
+        {
+          "entity_id": "inst_desk_018",
+          "decision": "RESOLVE_CHEAP",
+          "reason_codes": [
+            "STATIC_CANONICAL_MOVABLE_PRIOR"
+          ],
+          "evidence_valid": true,
+          "evidence_provenance": "MEASURED_FULL",
+          "vlm_required": false,
+          "vlm_model": null,
+          "views_used": 0,
+          "prediction": "MOVABLE",
+          "abstained": false,
+          "decision_latency_ms": 0.006,
+          "inference_latency_ms": null,
+          "token_usage": null,
+          "ground_truth": "MOVABLE",
+          "observed_motion_gt": "STATIC",
+          "semantic_class": "desk"
+        },
+        {
+          "entity_id": "inst_laptop_001",
+          "decision": "RESOLVE_CHEAP",
+          "reason_codes": [
+            "STATIC_CANONICAL_MOVABLE_PRIOR"
+          ],
+          "evidence_valid": true,
+          "evidence_provenance": "MEASURED_FULL",
+          "vlm_required": false,
+          "vlm_model": null,
+          "views_used": 0,
+          "prediction": "MOVABLE",
+          "abstained": false,
+          "decision_latency_ms": 0.005,
+          "inference_latency_ms": null,
+          "token_usage": null,
+          "ground_truth": "MOVABLE",
+          "observed_motion_gt": "STATIC",
+          "semantic_class": "laptop"
+        },
+        {
+          "entity_id": "inst_backpack_001",
+          "decision": "RESOLVE_CHEAP",
+          "reason_codes": [
+            "STATIC_CANONICAL_MOVABLE_PRIOR"
+          ],
+          "evidence_valid": true,
+          "evidence_provenance": "MEASURED_FULL",
+          "vlm_required": false,
+          "vlm_model": null,
+          "views_used": 0,
+          "prediction": "MOVABLE",
+          "abstained": false,
+          "decision_latency_ms": 0.005,
+          "inference_latency_ms": null,
+          "token_usage": null,
+          "ground_truth": "MOVABLE",
+          "observed_motion_gt": "STATIC",
+          "semantic_class": "backpack"
+        },
+        {
+          "entity_id": "inst_chair_002",
+          "decision": "ESCALATE",
+          "reason_codes": [
+            "SIGNIFICANT_DISPLACEMENT_AFFORDANCE_UNRESOLVED"
+          ],
+          "evidence_valid": true,
+          "evidence_provenance": "MEASURED_FULL",
+          "vlm_required": true,
+          "vlm_model": null,
+          "views_used": 0,
+          "prediction": "UNKNOWN",
+          "abstained": true,
+          "decision_latency_ms": 0.007,
+          "inference_latency_ms": null,
+          "token_usage": null,
+          "ground_truth": "MOVABLE",
+          "observed_motion_gt": "DISPLACED",
+          "semantic_class": "chair"
+        },
+        {
+          "entity_id": "inst_chair_003",
+          "decision": "ESCALATE",
+          "reason_codes": [
+            "SIGNIFICANT_DISPLACEMENT_AFFORDANCE_UNRESOLVED"
+          ],
+          "evidence_valid": true,
+          "evidence_provenance": "MEASURED_FULL",
+          "vlm_required": true,
+          "vlm_model": null,
+          "views_used": 0,
+          "prediction": "UNKNOWN",
+          "abstained": true,
+          "decision_latency_ms": 0.005,
+          "inference_latency_ms": null,
+          "token_usage": null,
+          "ground_truth": "MOVABLE",
+          "observed_motion_gt": "DISPLACED",
+          "semantic_class": "chair"
+        },
+        {
+          "entity_id": "inst_storage_box_007",
+          "decision": "ESCALATE",
+          "reason_codes": [
+            "SIGNIFICANT_DISPLACEMENT_AFFORDANCE_UNRESOLVED"
+          ],
+          "evidence_valid": true,
+          "evidence_provenance": "MEASURED_FULL",
+          "vlm_required": true,
+          "vlm_model": null,
+          "views_used": 0,
+          "prediction": "UNKNOWN",
+          "abstained": true,
+          "decision_latency_ms": 0.005,
+          "inference_latency_ms": null,
+          "token_usage": null,
+          "ground_truth": "MOVABLE",
+          "observed_motion_gt": "DISPLACED",
+          "semantic_class": "storage box"
+        },
+        {
+          "entity_id": "inst_pedestal_fan_001",
+          "decision": "ESCALATE",
+          "reason_codes": [
+            "AMBIGUOUS_PHYSICAL_SUPPORT_AFFORDANCE"
+          ],
+          "evidence_valid": true,
+          "evidence_provenance": "MEASURED_FULL",
+          "vlm_required": true,
+          "vlm_model": null,
+          "views_used": 0,
+          "prediction": "UNKNOWN",
+          "abstained": true,
+          "decision_latency_ms": 0.005,
+          "inference_latency_ms": null,
+          "token_usage": null,
+          "ground_truth": "MOVABLE",
+          "observed_motion_gt": "STATIC",
+          "semantic_class": "pedestal fan"
+        },
+        {
+          "entity_id": "inst_monitor_001",
+          "decision": "RESOLVE_CHEAP",
+          "reason_codes": [
+            "STATIC_CANONICAL_MOVABLE_PRIOR"
+          ],
+          "evidence_valid": true,
+          "evidence_provenance": "MEASURED_FULL",
+          "vlm_required": false,
+          "vlm_model": null,
+          "views_used": 0,
+          "prediction": "MOVABLE",
+          "abstained": false,
+          "decision_latency_ms": 0.005,
+          "inference_latency_ms": null,
+          "token_usage": null,
+          "ground_truth": "MOVABLE",
+          "observed_motion_gt": "STATIC",
+          "semantic_class": "computer monitor"
+        }
+      ]
+    },
+    "router_selective_vlm": {
+      "name": "Router (VLM Enabled - Selective)",
+      "metrics": {
+        "quality": {
+          "balanced_accuracy": 0.8889,
+          "macro_f1": 0.9333,
+          "per_class_recall": {
+            "IMMOVABLE": 0.6667,
+            "MOVABLE": 1.0,
+            "MOBILE": 1.0
+          },
+          "per_class_precision": {
+            "IMMOVABLE": 1.0,
+            "MOVABLE": 1.0,
+            "MOBILE": 1.0
+          },
+          "per_class_f1": {
+            "IMMOVABLE": 0.8,
+            "MOVABLE": 1.0,
+            "MOBILE": 1.0
+          },
+          "confusion_matrix": {
+            "IMMOVABLE": {
+              "IMMOVABLE": 2,
+              "MOVABLE": 0,
+              "MOBILE": 0,
+              "UNKNOWN": 1
+            },
+            "MOVABLE": {
+              "IMMOVABLE": 0,
+              "MOVABLE": 9,
+              "MOBILE": 0,
+              "UNKNOWN": 0
+            },
+            "MOBILE": {
+              "IMMOVABLE": 0,
+              "MOVABLE": 0,
+              "MOBILE": 3,
+              "UNKNOWN": 0
+            }
+          },
+          "abstention_rate_pct": 6.67
+        },
+        "efficiency": {
+          "total_instances": 15,
+          "vlm_queries_invoked": 4,
+          "vlm_queries_avoided": 11,
+          "vlm_query_rate_pct": 26.67,
+          "decision_latency_ms": {
+            "mean": 0.006,
+            "p50": 0.006,
+            "p95": 0.008
+          },
+          "end_to_end_latency_s": {
+            "mean": 5.801,
+            "p50": 0.0,
+            "p95": 27.945
+          }
+        },
+        "reliability": {
+          "false_cheap_resolutions": 0,
+          "invalid_evidence_escalations": 0,
+          "vlm_abstentions": 0
+        }
+      },
+      "records": [
+        {
+          "entity_id": "inst_door_001",
+          "decision": "RESOLVE_CHEAP",
+          "reason_codes": [
+            "CANONICAL_IMMOVABLE_ARCHITECTURAL_PRIOR"
+          ],
+          "evidence_valid": true,
+          "evidence_provenance": "MEASURED_FULL",
+          "vlm_required": false,
+          "vlm_model": null,
+          "views_used": 0,
+          "prediction": "IMMOVABLE",
+          "abstained": false,
+          "decision_latency_ms": 0.01,
+          "inference_latency_ms": null,
+          "token_usage": null,
+          "ground_truth": "IMMOVABLE",
+          "observed_motion_gt": "STATIC",
+          "semantic_class": "door"
+        },
+        {
+          "entity_id": "inst_ceiling_fan_001",
+          "decision": "RESOLVE_CHEAP",
+          "reason_codes": [
+            "CANONICAL_IMMOVABLE_ARCHITECTURAL_PRIOR"
+          ],
+          "evidence_valid": true,
+          "evidence_provenance": "MEASURED_FULL",
+          "vlm_required": false,
+          "vlm_model": null,
+          "views_used": 0,
+          "prediction": "IMMOVABLE",
+          "abstained": false,
+          "decision_latency_ms": 0.007,
+          "inference_latency_ms": null,
+          "token_usage": null,
+          "ground_truth": "IMMOVABLE",
+          "observed_motion_gt": "STATIC",
+          "semantic_class": "ceiling fan"
+        },
+        {
+          "entity_id": "inst_whiteboard_001",
+          "decision": "DEFER",
+          "reason_codes": [
+            "AMBIGUOUS_PHYSICAL_SUPPORT_AFFORDANCE",
+            "MISSING_REQUIRED_VISUAL_CONTEXT"
+          ],
+          "evidence_valid": false,
+          "evidence_provenance": "MEASURED_FULL",
+          "vlm_required": false,
+          "vlm_model": null,
+          "views_used": 0,
+          "prediction": "UNKNOWN",
+          "abstained": true,
+          "decision_latency_ms": 0.007,
+          "inference_latency_ms": null,
+          "token_usage": null,
+          "ground_truth": "IMMOVABLE",
+          "observed_motion_gt": "STATIC",
+          "semantic_class": "whiteboard"
+        },
+        {
+          "entity_id": "inst_human_operator_001",
+          "decision": "RESOLVE_CHEAP",
+          "reason_codes": [
+            "CANONICAL_MOBILE_AGENT_PRIOR"
+          ],
+          "evidence_valid": true,
+          "evidence_provenance": "MEASURED_FULL",
+          "vlm_required": false,
+          "vlm_model": null,
+          "views_used": 0,
+          "prediction": "MOBILE",
+          "abstained": false,
+          "decision_latency_ms": 0.004,
+          "inference_latency_ms": null,
+          "token_usage": null,
+          "ground_truth": "MOBILE",
+          "observed_motion_gt": "DYNAMIC",
+          "semantic_class": "person"
+        },
+        {
+          "entity_id": "inst_rc_car_robot_001",
+          "decision": "RESOLVE_CHEAP",
+          "reason_codes": [
+            "CANONICAL_MOBILE_AGENT_PRIOR"
+          ],
+          "evidence_valid": true,
+          "evidence_provenance": "MEASURED_FULL",
+          "vlm_required": false,
+          "vlm_model": null,
+          "views_used": 0,
+          "prediction": "MOBILE",
+          "abstained": false,
+          "decision_latency_ms": 0.004,
+          "inference_latency_ms": null,
+          "token_usage": null,
+          "ground_truth": "MOBILE",
+          "observed_motion_gt": "DYNAMIC",
+          "semantic_class": "robot"
+        },
+        {
+          "entity_id": "inst_quadcopter_drone_001",
+          "decision": "RESOLVE_CHEAP",
+          "reason_codes": [
+            "CANONICAL_MOBILE_AGENT_PRIOR"
+          ],
+          "evidence_valid": true,
+          "evidence_provenance": "MEASURED_FULL",
+          "vlm_required": false,
+          "vlm_model": null,
+          "views_used": 0,
+          "prediction": "MOBILE",
+          "abstained": false,
+          "decision_latency_ms": 0.004,
+          "inference_latency_ms": null,
+          "token_usage": null,
+          "ground_truth": "MOBILE",
+          "observed_motion_gt": "DYNAMIC",
+          "semantic_class": "robot"
+        },
+        {
+          "entity_id": "inst_desk_001",
+          "decision": "RESOLVE_CHEAP",
+          "reason_codes": [
+            "STATIC_CANONICAL_MOVABLE_PRIOR"
+          ],
+          "evidence_valid": true,
+          "evidence_provenance": "MEASURED_FULL",
+          "vlm_required": false,
+          "vlm_model": null,
+          "views_used": 0,
+          "prediction": "MOVABLE",
+          "abstained": false,
+          "decision_latency_ms": 0.005,
+          "inference_latency_ms": null,
+          "token_usage": null,
+          "ground_truth": "MOVABLE",
+          "observed_motion_gt": "STATIC",
+          "semantic_class": "desk"
+        },
+        {
+          "entity_id": "inst_desk_018",
+          "decision": "RESOLVE_CHEAP",
+          "reason_codes": [
+            "STATIC_CANONICAL_MOVABLE_PRIOR"
+          ],
+          "evidence_valid": true,
+          "evidence_provenance": "MEASURED_FULL",
+          "vlm_required": false,
+          "vlm_model": null,
+          "views_used": 0,
+          "prediction": "MOVABLE",
+          "abstained": false,
+          "decision_latency_ms": 0.004,
+          "inference_latency_ms": null,
+          "token_usage": null,
+          "ground_truth": "MOVABLE",
+          "observed_motion_gt": "STATIC",
+          "semantic_class": "desk"
+        },
+        {
+          "entity_id": "inst_laptop_001",
+          "decision": "RESOLVE_CHEAP",
+          "reason_codes": [
+            "STATIC_CANONICAL_MOVABLE_PRIOR"
+          ],
+          "evidence_valid": true,
+          "evidence_provenance": "MEASURED_FULL",
+          "vlm_required": false,
+          "vlm_model": null,
+          "views_used": 0,
+          "prediction": "MOVABLE",
+          "abstained": false,
+          "decision_latency_ms": 0.004,
+          "inference_latency_ms": null,
+          "token_usage": null,
+          "ground_truth": "MOVABLE",
+          "observed_motion_gt": "STATIC",
+          "semantic_class": "laptop"
+        },
+        {
+          "entity_id": "inst_backpack_001",
+          "decision": "RESOLVE_CHEAP",
+          "reason_codes": [
+            "STATIC_CANONICAL_MOVABLE_PRIOR"
+          ],
+          "evidence_valid": true,
+          "evidence_provenance": "MEASURED_FULL",
+          "vlm_required": false,
+          "vlm_model": null,
+          "views_used": 0,
+          "prediction": "MOVABLE",
+          "abstained": false,
+          "decision_latency_ms": 0.005,
+          "inference_latency_ms": null,
+          "token_usage": null,
+          "ground_truth": "MOVABLE",
+          "observed_motion_gt": "STATIC",
+          "semantic_class": "backpack"
+        },
+        {
+          "entity_id": "inst_chair_002",
+          "decision": "ESCALATE",
+          "reason_codes": [
+            "SIGNIFICANT_DISPLACEMENT_AFFORDANCE_UNRESOLVED"
+          ],
+          "evidence_valid": true,
+          "evidence_provenance": "MEASURED_FULL",
+          "vlm_required": true,
+          "vlm_model": "Qwen2.5-VL-3B-Instruct (GGUF Q4_K_M)",
+          "views_used": 1,
+          "prediction": "MOVABLE",
+          "abstained": false,
+          "decision_latency_ms": 0.006,
+          "inference_latency_ms": 10261.98,
+          "token_usage": {
+            "completion_tokens": 54,
+            "prompt_tokens": 301,
+            "total_tokens": 355,
+            "prompt_tokens_details": {
+              "cached_tokens": 215
+            }
+          },
+          "ground_truth": "MOVABLE",
+          "observed_motion_gt": "DISPLACED",
+          "semantic_class": "chair"
+        },
+        {
+          "entity_id": "inst_chair_003",
+          "decision": "ESCALATE",
+          "reason_codes": [
+            "SIGNIFICANT_DISPLACEMENT_AFFORDANCE_UNRESOLVED"
+          ],
+          "evidence_valid": true,
+          "evidence_provenance": "MEASURED_FULL",
+          "vlm_required": true,
+          "vlm_model": "Qwen2.5-VL-3B-Instruct (GGUF Q4_K_M)",
+          "views_used": 1,
+          "prediction": "MOVABLE",
+          "abstained": false,
+          "decision_latency_ms": 0.007,
+          "inference_latency_ms": 31989.6,
+          "token_usage": {
+            "completion_tokens": 54,
+            "prompt_tokens": 282,
+            "total_tokens": 336,
+            "prompt_tokens_details": {
+              "cached_tokens": 39
+            }
+          },
+          "ground_truth": "MOVABLE",
+          "observed_motion_gt": "DISPLACED",
+          "semantic_class": "chair"
+        },
+        {
+          "entity_id": "inst_storage_box_007",
+          "decision": "ESCALATE",
+          "reason_codes": [
+            "SIGNIFICANT_DISPLACEMENT_AFFORDANCE_UNRESOLVED"
+          ],
+          "evidence_valid": true,
+          "evidence_provenance": "MEASURED_FULL",
+          "vlm_required": true,
+          "vlm_model": "Qwen2.5-VL-3B-Instruct (GGUF Q4_K_M)",
+          "views_used": 2,
+          "prediction": "MOVABLE",
+          "abstained": false,
+          "decision_latency_ms": 0.006,
+          "inference_latency_ms": 26211.06,
+          "token_usage": {
+            "completion_tokens": 55,
+            "prompt_tokens": 389,
+            "total_tokens": 444,
+            "prompt_tokens_details": {
+              "cached_tokens": 0
+            }
+          },
+          "ground_truth": "MOVABLE",
+          "observed_motion_gt": "DISPLACED",
+          "semantic_class": "storage box"
+        },
+        {
+          "entity_id": "inst_pedestal_fan_001",
+          "decision": "ESCALATE",
+          "reason_codes": [
+            "AMBIGUOUS_PHYSICAL_SUPPORT_AFFORDANCE"
+          ],
+          "evidence_valid": true,
+          "evidence_provenance": "MEASURED_FULL",
+          "vlm_required": true,
+          "vlm_model": "Qwen2.5-VL-3B-Instruct (GGUF Q4_K_M)",
+          "views_used": 1,
+          "prediction": "MOVABLE",
+          "abstained": false,
+          "decision_latency_ms": 0.006,
+          "inference_latency_ms": 18551.79,
+          "token_usage": {
+            "completion_tokens": 60,
+            "prompt_tokens": 311,
+            "total_tokens": 371,
+            "prompt_tokens_details": {
+              "cached_tokens": 34
+            }
+          },
+          "ground_truth": "MOVABLE",
+          "observed_motion_gt": "STATIC",
+          "semantic_class": "pedestal fan"
+        },
+        {
+          "entity_id": "inst_monitor_001",
+          "decision": "RESOLVE_CHEAP",
+          "reason_codes": [
+            "STATIC_CANONICAL_MOVABLE_PRIOR"
+          ],
+          "evidence_valid": true,
+          "evidence_provenance": "MEASURED_FULL",
+          "vlm_required": false,
+          "vlm_model": null,
+          "views_used": 0,
+          "prediction": "MOVABLE",
+          "abstained": false,
+          "decision_latency_ms": 0.006,
+          "inference_latency_ms": null,
+          "token_usage": null,
+          "ground_truth": "MOVABLE",
+          "observed_motion_gt": "STATIC",
+          "semantic_class": "computer monitor"
+        }
+      ]
+    },
+    "random_query_baseline": {
+      "name": "Random Query Baseline (26.7% Budget)",
+      "metrics": {
+        "quality": {
+          "balanced_accuracy": 0.8889,
+          "macro_f1": 0.9158,
+          "per_class_recall": {
+            "IMMOVABLE": 0.6667,
+            "MOVABLE": 1.0,
+            "MOBILE": 1.0
+          },
+          "per_class_precision": {
+            "IMMOVABLE": 1.0,
+            "MOVABLE": 0.9,
+            "MOBILE": 1.0
+          },
+          "per_class_f1": {
+            "IMMOVABLE": 0.8,
+            "MOVABLE": 0.9474,
+            "MOBILE": 1.0
+          },
+          "confusion_matrix": {
+            "IMMOVABLE": {
+              "IMMOVABLE": 2,
+              "MOVABLE": 1,
+              "MOBILE": 0,
+              "UNKNOWN": 0
+            },
+            "MOVABLE": {
+              "IMMOVABLE": 0,
+              "MOVABLE": 9,
+              "MOBILE": 0,
+              "UNKNOWN": 0
+            },
+            "MOBILE": {
+              "IMMOVABLE": 0,
+              "MOVABLE": 0,
+              "MOBILE": 3,
+              "UNKNOWN": 0
+            }
+          },
+          "abstention_rate_pct": 0.0
+        },
+        "efficiency": {
+          "total_instances": 15,
+          "vlm_queries_invoked": 4,
+          "vlm_queries_avoided": 11,
+          "vlm_query_rate_pct": 26.67,
+          "decision_latency_ms": {
+            "mean": 0.031,
+            "p50": 0.04,
+            "p95": 0.04
+          },
+          "end_to_end_latency_s": {
+            "mean": 5.524,
+            "p50": 0.0,
+            "p95": 25.8
+          }
+        },
+        "reliability": {
+          "false_cheap_resolutions": 0,
+          "invalid_evidence_escalations": 0,
+          "vlm_abstentions": 0
+        }
+      },
+      "records": [
+        {
+          "entity_id": "inst_door_001",
+          "decision": "ESCALATE",
+          "reason_codes": [
+            "SIGNIFICANT_DISPLACEMENT_AFFORDANCE_UNRESOLVED"
+          ],
+          "evidence_valid": true,
+          "evidence_provenance": "MISSING",
+          "vlm_required": true,
+          "vlm_model": "Qwen2.5-VL-3B-Instruct (GGUF Q4_K_M)",
+          "views_used": 1,
+          "prediction": "MOVABLE",
+          "abstained": false,
+          "decision_latency_ms": 0.011,
+          "inference_latency_ms": 14816.16,
+          "token_usage": {
+            "completion_tokens": 53,
+            "prompt_tokens": 292,
+            "total_tokens": 345,
+            "prompt_tokens_details": {
+              "cached_tokens": 34
+            }
+          },
+          "ground_truth": "IMMOVABLE"
+        },
+        {
+          "entity_id": "inst_ceiling_fan_001",
+          "decision": "ESCALATE",
+          "reason_codes": [
+            "SIGNIFICANT_DISPLACEMENT_AFFORDANCE_UNRESOLVED"
+          ],
+          "evidence_valid": true,
+          "evidence_provenance": "MISSING",
+          "vlm_required": true,
+          "vlm_model": "Qwen2.5-VL-3B-Instruct (GGUF Q4_K_M)",
+          "views_used": 1,
+          "prediction": "IMMOVABLE",
+          "abstained": false,
+          "decision_latency_ms": 0.007,
+          "inference_latency_ms": 15985.7,
+          "token_usage": {
+            "completion_tokens": 57,
+            "prompt_tokens": 292,
+            "total_tokens": 349,
+            "prompt_tokens_details": {
+              "cached_tokens": 34
+            }
+          },
+          "ground_truth": "IMMOVABLE"
+        },
+        {
+          "entity_id": "inst_whiteboard_001",
+          "decision": "RESOLVE_CHEAP",
+          "prediction": "IMMOVABLE",
+          "abstained": false,
+          "vlm_required": false,
+          "views_used": 0,
+          "evidence_valid": true,
+          "decision_latency_ms": 0.04,
+          "inference_latency_ms": 0.0,
+          "ground_truth": "IMMOVABLE"
+        },
+        {
+          "entity_id": "inst_human_operator_001",
+          "decision": "RESOLVE_CHEAP",
+          "prediction": "MOBILE",
+          "abstained": false,
+          "vlm_required": false,
+          "views_used": 0,
+          "evidence_valid": true,
+          "decision_latency_ms": 0.04,
+          "inference_latency_ms": 0.0,
+          "ground_truth": "MOBILE"
+        },
+        {
+          "entity_id": "inst_rc_car_robot_001",
+          "decision": "RESOLVE_CHEAP",
+          "prediction": "MOBILE",
+          "abstained": false,
+          "vlm_required": false,
+          "views_used": 0,
+          "evidence_valid": true,
+          "decision_latency_ms": 0.04,
+          "inference_latency_ms": 0.0,
+          "ground_truth": "MOBILE"
+        },
+        {
+          "entity_id": "inst_quadcopter_drone_001",
+          "decision": "RESOLVE_CHEAP",
+          "prediction": "MOBILE",
+          "abstained": false,
+          "vlm_required": false,
+          "views_used": 0,
+          "evidence_valid": true,
+          "decision_latency_ms": 0.04,
+          "inference_latency_ms": 0.0,
+          "ground_truth": "MOBILE"
+        },
+        {
+          "entity_id": "inst_desk_001",
+          "decision": "RESOLVE_CHEAP",
+          "prediction": "MOVABLE",
+          "abstained": false,
+          "vlm_required": false,
+          "views_used": 0,
+          "evidence_valid": true,
+          "decision_latency_ms": 0.04,
+          "inference_latency_ms": 0.0,
+          "ground_truth": "MOVABLE"
+        },
+        {
+          "entity_id": "inst_desk_018",
+          "decision": "RESOLVE_CHEAP",
+          "prediction": "MOVABLE",
+          "abstained": false,
+          "vlm_required": false,
+          "views_used": 0,
+          "evidence_valid": true,
+          "decision_latency_ms": 0.04,
+          "inference_latency_ms": 0.0,
+          "ground_truth": "MOVABLE"
+        },
+        {
+          "entity_id": "inst_laptop_001",
+          "decision": "ESCALATE",
+          "reason_codes": [
+            "SIGNIFICANT_DISPLACEMENT_AFFORDANCE_UNRESOLVED"
+          ],
+          "evidence_valid": true,
+          "evidence_provenance": "MISSING",
+          "vlm_required": true,
+          "vlm_model": "Qwen2.5-VL-3B-Instruct (GGUF Q4_K_M)",
+          "views_used": 2,
+          "prediction": "MOVABLE",
+          "abstained": false,
+          "decision_latency_ms": 0.007,
+          "inference_latency_ms": 25459.48,
+          "token_usage": {
+            "completion_tokens": 55,
+            "prompt_tokens": 398,
+            "total_tokens": 453,
+            "prompt_tokens_details": {
+              "cached_tokens": 0
+            }
+          },
+          "ground_truth": "MOVABLE"
+        },
+        {
+          "entity_id": "inst_backpack_001",
+          "decision": "RESOLVE_CHEAP",
+          "prediction": "MOVABLE",
+          "abstained": false,
+          "vlm_required": false,
+          "views_used": 0,
+          "evidence_valid": true,
+          "decision_latency_ms": 0.04,
+          "inference_latency_ms": 0.0,
+          "ground_truth": "MOVABLE"
+        },
+        {
+          "entity_id": "inst_chair_002",
+          "decision": "RESOLVE_CHEAP",
+          "prediction": "MOVABLE",
+          "abstained": false,
+          "vlm_required": false,
+          "views_used": 0,
+          "evidence_valid": true,
+          "decision_latency_ms": 0.04,
+          "inference_latency_ms": 0.0,
+          "ground_truth": "MOVABLE"
+        },
+        {
+          "entity_id": "inst_chair_003",
+          "decision": "RESOLVE_CHEAP",
+          "prediction": "MOVABLE",
+          "abstained": false,
+          "vlm_required": false,
+          "views_used": 0,
+          "evidence_valid": true,
+          "decision_latency_ms": 0.04,
+          "inference_latency_ms": 0.0,
+          "ground_truth": "MOVABLE"
+        },
+        {
+          "entity_id": "inst_storage_box_007",
+          "decision": "RESOLVE_CHEAP",
+          "prediction": "MOVABLE",
+          "abstained": false,
+          "vlm_required": false,
+          "views_used": 0,
+          "evidence_valid": true,
+          "decision_latency_ms": 0.04,
+          "inference_latency_ms": 0.0,
+          "ground_truth": "MOVABLE"
+        },
+        {
+          "entity_id": "inst_pedestal_fan_001",
+          "decision": "RESOLVE_CHEAP",
+          "prediction": "MOVABLE",
+          "abstained": false,
+          "vlm_required": false,
+          "views_used": 0,
+          "evidence_valid": true,
+          "decision_latency_ms": 0.04,
+          "inference_latency_ms": 0.0,
+          "ground_truth": "MOVABLE"
+        },
+        {
+          "entity_id": "inst_monitor_001",
+          "decision": "ESCALATE",
+          "reason_codes": [
+            "SIGNIFICANT_DISPLACEMENT_AFFORDANCE_UNRESOLVED"
+          ],
+          "evidence_valid": true,
+          "evidence_provenance": "MISSING",
+          "vlm_required": true,
+          "vlm_model": "Qwen2.5-VL-3B-Instruct (GGUF Q4_K_M)",
+          "views_used": 2,
+          "prediction": "MOVABLE",
+          "abstained": false,
+          "decision_latency_ms": 0.007,
+          "inference_latency_ms": 26593.16,
+          "token_usage": {
+            "completion_tokens": 54,
+            "prompt_tokens": 416,
+            "total_tokens": 470,
+            "prompt_tokens_details": {
+              "cached_tokens": 0
+            }
+          },
+          "ground_truth": "MOVABLE"
+        }
+      ]
+    },
+    "oracle_query_baseline": {
+      "name": "Oracle Query Baseline (Upper Bound)",
+      "metrics": {
+        "quality": {
+          "balanced_accuracy": 1.0,
+          "macro_f1": 1.0,
+          "per_class_recall": {
+            "IMMOVABLE": 1.0,
+            "MOVABLE": 1.0,
+            "MOBILE": 1.0
+          },
+          "per_class_precision": {
+            "IMMOVABLE": 1.0,
+            "MOVABLE": 1.0,
+            "MOBILE": 1.0
+          },
+          "per_class_f1": {
+            "IMMOVABLE": 1.0,
+            "MOVABLE": 1.0,
+            "MOBILE": 1.0
+          },
+          "confusion_matrix": {
+            "IMMOVABLE": {
+              "IMMOVABLE": 3,
+              "MOVABLE": 0,
+              "MOBILE": 0,
+              "UNKNOWN": 0
+            },
+            "MOVABLE": {
+              "IMMOVABLE": 0,
+              "MOVABLE": 9,
+              "MOBILE": 0,
+              "UNKNOWN": 0
+            },
+            "MOBILE": {
+              "IMMOVABLE": 0,
+              "MOVABLE": 0,
+              "MOBILE": 3,
+              "UNKNOWN": 0
+            }
+          },
+          "abstention_rate_pct": 0.0
+        },
+        "efficiency": {
+          "total_instances": 15,
+          "vlm_queries_invoked": 4,
+          "vlm_queries_avoided": 11,
+          "vlm_query_rate_pct": 26.67,
+          "decision_latency_ms": {
+            "mean": 0.024,
+            "p50": 0.03,
+            "p95": 0.03
+          },
+          "end_to_end_latency_s": {
+            "mean": 1.418,
+            "p50": 0.0,
+            "p95": 5.404
+          }
+        },
+        "reliability": {
+          "false_cheap_resolutions": 0,
+          "invalid_evidence_escalations": 0,
+          "vlm_abstentions": 0
+        }
+      },
+      "records": [
+        {
+          "entity_id": "inst_door_001",
+          "decision": "RESOLVE_CHEAP",
+          "prediction": "IMMOVABLE",
+          "abstained": false,
+          "vlm_required": false,
+          "views_used": 0,
+          "evidence_valid": true,
+          "decision_latency_ms": 0.03,
+          "inference_latency_ms": 0.0,
+          "ground_truth": "IMMOVABLE"
+        },
+        {
+          "entity_id": "inst_ceiling_fan_001",
+          "decision": "RESOLVE_CHEAP",
+          "prediction": "IMMOVABLE",
+          "abstained": false,
+          "vlm_required": false,
+          "views_used": 0,
+          "evidence_valid": true,
+          "decision_latency_ms": 0.03,
+          "inference_latency_ms": 0.0,
+          "ground_truth": "IMMOVABLE"
+        },
+        {
+          "entity_id": "inst_whiteboard_001",
+          "decision": "RESOLVE_CHEAP",
+          "prediction": "IMMOVABLE",
+          "abstained": false,
+          "vlm_required": false,
+          "views_used": 0,
+          "evidence_valid": true,
+          "decision_latency_ms": 0.03,
+          "inference_latency_ms": 0.0,
+          "ground_truth": "IMMOVABLE"
+        },
+        {
+          "entity_id": "inst_human_operator_001",
+          "decision": "RESOLVE_CHEAP",
+          "prediction": "MOBILE",
+          "abstained": false,
+          "vlm_required": false,
+          "views_used": 0,
+          "evidence_valid": true,
+          "decision_latency_ms": 0.03,
+          "inference_latency_ms": 0.0,
+          "ground_truth": "MOBILE"
+        },
+        {
+          "entity_id": "inst_rc_car_robot_001",
+          "decision": "RESOLVE_CHEAP",
+          "prediction": "MOBILE",
+          "abstained": false,
+          "vlm_required": false,
+          "views_used": 0,
+          "evidence_valid": true,
+          "decision_latency_ms": 0.03,
+          "inference_latency_ms": 0.0,
+          "ground_truth": "MOBILE"
+        },
+        {
+          "entity_id": "inst_quadcopter_drone_001",
+          "decision": "RESOLVE_CHEAP",
+          "prediction": "MOBILE",
+          "abstained": false,
+          "vlm_required": false,
+          "views_used": 0,
+          "evidence_valid": true,
+          "decision_latency_ms": 0.03,
+          "inference_latency_ms": 0.0,
+          "ground_truth": "MOBILE"
+        },
+        {
+          "entity_id": "inst_desk_001",
+          "decision": "RESOLVE_CHEAP",
+          "prediction": "MOVABLE",
+          "abstained": false,
+          "vlm_required": false,
+          "views_used": 0,
+          "evidence_valid": true,
+          "decision_latency_ms": 0.03,
+          "inference_latency_ms": 0.0,
+          "ground_truth": "MOVABLE"
+        },
+        {
+          "entity_id": "inst_desk_018",
+          "decision": "RESOLVE_CHEAP",
+          "prediction": "MOVABLE",
+          "abstained": false,
+          "vlm_required": false,
+          "views_used": 0,
+          "evidence_valid": true,
+          "decision_latency_ms": 0.03,
+          "inference_latency_ms": 0.0,
+          "ground_truth": "MOVABLE"
+        },
+        {
+          "entity_id": "inst_laptop_001",
+          "decision": "RESOLVE_CHEAP",
+          "prediction": "MOVABLE",
+          "abstained": false,
+          "vlm_required": false,
+          "views_used": 0,
+          "evidence_valid": true,
+          "decision_latency_ms": 0.03,
+          "inference_latency_ms": 0.0,
+          "ground_truth": "MOVABLE"
+        },
+        {
+          "entity_id": "inst_backpack_001",
+          "decision": "RESOLVE_CHEAP",
+          "prediction": "MOVABLE",
+          "abstained": false,
+          "vlm_required": false,
+          "views_used": 0,
+          "evidence_valid": true,
+          "decision_latency_ms": 0.03,
+          "inference_latency_ms": 0.0,
+          "ground_truth": "MOVABLE"
+        },
+        {
+          "entity_id": "inst_chair_002",
+          "decision": "ESCALATE",
+          "reason_codes": [
+            "SIGNIFICANT_DISPLACEMENT_AFFORDANCE_UNRESOLVED"
+          ],
+          "evidence_valid": true,
+          "evidence_provenance": "MISSING",
+          "vlm_required": true,
+          "vlm_model": "Qwen2.5-VL-3B-Instruct (GGUF Q4_K_M)",
+          "views_used": 1,
+          "prediction": "MOVABLE",
+          "abstained": false,
+          "decision_latency_ms": 0.01,
+          "inference_latency_ms": 5057.52,
+          "token_usage": {
+            "completion_tokens": 54,
+            "prompt_tokens": 301,
+            "total_tokens": 355,
+            "prompt_tokens_details": {
+              "cached_tokens": 300
+            }
+          },
+          "ground_truth": "MOVABLE"
+        },
+        {
+          "entity_id": "inst_chair_003",
+          "decision": "ESCALATE",
+          "reason_codes": [
+            "SIGNIFICANT_DISPLACEMENT_AFFORDANCE_UNRESOLVED"
+          ],
+          "evidence_valid": true,
+          "evidence_provenance": "MISSING",
+          "vlm_required": true,
+          "vlm_model": "Qwen2.5-VL-3B-Instruct (GGUF Q4_K_M)",
+          "views_used": 1,
+          "prediction": "MOVABLE",
+          "abstained": false,
+          "decision_latency_ms": 0.007,
+          "inference_latency_ms": 5315.7,
+          "token_usage": {
+            "completion_tokens": 54,
+            "prompt_tokens": 282,
+            "total_tokens": 336,
+            "prompt_tokens_details": {
+              "cached_tokens": 281
+            }
+          },
+          "ground_truth": "MOVABLE"
+        },
+        {
+          "entity_id": "inst_storage_box_007",
+          "decision": "ESCALATE",
+          "reason_codes": [
+            "SIGNIFICANT_DISPLACEMENT_AFFORDANCE_UNRESOLVED"
+          ],
+          "evidence_valid": true,
+          "evidence_provenance": "MISSING",
+          "vlm_required": true,
+          "vlm_model": "Qwen2.5-VL-3B-Instruct (GGUF Q4_K_M)",
+          "views_used": 2,
+          "prediction": "MOVABLE",
+          "abstained": false,
+          "decision_latency_ms": 0.006,
+          "inference_latency_ms": 5290.28,
+          "token_usage": {
+            "completion_tokens": 55,
+            "prompt_tokens": 389,
+            "total_tokens": 444,
+            "prompt_tokens_details": {
+              "cached_tokens": 388
+            }
+          },
+          "ground_truth": "MOVABLE"
+        },
+        {
+          "entity_id": "inst_pedestal_fan_001",
+          "decision": "ESCALATE",
+          "reason_codes": [
+            "SIGNIFICANT_DISPLACEMENT_AFFORDANCE_UNRESOLVED",
+            "AMBIGUOUS_PHYSICAL_SUPPORT_AFFORDANCE"
+          ],
+          "evidence_valid": true,
+          "evidence_provenance": "MISSING",
+          "vlm_required": true,
+          "vlm_model": "Qwen2.5-VL-3B-Instruct (GGUF Q4_K_M)",
+          "views_used": 1,
+          "prediction": "MOVABLE",
+          "abstained": false,
+          "decision_latency_ms": 0.006,
+          "inference_latency_ms": 5608.87,
+          "token_usage": {
+            "completion_tokens": 60,
+            "prompt_tokens": 311,
+            "total_tokens": 371,
+            "prompt_tokens_details": {
+              "cached_tokens": 310
+            }
+          },
+          "ground_truth": "MOVABLE"
+        },
+        {
+          "entity_id": "inst_monitor_001",
+          "decision": "RESOLVE_CHEAP",
+          "prediction": "MOVABLE",
+          "abstained": false,
+          "vlm_required": false,
+          "views_used": 0,
+          "evidence_valid": true,
+          "decision_latency_ms": 0.03,
+          "inference_latency_ms": 0.0,
+          "ground_truth": "MOVABLE"
+        }
+      ]
+    }
+  }
+}

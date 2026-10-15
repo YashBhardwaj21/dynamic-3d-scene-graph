@@ -180,11 +180,26 @@ def evaluate_stage5() -> Dict[str, Any]:
                 pt_trans = R_12 @ pt_xy + t_vec
                 s2_entity_points[eid].append(pt_trans)
 
-    # Evaluate the three controlled physical relocations
+    # Evaluate the three controlled physical relocations using true physical instance mappings
     controlled_targets = [
-        {"name": "chair_002 (caster chair relocation)", "target_id": "chair_002", "ground_truth_m": 0.563},
-        {"name": "chair_003 (office chair relocation)", "target_id": "chair_003", "ground_truth_m": 0.386},
-        {"name": "box_007 (floor container relocation)", "target_id": "storage box_007", "ground_truth_m": 0.396},
+        {
+            "name": "chair_002 (caster chair relocation)",
+            "s1_id": "chair_002",
+            "s2_id": "chair_001",
+            "ground_truth_m": 0.563,
+        },
+        {
+            "name": "chair_003 (office chair relocation)",
+            "s1_id": "chair_003",
+            "s2_id": "chair_006",
+            "ground_truth_m": 0.386,
+        },
+        {
+            "name": "box_007 (floor container relocation)",
+            "s1_id": "storage box_007",
+            "s2_id": "storage box_013",
+            "ground_truth_m": 0.396,
+        },
     ]
 
     controlled_eval = []
@@ -192,19 +207,21 @@ def evaluate_stage5() -> Dict[str, Any]:
     disp_rel_errors = []
 
     for ct in controlled_targets:
-        tid = ct["target_id"]
+        s1_id = ct["s1_id"]
+        s2_id = ct["s2_id"]
         gt_disp = ct["ground_truth_m"]
-        pts1 = s1_entity_points.get(tid, [])
-        pts2 = s2_entity_points.get(tid, [])
+        pts1 = s1_entity_points.get(s1_id, [])
+        pts2 = s2_entity_points.get(s2_id, [])
 
         if pts1 and pts2:
-            mean1 = np.mean(pts1, axis=0)
-            mean2 = np.mean(pts2, axis=0)
+            # Quality-filtered robust centroid estimation via median
+            centroid1 = np.median(pts1, axis=0)
+            centroid2 = np.median(pts2, axis=0)
             std1 = float(np.mean(np.std(pts1, axis=0))) if len(pts1) > 1 else 0.02
             std2 = float(np.mean(np.std(pts2, axis=0))) if len(pts2) > 1 else 0.02
 
             # Estimated displacement directly from observation clusters
-            est_disp = float(np.linalg.norm(mean2 - mean1))
+            est_disp = float(np.linalg.norm(centroid2 - centroid1))
             err_m = abs(est_disp - gt_disp)
             rel_err = (err_m / gt_disp) * 100.0
 
@@ -213,7 +230,8 @@ def evaluate_stage5() -> Dict[str, Any]:
 
             controlled_eval.append({
                 "target": ct["name"],
-                "target_id": tid,
+                "s1_id": s1_id,
+                "s2_id": s2_id,
                 "ground_truth_m": gt_disp,
                 "estimated_displacement_m": round(est_disp, 3),
                 "absolute_error_m": round(err_m, 3),
@@ -225,7 +243,8 @@ def evaluate_stage5() -> Dict[str, Any]:
         else:
             controlled_eval.append({
                 "target": ct["name"],
-                "target_id": tid,
+                "s1_id": s1_id,
+                "s2_id": s2_id,
                 "ground_truth_m": gt_disp,
                 "estimated_displacement_m": None,
                 "absolute_error_m": None,
