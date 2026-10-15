@@ -230,10 +230,9 @@ def test_cross_session_physical_identity_scene_graph_fusion():
     assert assoc_res.is_valid
     assert len(assoc_res.matched_pairs) > 0
 
-    # Pick a verified static match, e.g. desk_001 <-> desk_001 or desk_005 <-> desk_014
+    # Explicitly require verified static pair desk_001 <-> desk_001
     target_match = next((m for m in assoc_res.matched_pairs if m.s1_entity_id == "desk_001" and m.s2_entity_id == "desk_001"), None)
-    if not target_match:
-        target_match = assoc_res.matched_pairs[0]
+    assert target_match is not None, "Verified canonical static pair desk_001 <-> desk_001 must be matched!"
 
     s1_eid = target_match.s1_entity_id
     s2_eid = target_match.s2_entity_id
@@ -308,4 +307,85 @@ def test_cross_session_physical_identity_scene_graph_fusion():
     assert s1_eid in persistent_entity.source_track_ids
     assert s2_eid in persistent_entity.source_track_ids
     assert persistent_entity.lifecycle_state == EntityLifecycleState.CONFIRMED
+
+
+def test_fusion_exact_se2_transform_application():
+    """Verify that the production fusion path applies the exact SE(2) transform to Session 2 local points."""
+    from vlm.src.stage5_adapter import RegistrationInfo
+
+    R_test = np.array([[0.0, -1.0], [1.0, 0.0]], dtype=np.float64)  # 90 deg rotation
+    t_test = np.array([5.0, 10.0], dtype=np.float64)
+    reg = RegistrationInfo(
+        is_valid=True,
+        reference_session="rec01",
+        aligned_session="rec02",
+        rotation_deg=90.0,
+        translation_m=t_test,
+        R_12=R_test,
+        anchor_rms_residual_m=0.01,
+        anchor_count=4,
+        status="VERIFIED",
+    )
+
+    fusion = ContextualSceneGraphFusion()
+    routed = {"prediction": "MOVABLE", "observed_motion": "STATIC"}
+
+    # Input point in Session 2 local frame: [1.0, 2.0, 0.50]
+    p_s2 = np.array([1.0, 2.0])
+    expected_p_ref = R_test @ p_s2 + t_test  # [0, -1] @ [1, 2] + [5, 10] = [-2, 1] + [5, 10] = [3.0, 11.0]
+
+    obs_meta = {
+        "timestamp": 50.0,
+        "source_session": "rec02",
+        "obs_id": "obs_s2_test",
+        "local_track_id": "trk_s2_99",
+        "centroid": [1.0, 2.0, 0.50],
+        "coordinate_frame": "session_02_local",
+        "registration": reg,
+    }
+
+    node = fusion.update_or_create_node("phys_obj_exact_trans", "chair", routed, obs_meta)
+
+    assert node.geometry_valid is True
+    assert np.allclose(node.centroid_world[:2], expected_p_ref, atol=1e-5), f"Expected {expected_p_ref}, got {node.centroid_world[:2]}"
+    assert node.centroid_world[2] == pytest.approx(0.50)
+
+
+def test_fusion_rejects_unaligned_session2_geometry_when_reg_invalid():
+    """Verify that unaligned Session 2 points are strictly rejected when registration is missing or invalid."""
+    from vlm.src.stage5_adapter import RegistrationInfo
+
+    reg_invalid = RegistrationInfo(
+        is_valid=False,
+        reference_session="rec01",
+        aligned_session="rec02",
+        rotation_deg=0.0,
+        translation_m=np.zeros(2),
+        R_12=np.eye(2),
+        anchor_rms_residual_m=0.95,
+        anchor_count=1,
+        status="FAILED_UNVERIFIED",
+    )
+
+    fusion = ContextualSceneGraphFusion()
+    routed = {"prediction": "MOVABLE", "observed_motion": "STATIC"}
+
+    obs_meta = {
+        "timestamp": 60.0,
+        "source_session": "rec02",
+        "obs_id": "obs_unaligned",
+        "local_track_id": "trk_unaligned",
+        "centroid": [2.5, 3.5, 0.70],
+        "coordinate_frame": "session_02_local",
+        "registration": reg_invalid,
+    }
+
+    node = fusion.update_or_create_node("phys_unaligned", "desk", routed, obs_meta)
+
+    # Must reject geometry to prevent unaligned coordinate corruption!
+    assert node.geometry_valid is False
+    assert node.centroid_world is None
+    persistent = node.to_persistent_entity()
+    assert persistent.lifecycle_state == EntityLifecycleState.TENTATIVE
+
 

@@ -124,20 +124,27 @@ The unmatched observations correspond to legitimate physical objects that receiv
 
 ---
 
-## 6. Stage 9A Estimator-Aware Cross-Session Candidate Association Results
+## 6. Stage 9B Ground-Truth-Validated Cross-Session Association & Registration Analysis
 
-Using floor centroids, verified SE(2) registration (`R_12` = -16.13°, `t_12` = [-0.0815, 0.0930]m, RMS residual = 0.305m), and Hungarian bipartite assignment:
+### 6.1 Independent SE(2) Registration Validation
+- **Optimal Transform:** Rotation $\theta = -16.13^\circ$, Translation $t = [-0.0815, 0.0930]$ m.
+- **Residual Distribution:** Median = **`0.1325 m`**, RMS = **`0.3054 m`**, Max = **`0.5711 m`**.
+- **Leave-One-Out (LOO) Sensitivity:** Anchors 1–5 and 10 exhibit small residuals (0.051–0.137m), closely tracking the 13.2cm median. Peripheral anchors 6 (`desk_023` <-> `desk_034`, residual = 0.5711m) and 7 (`desk_025` <-> `desk_006`, residual = 0.5572m) drive the aggregate RMS to 0.305m due to boundary trajectory drift. Excluding anchor 6 reduces training RMS to 0.2422m.
 
-| Cross-Session Association Metric | Value | Interpretation |
-|---|:---:|---|
-| **Session 1 Track Clusters** | **102** | Discrete entity clusters observed in Recording 01 |
-| **Session 2 Track Clusters** | **166** | Discrete entity clusters observed in Recording 02 |
-| **Matched Physical Candidate Pairs** | **35** | Bipartite matches satisfying spatial (<=0.45m), semantic, and extent gates |
-| **Ambiguous Candidates Rejected** | **7** | Competing candidates with overlapping uncertainties (flagged AMBIGUOUS) |
-| **Unmatched S1 Clusters** | **67** | Session 1 entities unobserved or relocated in Session 2 |
-| **Unmatched S2 Clusters** | **131** | Session 2 entities unobserved in Session 1 |
-| **GT Evaluated Precision** | **17.1%** | True cross-session instance matches over total pairs |
-| **False Merges in Matcher** | **3** | Erroneously merged distinct physical GT instances |
+### 6.2 Cross-Session Matcher Performance (Canonical Ground-Truth Evaluation)
+
+| Cross-Session Association Metric | Value | Denominator & Scope | Interpretation |
+|---|:---:|---|---|
+| **Session 1 Track Clusters** | **102** | S1 clusters (N >= 2 obs) | Physical clusters identified in Recording 01 |
+| **Session 2 Track Clusters** | **166** | S2 clusters (N >= 2 obs) | Physical clusters identified in Recording 02 |
+| **Total Matched Candidate Pairs** | **34** | Hungarian assignment <= 0.45 m | Bipartite matches satisfying spatial & semantic gates |
+| **Ambiguous Candidates Rejected** | **8** | Symmetric ambiguity check | Pairs rejected due to competing S1/S2 neighbors <= 0.15 m |
+| **GT-Annotated Evaluation Pairs** | **11** | Pairs with both tracks in GT | Subset of proposed matches with ground truth labels |
+| **Unannotated Candidate Pairs** | **23** | Outside 52 physical instances | Unannotated background clutter (reported separately) |
+| **True Positives (Annotated)** | **6** | Verified correct matches | Correct identity continuity across sessions |
+| **False Merges (Annotated)** | **5** | Erroneously merged instances | Different physical objects merged (e.g. adjacent chairs) |
+| **Annotated Pair Precision** | **54.5%** | TP / (TP + False Merges) | Precision on ground-truth annotated candidate subset |
+| **Multi-Session Instance Recall** | **14.6%** | Recalled / 41 multi-session GT | Multi-session instances recovered by static matcher |
 
 ### Sample Verified Cross-Session Physical Matches
 

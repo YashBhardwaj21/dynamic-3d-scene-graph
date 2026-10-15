@@ -234,3 +234,64 @@ def test_extent_gate_rejection():
     res = matcher.match_entities(s1, s2, reg)
 
     assert len(res.matched_pairs) == 0
+
+
+def test_symmetric_ambiguity_direction_b():
+    """Test ambiguity when S1 has 1 candidate and S2 has 2 competing nearby candidates."""
+    # S1 has one chair at (1.0, 0.0)
+    s1 = {"chair_A": _make_cluster("chair_A", "chair", 1.0, 0.0)}
+    # S2 has two chairs at (1.02, 0.0) and (1.05, 0.0) -> both within 0.15m of each other
+    s2 = {
+        "chair_1": _make_cluster("chair_1", "chair", 1.02, 0.0),
+        "chair_2": _make_cluster("chair_2", "chair", 1.05, 0.0),
+    }
+
+    reg = _make_reg()
+
+    matcher = CrossSessionCandidateMatcher(max_static_distance_m=0.45, ambiguity_margin_m=0.15)
+    res = matcher.match_entities(s1, s2, reg)
+
+    # Must be marked AMBIGUOUS due to symmetric check in Direction B
+    assert len(res.matched_pairs) == 0
+    assert len(res.ambiguous_pairs) == 1
+    assert "competing S2 neighbor" in res.ambiguous_pairs[0].diagnostics[0]
+
+
+def test_true_relocation_beyond_static_gate():
+    """Objects that moved >0.45m between sessions are not forcibly merged as static objects."""
+    s1 = {"chair_001": _make_cluster("chair_001", "chair", 1.0, 1.0)}
+    # Physically relocated by 1.2m
+    s2 = {"chair_001_s2": _make_cluster("chair_001_s2", "chair", 2.2, 1.0)}
+
+    reg = _make_reg()
+
+    matcher = CrossSessionCandidateMatcher(max_static_distance_m=0.45)
+    res = matcher.match_entities(s1, s2, reg)
+
+    assert len(res.matched_pairs) == 0
+    assert "chair_001" in res.unmatched_s1
+    assert "chair_001_s2" in res.unmatched_s2
+
+
+def test_duplicate_track_ids_different_objects():
+    """Ensure spatial geometry dictates physical identity, NOT identical session-local track names."""
+    # S1 has chair_001 at (1.0, 1.0)
+    s1 = {"chair_001": _make_cluster("chair_001", "chair", 1.0, 1.0)}
+    # S2 renumbered: chair_001 is at (5.0, 5.0), while chair_010 is at (1.02, 1.01)
+    s2 = {
+        "chair_001": _make_cluster("chair_001", "chair", 5.0, 5.0),
+        "chair_010": _make_cluster("chair_010", "chair", 1.02, 1.01),
+    }
+
+    reg = _make_reg()
+
+    matcher = CrossSessionCandidateMatcher(max_static_distance_m=0.45)
+    res = matcher.match_entities(s1, s2, reg)
+
+    assert len(res.matched_pairs) == 1
+    m = res.matched_pairs[0]
+    # Matched with chair_010 based on true physical position, NOT with chair_001!
+    assert m.s1_entity_id == "chair_001"
+    assert m.s2_entity_id == "chair_010"
+    assert "chair_001" in res.unmatched_s2
+

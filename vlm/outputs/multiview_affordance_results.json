@@ -1,7 +1,7 @@
 {
   "metadata": {
     "title": "Empirical Multi-View Affordance & Contextual Reasoning Evaluation",
-    "timestamp": 1792034056.5200763,
+    "timestamp": 1792035890.1052537,
     "model_version": "Qwen2.5-VL-3B-Instruct",
     "temperature": 0.0,
     "max_tokens": 75,
@@ -869,9 +869,9 @@
           "total_instances": 28,
           "vlm_queries_invoked": 28,
           "vlm_query_rate_pct": 100.0,
-          "mean_latency_s": 18.318,
-          "p95_latency_s": 20.318,
-          "mean_tokens": 415.2,
+          "mean_latency_s": 144.613,
+          "p95_latency_s": 934.509,
+          "mean_tokens": 424.6,
           "class_support": {
             "MOVABLE": 28,
             "IMMOVABLE": 0,
@@ -884,336 +884,336 @@
             "semantic_class": "desk",
             "ground_truth": "MOVABLE",
             "prediction": "MOVABLE",
-            "latency_s": 17.734060072898863,
-            "total_tokens": 411,
-            "views_used": 1,
+            "latency_s": 22.676483869552612,
+            "total_tokens": 415,
+            "views_used": 2,
             "vlm_queried": true,
             "abstained": false,
-            "provenance": "GENUINE_VLM_SINGLE_COMPOSITE"
+            "provenance": "GENUINE_VLM_MULTIVIEW_STANDARD"
           },
           {
             "entity_id": "inst_desk_005",
             "semantic_class": "desk",
             "ground_truth": "MOVABLE",
             "prediction": "MOVABLE",
-            "latency_s": 17.92423994541168,
-            "total_tokens": 433,
-            "views_used": 1,
+            "latency_s": 24.814418077468872,
+            "total_tokens": 459,
+            "views_used": 2,
             "vlm_queried": true,
             "abstained": false,
-            "provenance": "GENUINE_VLM_SINGLE_COMPOSITE"
+            "provenance": "GENUINE_VLM_MULTIVIEW_STANDARD"
           },
           {
             "entity_id": "inst_desk_008",
             "semantic_class": "desk",
             "ground_truth": "MOVABLE",
             "prediction": "MOVABLE",
-            "latency_s": 19.254108130931854,
-            "total_tokens": 416,
-            "views_used": 1,
+            "latency_s": 21.525984287261963,
+            "total_tokens": 423,
+            "views_used": 2,
             "vlm_queried": true,
             "abstained": false,
-            "provenance": "GENUINE_VLM_SINGLE_COMPOSITE"
+            "provenance": "GENUINE_VLM_MULTIVIEW_STANDARD"
           },
           {
             "entity_id": "inst_desk_023",
             "semantic_class": "desk",
             "ground_truth": "MOVABLE",
             "prediction": "MOVABLE",
-            "latency_s": 19.140990769863127,
-            "total_tokens": 421,
-            "views_used": 1,
+            "latency_s": 23.83778738975525,
+            "total_tokens": 435,
+            "views_used": 2,
             "vlm_queried": true,
             "abstained": false,
-            "provenance": "GENUINE_VLM_SINGLE_COMPOSITE"
+            "provenance": "GENUINE_VLM_MULTIVIEW_STANDARD"
           },
           {
             "entity_id": "inst_desk_025",
             "semantic_class": "desk",
             "ground_truth": "MOVABLE",
             "prediction": "MOVABLE",
-            "latency_s": 16.609213745594023,
+            "latency_s": 19.838008642196655,
             "total_tokens": 411,
-            "views_used": 1,
+            "views_used": 2,
             "vlm_queried": true,
             "abstained": false,
-            "provenance": "GENUINE_VLM_SINGLE_COMPOSITE"
+            "provenance": "GENUINE_VLM_MULTIVIEW_STANDARD"
           },
           {
             "entity_id": "inst_desk_031",
             "semantic_class": "desk",
             "ground_truth": "MOVABLE",
             "prediction": "MOVABLE",
-            "latency_s": 16.379615092277525,
-            "total_tokens": 411,
-            "views_used": 1,
+            "latency_s": 24.187751054763794,
+            "total_tokens": 434,
+            "views_used": 2,
             "vlm_queried": true,
             "abstained": false,
-            "provenance": "GENUINE_VLM_SINGLE_COMPOSITE"
+            "provenance": "GENUINE_VLM_MULTIVIEW_STANDARD"
           },
           {
             "entity_id": "inst_desk_012",
             "semantic_class": "desk",
             "ground_truth": "MOVABLE",
             "prediction": "MOVABLE",
-            "latency_s": 16.933986234664914,
-            "total_tokens": 407,
-            "views_used": 1,
+            "latency_s": 22.17635226249695,
+            "total_tokens": 408,
+            "views_used": 2,
             "vlm_queried": true,
             "abstained": false,
-            "provenance": "GENUINE_VLM_SINGLE_COMPOSITE"
+            "provenance": "GENUINE_VLM_MULTIVIEW_STANDARD"
           },
           {
             "entity_id": "inst_desk_016",
             "semantic_class": "desk",
             "ground_truth": "MOVABLE",
             "prediction": "MOVABLE",
-            "latency_s": 18.12486228942871,
-            "total_tokens": 415,
-            "views_used": 1,
+            "latency_s": 20.620799779891968,
+            "total_tokens": 417,
+            "views_used": 2,
             "vlm_queried": true,
             "abstained": false,
-            "provenance": "GENUINE_VLM_SINGLE_COMPOSITE"
+            "provenance": "GENUINE_VLM_MULTIVIEW_STANDARD"
           },
           {
             "entity_id": "inst_desk_017",
             "semantic_class": "desk",
             "ground_truth": "MOVABLE",
             "prediction": "MOVABLE",
-            "latency_s": 16.419582509994505,
-            "total_tokens": 407,
-            "views_used": 1,
+            "latency_s": 25.25149440765381,
+            "total_tokens": 445,
+            "views_used": 2,
             "vlm_queried": true,
             "abstained": false,
-            "provenance": "GENUINE_VLM_SINGLE_COMPOSITE"
+            "provenance": "GENUINE_VLM_MULTIVIEW_STANDARD"
           },
           {
             "entity_id": "inst_desk_024",
             "semantic_class": "desk",
             "ground_truth": "MOVABLE",
             "prediction": "MOVABLE",
-            "latency_s": 18.229651939868926,
-            "total_tokens": 411,
-            "views_used": 1,
+            "latency_s": 22.602654933929443,
+            "total_tokens": 427,
+            "views_used": 2,
             "vlm_queried": true,
             "abstained": false,
-            "provenance": "GENUINE_VLM_SINGLE_COMPOSITE"
+            "provenance": "GENUINE_VLM_MULTIVIEW_STANDARD"
           },
           {
             "entity_id": "inst_chair_001",
             "semantic_class": "chair",
             "ground_truth": "MOVABLE",
             "prediction": "MOVABLE",
-            "latency_s": 16.704808723926543,
+            "latency_s": 20.820579290390015,
             "total_tokens": 411,
-            "views_used": 1,
+            "views_used": 2,
             "vlm_queried": true,
             "abstained": false,
-            "provenance": "GENUINE_VLM_SINGLE_COMPOSITE"
+            "provenance": "GENUINE_VLM_MULTIVIEW_STANDARD"
           },
           {
             "entity_id": "inst_chair_004",
             "semantic_class": "chair",
             "ground_truth": "MOVABLE",
             "prediction": "MOVABLE",
-            "latency_s": 19.235810089111325,
-            "total_tokens": 411,
-            "views_used": 1,
+            "latency_s": 22.93941879272461,
+            "total_tokens": 441,
+            "views_used": 2,
             "vlm_queried": true,
             "abstained": false,
-            "provenance": "GENUINE_VLM_SINGLE_COMPOSITE"
+            "provenance": "GENUINE_VLM_MULTIVIEW_STANDARD"
           },
           {
             "entity_id": "inst_chair_005",
             "semantic_class": "chair",
             "ground_truth": "MOVABLE",
             "prediction": "MOVABLE",
-            "latency_s": 17.136590361595154,
-            "total_tokens": 411,
-            "views_used": 1,
+            "latency_s": 23.366318464279175,
+            "total_tokens": 427,
+            "views_used": 2,
             "vlm_queried": true,
             "abstained": false,
-            "provenance": "GENUINE_VLM_SINGLE_COMPOSITE"
+            "provenance": "GENUINE_VLM_MULTIVIEW_STANDARD"
           },
           {
             "entity_id": "inst_chair_007",
             "semantic_class": "chair",
             "ground_truth": "MOVABLE",
             "prediction": "MOVABLE",
-            "latency_s": 18.640213310718536,
-            "total_tokens": 406,
-            "views_used": 1,
+            "latency_s": 1419.068107843399,
+            "total_tokens": 407,
+            "views_used": 2,
             "vlm_queried": true,
             "abstained": false,
-            "provenance": "GENUINE_VLM_SINGLE_COMPOSITE"
+            "provenance": "GENUINE_VLM_MULTIVIEW_STANDARD"
           },
           {
             "entity_id": "inst_chair_008",
             "semantic_class": "chair",
             "ground_truth": "MOVABLE",
             "prediction": "MOVABLE",
-            "latency_s": 16.90927618741989,
-            "total_tokens": 406,
-            "views_used": 1,
+            "latency_s": 28.79299807548523,
+            "total_tokens": 430,
+            "views_used": 2,
             "vlm_queried": true,
             "abstained": false,
-            "provenance": "GENUINE_VLM_SINGLE_COMPOSITE"
+            "provenance": "GENUINE_VLM_MULTIVIEW_STANDARD"
           },
           {
             "entity_id": "inst_chair_009",
             "semantic_class": "chair",
             "ground_truth": "MOVABLE",
             "prediction": "MOVABLE",
-            "latency_s": 19.092588436603545,
-            "total_tokens": 406,
-            "views_used": 1,
+            "latency_s": 27.56693434715271,
+            "total_tokens": 407,
+            "views_used": 2,
             "vlm_queried": true,
             "abstained": false,
-            "provenance": "GENUINE_VLM_SINGLE_COMPOSITE"
+            "provenance": "GENUINE_VLM_MULTIVIEW_STANDARD"
           },
           {
             "entity_id": "inst_chair_011",
             "semantic_class": "chair",
             "ground_truth": "MOVABLE",
             "prediction": "MOVABLE",
-            "latency_s": 18.10816053152084,
-            "total_tokens": 411,
-            "views_used": 1,
+            "latency_s": 34.612749338150024,
+            "total_tokens": 409,
+            "views_used": 2,
             "vlm_queried": true,
             "abstained": false,
-            "provenance": "GENUINE_VLM_SINGLE_COMPOSITE"
+            "provenance": "GENUINE_VLM_MULTIVIEW_STANDARD"
           },
           {
             "entity_id": "inst_chair_017",
             "semantic_class": "chair",
             "ground_truth": "MOVABLE",
             "prediction": "MOVABLE",
-            "latency_s": 19.29769967794418,
-            "total_tokens": 411,
-            "views_used": 1,
+            "latency_s": 33.80738949775696,
+            "total_tokens": 434,
+            "views_used": 2,
             "vlm_queried": true,
             "abstained": false,
-            "provenance": "GENUINE_VLM_SINGLE_COMPOSITE"
+            "provenance": "GENUINE_VLM_MULTIVIEW_STANDARD"
           },
           {
             "entity_id": "inst_chair_018",
             "semantic_class": "chair",
             "ground_truth": "MOVABLE",
             "prediction": "MOVABLE",
-            "latency_s": 18.523780000209808,
-            "total_tokens": 408,
-            "views_used": 1,
+            "latency_s": 29.719014406204224,
+            "total_tokens": 405,
+            "views_used": 2,
             "vlm_queried": true,
             "abstained": false,
-            "provenance": "GENUINE_VLM_SINGLE_COMPOSITE"
+            "provenance": "GENUINE_VLM_MULTIVIEW_STANDARD"
           },
           {
             "entity_id": "inst_chair_019",
             "semantic_class": "chair",
             "ground_truth": "MOVABLE",
             "prediction": "MOVABLE",
-            "latency_s": 19.519229996204373,
-            "total_tokens": 426,
-            "views_used": 1,
+            "latency_s": 33.84315586090088,
+            "total_tokens": 429,
+            "views_used": 2,
             "vlm_queried": true,
             "abstained": false,
-            "provenance": "GENUINE_VLM_SINGLE_COMPOSITE"
+            "provenance": "GENUINE_VLM_MULTIVIEW_STANDARD"
           },
           {
             "entity_id": "inst_chair_021",
             "semantic_class": "chair",
             "ground_truth": "MOVABLE",
             "prediction": "MOVABLE",
-            "latency_s": 18.691384875774382,
-            "total_tokens": 411,
-            "views_used": 1,
+            "latency_s": 30.943760871887207,
+            "total_tokens": 424,
+            "views_used": 2,
             "vlm_queried": true,
             "abstained": false,
-            "provenance": "GENUINE_VLM_SINGLE_COMPOSITE"
+            "provenance": "GENUINE_VLM_MULTIVIEW_STANDARD"
           },
           {
             "entity_id": "inst_chair_027",
             "semantic_class": "chair",
             "ground_truth": "MOVABLE",
             "prediction": "MOVABLE",
-            "latency_s": 20.629601740837096,
-            "total_tokens": 440,
-            "views_used": 1,
+            "latency_s": 31.80007290840149,
+            "total_tokens": 434,
+            "views_used": 2,
             "vlm_queried": true,
             "abstained": false,
-            "provenance": "GENUINE_VLM_SINGLE_COMPOSITE"
+            "provenance": "GENUINE_VLM_MULTIVIEW_STANDARD"
           },
           {
             "entity_id": "inst_chair_030",
             "semantic_class": "chair",
             "ground_truth": "MOVABLE",
             "prediction": "MOVABLE",
-            "latency_s": 19.73838371038437,
-            "total_tokens": 426,
-            "views_used": 1,
+            "latency_s": 31.39101219177246,
+            "total_tokens": 420,
+            "views_used": 2,
             "vlm_queried": true,
             "abstained": false,
-            "provenance": "GENUINE_VLM_SINGLE_COMPOSITE"
+            "provenance": "GENUINE_VLM_MULTIVIEW_STANDARD"
           },
           {
             "entity_id": "inst_chair_032",
             "semantic_class": "chair",
             "ground_truth": "MOVABLE",
             "prediction": "MOVABLE",
-            "latency_s": 19.341568422317504,
-            "total_tokens": 407,
-            "views_used": 1,
+            "latency_s": 32.501713275909424,
+            "total_tokens": 432,
+            "views_used": 2,
             "vlm_queried": true,
             "abstained": false,
-            "provenance": "GENUINE_VLM_SINGLE_COMPOSITE"
+            "provenance": "GENUINE_VLM_MULTIVIEW_STANDARD"
           },
           {
             "entity_id": "inst_chair_035",
             "semantic_class": "chair",
             "ground_truth": "MOVABLE",
             "prediction": "MOVABLE",
-            "latency_s": 21.149633038043973,
-            "total_tokens": 456,
-            "views_used": 1,
+            "latency_s": 1942.9158163070679,
+            "total_tokens": 450,
+            "views_used": 2,
             "vlm_queried": true,
             "abstained": false,
-            "provenance": "GENUINE_VLM_SINGLE_COMPOSITE"
+            "provenance": "GENUINE_VLM_MULTIVIEW_STANDARD"
           },
           {
             "entity_id": "inst_storage_box_001",
             "semantic_class": "storage box",
             "ground_truth": "MOVABLE",
             "prediction": "MOVABLE",
-            "latency_s": 18.57505712509155,
-            "total_tokens": 415,
-            "views_used": 1,
+            "latency_s": 29.59007239341736,
+            "total_tokens": 411,
+            "views_used": 2,
             "vlm_queried": true,
             "abstained": false,
-            "provenance": "GENUINE_VLM_SINGLE_COMPOSITE"
+            "provenance": "GENUINE_VLM_MULTIVIEW_STANDARD"
           },
           {
             "entity_id": "inst_storage_box_004",
             "semantic_class": "storage box",
             "ground_truth": "MOVABLE",
             "prediction": "MOVABLE",
-            "latency_s": 17.263599669933317,
+            "latency_s": 24.932862520217896,
             "total_tokens": 412,
-            "views_used": 1,
+            "views_used": 2,
             "vlm_queried": true,
             "abstained": false,
-            "provenance": "GENUINE_VLM_SINGLE_COMPOSITE"
+            "provenance": "GENUINE_VLM_MULTIVIEW_STANDARD"
           },
           {
             "entity_id": "inst_backpack_002",
             "semantic_class": "backpack",
             "ground_truth": "MOVABLE",
             "prediction": "MOVABLE",
-            "latency_s": 17.602057099342346,
-            "total_tokens": 410,
-            "views_used": 1,
+            "latency_s": 23.01309108734131,
+            "total_tokens": 433,
+            "views_used": 2,
             "vlm_queried": true,
             "abstained": false,
-            "provenance": "GENUINE_VLM_SINGLE_COMPOSITE"
+            "provenance": "GENUINE_VLM_MULTIVIEW_STANDARD"
           }
         ]
       },
@@ -1677,11 +1677,11 @@
           },
           "abstention_rate_pct": 0.0,
           "total_instances": 28,
-          "vlm_queries_invoked": 2,
-          "vlm_query_rate_pct": 7.1,
-          "mean_latency_s": 1.505,
-          "p95_latency_s": 13.594,
-          "mean_tokens": 31.7,
+          "vlm_queries_invoked": 0,
+          "vlm_query_rate_pct": 0.0,
+          "mean_latency_s": 0.0,
+          "p95_latency_s": 0.0,
+          "mean_tokens": 0.0,
           "class_support": {
             "MOVABLE": 28,
             "IMMOVABLE": 0,
@@ -1699,7 +1699,7 @@
             "views_used": 0,
             "vlm_queried": false,
             "abstained": false,
-            "provenance": "SELECTIVE_ROUTER_CHEAP_RESOLVED"
+            "provenance": "SELECTIVE_ROUTER_CHEAP_RESOLVED (STATIC_CANONICAL_MOVABLE_PRIOR)"
           },
           {
             "entity_id": "inst_desk_005",
@@ -1711,7 +1711,7 @@
             "views_used": 0,
             "vlm_queried": false,
             "abstained": false,
-            "provenance": "SELECTIVE_ROUTER_CHEAP_RESOLVED"
+            "provenance": "SELECTIVE_ROUTER_CHEAP_RESOLVED (STATIC_CANONICAL_MOVABLE_PRIOR)"
           },
           {
             "entity_id": "inst_desk_008",
@@ -1723,7 +1723,7 @@
             "views_used": 0,
             "vlm_queried": false,
             "abstained": false,
-            "provenance": "SELECTIVE_ROUTER_CHEAP_RESOLVED"
+            "provenance": "SELECTIVE_ROUTER_CHEAP_RESOLVED (STATIC_CANONICAL_MOVABLE_PRIOR)"
           },
           {
             "entity_id": "inst_desk_023",
@@ -1735,7 +1735,7 @@
             "views_used": 0,
             "vlm_queried": false,
             "abstained": false,
-            "provenance": "SELECTIVE_ROUTER_CHEAP_RESOLVED"
+            "provenance": "SELECTIVE_ROUTER_CHEAP_RESOLVED (STATIC_CANONICAL_MOVABLE_PRIOR)"
           },
           {
             "entity_id": "inst_desk_025",
@@ -1747,7 +1747,7 @@
             "views_used": 0,
             "vlm_queried": false,
             "abstained": false,
-            "provenance": "SELECTIVE_ROUTER_CHEAP_RESOLVED"
+            "provenance": "SELECTIVE_ROUTER_CHEAP_RESOLVED (STATIC_CANONICAL_MOVABLE_PRIOR)"
           },
           {
             "entity_id": "inst_desk_031",
@@ -1759,7 +1759,7 @@
             "views_used": 0,
             "vlm_queried": false,
             "abstained": false,
-            "provenance": "SELECTIVE_ROUTER_CHEAP_RESOLVED"
+            "provenance": "SELECTIVE_ROUTER_CHEAP_RESOLVED (STATIC_CANONICAL_MOVABLE_PRIOR)"
           },
           {
             "entity_id": "inst_desk_012",
@@ -1771,7 +1771,7 @@
             "views_used": 0,
             "vlm_queried": false,
             "abstained": false,
-            "provenance": "SELECTIVE_ROUTER_CHEAP_RESOLVED"
+            "provenance": "SELECTIVE_ROUTER_CHEAP_RESOLVED (STATIC_CANONICAL_MOVABLE_PRIOR)"
           },
           {
             "entity_id": "inst_desk_016",
@@ -1783,7 +1783,7 @@
             "views_used": 0,
             "vlm_queried": false,
             "abstained": false,
-            "provenance": "SELECTIVE_ROUTER_CHEAP_RESOLVED"
+            "provenance": "SELECTIVE_ROUTER_CHEAP_RESOLVED (STATIC_CANONICAL_MOVABLE_PRIOR)"
           },
           {
             "entity_id": "inst_desk_017",
@@ -1795,7 +1795,7 @@
             "views_used": 0,
             "vlm_queried": false,
             "abstained": false,
-            "provenance": "SELECTIVE_ROUTER_CHEAP_RESOLVED"
+            "provenance": "SELECTIVE_ROUTER_CHEAP_RESOLVED (STATIC_CANONICAL_MOVABLE_PRIOR)"
           },
           {
             "entity_id": "inst_desk_024",
@@ -1807,7 +1807,7 @@
             "views_used": 0,
             "vlm_queried": false,
             "abstained": false,
-            "provenance": "SELECTIVE_ROUTER_CHEAP_RESOLVED"
+            "provenance": "SELECTIVE_ROUTER_CHEAP_RESOLVED (STATIC_CANONICAL_MOVABLE_PRIOR)"
           },
           {
             "entity_id": "inst_chair_001",
@@ -1819,7 +1819,7 @@
             "views_used": 0,
             "vlm_queried": false,
             "abstained": false,
-            "provenance": "SELECTIVE_ROUTER_CHEAP_RESOLVED"
+            "provenance": "SELECTIVE_ROUTER_CHEAP_RESOLVED (STATIC_CANONICAL_MOVABLE_PRIOR)"
           },
           {
             "entity_id": "inst_chair_004",
@@ -1831,7 +1831,7 @@
             "views_used": 0,
             "vlm_queried": false,
             "abstained": false,
-            "provenance": "SELECTIVE_ROUTER_CHEAP_RESOLVED"
+            "provenance": "SELECTIVE_ROUTER_CHEAP_RESOLVED (STATIC_CANONICAL_MOVABLE_PRIOR)"
           },
           {
             "entity_id": "inst_chair_005",
@@ -1843,7 +1843,7 @@
             "views_used": 0,
             "vlm_queried": false,
             "abstained": false,
-            "provenance": "SELECTIVE_ROUTER_CHEAP_RESOLVED"
+            "provenance": "SELECTIVE_ROUTER_CHEAP_RESOLVED (STATIC_CANONICAL_MOVABLE_PRIOR)"
           },
           {
             "entity_id": "inst_chair_007",
@@ -1855,7 +1855,7 @@
             "views_used": 0,
             "vlm_queried": false,
             "abstained": false,
-            "provenance": "SELECTIVE_ROUTER_CHEAP_RESOLVED"
+            "provenance": "SELECTIVE_ROUTER_CHEAP_RESOLVED (STATIC_CANONICAL_MOVABLE_PRIOR)"
           },
           {
             "entity_id": "inst_chair_008",
@@ -1867,7 +1867,7 @@
             "views_used": 0,
             "vlm_queried": false,
             "abstained": false,
-            "provenance": "SELECTIVE_ROUTER_CHEAP_RESOLVED"
+            "provenance": "SELECTIVE_ROUTER_CHEAP_RESOLVED (STATIC_CANONICAL_MOVABLE_PRIOR)"
           },
           {
             "entity_id": "inst_chair_009",
@@ -1879,7 +1879,7 @@
             "views_used": 0,
             "vlm_queried": false,
             "abstained": false,
-            "provenance": "SELECTIVE_ROUTER_CHEAP_RESOLVED"
+            "provenance": "SELECTIVE_ROUTER_CHEAP_RESOLVED (STATIC_CANONICAL_MOVABLE_PRIOR)"
           },
           {
             "entity_id": "inst_chair_011",
@@ -1891,7 +1891,7 @@
             "views_used": 0,
             "vlm_queried": false,
             "abstained": false,
-            "provenance": "SELECTIVE_ROUTER_CHEAP_RESOLVED"
+            "provenance": "SELECTIVE_ROUTER_CHEAP_RESOLVED (STATIC_CANONICAL_MOVABLE_PRIOR)"
           },
           {
             "entity_id": "inst_chair_017",
@@ -1903,7 +1903,7 @@
             "views_used": 0,
             "vlm_queried": false,
             "abstained": false,
-            "provenance": "SELECTIVE_ROUTER_CHEAP_RESOLVED"
+            "provenance": "SELECTIVE_ROUTER_CHEAP_RESOLVED (STATIC_CANONICAL_MOVABLE_PRIOR)"
           },
           {
             "entity_id": "inst_chair_018",
@@ -1915,7 +1915,7 @@
             "views_used": 0,
             "vlm_queried": false,
             "abstained": false,
-            "provenance": "SELECTIVE_ROUTER_CHEAP_RESOLVED"
+            "provenance": "SELECTIVE_ROUTER_CHEAP_RESOLVED (STATIC_CANONICAL_MOVABLE_PRIOR)"
           },
           {
             "entity_id": "inst_chair_019",
@@ -1927,7 +1927,7 @@
             "views_used": 0,
             "vlm_queried": false,
             "abstained": false,
-            "provenance": "SELECTIVE_ROUTER_CHEAP_RESOLVED"
+            "provenance": "SELECTIVE_ROUTER_CHEAP_RESOLVED (STATIC_CANONICAL_MOVABLE_PRIOR)"
           },
           {
             "entity_id": "inst_chair_021",
@@ -1939,7 +1939,7 @@
             "views_used": 0,
             "vlm_queried": false,
             "abstained": false,
-            "provenance": "SELECTIVE_ROUTER_CHEAP_RESOLVED"
+            "provenance": "SELECTIVE_ROUTER_CHEAP_RESOLVED (STATIC_CANONICAL_MOVABLE_PRIOR)"
           },
           {
             "entity_id": "inst_chair_027",
@@ -1951,7 +1951,7 @@
             "views_used": 0,
             "vlm_queried": false,
             "abstained": false,
-            "provenance": "SELECTIVE_ROUTER_CHEAP_RESOLVED"
+            "provenance": "SELECTIVE_ROUTER_CHEAP_RESOLVED (STATIC_CANONICAL_MOVABLE_PRIOR)"
           },
           {
             "entity_id": "inst_chair_030",
@@ -1963,7 +1963,7 @@
             "views_used": 0,
             "vlm_queried": false,
             "abstained": false,
-            "provenance": "SELECTIVE_ROUTER_CHEAP_RESOLVED"
+            "provenance": "SELECTIVE_ROUTER_CHEAP_RESOLVED (STATIC_CANONICAL_MOVABLE_PRIOR)"
           },
           {
             "entity_id": "inst_chair_032",
@@ -1975,7 +1975,7 @@
             "views_used": 0,
             "vlm_queried": false,
             "abstained": false,
-            "provenance": "SELECTIVE_ROUTER_CHEAP_RESOLVED"
+            "provenance": "SELECTIVE_ROUTER_CHEAP_RESOLVED (STATIC_CANONICAL_MOVABLE_PRIOR)"
           },
           {
             "entity_id": "inst_chair_035",
@@ -1987,31 +1987,31 @@
             "views_used": 0,
             "vlm_queried": false,
             "abstained": false,
-            "provenance": "SELECTIVE_ROUTER_CHEAP_RESOLVED"
+            "provenance": "SELECTIVE_ROUTER_CHEAP_RESOLVED (STATIC_CANONICAL_MOVABLE_PRIOR)"
           },
           {
             "entity_id": "inst_storage_box_001",
             "semantic_class": "storage box",
             "ground_truth": "MOVABLE",
             "prediction": "MOVABLE",
-            "latency_s": 21.21239137649536,
-            "total_tokens": 443,
-            "views_used": 2,
-            "vlm_queried": true,
+            "latency_s": 4e-05,
+            "total_tokens": 0,
+            "views_used": 0,
+            "vlm_queried": false,
             "abstained": false,
-            "provenance": "SELECTIVE_ROUTER_ESCALATED"
+            "provenance": "SELECTIVE_ROUTER_CHEAP_RESOLVED (STATIC_CANONICAL_MOVABLE_PRIOR)"
           },
           {
             "entity_id": "inst_storage_box_004",
             "semantic_class": "storage box",
             "ground_truth": "MOVABLE",
             "prediction": "MOVABLE",
-            "latency_s": 20.913710117340088,
-            "total_tokens": 444,
-            "views_used": 2,
-            "vlm_queried": true,
+            "latency_s": 4e-05,
+            "total_tokens": 0,
+            "views_used": 0,
+            "vlm_queried": false,
             "abstained": false,
-            "provenance": "SELECTIVE_ROUTER_ESCALATED"
+            "provenance": "SELECTIVE_ROUTER_CHEAP_RESOLVED (STATIC_CANONICAL_MOVABLE_PRIOR)"
           },
           {
             "entity_id": "inst_backpack_002",
@@ -2023,7 +2023,7 @@
             "views_used": 0,
             "vlm_queried": false,
             "abstained": false,
-            "provenance": "SELECTIVE_ROUTER_CHEAP_RESOLVED"
+            "provenance": "SELECTIVE_ROUTER_CHEAP_RESOLVED (STATIC_CANONICAL_MOVABLE_PRIOR)"
           }
         ]
       },
@@ -3516,21 +3516,21 @@
       },
       "C_composite_single_view": {
         "metrics": {
-          "balanced_accuracy": 0.5,
-          "macro_f1": 0.4869,
+          "balanced_accuracy": 0.4865,
+          "macro_f1": 0.48,
           "per_class_recall": {
             "IMMOVABLE": 0.0,
-            "MOVABLE": 1.0,
+            "MOVABLE": 0.973,
             "MOBILE": 0.0
           },
           "per_class_precision": {
             "IMMOVABLE": 0.0,
-            "MOVABLE": 0.9487,
+            "MOVABLE": 0.9474,
             "MOBILE": 0.0
           },
           "per_class_f1": {
             "IMMOVABLE": 0.0,
-            "MOVABLE": 0.9737,
+            "MOVABLE": 0.96,
             "MOBILE": 0.0
           },
           "confusion_matrix": {
@@ -3542,9 +3542,9 @@
             },
             "MOVABLE": {
               "IMMOVABLE": 0,
-              "MOVABLE": 37,
+              "MOVABLE": 36,
               "MOBILE": 0,
-              "UNKNOWN": 0
+              "UNKNOWN": 1
             },
             "MOBILE": {
               "IMMOVABLE": 0,
@@ -3553,13 +3553,13 @@
               "UNKNOWN": 0
             }
           },
-          "abstention_rate_pct": 0.0,
+          "abstention_rate_pct": 2.56,
           "total_instances": 39,
           "vlm_queries_invoked": 39,
           "vlm_query_rate_pct": 100.0,
-          "mean_latency_s": 18.36,
-          "p95_latency_s": 20.984,
-          "mean_tokens": 416.1,
+          "mean_latency_s": 110.445,
+          "p95_latency_s": 173.058,
+          "mean_tokens": 423.8,
           "class_support": {
             "IMMOVABLE": 2,
             "MOVABLE": 37,
@@ -3572,468 +3572,468 @@
             "semantic_class": "door",
             "ground_truth": "IMMOVABLE",
             "prediction": "MOVABLE",
-            "latency_s": 19.632044386863708,
-            "total_tokens": 422,
-            "views_used": 1,
+            "latency_s": 26.08023238182068,
+            "total_tokens": 426,
+            "views_used": 2,
             "vlm_queried": true,
             "abstained": false,
-            "provenance": "GENUINE_VLM_SINGLE_COMPOSITE"
+            "provenance": "GENUINE_VLM_MULTIVIEW_STANDARD"
           },
           {
             "entity_id": "inst_ceiling_fan_001",
             "semantic_class": "ceiling fan",
             "ground_truth": "IMMOVABLE",
             "prediction": "MOVABLE",
-            "latency_s": 17.11693649291992,
-            "total_tokens": 423,
-            "views_used": 1,
+            "latency_s": 23.033326625823975,
+            "total_tokens": 421,
+            "views_used": 2,
             "vlm_queried": true,
             "abstained": false,
-            "provenance": "GENUINE_VLM_SINGLE_COMPOSITE"
+            "provenance": "GENUINE_VLM_MULTIVIEW_STANDARD"
           },
           {
             "entity_id": "inst_chair_002",
             "semantic_class": "chair",
             "ground_truth": "MOVABLE",
             "prediction": "MOVABLE",
-            "latency_s": 19.12106271982193,
+            "latency_s": 22.700207233428955,
             "total_tokens": 411,
-            "views_used": 1,
+            "views_used": 2,
             "vlm_queried": true,
             "abstained": false,
-            "provenance": "GENUINE_VLM_SINGLE_COMPOSITE"
+            "provenance": "GENUINE_VLM_MULTIVIEW_STANDARD"
           },
           {
             "entity_id": "inst_chair_003",
             "semantic_class": "chair",
             "ground_truth": "MOVABLE",
             "prediction": "MOVABLE",
-            "latency_s": 17.320395791530608,
-            "total_tokens": 411,
-            "views_used": 1,
+            "latency_s": 22.72802448272705,
+            "total_tokens": 434,
+            "views_used": 2,
             "vlm_queried": true,
             "abstained": false,
-            "provenance": "GENUINE_VLM_SINGLE_COMPOSITE"
+            "provenance": "GENUINE_VLM_MULTIVIEW_STANDARD"
           },
           {
             "entity_id": "inst_storage_box_007",
             "semantic_class": "storage box",
             "ground_truth": "MOVABLE",
             "prediction": "MOVABLE",
-            "latency_s": 18.452006995677948,
-            "total_tokens": 412,
-            "views_used": 1,
+            "latency_s": 21.354921579360962,
+            "total_tokens": 415,
+            "views_used": 2,
             "vlm_queried": true,
             "abstained": false,
-            "provenance": "GENUINE_VLM_SINGLE_COMPOSITE"
+            "provenance": "GENUINE_VLM_MULTIVIEW_STANDARD"
           },
           {
             "entity_id": "inst_desk_001",
             "semantic_class": "desk",
             "ground_truth": "MOVABLE",
             "prediction": "MOVABLE",
-            "latency_s": 16.32573790550232,
-            "total_tokens": 408,
-            "views_used": 1,
+            "latency_s": 21.85906195640564,
+            "total_tokens": 409,
+            "views_used": 2,
             "vlm_queried": true,
             "abstained": false,
-            "provenance": "GENUINE_VLM_SINGLE_COMPOSITE"
+            "provenance": "GENUINE_VLM_MULTIVIEW_STANDARD"
           },
           {
             "entity_id": "inst_desk_003",
             "semantic_class": "desk",
             "ground_truth": "MOVABLE",
             "prediction": "MOVABLE",
-            "latency_s": 17.734060072898863,
-            "total_tokens": 411,
-            "views_used": 1,
+            "latency_s": 22.676483869552612,
+            "total_tokens": 415,
+            "views_used": 2,
             "vlm_queried": true,
             "abstained": false,
-            "provenance": "GENUINE_VLM_SINGLE_COMPOSITE"
+            "provenance": "GENUINE_VLM_MULTIVIEW_STANDARD"
           },
           {
             "entity_id": "inst_desk_005",
             "semantic_class": "desk",
             "ground_truth": "MOVABLE",
             "prediction": "MOVABLE",
-            "latency_s": 17.92423994541168,
-            "total_tokens": 433,
-            "views_used": 1,
+            "latency_s": 24.814418077468872,
+            "total_tokens": 459,
+            "views_used": 2,
             "vlm_queried": true,
             "abstained": false,
-            "provenance": "GENUINE_VLM_SINGLE_COMPOSITE"
+            "provenance": "GENUINE_VLM_MULTIVIEW_STANDARD"
           },
           {
             "entity_id": "inst_desk_008",
             "semantic_class": "desk",
             "ground_truth": "MOVABLE",
             "prediction": "MOVABLE",
-            "latency_s": 19.254108130931854,
-            "total_tokens": 416,
-            "views_used": 1,
+            "latency_s": 21.525984287261963,
+            "total_tokens": 423,
+            "views_used": 2,
             "vlm_queried": true,
             "abstained": false,
-            "provenance": "GENUINE_VLM_SINGLE_COMPOSITE"
+            "provenance": "GENUINE_VLM_MULTIVIEW_STANDARD"
           },
           {
             "entity_id": "inst_desk_018",
             "semantic_class": "desk",
             "ground_truth": "MOVABLE",
             "prediction": "MOVABLE",
-            "latency_s": 16.623390018939972,
+            "latency_s": 23.225836277008057,
             "total_tokens": 411,
-            "views_used": 1,
+            "views_used": 2,
             "vlm_queried": true,
             "abstained": false,
-            "provenance": "GENUINE_VLM_SINGLE_COMPOSITE"
+            "provenance": "GENUINE_VLM_MULTIVIEW_STANDARD"
           },
           {
             "entity_id": "inst_desk_023",
             "semantic_class": "desk",
             "ground_truth": "MOVABLE",
             "prediction": "MOVABLE",
-            "latency_s": 19.140990769863127,
-            "total_tokens": 421,
-            "views_used": 1,
+            "latency_s": 23.83778738975525,
+            "total_tokens": 435,
+            "views_used": 2,
             "vlm_queried": true,
             "abstained": false,
-            "provenance": "GENUINE_VLM_SINGLE_COMPOSITE"
+            "provenance": "GENUINE_VLM_MULTIVIEW_STANDARD"
           },
           {
             "entity_id": "inst_desk_025",
             "semantic_class": "desk",
             "ground_truth": "MOVABLE",
             "prediction": "MOVABLE",
-            "latency_s": 16.609213745594023,
+            "latency_s": 19.838008642196655,
             "total_tokens": 411,
-            "views_used": 1,
+            "views_used": 2,
             "vlm_queried": true,
             "abstained": false,
-            "provenance": "GENUINE_VLM_SINGLE_COMPOSITE"
+            "provenance": "GENUINE_VLM_MULTIVIEW_STANDARD"
           },
           {
             "entity_id": "inst_desk_031",
             "semantic_class": "desk",
             "ground_truth": "MOVABLE",
             "prediction": "MOVABLE",
-            "latency_s": 16.379615092277525,
-            "total_tokens": 411,
-            "views_used": 1,
+            "latency_s": 24.187751054763794,
+            "total_tokens": 434,
+            "views_used": 2,
             "vlm_queried": true,
             "abstained": false,
-            "provenance": "GENUINE_VLM_SINGLE_COMPOSITE"
+            "provenance": "GENUINE_VLM_MULTIVIEW_STANDARD"
           },
           {
             "entity_id": "inst_desk_012",
             "semantic_class": "desk",
             "ground_truth": "MOVABLE",
             "prediction": "MOVABLE",
-            "latency_s": 16.933986234664914,
-            "total_tokens": 407,
-            "views_used": 1,
+            "latency_s": 22.17635226249695,
+            "total_tokens": 408,
+            "views_used": 2,
             "vlm_queried": true,
             "abstained": false,
-            "provenance": "GENUINE_VLM_SINGLE_COMPOSITE"
+            "provenance": "GENUINE_VLM_MULTIVIEW_STANDARD"
           },
           {
             "entity_id": "inst_desk_016",
             "semantic_class": "desk",
             "ground_truth": "MOVABLE",
             "prediction": "MOVABLE",
-            "latency_s": 18.12486228942871,
-            "total_tokens": 415,
-            "views_used": 1,
+            "latency_s": 20.620799779891968,
+            "total_tokens": 417,
+            "views_used": 2,
             "vlm_queried": true,
             "abstained": false,
-            "provenance": "GENUINE_VLM_SINGLE_COMPOSITE"
+            "provenance": "GENUINE_VLM_MULTIVIEW_STANDARD"
           },
           {
             "entity_id": "inst_desk_017",
             "semantic_class": "desk",
             "ground_truth": "MOVABLE",
             "prediction": "MOVABLE",
-            "latency_s": 16.419582509994505,
-            "total_tokens": 407,
-            "views_used": 1,
+            "latency_s": 25.25149440765381,
+            "total_tokens": 445,
+            "views_used": 2,
             "vlm_queried": true,
             "abstained": false,
-            "provenance": "GENUINE_VLM_SINGLE_COMPOSITE"
+            "provenance": "GENUINE_VLM_MULTIVIEW_STANDARD"
           },
           {
             "entity_id": "inst_desk_024",
             "semantic_class": "desk",
             "ground_truth": "MOVABLE",
             "prediction": "MOVABLE",
-            "latency_s": 18.229651939868926,
-            "total_tokens": 411,
-            "views_used": 1,
+            "latency_s": 22.602654933929443,
+            "total_tokens": 427,
+            "views_used": 2,
             "vlm_queried": true,
             "abstained": false,
-            "provenance": "GENUINE_VLM_SINGLE_COMPOSITE"
+            "provenance": "GENUINE_VLM_MULTIVIEW_STANDARD"
           },
           {
             "entity_id": "inst_chair_001",
             "semantic_class": "chair",
             "ground_truth": "MOVABLE",
             "prediction": "MOVABLE",
-            "latency_s": 16.704808723926543,
+            "latency_s": 20.820579290390015,
             "total_tokens": 411,
-            "views_used": 1,
+            "views_used": 2,
             "vlm_queried": true,
             "abstained": false,
-            "provenance": "GENUINE_VLM_SINGLE_COMPOSITE"
+            "provenance": "GENUINE_VLM_MULTIVIEW_STANDARD"
           },
           {
             "entity_id": "inst_chair_004",
             "semantic_class": "chair",
             "ground_truth": "MOVABLE",
             "prediction": "MOVABLE",
-            "latency_s": 19.235810089111325,
-            "total_tokens": 411,
-            "views_used": 1,
+            "latency_s": 22.93941879272461,
+            "total_tokens": 441,
+            "views_used": 2,
             "vlm_queried": true,
             "abstained": false,
-            "provenance": "GENUINE_VLM_SINGLE_COMPOSITE"
+            "provenance": "GENUINE_VLM_MULTIVIEW_STANDARD"
           },
           {
             "entity_id": "inst_chair_005",
             "semantic_class": "chair",
             "ground_truth": "MOVABLE",
             "prediction": "MOVABLE",
-            "latency_s": 17.136590361595154,
-            "total_tokens": 411,
-            "views_used": 1,
+            "latency_s": 23.366318464279175,
+            "total_tokens": 427,
+            "views_used": 2,
             "vlm_queried": true,
             "abstained": false,
-            "provenance": "GENUINE_VLM_SINGLE_COMPOSITE"
+            "provenance": "GENUINE_VLM_MULTIVIEW_STANDARD"
           },
           {
             "entity_id": "inst_chair_007",
             "semantic_class": "chair",
             "ground_truth": "MOVABLE",
             "prediction": "MOVABLE",
-            "latency_s": 18.640213310718536,
-            "total_tokens": 406,
-            "views_used": 1,
+            "latency_s": 1419.068107843399,
+            "total_tokens": 407,
+            "views_used": 2,
             "vlm_queried": true,
             "abstained": false,
-            "provenance": "GENUINE_VLM_SINGLE_COMPOSITE"
+            "provenance": "GENUINE_VLM_MULTIVIEW_STANDARD"
           },
           {
             "entity_id": "inst_chair_008",
             "semantic_class": "chair",
             "ground_truth": "MOVABLE",
             "prediction": "MOVABLE",
-            "latency_s": 16.90927618741989,
-            "total_tokens": 406,
-            "views_used": 1,
+            "latency_s": 28.79299807548523,
+            "total_tokens": 430,
+            "views_used": 2,
             "vlm_queried": true,
             "abstained": false,
-            "provenance": "GENUINE_VLM_SINGLE_COMPOSITE"
+            "provenance": "GENUINE_VLM_MULTIVIEW_STANDARD"
           },
           {
             "entity_id": "inst_chair_009",
             "semantic_class": "chair",
             "ground_truth": "MOVABLE",
             "prediction": "MOVABLE",
-            "latency_s": 19.092588436603545,
-            "total_tokens": 406,
-            "views_used": 1,
+            "latency_s": 27.56693434715271,
+            "total_tokens": 407,
+            "views_used": 2,
             "vlm_queried": true,
             "abstained": false,
-            "provenance": "GENUINE_VLM_SINGLE_COMPOSITE"
+            "provenance": "GENUINE_VLM_MULTIVIEW_STANDARD"
           },
           {
             "entity_id": "inst_chair_011",
             "semantic_class": "chair",
             "ground_truth": "MOVABLE",
             "prediction": "MOVABLE",
-            "latency_s": 18.10816053152084,
-            "total_tokens": 411,
-            "views_used": 1,
+            "latency_s": 34.612749338150024,
+            "total_tokens": 409,
+            "views_used": 2,
             "vlm_queried": true,
             "abstained": false,
-            "provenance": "GENUINE_VLM_SINGLE_COMPOSITE"
+            "provenance": "GENUINE_VLM_MULTIVIEW_STANDARD"
           },
           {
             "entity_id": "inst_chair_017",
             "semantic_class": "chair",
             "ground_truth": "MOVABLE",
             "prediction": "MOVABLE",
-            "latency_s": 19.29769967794418,
-            "total_tokens": 411,
-            "views_used": 1,
+            "latency_s": 33.80738949775696,
+            "total_tokens": 434,
+            "views_used": 2,
             "vlm_queried": true,
             "abstained": false,
-            "provenance": "GENUINE_VLM_SINGLE_COMPOSITE"
+            "provenance": "GENUINE_VLM_MULTIVIEW_STANDARD"
           },
           {
             "entity_id": "inst_chair_018",
             "semantic_class": "chair",
             "ground_truth": "MOVABLE",
             "prediction": "MOVABLE",
-            "latency_s": 18.523780000209808,
-            "total_tokens": 408,
-            "views_used": 1,
+            "latency_s": 29.719014406204224,
+            "total_tokens": 405,
+            "views_used": 2,
             "vlm_queried": true,
             "abstained": false,
-            "provenance": "GENUINE_VLM_SINGLE_COMPOSITE"
+            "provenance": "GENUINE_VLM_MULTIVIEW_STANDARD"
           },
           {
             "entity_id": "inst_chair_019",
             "semantic_class": "chair",
             "ground_truth": "MOVABLE",
             "prediction": "MOVABLE",
-            "latency_s": 19.519229996204373,
-            "total_tokens": 426,
-            "views_used": 1,
+            "latency_s": 33.84315586090088,
+            "total_tokens": 429,
+            "views_used": 2,
             "vlm_queried": true,
             "abstained": false,
-            "provenance": "GENUINE_VLM_SINGLE_COMPOSITE"
+            "provenance": "GENUINE_VLM_MULTIVIEW_STANDARD"
           },
           {
             "entity_id": "inst_chair_021",
             "semantic_class": "chair",
             "ground_truth": "MOVABLE",
             "prediction": "MOVABLE",
-            "latency_s": 18.691384875774382,
-            "total_tokens": 411,
-            "views_used": 1,
+            "latency_s": 30.943760871887207,
+            "total_tokens": 424,
+            "views_used": 2,
             "vlm_queried": true,
             "abstained": false,
-            "provenance": "GENUINE_VLM_SINGLE_COMPOSITE"
+            "provenance": "GENUINE_VLM_MULTIVIEW_STANDARD"
           },
           {
             "entity_id": "inst_chair_027",
             "semantic_class": "chair",
             "ground_truth": "MOVABLE",
             "prediction": "MOVABLE",
-            "latency_s": 20.629601740837096,
-            "total_tokens": 440,
-            "views_used": 1,
+            "latency_s": 31.80007290840149,
+            "total_tokens": 434,
+            "views_used": 2,
             "vlm_queried": true,
             "abstained": false,
-            "provenance": "GENUINE_VLM_SINGLE_COMPOSITE"
+            "provenance": "GENUINE_VLM_MULTIVIEW_STANDARD"
           },
           {
             "entity_id": "inst_chair_030",
             "semantic_class": "chair",
             "ground_truth": "MOVABLE",
             "prediction": "MOVABLE",
-            "latency_s": 19.73838371038437,
-            "total_tokens": 426,
-            "views_used": 1,
+            "latency_s": 31.39101219177246,
+            "total_tokens": 420,
+            "views_used": 2,
             "vlm_queried": true,
             "abstained": false,
-            "provenance": "GENUINE_VLM_SINGLE_COMPOSITE"
+            "provenance": "GENUINE_VLM_MULTIVIEW_STANDARD"
           },
           {
             "entity_id": "inst_chair_032",
             "semantic_class": "chair",
             "ground_truth": "MOVABLE",
             "prediction": "MOVABLE",
-            "latency_s": 19.341568422317504,
-            "total_tokens": 407,
-            "views_used": 1,
+            "latency_s": 32.501713275909424,
+            "total_tokens": 432,
+            "views_used": 2,
             "vlm_queried": true,
             "abstained": false,
-            "provenance": "GENUINE_VLM_SINGLE_COMPOSITE"
+            "provenance": "GENUINE_VLM_MULTIVIEW_STANDARD"
           },
           {
             "entity_id": "inst_chair_035",
             "semantic_class": "chair",
             "ground_truth": "MOVABLE",
             "prediction": "MOVABLE",
-            "latency_s": 21.149633038043973,
-            "total_tokens": 456,
-            "views_used": 1,
+            "latency_s": 1942.9158163070679,
+            "total_tokens": 450,
+            "views_used": 2,
             "vlm_queried": true,
             "abstained": false,
-            "provenance": "GENUINE_VLM_SINGLE_COMPOSITE"
+            "provenance": "GENUINE_VLM_MULTIVIEW_STANDARD"
           },
           {
             "entity_id": "inst_storage_box_001",
             "semantic_class": "storage box",
             "ground_truth": "MOVABLE",
             "prediction": "MOVABLE",
-            "latency_s": 18.57505712509155,
-            "total_tokens": 415,
-            "views_used": 1,
+            "latency_s": 29.59007239341736,
+            "total_tokens": 411,
+            "views_used": 2,
             "vlm_queried": true,
             "abstained": false,
-            "provenance": "GENUINE_VLM_SINGLE_COMPOSITE"
+            "provenance": "GENUINE_VLM_MULTIVIEW_STANDARD"
           },
           {
             "entity_id": "inst_storage_box_004",
             "semantic_class": "storage box",
             "ground_truth": "MOVABLE",
             "prediction": "MOVABLE",
-            "latency_s": 17.263599669933317,
+            "latency_s": 24.932862520217896,
             "total_tokens": 412,
-            "views_used": 1,
+            "views_used": 2,
             "vlm_queried": true,
             "abstained": false,
-            "provenance": "GENUINE_VLM_SINGLE_COMPOSITE"
+            "provenance": "GENUINE_VLM_MULTIVIEW_STANDARD"
           },
           {
             "entity_id": "inst_laptop_001",
             "semantic_class": "laptop",
             "ground_truth": "MOVABLE",
             "prediction": "MOVABLE",
-            "latency_s": 18.907017278671262,
-            "total_tokens": 413,
-            "views_used": 1,
+            "latency_s": 21.330503702163696,
+            "total_tokens": 411,
+            "views_used": 2,
             "vlm_queried": true,
             "abstained": false,
-            "provenance": "GENUINE_VLM_SINGLE_COMPOSITE"
+            "provenance": "GENUINE_VLM_MULTIVIEW_STANDARD"
           },
           {
             "entity_id": "inst_monitor_001",
             "semantic_class": "computer monitor",
             "ground_truth": "MOVABLE",
             "prediction": "MOVABLE",
-            "latency_s": 16.557342195510863,
+            "latency_s": 21.654989004135132,
             "total_tokens": 411,
-            "views_used": 1,
+            "views_used": 2,
             "vlm_queried": true,
             "abstained": false,
-            "provenance": "GENUINE_VLM_SINGLE_COMPOSITE"
+            "provenance": "GENUINE_VLM_MULTIVIEW_STANDARD"
           },
           {
             "entity_id": "inst_backpack_001",
             "semantic_class": "backpack",
             "ground_truth": "MOVABLE",
             "prediction": "MOVABLE",
-            "latency_s": 20.96578538417816,
-            "total_tokens": 428,
-            "views_used": 1,
+            "latency_s": 28.597623109817505,
+            "total_tokens": 419,
+            "views_used": 2,
             "vlm_queried": true,
             "abstained": false,
-            "provenance": "GENUINE_VLM_SINGLE_COMPOSITE"
+            "provenance": "GENUINE_VLM_MULTIVIEW_STANDARD"
           },
           {
             "entity_id": "inst_backpack_002",
             "semantic_class": "backpack",
             "ground_truth": "MOVABLE",
             "prediction": "MOVABLE",
-            "latency_s": 17.602057099342346,
-            "total_tokens": 410,
-            "views_used": 1,
+            "latency_s": 23.01309108734131,
+            "total_tokens": 433,
+            "views_used": 2,
             "vlm_queried": true,
             "abstained": false,
-            "provenance": "GENUINE_VLM_SINGLE_COMPOSITE"
+            "provenance": "GENUINE_VLM_MULTIVIEW_STANDARD"
           },
           {
             "entity_id": "inst_pedestal_fan_001",
             "semantic_class": "pedestal fan",
             "ground_truth": "MOVABLE",
-            "prediction": "MOVABLE",
-            "latency_s": 22.10001392364502,
-            "total_tokens": 452,
-            "views_used": 1,
+            "prediction": "UNKNOWN",
+            "latency_s": 25.62923789024353,
+            "total_tokens": 470,
+            "views_used": 2,
             "vlm_queried": true,
-            "abstained": false,
-            "provenance": "GENUINE_VLM_SINGLE_COMPOSITE"
+            "abstained": true,
+            "provenance": "GENUINE_VLM_MULTIVIEW_STANDARD"
           }
         ]
       },
@@ -4601,27 +4601,27 @@
       },
       "E_selective_multiview_router": {
         "metrics": {
-          "balanced_accuracy": 0.75,
-          "macro_f1": 0.8267,
+          "balanced_accuracy": 1.0,
+          "macro_f1": 1.0,
           "per_class_recall": {
-            "IMMOVABLE": 0.5,
+            "IMMOVABLE": 1.0,
             "MOVABLE": 1.0,
             "MOBILE": 0.0
           },
           "per_class_precision": {
             "IMMOVABLE": 1.0,
-            "MOVABLE": 0.9737,
+            "MOVABLE": 1.0,
             "MOBILE": 0.0
           },
           "per_class_f1": {
-            "IMMOVABLE": 0.6667,
-            "MOVABLE": 0.9867,
+            "IMMOVABLE": 1.0,
+            "MOVABLE": 1.0,
             "MOBILE": 0.0
           },
           "confusion_matrix": {
             "IMMOVABLE": {
-              "IMMOVABLE": 1,
-              "MOVABLE": 1,
+              "IMMOVABLE": 2,
+              "MOVABLE": 0,
               "MOBILE": 0,
               "UNKNOWN": 0
             },
@@ -4640,11 +4640,11 @@
           },
           "abstention_rate_pct": 0.0,
           "total_instances": 39,
-          "vlm_queries_invoked": 5,
-          "vlm_query_rate_pct": 12.8,
-          "mean_latency_s": 3.244,
-          "p95_latency_s": 25.404,
-          "mean_tokens": 58.8,
+          "vlm_queries_invoked": 4,
+          "vlm_query_rate_pct": 10.3,
+          "mean_latency_s": 3.197,
+          "p95_latency_s": 26.382,
+          "mean_tokens": 47.7,
           "class_support": {
             "IMMOVABLE": 2,
             "MOVABLE": 37,
@@ -4662,43 +4662,43 @@
             "views_used": 0,
             "vlm_queried": false,
             "abstained": false,
-            "provenance": "SELECTIVE_ROUTER_CHEAP_RESOLVED"
+            "provenance": "SELECTIVE_ROUTER_CHEAP_RESOLVED (CANONICAL_IMMOVABLE_ARCHITECTURAL_PRIOR)"
           },
           {
             "entity_id": "inst_ceiling_fan_001",
             "semantic_class": "ceiling fan",
             "ground_truth": "IMMOVABLE",
-            "prediction": "MOVABLE",
-            "latency_s": 25.38232398033142,
-            "total_tokens": 454,
-            "views_used": 2,
-            "vlm_queried": true,
+            "prediction": "IMMOVABLE",
+            "latency_s": 4e-05,
+            "total_tokens": 0,
+            "views_used": 0,
+            "vlm_queried": false,
             "abstained": false,
-            "provenance": "SELECTIVE_ROUTER_ESCALATED"
+            "provenance": "SELECTIVE_ROUTER_CHEAP_RESOLVED (CANONICAL_IMMOVABLE_ARCHITECTURAL_PRIOR)"
           },
           {
             "entity_id": "inst_chair_002",
             "semantic_class": "chair",
             "ground_truth": "MOVABLE",
             "prediction": "MOVABLE",
-            "latency_s": 4e-05,
-            "total_tokens": 0,
-            "views_used": 0,
-            "vlm_queried": false,
+            "latency_s": 24.67715096473694,
+            "total_tokens": 443,
+            "views_used": 2,
+            "vlm_queried": true,
             "abstained": false,
-            "provenance": "SELECTIVE_ROUTER_CHEAP_RESOLVED"
+            "provenance": "SELECTIVE_ROUTER_ESCALATED (SIGNIFICANT_DISPLACEMENT_AFFORDANCE_UNRESOLVED)"
           },
           {
             "entity_id": "inst_chair_003",
             "semantic_class": "chair",
             "ground_truth": "MOVABLE",
             "prediction": "MOVABLE",
-            "latency_s": 4e-05,
-            "total_tokens": 0,
-            "views_used": 0,
-            "vlm_queried": false,
+            "latency_s": 40.989208698272705,
+            "total_tokens": 466,
+            "views_used": 2,
+            "vlm_queried": true,
             "abstained": false,
-            "provenance": "SELECTIVE_ROUTER_CHEAP_RESOLVED"
+            "provenance": "SELECTIVE_ROUTER_ESCALATED (SIGNIFICANT_DISPLACEMENT_AFFORDANCE_UNRESOLVED)"
           },
           {
             "entity_id": "inst_storage_box_007",
@@ -4710,7 +4710,7 @@
             "views_used": 2,
             "vlm_queried": true,
             "abstained": false,
-            "provenance": "SELECTIVE_ROUTER_ESCALATED"
+            "provenance": "SELECTIVE_ROUTER_ESCALATED (SIGNIFICANT_DISPLACEMENT_AFFORDANCE_UNRESOLVED)"
           },
           {
             "entity_id": "inst_desk_001",
@@ -4722,7 +4722,7 @@
             "views_used": 0,
             "vlm_queried": false,
             "abstained": false,
-            "provenance": "SELECTIVE_ROUTER_CHEAP_RESOLVED"
+            "provenance": "SELECTIVE_ROUTER_CHEAP_RESOLVED (STATIC_CANONICAL_MOVABLE_PRIOR)"
           },
           {
             "entity_id": "inst_desk_003",
@@ -4734,7 +4734,7 @@
             "views_used": 0,
             "vlm_queried": false,
             "abstained": false,
-            "provenance": "SELECTIVE_ROUTER_CHEAP_RESOLVED"
+            "provenance": "SELECTIVE_ROUTER_CHEAP_RESOLVED (STATIC_CANONICAL_MOVABLE_PRIOR)"
           },
           {
             "entity_id": "inst_desk_005",
@@ -4746,7 +4746,7 @@
             "views_used": 0,
             "vlm_queried": false,
             "abstained": false,
-            "provenance": "SELECTIVE_ROUTER_CHEAP_RESOLVED"
+            "provenance": "SELECTIVE_ROUTER_CHEAP_RESOLVED (STATIC_CANONICAL_MOVABLE_PRIOR)"
           },
           {
             "entity_id": "inst_desk_008",
@@ -4758,7 +4758,7 @@
             "views_used": 0,
             "vlm_queried": false,
             "abstained": false,
-            "provenance": "SELECTIVE_ROUTER_CHEAP_RESOLVED"
+            "provenance": "SELECTIVE_ROUTER_CHEAP_RESOLVED (STATIC_CANONICAL_MOVABLE_PRIOR)"
           },
           {
             "entity_id": "inst_desk_018",
@@ -4770,7 +4770,7 @@
             "views_used": 0,
             "vlm_queried": false,
             "abstained": false,
-            "provenance": "SELECTIVE_ROUTER_CHEAP_RESOLVED"
+            "provenance": "SELECTIVE_ROUTER_CHEAP_RESOLVED (STATIC_CANONICAL_MOVABLE_PRIOR)"
           },
           {
             "entity_id": "inst_desk_023",
@@ -4782,7 +4782,7 @@
             "views_used": 0,
             "vlm_queried": false,
             "abstained": false,
-            "provenance": "SELECTIVE_ROUTER_CHEAP_RESOLVED"
+            "provenance": "SELECTIVE_ROUTER_CHEAP_RESOLVED (STATIC_CANONICAL_MOVABLE_PRIOR)"
           },
           {
             "entity_id": "inst_desk_025",
@@ -4794,7 +4794,7 @@
             "views_used": 0,
             "vlm_queried": false,
             "abstained": false,
-            "provenance": "SELECTIVE_ROUTER_CHEAP_RESOLVED"
+            "provenance": "SELECTIVE_ROUTER_CHEAP_RESOLVED (STATIC_CANONICAL_MOVABLE_PRIOR)"
           },
           {
             "entity_id": "inst_desk_031",
@@ -4806,7 +4806,7 @@
             "views_used": 0,
             "vlm_queried": false,
             "abstained": false,
-            "provenance": "SELECTIVE_ROUTER_CHEAP_RESOLVED"
+            "provenance": "SELECTIVE_ROUTER_CHEAP_RESOLVED (STATIC_CANONICAL_MOVABLE_PRIOR)"
           },
           {
             "entity_id": "inst_desk_012",
@@ -4818,7 +4818,7 @@
             "views_used": 0,
             "vlm_queried": false,
             "abstained": false,
-            "provenance": "SELECTIVE_ROUTER_CHEAP_RESOLVED"
+            "provenance": "SELECTIVE_ROUTER_CHEAP_RESOLVED (STATIC_CANONICAL_MOVABLE_PRIOR)"
           },
           {
             "entity_id": "inst_desk_016",
@@ -4830,7 +4830,7 @@
             "views_used": 0,
             "vlm_queried": false,
             "abstained": false,
-            "provenance": "SELECTIVE_ROUTER_CHEAP_RESOLVED"
+            "provenance": "SELECTIVE_ROUTER_CHEAP_RESOLVED (STATIC_CANONICAL_MOVABLE_PRIOR)"
           },
           {
             "entity_id": "inst_desk_017",
@@ -4842,7 +4842,7 @@
             "views_used": 0,
             "vlm_queried": false,
             "abstained": false,
-            "provenance": "SELECTIVE_ROUTER_CHEAP_RESOLVED"
+            "provenance": "SELECTIVE_ROUTER_CHEAP_RESOLVED (STATIC_CANONICAL_MOVABLE_PRIOR)"
           },
           {
             "entity_id": "inst_desk_024",
@@ -4854,7 +4854,7 @@
             "views_used": 0,
             "vlm_queried": false,
             "abstained": false,
-            "provenance": "SELECTIVE_ROUTER_CHEAP_RESOLVED"
+            "provenance": "SELECTIVE_ROUTER_CHEAP_RESOLVED (STATIC_CANONICAL_MOVABLE_PRIOR)"
           },
           {
             "entity_id": "inst_chair_001",
@@ -4866,7 +4866,7 @@
             "views_used": 0,
             "vlm_queried": false,
             "abstained": false,
-            "provenance": "SELECTIVE_ROUTER_CHEAP_RESOLVED"
+            "provenance": "SELECTIVE_ROUTER_CHEAP_RESOLVED (STATIC_CANONICAL_MOVABLE_PRIOR)"
           },
           {
             "entity_id": "inst_chair_004",
@@ -4878,7 +4878,7 @@
             "views_used": 0,
             "vlm_queried": false,
             "abstained": false,
-            "provenance": "SELECTIVE_ROUTER_CHEAP_RESOLVED"
+            "provenance": "SELECTIVE_ROUTER_CHEAP_RESOLVED (STATIC_CANONICAL_MOVABLE_PRIOR)"
           },
           {
             "entity_id": "inst_chair_005",
@@ -4890,7 +4890,7 @@
             "views_used": 0,
             "vlm_queried": false,
             "abstained": false,
-            "provenance": "SELECTIVE_ROUTER_CHEAP_RESOLVED"
+            "provenance": "SELECTIVE_ROUTER_CHEAP_RESOLVED (STATIC_CANONICAL_MOVABLE_PRIOR)"
           },
           {
             "entity_id": "inst_chair_007",
@@ -4902,7 +4902,7 @@
             "views_used": 0,
             "vlm_queried": false,
             "abstained": false,
-            "provenance": "SELECTIVE_ROUTER_CHEAP_RESOLVED"
+            "provenance": "SELECTIVE_ROUTER_CHEAP_RESOLVED (STATIC_CANONICAL_MOVABLE_PRIOR)"
           },
           {
             "entity_id": "inst_chair_008",
@@ -4914,7 +4914,7 @@
             "views_used": 0,
             "vlm_queried": false,
             "abstained": false,
-            "provenance": "SELECTIVE_ROUTER_CHEAP_RESOLVED"
+            "provenance": "SELECTIVE_ROUTER_CHEAP_RESOLVED (STATIC_CANONICAL_MOVABLE_PRIOR)"
           },
           {
             "entity_id": "inst_chair_009",
@@ -4926,7 +4926,7 @@
             "views_used": 0,
             "vlm_queried": false,
             "abstained": false,
-            "provenance": "SELECTIVE_ROUTER_CHEAP_RESOLVED"
+            "provenance": "SELECTIVE_ROUTER_CHEAP_RESOLVED (STATIC_CANONICAL_MOVABLE_PRIOR)"
           },
           {
             "entity_id": "inst_chair_011",
@@ -4938,7 +4938,7 @@
             "views_used": 0,
             "vlm_queried": false,
             "abstained": false,
-            "provenance": "SELECTIVE_ROUTER_CHEAP_RESOLVED"
+            "provenance": "SELECTIVE_ROUTER_CHEAP_RESOLVED (STATIC_CANONICAL_MOVABLE_PRIOR)"
           },
           {
             "entity_id": "inst_chair_017",
@@ -4950,7 +4950,7 @@
             "views_used": 0,
             "vlm_queried": false,
             "abstained": false,
-            "provenance": "SELECTIVE_ROUTER_CHEAP_RESOLVED"
+            "provenance": "SELECTIVE_ROUTER_CHEAP_RESOLVED (STATIC_CANONICAL_MOVABLE_PRIOR)"
           },
           {
             "entity_id": "inst_chair_018",
@@ -4962,7 +4962,7 @@
             "views_used": 0,
             "vlm_queried": false,
             "abstained": false,
-            "provenance": "SELECTIVE_ROUTER_CHEAP_RESOLVED"
+            "provenance": "SELECTIVE_ROUTER_CHEAP_RESOLVED (STATIC_CANONICAL_MOVABLE_PRIOR)"
           },
           {
             "entity_id": "inst_chair_019",
@@ -4974,7 +4974,7 @@
             "views_used": 0,
             "vlm_queried": false,
             "abstained": false,
-            "provenance": "SELECTIVE_ROUTER_CHEAP_RESOLVED"
+            "provenance": "SELECTIVE_ROUTER_CHEAP_RESOLVED (STATIC_CANONICAL_MOVABLE_PRIOR)"
           },
           {
             "entity_id": "inst_chair_021",
@@ -4986,7 +4986,7 @@
             "views_used": 0,
             "vlm_queried": false,
             "abstained": false,
-            "provenance": "SELECTIVE_ROUTER_CHEAP_RESOLVED"
+            "provenance": "SELECTIVE_ROUTER_CHEAP_RESOLVED (STATIC_CANONICAL_MOVABLE_PRIOR)"
           },
           {
             "entity_id": "inst_chair_027",
@@ -4998,7 +4998,7 @@
             "views_used": 0,
             "vlm_queried": false,
             "abstained": false,
-            "provenance": "SELECTIVE_ROUTER_CHEAP_RESOLVED"
+            "provenance": "SELECTIVE_ROUTER_CHEAP_RESOLVED (STATIC_CANONICAL_MOVABLE_PRIOR)"
           },
           {
             "entity_id": "inst_chair_030",
@@ -5010,7 +5010,7 @@
             "views_used": 0,
             "vlm_queried": false,
             "abstained": false,
-            "provenance": "SELECTIVE_ROUTER_CHEAP_RESOLVED"
+            "provenance": "SELECTIVE_ROUTER_CHEAP_RESOLVED (STATIC_CANONICAL_MOVABLE_PRIOR)"
           },
           {
             "entity_id": "inst_chair_032",
@@ -5022,7 +5022,7 @@
             "views_used": 0,
             "vlm_queried": false,
             "abstained": false,
-            "provenance": "SELECTIVE_ROUTER_CHEAP_RESOLVED"
+            "provenance": "SELECTIVE_ROUTER_CHEAP_RESOLVED (STATIC_CANONICAL_MOVABLE_PRIOR)"
           },
           {
             "entity_id": "inst_chair_035",
@@ -5034,31 +5034,31 @@
             "views_used": 0,
             "vlm_queried": false,
             "abstained": false,
-            "provenance": "SELECTIVE_ROUTER_CHEAP_RESOLVED"
+            "provenance": "SELECTIVE_ROUTER_CHEAP_RESOLVED (STATIC_CANONICAL_MOVABLE_PRIOR)"
           },
           {
             "entity_id": "inst_storage_box_001",
             "semantic_class": "storage box",
             "ground_truth": "MOVABLE",
             "prediction": "MOVABLE",
-            "latency_s": 21.21239137649536,
-            "total_tokens": 443,
-            "views_used": 2,
-            "vlm_queried": true,
+            "latency_s": 4e-05,
+            "total_tokens": 0,
+            "views_used": 0,
+            "vlm_queried": false,
             "abstained": false,
-            "provenance": "SELECTIVE_ROUTER_ESCALATED"
+            "provenance": "SELECTIVE_ROUTER_CHEAP_RESOLVED (STATIC_CANONICAL_MOVABLE_PRIOR)"
           },
           {
             "entity_id": "inst_storage_box_004",
             "semantic_class": "storage box",
             "ground_truth": "MOVABLE",
             "prediction": "MOVABLE",
-            "latency_s": 20.913710117340088,
-            "total_tokens": 444,
-            "views_used": 2,
-            "vlm_queried": true,
+            "latency_s": 4e-05,
+            "total_tokens": 0,
+            "views_used": 0,
+            "vlm_queried": false,
             "abstained": false,
-            "provenance": "SELECTIVE_ROUTER_ESCALATED"
+            "provenance": "SELECTIVE_ROUTER_CHEAP_RESOLVED (STATIC_CANONICAL_MOVABLE_PRIOR)"
           },
           {
             "entity_id": "inst_laptop_001",
@@ -5070,7 +5070,7 @@
             "views_used": 0,
             "vlm_queried": false,
             "abstained": false,
-            "provenance": "SELECTIVE_ROUTER_CHEAP_RESOLVED"
+            "provenance": "SELECTIVE_ROUTER_CHEAP_RESOLVED (STATIC_CANONICAL_MOVABLE_PRIOR)"
           },
           {
             "entity_id": "inst_monitor_001",
@@ -5082,7 +5082,7 @@
             "views_used": 0,
             "vlm_queried": false,
             "abstained": false,
-            "provenance": "SELECTIVE_ROUTER_CHEAP_RESOLVED"
+            "provenance": "SELECTIVE_ROUTER_CHEAP_RESOLVED (STATIC_CANONICAL_MOVABLE_PRIOR)"
           },
           {
             "entity_id": "inst_backpack_001",
@@ -5094,7 +5094,7 @@
             "views_used": 0,
             "vlm_queried": false,
             "abstained": false,
-            "provenance": "SELECTIVE_ROUTER_CHEAP_RESOLVED"
+            "provenance": "SELECTIVE_ROUTER_CHEAP_RESOLVED (STATIC_CANONICAL_MOVABLE_PRIOR)"
           },
           {
             "entity_id": "inst_backpack_002",
@@ -5106,7 +5106,7 @@
             "views_used": 0,
             "vlm_queried": false,
             "abstained": false,
-            "provenance": "SELECTIVE_ROUTER_CHEAP_RESOLVED"
+            "provenance": "SELECTIVE_ROUTER_CHEAP_RESOLVED (STATIC_CANONICAL_MOVABLE_PRIOR)"
           },
           {
             "entity_id": "inst_pedestal_fan_001",
@@ -5118,7 +5118,7 @@
             "views_used": 2,
             "vlm_queried": true,
             "abstained": false,
-            "provenance": "SELECTIVE_ROUTER_ESCALATED"
+            "provenance": "SELECTIVE_ROUTER_ESCALATED (AMBIGUOUS_PHYSICAL_SUPPORT_AFFORDANCE)"
           }
         ]
       },

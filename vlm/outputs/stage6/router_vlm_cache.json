@@ -283,5 +283,95 @@
         "cached_tokens": 310
       }
     }
+  },
+  "864b9cd52923b7cf1d89": {
+    "entity_id": "inst_ceiling_fan_001",
+    "movability": "IMMOVABLE",
+    "abstain": false,
+    "total_views": 0,
+    "latency_s": 11.87764024734497,
+    "token_usage": {
+      "completion_tokens": 57,
+      "prompt_tokens": 196,
+      "total_tokens": 253,
+      "prompt_tokens_details": {
+        "cached_tokens": 191
+      }
+    }
+  },
+  "cb8adfd53c112d5e5f63": {
+    "entity_id": "inst_chair_002",
+    "movability": "MOVABLE",
+    "abstain": false,
+    "total_views": 0,
+    "latency_s": 4.390211582183838,
+    "token_usage": {
+      "completion_tokens": 54,
+      "prompt_tokens": 189,
+      "total_tokens": 243,
+      "prompt_tokens_details": {
+        "cached_tokens": 184
+      }
+    }
+  },
+  "82eb69f83b4696cd6bd2": {
+    "entity_id": "inst_chair_003",
+    "movability": "MOVABLE",
+    "abstain": false,
+    "total_views": 0,
+    "latency_s": 5.5528404712677,
+    "token_usage": {
+      "completion_tokens": 54,
+      "prompt_tokens": 189,
+      "total_tokens": 243,
+      "prompt_tokens_details": {
+        "cached_tokens": 184
+      }
+    }
+  },
+  "7e46df02cc35df5afc8e": {
+    "entity_id": "inst_desk_003",
+    "movability": "MOVABLE",
+    "abstain": false,
+    "total_views": 0,
+    "latency_s": 7.949641942977905,
+    "token_usage": {
+      "completion_tokens": 54,
+      "prompt_tokens": 189,
+      "total_tokens": 243,
+      "prompt_tokens_details": {
+        "cached_tokens": 34
+      }
+    }
+  },
+  "4090c77ffebd1155a266": {
+    "entity_id": "inst_desk_008",
+    "movability": "MOVABLE",
+    "abstain": false,
+    "total_views": 0,
+    "latency_s": 7.110570669174194,
+    "token_usage": {
+      "completion_tokens": 54,
+      "prompt_tokens": 189,
+      "total_tokens": 243,
+      "prompt_tokens_details": {
+        "cached_tokens": 39
+      }
+    }
+  },
+  "4cfe81e6f5b16677b76d": {
+    "entity_id": "inst_desk_018",
+    "movability": "MOVABLE",
+    "abstain": false,
+    "total_views": 0,
+    "latency_s": 4.382512092590332,
+    "token_usage": {
+      "completion_tokens": 54,
+      "prompt_tokens": 189,
+      "total_tokens": 243,
+      "prompt_tokens_details": {
+        "cached_tokens": 184
+      }
+    }
   }
 }
