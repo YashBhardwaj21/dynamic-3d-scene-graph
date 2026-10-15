@@ -1,0 +1,236 @@
+"""Unit and regression tests for Stage 9A: Cross-Session Physical Identity Association."""
+
+import math
+import numpy as np
+import pytest
+
+from vlm.src.stage5_adapter import RegistrationInfo
+from vlm.src.cross_session_association import (
+    EntityCluster,
+    CrossSessionCandidateMatcher,
+    evaluate_matcher_against_ground_truth,
+)
+
+
+def _make_cluster(
+    entity_id: str,
+    semantic_class: str,
+    x: float,
+    y: float,
+    session: str = "rec01",
+    extent: float = 0.50,
+    n_obs: int = 10,
+    dispersion: float = 0.05,
+) -> EntityCluster:
+    return EntityCluster(
+        entity_id=entity_id,
+        semantic_class=semantic_class,
+        source_session=session,
+        centroid_floor=np.array([x, y], dtype=np.float64),
+        centroid_std=dispersion,
+        spatial_extent_m=extent,
+        observations_count=n_obs,
+        local_track_ids=[entity_id],
+        observation_ids=[f"obs_{entity_id}_{i}" for i in range(n_obs)],
+        position_uncertainty_m=dispersion / math.sqrt(n_obs),
+    )
+
+
+def _make_reg(
+    is_valid: bool = True,
+    status: str = "VERIFIED",
+    translation_m: np.ndarray = None,
+    rotation_deg: float = 0.0,
+    R_12: np.ndarray = None,
+    anchor_rms_residual_m: float = 0.02,
+    anchor_count: int = 3,
+) -> RegistrationInfo:
+    if translation_m is None:
+        translation_m = np.zeros(2, dtype=np.float64)
+    if R_12 is None:
+        R_12 = np.eye(2, dtype=np.float64)
+    return RegistrationInfo(
+        is_valid=is_valid,
+        reference_session="rec01",
+        aligned_session="rec02",
+        rotation_deg=rotation_deg,
+        translation_m=translation_m,
+        R_12=R_12,
+        anchor_rms_residual_m=anchor_rms_residual_m,
+        anchor_count=anchor_count,
+        status=status,
+    )
+
+
+def test_pure_translation_matching():
+    """Test matching with known pure translation SE(2)."""
+    # Session 1: entity at (1.0, 2.0)
+    s1 = {"chair_001": _make_cluster("chair_001", "chair", 1.0, 2.0, session="rec01")}
+    # Session 2: shifted by dx=-0.5, dy=1.0 -> entity in S2 is at (1.5, 1.0)
+    # Registration: c1 = I @ c2 + [-0.5, 1.0] -> [-0.5, 1.0] + [1.5, 1.0] = [1.0, 2.0]
+    s2 = {"chair_009": _make_cluster("chair_009", "chair", 1.5, 1.0, session="rec02")}
+
+    reg = _make_reg(
+        translation_m=np.array([-0.5, 1.0], dtype=np.float64),
+    )
+
+    matcher = CrossSessionCandidateMatcher(max_static_distance_m=0.45)
+    res = matcher.match_entities(s1, s2, reg)
+
+    assert res.is_valid
+    assert len(res.matched_pairs) == 1
+    m = res.matched_pairs[0]
+    assert m.s1_entity_id == "chair_001"
+    assert m.s2_entity_id == "chair_009"
+    assert m.distance_m < 0.01
+    assert m.status == "MATCHED"
+    assert len(res.unmatched_s1) == 0
+    assert len(res.unmatched_s2) == 0
+
+
+def test_se2_rotation_and_translation_matching():
+    """Test matching with full SE(2) rotation and translation."""
+    theta = np.deg2rad(45.0)
+    R = np.array([[np.cos(theta), -np.sin(theta)], [np.sin(theta), np.cos(theta)]])
+    t = np.array([2.0, -1.0])
+
+    # S1 positions
+    c1_pos = np.array([3.0, 4.0])
+    s1 = {"desk_001": _make_cluster("desk_001", "desk", c1_pos[0], c1_pos[1], session="rec01")}
+
+    # S2 position: c2 = R^T (c1 - t)
+    c2_pos = R.T @ (c1_pos - t)
+    s2 = {"desk_020": _make_cluster("desk_020", "desk", c2_pos[0], c2_pos[1], session="rec02")}
+
+    reg = _make_reg(
+        translation_m=t,
+        rotation_deg=45.0,
+        R_12=R,
+        anchor_rms_residual_m=0.03,
+        anchor_count=4,
+    )
+
+    matcher = CrossSessionCandidateMatcher()
+    res = matcher.match_entities(s1, s2, reg)
+
+    assert res.is_valid
+    assert len(res.matched_pairs) == 1
+    assert res.matched_pairs[0].s1_entity_id == "desk_001"
+    assert res.matched_pairs[0].s2_entity_id == "desk_020"
+    assert res.matched_pairs[0].distance_m < 0.01
+
+
+def test_nearby_distinct_chairs_rejected_if_beyond_gate():
+    """Objects of same class beyond max_static_distance_m are rejected."""
+    s1 = {"chair_001": _make_cluster("chair_001", "chair", 1.0, 1.0)}
+    # Distinct chair 0.8m away
+    s2 = {"chair_002": _make_cluster("chair_002", "chair", 1.8, 1.0)}
+
+    reg = _make_reg()
+
+    matcher = CrossSessionCandidateMatcher(max_static_distance_m=0.45)
+    res = matcher.match_entities(s1, s2, reg)
+
+    assert len(res.matched_pairs) == 0
+    assert "chair_001" in res.unmatched_s1
+    assert "chair_002" in res.unmatched_s2
+
+
+def test_repeated_desks_globally_assigned():
+    """Hungarian algorithm disambiguates row of identical desks cleanly."""
+    # Row of desks at x=1.0, 2.0, 3.0
+    s1 = {
+        "desk_A": _make_cluster("desk_A", "desk", 1.0, 0.0),
+        "desk_B": _make_cluster("desk_B", "desk", 2.0, 0.0),
+        "desk_C": _make_cluster("desk_C", "desk", 3.0, 0.0),
+    }
+    # S2 desks with small jitter (0.05m)
+    s2 = {
+        "desk_1": _make_cluster("desk_1", "desk", 1.05, 0.0),
+        "desk_2": _make_cluster("desk_2", "desk", 2.02, -0.01),
+        "desk_3": _make_cluster("desk_3", "desk", 2.98, 0.03),
+    }
+
+    reg = _make_reg()
+
+    matcher = CrossSessionCandidateMatcher(max_static_distance_m=0.45, ambiguity_margin_m=0.30)
+    res = matcher.match_entities(s1, s2, reg)
+
+    assert len(res.matched_pairs) == 3
+    mapping = {m.s1_entity_id: m.s2_entity_id for m in res.matched_pairs}
+    assert mapping["desk_A"] == "desk_1"
+    assert mapping["desk_B"] == "desk_2"
+    assert mapping["desk_C"] == "desk_3"
+
+
+def test_ambiguity_margin_detection():
+    """If two candidates in S1 are virtually equidistant to S2 candidate, detect ambiguity."""
+    # S1 has two chairs at (1.0, 0.0) and (1.06, 0.0)
+    s1 = {
+        "chair_A": _make_cluster("chair_A", "chair", 1.0, 0.0),
+        "chair_B": _make_cluster("chair_B", "chair", 1.06, 0.0),
+    }
+    # S2 chair at (1.03, 0.0)
+    s2 = {
+        "chair_1": _make_cluster("chair_1", "chair", 1.03, 0.0),
+    }
+
+    reg = _make_reg()
+
+    # Ambiguity margin of 0.15m: distance to chair_A is 0.03m, to chair_B is 0.03m -> diff is 0.00m < 0.15m!
+    matcher = CrossSessionCandidateMatcher(max_static_distance_m=0.45, ambiguity_margin_m=0.15)
+    res = matcher.match_entities(s1, s2, reg)
+
+    assert len(res.matched_pairs) == 0
+    assert len(res.ambiguous_pairs) == 1
+    assert res.ambiguous_pairs[0].status == "AMBIGUOUS"
+
+
+def test_invalid_registration_blocks_matching():
+    """Unverified or invalid registration immediately gates out cross-session matches."""
+    s1 = {"chair_001": _make_cluster("chair_001", "chair", 1.0, 2.0)}
+    s2 = {"chair_002": _make_cluster("chair_002", "chair", 1.0, 2.0)}
+
+    reg = _make_reg(
+        is_valid=False,
+        status="FAILED_RESIDUAL_TOO_HIGH",
+        anchor_rms_residual_m=0.85,
+        anchor_count=1,
+    )
+
+    matcher = CrossSessionCandidateMatcher()
+    res = matcher.match_entities(s1, s2, reg)
+
+    assert not res.is_valid
+    assert len(res.matched_pairs) == 0
+    assert "chair_001" in res.unmatched_s1
+    assert "chair_002" in res.unmatched_s2
+
+
+def test_semantic_class_mismatch_gated():
+    """Objects at same location but different semantic classes are not matched."""
+    s1 = {"chair_001": _make_cluster("chair_001", "chair", 1.0, 1.0)}
+    s2 = {"desk_001": _make_cluster("desk_001", "desk", 1.0, 1.0)}
+
+    reg = _make_reg()
+
+    matcher = CrossSessionCandidateMatcher()
+    res = matcher.match_entities(s1, s2, reg)
+
+    assert len(res.matched_pairs) == 0
+    assert len(res.unmatched_s1) == 1
+    assert len(res.unmatched_s2) == 1
+
+
+def test_extent_gate_rejection():
+    """Objects at same location but incompatible bounding extents are rejected."""
+    s1 = {"desk_small": _make_cluster("desk_small", "desk", 1.0, 1.0, extent=0.40)}
+    s2 = {"desk_giant": _make_cluster("desk_giant", "desk", 1.0, 1.0, extent=1.50)}
+
+    reg = _make_reg()
+
+    # Relative diff: abs(0.40 - 1.50) / 1.50 = 0.733 > 0.60
+    matcher = CrossSessionCandidateMatcher(max_extent_relative_diff=0.60)
+    res = matcher.match_entities(s1, s2, reg)
+
+    assert len(res.matched_pairs) == 0

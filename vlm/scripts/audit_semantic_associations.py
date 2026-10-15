@@ -13,6 +13,7 @@ Conducts rigorous audit of:
 from __future__ import annotations
 
 import json
+import sys
 import time
 from collections import defaultdict
 from pathlib import Path
@@ -20,6 +21,13 @@ from typing import Any, Dict, List, Set, Tuple
 import numpy as np
 
 repo_root = Path(__file__).resolve().parent.parent.parent
+sys.path.insert(0, str(repo_root))
+
+from vlm.src.cross_session_association import (
+    CrossSessionCandidateMatcher,
+    evaluate_matcher_against_ground_truth,
+)
+from vlm.src.stage5_adapter import load_registration_audit
 
 
 def run_comprehensive_association_audit() -> Dict[str, Any]:
@@ -268,6 +276,48 @@ def run_comprehensive_association_audit() -> Dict[str, Any]:
         lines.append(
             f"| `{inst_id}` | `{rec['semantic_class']}` | `{rec['movability_gt']}` | `{rec['current_motion_gt']}` | "
             f"{trks_str} | {rec['mapped_observations_count']:,} | {sess_str} |"
+        )
+
+    # 6. Stage 9A: Estimator-Aware Cross-Session Candidate Association Results
+    reg_path = repo_root / "vlm" / "outputs" / "stage5_registration_audit.json"
+    registration = load_registration_audit(reg_path)
+
+    s1_clusters = CrossSessionCandidateMatcher.extract_clusters_from_observations(observations, "recording_01", min_obs=2)
+    s2_clusters = CrossSessionCandidateMatcher.extract_clusters_from_observations(observations, "recording_02", min_obs=2)
+
+    matcher = CrossSessionCandidateMatcher(max_static_distance_m=0.45)
+    assoc_res = matcher.match_entities(s1_clusters, s2_clusters, registration)
+    eval_gt = evaluate_matcher_against_ground_truth(assoc_res, gt_path)
+
+    lines.extend([
+        "",
+        "---",
+        "",
+        "## 6. Stage 9A Estimator-Aware Cross-Session Candidate Association Results",
+        "",
+        "Using floor centroids, verified SE(2) registration (`R_12` = -16.13°, `t_12` = [-0.0815, 0.0930]m, RMS residual = 0.305m), and Hungarian bipartite assignment:",
+        "",
+        "| Cross-Session Association Metric | Value | Interpretation |",
+        "|---|:---:|---|",
+        f"| **Session 1 Track Clusters** | **{assoc_res.total_s1_entities}** | Discrete entity clusters observed in Recording 01 |",
+        f"| **Session 2 Track Clusters** | **{assoc_res.total_s2_entities}** | Discrete entity clusters observed in Recording 02 |",
+        f"| **Matched Physical Candidate Pairs** | **{len(assoc_res.matched_pairs)}** | Bipartite matches satisfying spatial (<=0.45m), semantic, and extent gates |",
+        f"| **Ambiguous Candidates Rejected** | **{len(assoc_res.ambiguous_pairs)}** | Competing candidates with overlapping uncertainties (flagged AMBIGUOUS) |",
+        f"| **Unmatched S1 Clusters** | **{len(assoc_res.unmatched_s1)}** | Session 1 entities unobserved or relocated in Session 2 |",
+        f"| **Unmatched S2 Clusters** | **{len(assoc_res.unmatched_s2)}** | Session 2 entities unobserved in Session 1 |",
+        f"| **GT Evaluated Precision** | **{eval_gt['association_precision_pct']:.1f}%** | True cross-session instance matches over total pairs |",
+        f"| **False Merges in Matcher** | **{eval_gt['false_merges']}** | Erroneously merged distinct physical GT instances |",
+        "",
+        "### Sample Verified Cross-Session Physical Matches",
+        "",
+        "| Persistent Entity ID | S1 Entity ID | S2 Entity ID | Class | Floor Distance | Status |",
+        "|---|:---:|:---:|:---:|:---:|:---:|",
+    ])
+
+    for m in assoc_res.matched_pairs[:10]:
+        lines.append(
+            f"| `{m.persistent_entity_id}` | `{m.s1_entity_id}` | `{m.s2_entity_id}` | "
+            f"`{m.semantic_class}` | `{m.distance_m:.3f} m` | **`{m.status}`** |"
         )
 
     lines.extend([

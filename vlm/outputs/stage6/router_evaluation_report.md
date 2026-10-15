@@ -3,7 +3,7 @@
 ## 1. Executive Summary & Objective
 Stage 6 establishes an **estimator-aware selective evidence router** that decides when to trust inexpensive SLAM evidence and when to invoke an expensive Vision-Language Model (VLM).
 
-**Evaluation Timestamp:** `2026-10-15 02:44:30 UTC`  
+**Evaluation Timestamp:** `2026-10-15 03:16:14 UTC`  
 **Benchmark Size:** `15 physical instances` (11 image-eligible)  
 **Model:** `Qwen2.5-VL-3B-Instruct (GGUF Q4_K_M)`  
 
@@ -16,11 +16,11 @@ All 6 conditions were evaluated on the identical 15 physical-instance benchmark 
 | Method / Condition | Balanced Accuracy | Macro-F1 | IMMOVABLE Recall | MOVABLE Recall | MOBILE Recall | Abstention Rate | VLM Query Rate | Total VLM Calls | Mean E2E Latency | p95 Latency |
 |---|:---:|:---:|:---:|:---:|:---:|:---:|:---:|:---:|:---:|:---:|
 | **M0: Semantic Class Prior** | **100.0%** | **100.0%** | `100.0%` | `100.0%` | `100.0%` | `0.0%` | **`0.0%`** | `0` | **`0.00 s`** | `0.00 s` |
-| **M3: All-VLM Baseline (Direct)** | **55.6%** | **60.0%** | `66.7%` | `100.0%` | `0.0%` | `26.7%` | **`26.7%`** | `4` | **`2.39 s`** | `9.53 s` |
+| **M3: All-VLM Baseline (Direct)** | **33.3%** | **30.0%** | `0.0%` | `100.0%` | `0.0%` | `26.7%` | **`73.3%`** | `11` | **`19.31 s`** | `35.69 s` |
 | **Router (VLM Disabled - Cheap Only)** | **66.7%** | **76.7%** | `33.3%` | `66.7%` | `100.0%` | `33.3%` | **`0.0%`** | `0` | **`0.00 s`** | `0.00 s` |
 | **Router (VLM Enabled - Selective)** | **88.9%** | **93.3%** | `66.7%` | `100.0%` | `100.0%` | `6.7%` | **`26.7%`** | `4` | **`2.39 s`** | `9.53 s` |
-| **Random Query Baseline (1000-Seed Mean)** | **88.0%** | **92.9%** | `20.0%` | `88.0%` | `100.0%` | `0.0%` | **`26.7%`** | `4` | **`1.06 s`** | `4.76 s` |
-| **Oracle Query Baseline (Upper Bound)** | **81.5%** | **89.2%** | `66.7%` | `77.8%` | `100.0%` | `20.0%` | **`0.0%`** | `0` | **`1.06 s`** | `4.76 s` |
+| **Random Query Baseline (1000-Seed Mean)** | **91.9%** | **93.5%** | `6.7%` | `91.9%` | `100.0%` | `0.0%` | **`26.7%`** | `4` | **`6.30 s`** | `25.20 s` |
+| **Oracle Diagnostic Upper Bound (Non-Deployable)** | **77.8%** | **80.0%** | `33.3%` | `100.0%` | `100.0%` | `0.0%` | **`26.7%`** | `4` | **`6.61 s`** | `25.20 s` |
 
 ---
 
@@ -32,12 +32,12 @@ All 6 conditions were evaluated on the identical 15 physical-instance benchmark 
 
 ### 3.2 Efficiency & Latency Reduction
 - The Selective Router invokes the VLM for **4 instances** (26.67% query rate), avoiding **11 queries (73.3%)**.
-- End-to-end average latency drops from **2.39s** down to **2.39s** per object across the entire environment.
+- End-to-end average latency drops from **19.31s** down to **2.39s** per object across the entire environment.
 
 ### 3.3 1,000-Seed Random Baseline Analysis
 - Evaluated across `1000` deterministic seeds at query budget `k = 4`:
-  - Balanced Accuracy: Mean `88.0%` (+/- `5.1%`), Median `88.9%`, 95th Percentile `96.3%`
-  - Macro-F1: Mean `92.9%` (+/- `3.1%`), Median `93.3%`, 95th Percentile `98.0%`
+  - Balanced Accuracy: Mean `91.9%` (+/- `7.1%`), Median `88.9%`, 95th Percentile `100.0%`
+  - Macro-F1: Mean `93.5%` (+/- `6.1%`), Median `91.6%`, 95th Percentile `100.0%`
 
 ---
 

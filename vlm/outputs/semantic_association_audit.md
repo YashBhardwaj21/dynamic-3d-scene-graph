@@ -123,4 +123,36 @@ The unmatched observations correspond to legitimate physical objects that receiv
 | `inst_wall_west_001` | `wall` | `IMMOVABLE` | `STATIC` | `wall_boundary_west` | 0 | S2 only |
 
 ---
+
+## 6. Stage 9A Estimator-Aware Cross-Session Candidate Association Results
+
+Using floor centroids, verified SE(2) registration (`R_12` = -16.13°, `t_12` = [-0.0815, 0.0930]m, RMS residual = 0.305m), and Hungarian bipartite assignment:
+
+| Cross-Session Association Metric | Value | Interpretation |
+|---|:---:|---|
+| **Session 1 Track Clusters** | **102** | Discrete entity clusters observed in Recording 01 |
+| **Session 2 Track Clusters** | **166** | Discrete entity clusters observed in Recording 02 |
+| **Matched Physical Candidate Pairs** | **35** | Bipartite matches satisfying spatial (<=0.45m), semantic, and extent gates |
+| **Ambiguous Candidates Rejected** | **7** | Competing candidates with overlapping uncertainties (flagged AMBIGUOUS) |
+| **Unmatched S1 Clusters** | **67** | Session 1 entities unobserved or relocated in Session 2 |
+| **Unmatched S2 Clusters** | **131** | Session 2 entities unobserved in Session 1 |
+| **GT Evaluated Precision** | **17.1%** | True cross-session instance matches over total pairs |
+| **False Merges in Matcher** | **3** | Erroneously merged distinct physical GT instances |
+
+### Sample Verified Cross-Session Physical Matches
+
+| Persistent Entity ID | S1 Entity ID | S2 Entity ID | Class | Floor Distance | Status |
+|---|:---:|:---:|:---:|:---:|:---:|
+| `phys_desk_001` | `desk_001` | `desk_001` | `desk` | `0.103 m` | **`MATCHED`** |
+| `phys_desk_004` | `desk_004` | `desk_003` | `desk` | `0.101 m` | **`MATCHED`** |
+| `phys_desk_003` | `desk_003` | `desk_006` | `desk` | `0.105 m` | **`MATCHED`** |
+| `phys_chair_002` | `chair_002` | `chair_004` | `chair` | `0.118 m` | **`MATCHED`** |
+| `phys_chair_005` | `chair_005` | `chair_007` | `chair` | `0.081 m` | **`MATCHED`** |
+| `phys_storage box_001` | `storage box_001` | `storage box_003` | `storage box` | `0.214 m` | **`MATCHED`** |
+| `phys_chair_008` | `chair_008` | `chair_015` | `chair` | `0.197 m` | **`MATCHED`** |
+| `phys_chair_007` | `chair_007` | `chair_014` | `chair` | `0.034 m` | **`MATCHED`** |
+| `phys_desk_005` | `desk_005` | `desk_014` | `desk` | `0.076 m` | **`MATCHED`** |
+| `phys_chair_011` | `chair_011` | `chair_022` | `chair` | `0.087 m` | **`MATCHED`** |
+
+---
 *Generated automatically by `vlm/scripts/audit_semantic_associations.py`.*

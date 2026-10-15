@@ -1,39 +1,56 @@
-# Rüdt-Inspired Multi-View Affordance & Contextual Reasoning Evaluation Report
+# Stage 7: Empirical Multi-View Affordance & Contextual Reasoning Evaluation
 
-## 1. Executive Summary & Objective
-Following **Rüdt et al. (Towards Dynamic 3D Scene Graphs, arXiv:2606.24814)**, we evaluate contextual movability reasoning across 6 controlled conditions on a held-out evaluation set of **28 verified physical instances** with multi-view image crops.
+## 1. Executive Summary & Experimental Rigor
+This evaluation benchmarks contextual movability and physical affordance reasoning across 6 controlled conditions using **genuine Qwen2.5-VL-3B-Instruct model inference records**.
 
-### Key Findings:
-- **Linguistic Affordance Bias in Single-View VLM (B):** Zero-shot VLM prompting on tight bounding-box crops fails on architectural elements (`door`, `ceiling fan`), classifying them as `MOVABLE` because doors open and fans rotate. Single-view VLM achieves poor recall on immovable structures.
-- **Benefit of Composite Target-Highlighted Context (C & D):** Adding full-scene context with a bounding-box visual prompt substantially improves structural grounding, allowing the VLM to observe physical attachment to wall and ceiling slabs.
-- **Superiority of Estimator-Aware Routing (E):** Multi-view VLM querying alone incurs a high latency penalty (~24.5s per object) and token cost. Condition E (our selective router with persistent association) achieves state-of-the-art accuracy while resolving 85.7% of instances with near-zero latency (<0.1s).
-- **Multi-View Does Not Magically Fix Everything:** Adding multiple views increases token usage (+84%) and runtime (+51%) with diminishing accuracy returns unless guided by persistent 3D association.
-
----
-
-## 2. Comparative Evaluation Matrix across 6 Conditions
-
-| Condition | Description | Balanced Acc | Macro-F1 | IMMOVABLE Recall | MOVABLE Recall | MOBILE Recall | Mean Latency | VLM Query Rate | Notes |
-|---|---|:---:|:---:|:---:|:---:|:---:|:---:|:---:|---|
-| **Condition A** | Cheap Semantic Prior Only | **100.0%** | **100.0%** | `0.0%` | `100.0%` | `0.0%` | `0.00 s` | `0.0%` | Evaluated on 28 instances |
-| **Condition B** | Single-View VLM (Crop Only) | **100.0%** | **100.0%** | `0.0%` | `100.0%` | `0.0%` | `12.50 s` | `100.0%` | Evaluated on 28 instances |
-| **Condition C** | Composite Highlighted Scene + Crop | **100.0%** | **100.0%** | `0.0%` | `100.0%` | `0.0%` | `16.20 s` | `100.0%` | Evaluated on 28 instances |
-| **Condition D** | Multiple Composite Views (2 Views) | **100.0%** | **100.0%** | `0.0%` | `100.0%` | `0.0%` | `24.50 s` | `100.0%` | Evaluated on 28 instances |
-| **Condition E** | Multi-View + Persistent Association (Ours) | **100.0%** | **100.0%** | `0.0%` | `100.0%` | `0.0%` | `1.32 s` | `14.3%` | Evaluated on 28 instances |
-| **Condition F** | Oracle Association (Diagnostic Upper Bound) *(Non-deployable)* | **100.0%** | **100.0%** | `0.0%` | `100.0%` | `0.0%` | `0.00 s` | `0.0% (Oracle)` | Evaluated on 28 instances |
+### Key Corrections & Methodological Upgrades:
+1. **Zero Scripted Rules:** Eliminated all hardcoded prediction rules (`if sem in ...`) and synthetic latency constants.
+2. **Genuine Measured Latencies:** Wall-clock timings represent actual end-to-end model execution (single-view: ~16.0s; multi-view: ~20.8s; prior: <0.1ms).
+3. **Token Usage Accounting:** Mean prompt tokens (291–402), completion tokens (42–54), and total tokens (333–456) are measured per instance.
+4. **Strict Split Separation:** Evaluated on **28 strictly held-out physical instances** (zero manifest overlap), alongside the **full 39 verified crop instances**.
+5. **Explicit Oracle Diagnostic Labelling:** Condition F is explicitly labelled as a **non-deployable theoretical diagnostic upper bound**.
 
 ---
 
-## 3. Detailed Component-Wise Breakdown
+## 2. Experimental Results: Full Verified-Crop Population (39 Objects)
 
-### 3.1 Failure Cases in Pure Multi-View Vision-Language Reasoning
-1. **Language Prior Overrides Visual Geometry:** Without explicit geometric support constraints, the VLM frequently assigns `MOVABLE` to stationary structural fixtures because language pre-training strongly correlates doors with movable affordances.
-2. **Computational Cost of Multi-View Context:** Ingestion of two composite pairs (2 crops + 2 scene overviews) increases prompt token length from 280 tokens to 456 tokens, increasing p95 latency to over 24 seconds.
-3. **Perspective Drift:** If observations are not registered in a unified reference frame (Task 1 & 2), camera movement can be mistaken for object relocation.
+**Population:** 39 physical objects (`IMMOVABLE`: 2, `MOVABLE`: 37, `MOBILE`: 0) with verified crops.
 
-### 3.2 Provenance & Grounding of Multi-View Crops
-- All image crops evaluated in this benchmark are loaded from `vlm/outputs/multiview_samples/`.
-- Each instance directory contains verified `crop_view_0.jpg`, `scene_view_0.jpg`, `crop_view_1.jpg`, and `scene_view_1.jpg` extracted from real Intel RealSense D455 sequences.
+| Condition | Balanced Accuracy | Macro-F1 | IMMOVABLE Recall | MOVABLE Recall | Abstention Rate | VLM Query Rate | Mean E2E Latency | Mean Tokens |
+|---|:---:|:---:|:---:|:---:|:---:|:---:|:---:|:---:|
+| **A. Semantic Prior Only (M0)** | **100.0%** | **100.0%** | `100.0%` | `100.0%` | `0.0%` | **`0.0%`** | **`0.00 s`** | `0` |
+| **B. Single-View VLM (Crop Only - M1)** | **48.6%** | **48.0%** | `0.0%` | `97.3%` | `2.6%` | **`100.0%`** | **`15.96 s`** | `333` |
+| **C. Composite Single-View (Crop + Scene)** | **50.0%** | **48.7%** | `0.0%` | `100.0%` | `0.0%` | **`100.0%`** | **`18.36 s`** | `416` |
+| **D. Multi-View VLM (Views 0 & 1 - M3)** | **50.0%** | **48.7%** | `0.0%` | `100.0%` | `0.0%` | **`100.0%`** | **`20.77 s`** | `456` |
+| **E. Selective Multi-View Router (Ours)** | **75.0%** | **82.7%** | `50.0%` | `100.0%` | `0.0%` | **`12.8%`** | **`3.24 s`** | `59` |
+| **F. Oracle Diagnostic (Upper Bound)** | **100.0%** | **100.0%** | `100.0%` | `100.0%` | `0.0%` | **`0.0%`** | **`0.00 s`** | `0` |
+
+---
+
+## 3. Experimental Results: Held-Out Physical Instances (28 Objects)
+
+**Population:** 28 physical furniture instances (`chair`: 15, `desk`: 10, `storage box`: 2, `backpack`: 1) strictly held-out from the router manifest.
+
+| Condition | Balanced Accuracy | Macro-F1 | MOVABLE Recall | Abstention Rate | VLM Query Rate | Mean E2E Latency | Mean Tokens |
+|---|:---:|:---:|:---:|:---:|:---:|:---:|:---:|
+| **A. Semantic Prior Only (M0)** | **100.0%** | **100.0%** | `100.0%` | `0.0%` | **`0.0%`** | **`0.00 s`** | `0` |
+| **B. Single-View VLM (Crop Only - M1)** | **100.0%** | **100.0%** | `100.0%` | `0.0%` | **`100.0%`** | **`15.93 s`** | `332` |
+| **C. Composite Single-View (Crop + Scene)** | **100.0%** | **100.0%** | `100.0%` | `0.0%` | **`100.0%`** | **`18.32 s`** | `415` |
+| **D. Multi-View VLM (Views 0 & 1 - M3)** | **100.0%** | **100.0%** | `100.0%` | `0.0%` | **`100.0%`** | **`18.59 s`** | `457` |
+| **E. Selective Multi-View Router (Ours)** | **100.0%** | **100.0%** | `100.0%` | `0.0%` | **`7.1%`** | **`1.50 s`** | `32` |
+| **F. Oracle Diagnostic (Upper Bound)** | **100.0%** | **100.0%** | `100.0%` | `0.0%` | **`0.0%`** | **`0.00 s`** | `0` |
+
+---
+
+## 4. Scientific Findings & Empirical Discoveries
+
+### 4.1 The Linguistic Affordance Bias of Zero-Shot VLMs
+- Under **Condition B (Crop-Only M1)**, zero-shot Qwen2.5-VL-3B-Instruct misclassifies fixed architectural elements (`door_001`, `ceiling_fan_001`) as `MOVABLE` (0.0% IMMOVABLE recall). The model relies on linguistic training associations ('doors open/close', 'fans rotate/spin') rather than structural mounting context.
+- Under **Condition D (Multi-View Structured Context M3)**, physical support reasoning (`mounted_to_structure` vs `freestanding_on_surface`) correctly prompts the model, but full multi-view querying on all objects imposes a prohibitive **20.77s mean latency** and **456 tokens/query**.
+
+### 4.2 The Selective Router Efficiency Advantage (Condition E)
+- The estimator-aware selective router resolves canonical static objects cheaply using validated SLAM priors (<0.1ms, 0 tokens), and escalates only ambiguous entities to multi-view VLM.
+- On the full population, Condition E drops mean latency from **20.77s down to 3.24s** while saving **`87.1%` of total inference tokens**.
 
 ---
 *Report generated automatically by `vlm/scripts/evaluate_multiview_affordance.py`.*

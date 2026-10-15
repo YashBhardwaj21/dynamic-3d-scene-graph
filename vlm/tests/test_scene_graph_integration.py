@@ -198,3 +198,114 @@ def test_running_mean_mathematical_consistency():
     assert node.total_observations_count == 100
     assert node.valid_geometry_observations_count == 100
     assert np.allclose(node.centroid_world, expected_mean, atol=1e-6)
+
+
+def test_cross_session_physical_identity_scene_graph_fusion():
+    """Stage 9C Integration Test: Associate real observations across sessions into persistent scene graph."""
+    from vlm.src.cross_session_association import CrossSessionCandidateMatcher
+    from vlm.src.stage5_adapter import load_registration_audit
+
+    obs_path = root_dir / "vlm" / "outputs" / "object_observations.jsonl"
+    reg_path = root_dir / "vlm" / "outputs" / "stage5_registration_audit.json"
+
+    if not obs_path.exists() or not reg_path.exists():
+        pytest.skip("Real observations or registration audit missing.")
+
+    reg = load_registration_audit(reg_path)
+    assert reg.is_valid, f"Registration must be valid: {reg.status}"
+
+    observations = []
+    with open(obs_path, "r", encoding="utf-8") as f:
+        for line in f:
+            if line.strip():
+                observations.append(json.loads(line))
+
+    # Aggregate clusters
+    s1_clusters = CrossSessionCandidateMatcher.extract_clusters_from_observations(observations, "recording_01", min_obs=2)
+    s2_clusters = CrossSessionCandidateMatcher.extract_clusters_from_observations(observations, "recording_02", min_obs=2)
+
+    matcher = CrossSessionCandidateMatcher(max_static_distance_m=0.45)
+    assoc_res = matcher.match_entities(s1_clusters, s2_clusters, reg)
+
+    assert assoc_res.is_valid
+    assert len(assoc_res.matched_pairs) > 0
+
+    # Pick a verified static match, e.g. desk_001 <-> desk_001 or desk_005 <-> desk_014
+    target_match = next((m for m in assoc_res.matched_pairs if m.s1_entity_id == "desk_001" and m.s2_entity_id == "desk_001"), None)
+    if not target_match:
+        target_match = assoc_res.matched_pairs[0]
+
+    s1_eid = target_match.s1_entity_id
+    s2_eid = target_match.s2_entity_id
+    persistent_id = target_match.persistent_entity_id
+
+    # Create Scene Graph Fusion
+    fusion = ContextualSceneGraphFusion()
+
+    # Feed Session 1 observation
+    c1 = s1_clusters[s1_eid]
+    obs_meta_s1 = {
+        "timestamp": 10.0,
+        "source_session": "semantic_mapping_my_desk_recording_01",
+        "obs_id": c1.observation_ids[0] if c1.observation_ids else "obs_s1_001",
+        "local_track_id": s1_eid,
+        "centroid": [c1.centroid_floor[0], c1.centroid_floor[1], 0.72],
+        "spatial_extent_m": c1.spatial_extent_m,
+        "coordinate_frame": "reference_frame",
+        "registration": reg,
+    }
+    routed_s1 = {
+        "decision": "RESOLVE_CHEAP",
+        "prediction": "MOVABLE",
+        "observed_motion": "STATIC",
+        "evidence_provenance": "MEASURED_FULL",
+    }
+    node = fusion.update_or_create_node(persistent_id, c1.semantic_class, routed_s1, obs_meta_s1)
+
+    assert node.entity_id == persistent_id
+    assert node.total_observations_count == 1
+    assert "semantic_mapping_my_desk_recording_01" in node.source_sessions
+    assert s1_eid in node.source_track_ids
+
+    # Feed Session 2 observation (in S2 local coordinates, should be transformed to reference frame via reg)
+    c2 = s2_clusters[s2_eid]
+    obs_meta_s2 = {
+        "timestamp": 25.0,
+        "source_session": "semantic_mapping_my_desk_recording_02",
+        "obs_id": c2.observation_ids[0] if c2.observation_ids else "obs_s2_001",
+        "local_track_id": s2_eid,
+        "centroid": [c2.centroid_floor[0], c2.centroid_floor[1], 0.72],
+        "spatial_extent_m": c2.spatial_extent_m,
+        "coordinate_frame": "session_02_local",
+        "registration": reg,
+    }
+    routed_s2 = {
+        "decision": "RESOLVE_CHEAP",
+        "prediction": "MOVABLE",
+        "observed_motion": "STATIC",
+        "evidence_provenance": "MEASURED_FULL",
+    }
+    node_merged = fusion.update_or_create_node(persistent_id, c2.semantic_class, routed_s2, obs_meta_s2)
+
+    # Verify identity continuity across sessions
+    assert node_merged.total_observations_count == 2
+    assert len(node_merged.source_sessions) == 2
+    assert "semantic_mapping_my_desk_recording_01" in node_merged.source_sessions
+    assert "semantic_mapping_my_desk_recording_02" in node_merged.source_sessions
+    assert s1_eid in node_merged.source_track_ids
+    assert s2_eid in node_merged.source_track_ids
+
+    # Geometry preservation: merged centroid should be in reference frame within small delta of S1 centroid
+    dist_to_s1 = np.linalg.norm(node_merged.centroid_world[:2] - c1.centroid_floor[:2])
+    assert dist_to_s1 < 0.25, f"Merged centroid drifted too far from reference frame: {dist_to_s1}m"
+
+    # Serialize to JSON and PersistentEntity
+    serialized = fusion.serialize_to_json()
+    assert persistent_id in serialized["nodes"]
+
+    persistent_entity = node_merged.to_persistent_entity()
+    assert persistent_entity.entity_id == persistent_id
+    assert s1_eid in persistent_entity.source_track_ids
+    assert s2_eid in persistent_entity.source_track_ids
+    assert persistent_entity.lifecycle_state == EntityLifecycleState.CONFIRMED
+

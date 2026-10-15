@@ -86,18 +86,21 @@ def load_registration_audit(audit_path: Optional[Path]) -> RegistrationInfo:
 
     reg = data.get("registration")
     if not isinstance(reg, dict):
-        return RegistrationInfo(
-            is_valid=False,
-            reference_session="",
-            aligned_session="",
-            rotation_deg=0.0,
-            translation_m=np.zeros(2),
-            R_12=np.eye(2),
-            anchor_rms_residual_m=0.0,
-            anchor_count=0,
-            status="MISSING_REGISTRATION_BLOCK",
-            diagnostics=["JSON root lacks a valid 'registration' dictionary."],
-        )
+        if "reference_session" in data and "translation_m" in data:
+            reg = data
+        else:
+            return RegistrationInfo(
+                is_valid=False,
+                reference_session="",
+                aligned_session="",
+                rotation_deg=0.0,
+                translation_m=np.zeros(2),
+                R_12=np.eye(2),
+                anchor_rms_residual_m=0.0,
+                anchor_count=0,
+                status="MISSING_REGISTRATION_BLOCK",
+                diagnostics=["JSON root lacks a valid 'registration' dictionary."],
+            )
 
     ref_sess = reg.get("reference_session")
     align_sess = reg.get("aligned_session")

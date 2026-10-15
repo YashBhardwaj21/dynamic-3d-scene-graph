@@ -216,6 +216,20 @@ class ContextualSceneGraphFusion:
             raw_centroid = obs_meta.get("centroid_floor")
         if raw_centroid is None:
             raw_centroid = obs_meta.get("centroid_world")
+
+        # Coordinate frame verification: transform session 2 local coordinates into common reference frame
+        reg = obs_meta.get("registration")
+        coord_frame = obs_meta.get("coordinate_frame", "floor_map")
+        if reg is not None and getattr(reg, "is_valid", False) and coord_frame != "reference_frame":
+            # If session is aligned_session or recording_02, transform floor coordinates
+            if session == getattr(reg, "aligned_session", "") or "recording_02" in session:
+                if raw_centroid is not None and len(raw_centroid) >= 2 and all(x is not None for x in raw_centroid[:2]):
+                    c2_floor = np.array(raw_centroid[:2], dtype=np.float64)
+                    c1_aligned = reg.R_12 @ c2_floor + reg.translation_m
+                    c_rest = list(raw_centroid[2:]) if len(raw_centroid) > 2 else [0.0]
+                    raw_centroid = [float(c1_aligned[0]), float(c1_aligned[1])] + c_rest
+                    coord_frame = "reference_frame"
+
         geometry_valid = False
         centroid_arr: Optional[np.ndarray] = None
         if raw_centroid is not None and len(raw_centroid) >= 2 and all(x is not None for x in raw_centroid[:2]):
