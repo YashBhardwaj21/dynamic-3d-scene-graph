@@ -5,58 +5,59 @@
   "current_motion_gt": "STATIC",
   "displacement_gt": 0.0,
   "total_views": 3,
+  "angular_diversity_verified": true,
   "views": [
     {
       "view_index": 0,
-      "frame_index": 3715,
-      "timestamp": 1791788805.1867,
-      "viewing_angle_deg": -134.23,
+      "frame_index": 2025,
+      "timestamp": 1791797751.648,
+      "viewing_angle_deg": 219.27,
       "camera_pose": [
-        2.236,
-        -0.0125,
-        0.7053,
-        -0.0784,
-        0.8414,
-        0.0081,
-        0.5346
+        2.314,
+        -0.3442,
+        1.4665,
+        -0.129,
+        0.6489,
+        0.0389,
+        0.7488
       ],
-      "sharpness_score": 6969.18,
+      "sharpness_score": 895.55,
       "crop_path": "inst_chair_007/crop_view_0.jpg",
       "scene_path": "inst_chair_007/scene_view_0.jpg"
     },
     {
       "view_index": 1,
-      "frame_index": 1545,
-      "timestamp": 1791797728.8047,
-      "viewing_angle_deg": -116.55,
+      "frame_index": 1735,
+      "timestamp": 1791788715.2482,
+      "viewing_angle_deg": 202.13,
       "camera_pose": [
-        1.1786,
-        -0.2915,
-        1.8411,
-        -0.0842,
-        0.8175,
-        0.0359,
-        0.5685
+        4.3874,
+        -0.308,
+        -0.2638,
+        0.0143,
+        0.9467,
+        0.0678,
+        0.3145
       ],
-      "sharpness_score": 6192.06,
+      "sharpness_score": 2524.91,
       "crop_path": "inst_chair_007/crop_view_1.jpg",
       "scene_path": "inst_chair_007/scene_view_1.jpg"
     },
     {
       "view_index": 2,
-      "frame_index": 3950,
-      "timestamp": 1791788816.4584,
-      "viewing_angle_deg": -150.69,
+      "frame_index": 820,
+      "timestamp": 1791788672.597,
+      "viewing_angle_deg": 238.51,
       "camera_pose": [
-        3.4969,
-        -0.1836,
-        0.0547,
-        -0.1192,
-        0.8247,
-        0.0074,
-        0.5528
+        1.5864,
+        0.068,
+        1.527,
+        -0.0577,
+        0.6657,
+        -0.0159,
+        0.7438
       ],
-      "sharpness_score": 2984.2,
+      "sharpness_score": 4303.68,
       "crop_path": "inst_chair_007/crop_view_2.jpg",
       "scene_path": "inst_chair_007/scene_view_2.jpg"
     }

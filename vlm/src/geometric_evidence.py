@@ -1,12 +1,10 @@
-"""Stage 5: Geometric Evidence Extractor for Non-VLM Pre-Routing Pipeline.
+"""Stage 5: Geometric Evidence Extraction for Object Observations.
 
-Extracts real estimator geometric observations:
-1. MapPoint correspondence and 3D-to-2D projection status.
-2. Reprojection residuals and spatial residual distributions.
-3. Inlier ratios against detected bounding boxes.
-4. Physical depth validity and stereo triangulation uncertainty (sigma_z).
-5. Landmark point support and spatial conditioning.
-6. Quantified geometric consistency metric [0, 1].
+Extracts:
+1. Physical RealSense D455 stereo depth uncertainty: sigma_z = (z^2 / (f_x * B)) * sigma_d
+2. Genuine MapPoint reprojection residuals and inlier ratios (no synthetic defaults)
+3. Explicit evidence provenance: MEASURED_FULL, DERIVED_DEPTH_ONLY, or MISSING
+4. Calibrated geometric consistency score bounded in [0.0, 1.0]
 """
 
 from __future__ import annotations
@@ -14,14 +12,14 @@ from __future__ import annotations
 import math
 from dataclasses import dataclass, asdict
 from pathlib import Path
-from typing import Any, Dict, List, Optional, Tuple
+from typing import Any, Dict, List, Optional
 import numpy as np
 
 
-# RealSense D455 Calibrated Intrinsics and Stereo Baseline
-FX = 383.920563
-FY = 383.478058
-CX = 320.267059
+# Intel RealSense D455 Factory Intrinsics (640x480 resolution mode)
+FX = 383.924896
+FY = 383.924896
+CX = 320.123016
 CY = 244.569885
 STEREO_BASELINE_M = 0.095  # 95 mm physical baseline between IR stereo sensors
 DISPARITY_NOISE_PX = 0.08  # Subpixel disparity matching noise (sigma_d)
@@ -38,17 +36,21 @@ class GeometricEvidenceRecord:
     entity_id: str
     track_id: str
     depth_valid: bool
-    measured_depth_m: float
-    depth_uncertainty_sigma_m: float
+    measured_depth_m: Optional[float]
+    depth_uncertainty_sigma_m: Optional[float]
+    depth_provenance: str  # "MEASURED_SENSOR" or "MISSING"
     mappoints_count: int
     inlier_count: int
-    inlier_ratio: float
-    mean_reprojection_residual_px: float
-    median_reprojection_residual_px: float
-    p95_reprojection_residual_px: float
+    inlier_ratio: Optional[float]
+    reprojection_residual_valid: bool
+    reprojection_provenance: str  # "MEASURED_MAPPOINTS" or "MISSING_MAPPOINTS"
+    mean_reprojection_residual_px: Optional[float]
+    median_reprojection_residual_px: Optional[float]
+    p95_reprojection_residual_px: Optional[float]
     landmark_support_count: int
     landmark_spatial_extent_m: float
     geometric_consistency_score: float
+    provenance: str  # "MEASURED_FULL", "DERIVED_DEPTH_ONLY", "MISSING"
     has_valid_evidence: bool
 
     def to_dict(self) -> Dict[str, Any]:
@@ -130,31 +132,40 @@ class GeometricEvidenceExtractor:
         entity_id = obs.get("global_entity_id", "")
         track_id = obs.get("local_track_id", "")
         points_count = int(obs.get("points_count", 0))
-        bbox_xyxy = obs.get("bbox_xyxy", [0, 0, 640, 480])
+        bbox_xyxy = obs.get("bbox_xyxy")
 
-        centroid_cam = obs.get("centroid_camera", [0.0, 0.0, 1.5])
-        z_depth = float(centroid_cam[2]) if len(centroid_cam) >= 3 else 1.5
-        depth_valid = (MIN_VALID_DEPTH_M <= z_depth <= MAX_VALID_DEPTH_M)
+        # 1. Depth extraction & physical uncertainty
+        centroid_cam = obs.get("centroid_camera")
+        if centroid_cam is not None and len(centroid_cam) >= 3 and centroid_cam[2] is not None:
+            z_depth = float(centroid_cam[2])
+            depth_valid = (MIN_VALID_DEPTH_M <= z_depth <= MAX_VALID_DEPTH_M)
+            sigma_z = compute_depth_uncertainty(z_depth)
+            depth_prov = "MEASURED_SENSOR"
+        else:
+            z_depth = None
+            depth_valid = False
+            sigma_z = None
+            depth_prov = "MISSING"
 
-        sigma_z = compute_depth_uncertainty(z_depth)
+        # 2. 3D spatial extent from floor bounding box
+        b_min_raw = obs.get("bbox_min_floor")
+        b_max_raw = obs.get("bbox_max_floor")
+        if b_min_raw is not None and b_max_raw is not None and len(b_min_raw) == 3 and len(b_max_raw) == 3:
+            b_min = np.array(b_min_raw, dtype=np.float64)
+            b_max = np.array(b_max_raw, dtype=np.float64)
+            spatial_extent = float(np.linalg.norm(b_max - b_min))
+        else:
+            b_min = None
+            b_max = None
+            spatial_extent = 0.0
 
-        # 3D bounding box in floor/world coordinates
-        b_min = np.array(obs.get("bbox_min_floor", [-1, -1, 0]), dtype=np.float64)
-        b_max = np.array(obs.get("bbox_max_floor", [1, 1, 1]), dtype=np.float64)
-        spatial_extent = float(np.linalg.norm(b_max - b_min))
+        # 3. Camera pose
+        cam_pose = obs.get("camera_pose")
+        has_pose = (cam_pose is not None and len(cam_pose) >= 7)
 
-        # Camera pose [tx, ty, tz, qx, qy, qz, qw]
-        cam_pose = obs.get("camera_pose", [0, 0, 0, 0, 0, 0, 1])
-        t_wc = np.array(cam_pose[:3], dtype=np.float64)
-        R_wc = quaternion_to_rotation_matrix(cam_pose[3], cam_pose[4], cam_pose[5], cam_pose[6])
-
-        # Invert to world-to-camera
-        R_cw = R_wc.T
-        t_cw = -R_cw @ t_wc
-
-        # Find MapPoints in 3D bounding box
+        # 4. MapPoint projection & reprojection residual calculation
         candidate_pts = []
-        if len(self.mappoints) > 0 and len(b_min) == 3 and len(b_max) == 3:
+        if has_pose and len(self.mappoints) > 0 and b_min is not None and b_max is not None:
             mask = np.all((self.mappoints >= b_min - 0.10) & (self.mappoints <= b_max + 0.10), axis=1)
             candidate_pts = self.mappoints[mask]
 
@@ -162,59 +173,64 @@ class GeometricEvidenceExtractor:
         residuals: List[float] = []
         inliers = 0
 
-        bx1, by1, bx2, by2 = bbox_xyxy
-        bw = max(1.0, bx2 - bx1)
-        bh = max(1.0, by2 - by1)
-        bcx = (bx1 + bx2) / 2.0
-        bcy = (by1 + by2) / 2.0
+        if n_candidates > 0 and has_pose and bbox_xyxy is not None and len(bbox_xyxy) == 4:
+            t_wc = np.array(cam_pose[:3], dtype=np.float64)
+            R_wc = quaternion_to_rotation_matrix(cam_pose[3], cam_pose[4], cam_pose[5], cam_pose[6])
+            R_cw = R_wc.T
+            t_cw = -R_cw @ t_wc
 
-        if n_candidates > 0:
-            # Transform to camera coordinates
+            bx1, by1, bx2, by2 = bbox_xyxy
+            bcx = (bx1 + bx2) / 2.0
+            bcy = (by1 + by2) / 2.0
+
             p_cam = (R_cw @ candidate_pts.T).T + t_cw
             valid_z = p_cam[:, 2] > 0.15
 
             for p in p_cam[valid_z]:
                 u = FX * (p[0] / p[2]) + CX
                 v = FY * (p[1] / p[2]) + CY
-
-                # Normalized residual distance from bbox center in pixels
-                du = (u - bcx) / (bw / 2.0)
-                dv = (v - bcy) / (bh / 2.0)
-                norm_dist = math.sqrt(du * du + dv * dv)
-
-                # Physical pixel reprojection error to boundary/center
                 px_res = math.hypot(u - bcx, v - bcy)
                 residuals.append(px_res)
 
                 if bx1 - 8.0 <= u <= bx2 + 8.0 and by1 - 8.0 <= v <= by2 + 8.0:
                     inliers += 1
 
+        # 5. Honest Provenance & Fallback-Free Residuals
         if residuals:
             res_arr = np.array(residuals)
             mean_res = float(np.mean(res_arr))
             med_res = float(np.median(res_arr))
             p95_res = float(np.percentile(res_arr, 95))
             inlier_ratio = float(inliers / max(1, n_candidates))
+            reproj_valid = True
+            reproj_prov = "MEASURED_MAPPOINTS"
+            provenance = "MEASURED_FULL"
         else:
-            # Synthesize baseline residual from bounding box size if sparse points
-            mean_res = float(min(bw, bh) * 0.22)
-            med_res = mean_res * 0.90
-            p95_res = mean_res * 1.45
-            inlier_ratio = 0.85 if depth_valid else 0.40
-            inliers = int(points_count * inlier_ratio)
-            n_candidates = points_count
+            mean_res = None
+            med_res = None
+            p95_res = None
+            inlier_ratio = None
+            reproj_valid = False
+            reproj_prov = "MISSING_MAPPOINTS"
+            provenance = "DERIVED_DEPTH_ONLY" if depth_valid else "MISSING"
 
-        # Landmark support
+        # Landmark support count
         support_count = max(points_count, n_candidates)
 
-        # Calibrated geometric consistency metric in [0.0, 1.0]
-        # Combines inlier ratio (40%), reprojection residual quality (30%), and depth uncertainty (30%)
-        inlier_score = min(1.0, max(0.0, inlier_ratio))
-        residual_score = math.exp(-mean_res / 35.0) if mean_res >= 0 else 0.5
-        depth_score = math.exp(-sigma_z / 0.04) if depth_valid else 0.10
-
-        consistency_score = 0.40 * inlier_score + 0.30 * residual_score + 0.30 * depth_score
-        consistency_score = max(0.0, min(1.0, consistency_score))
+        # 6. Geometric consistency score
+        if provenance == "MEASURED_FULL" and mean_res is not None and inlier_ratio is not None and sigma_z is not None:
+            inlier_score = min(1.0, max(0.0, inlier_ratio))
+            residual_score = math.exp(-mean_res / 35.0)
+            depth_score = math.exp(-sigma_z / 0.04) if depth_valid else 0.10
+            consistency_score = 0.40 * inlier_score + 0.30 * residual_score + 0.30 * depth_score
+            has_valid_evidence = (depth_valid and inlier_score > 0.10)
+        elif depth_valid and sigma_z is not None:
+            depth_score = math.exp(-sigma_z / 0.04)
+            consistency_score = 0.60 * depth_score + 0.40 * min(1.0, points_count / 2000.0)
+            has_valid_evidence = depth_valid
+        else:
+            consistency_score = 0.0
+            has_valid_evidence = False
 
         return GeometricEvidenceRecord(
             obs_id=obs_id,
@@ -223,16 +239,20 @@ class GeometricEvidenceExtractor:
             entity_id=entity_id,
             track_id=track_id,
             depth_valid=depth_valid,
-            measured_depth_m=round(z_depth, 4),
-            depth_uncertainty_sigma_m=round(sigma_z, 4),
+            measured_depth_m=round(z_depth, 4) if z_depth is not None else None,
+            depth_uncertainty_sigma_m=round(sigma_z, 4) if sigma_z is not None else None,
+            depth_provenance=depth_prov,
             mappoints_count=n_candidates,
             inlier_count=inliers,
-            inlier_ratio=round(inlier_ratio, 4),
-            mean_reprojection_residual_px=round(mean_res, 2),
-            median_reprojection_residual_px=round(med_res, 2),
-            p95_reprojection_residual_px=round(p95_res, 2),
+            inlier_ratio=round(inlier_ratio, 4) if inlier_ratio is not None else None,
+            reprojection_residual_valid=reproj_valid,
+            reprojection_provenance=reproj_prov,
+            mean_reprojection_residual_px=round(mean_res, 2) if mean_res is not None else None,
+            median_reprojection_residual_px=round(med_res, 2) if med_res is not None else None,
+            p95_reprojection_residual_px=round(p95_res, 2) if p95_res is not None else None,
             landmark_support_count=support_count,
             landmark_spatial_extent_m=round(spatial_extent, 4),
             geometric_consistency_score=round(consistency_score, 4),
-            has_valid_evidence=True,
+            provenance=provenance,
+            has_valid_evidence=has_valid_evidence,
         )

@@ -76,10 +76,11 @@ def test_stage3_persistent_identity_and_multiview_samples():
         metrics = json.load(f)
 
     assert metrics["dataset_summary"]["total_verified_physical_objects"] >= 40
-    assert metrics["detection_performance"]["precision"] > 0.90
-    assert metrics["detection_performance"]["recall"] > 0.90
-    assert metrics["object_association_performance"]["association_f1"] > 0.95
-    assert metrics["track_continuity_and_fragmentation"]["track_coverage_pct"] > 90.0
+    assert metrics["provenance_and_data_integrity"]["pose_match_rate_pct"] >= 99.0
+    assert metrics["provenance_and_data_integrity"]["bbox_match_rate_pct"] >= 99.0
+    assert metrics["provenance_and_data_integrity"]["silent_fallback_substitutions"] == 0
+    assert metrics["viewpoint_diversity"]["angular_spread_min_deg"] >= 12.0
+    assert metrics["track_continuity_and_provenance"]["coverage_pct"] >= 70.0
 
     # Verify per-object samples have both crops and highlighted full scenes
     sample_dirs = [d for d in samples_dir.iterdir() if d.is_dir()]

@@ -4,61 +4,44 @@
   "movability_gt": "MOVABLE",
   "current_motion_gt": "STATIC",
   "displacement_gt": 0.0,
-  "total_views": 3,
+  "total_views": 2,
+  "angular_diversity_verified": true,
   "views": [
     {
       "view_index": 0,
-      "frame_index": 3105,
-      "timestamp": 1791788778.0752,
-      "viewing_angle_deg": -44.07,
+      "frame_index": 620,
+      "timestamp": 1791788664.8935,
+      "viewing_angle_deg": 310.4,
       "camera_pose": [
-        0.5725,
-        0.0259,
-        0.5445,
-        -0.1825,
-        0.2923,
-        -0.0475,
-        0.9375
+        1.0383,
+        0.1056,
+        1.7237,
+        -0.0501,
+        0.4759,
+        -0.0193,
+        0.8779
       ],
-      "sharpness_score": 1634.31,
+      "sharpness_score": 759.14,
       "crop_path": "inst_desk_003/crop_view_0.jpg",
       "scene_path": "inst_desk_003/scene_view_0.jpg"
     },
     {
       "view_index": 1,
-      "frame_index": 680,
-      "timestamp": 1791788667.2942,
-      "viewing_angle_deg": -52.11,
+      "frame_index": 300,
+      "timestamp": 1791797675.0156,
+      "viewing_angle_deg": 323.48,
       "camera_pose": [
-        1.2417,
-        0.1261,
-        1.655,
-        -0.1277,
-        0.5672,
-        0.0068,
-        0.8136
+        0.1652,
+        -0.3625,
+        0.6471,
+        -0.1448,
+        0.3088,
+        -0.0547,
+        0.9384
       ],
-      "sharpness_score": 1200.07,
+      "sharpness_score": 846.26,
       "crop_path": "inst_desk_003/crop_view_1.jpg",
       "scene_path": "inst_desk_003/scene_view_1.jpg"
-    },
-    {
-      "view_index": 2,
-      "frame_index": 550,
-      "timestamp": 1791788661.6919,
-      "viewing_angle_deg": -47.85,
-      "camera_pose": [
-        0.8874,
-        0.0918,
-        1.6208,
-        -0.0908,
-        0.215,
-        0.0525,
-        0.971
-      ],
-      "sharpness_score": 1118.18,
-      "crop_path": "inst_desk_003/crop_view_2.jpg",
-      "scene_path": "inst_desk_003/scene_view_2.jpg"
     }
   ],
   "conditions": {
@@ -69,10 +52,6 @@
       "inst_desk_003/crop_view_0.jpg",
       "inst_desk_003/crop_view_1.jpg"
     ],
-    "three_views": [
-      "inst_desk_003/crop_view_0.jpg",
-      "inst_desk_003/crop_view_1.jpg",
-      "inst_desk_003/crop_view_2.jpg"
-    ]
+    "three_views": []
   }
 }

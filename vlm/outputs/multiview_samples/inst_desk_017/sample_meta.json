@@ -4,23 +4,24 @@
   "movability_gt": "MOVABLE",
   "current_motion_gt": "STATIC",
   "displacement_gt": 0.0,
-  "total_views": 3,
+  "total_views": 2,
+  "angular_diversity_verified": true,
   "views": [
     {
       "view_index": 0,
-      "frame_index": 1895,
-      "timestamp": 1791788720.6505,
-      "viewing_angle_deg": 134.36,
+      "frame_index": 4450,
+      "timestamp": 1791788840.2016,
+      "viewing_angle_deg": 128.2,
       "camera_pose": [
-        4.4497,
-        -0.3414,
-        -0.5328,
-        -0.0621,
-        -0.9756,
-        -0.054,
-        0.2034
+        3.7379,
+        -0.4416,
+        -1.3995,
+        -0.0881,
+        -0.6799,
+        -0.0731,
+        0.7243
       ],
-      "sharpness_score": 1739.33,
+      "sharpness_score": 829.17,
       "crop_path": "inst_desk_017/crop_view_0.jpg",
       "scene_path": "inst_desk_017/scene_view_0.jpg"
     },
@@ -41,24 +42,6 @@
       "sharpness_score": 472.13,
       "crop_path": "inst_desk_017/crop_view_1.jpg",
       "scene_path": "inst_desk_017/scene_view_1.jpg"
-    },
-    {
-      "view_index": 2,
-      "frame_index": 4330,
-      "timestamp": 1791788835.8665,
-      "viewing_angle_deg": 130.63,
-      "camera_pose": [
-        4.0449,
-        -0.4483,
-        -0.9084,
-        -0.0178,
-        -0.9373,
-        -0.0147,
-        0.3479
-      ],
-      "sharpness_score": 1028.63,
-      "crop_path": "inst_desk_017/crop_view_2.jpg",
-      "scene_path": "inst_desk_017/scene_view_2.jpg"
     }
   ],
   "conditions": {
@@ -69,10 +52,6 @@
       "inst_desk_017/crop_view_0.jpg",
       "inst_desk_017/crop_view_1.jpg"
     ],
-    "three_views": [
-      "inst_desk_017/crop_view_0.jpg",
-      "inst_desk_017/crop_view_1.jpg",
-      "inst_desk_017/crop_view_2.jpg"
-    ]
+    "three_views": []
   }
 }

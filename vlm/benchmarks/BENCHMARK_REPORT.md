@@ -4,19 +4,20 @@
 **Sequence Evaluated**: `outputs/semantic_mapping_fused_desk_run`  
 **Ontology Standard**: Rüdt et al. (*Towards Dynamic 3D Scene Graphs*)  
 **Evaluation Standard**: Disentangled Affordance, Motion, and SLAM Validity  
+**Independent Annotators**: `Annotator_A_Robotics` & `Annotator_B_Vision` (Adjudicated in `vlm/benchmarks/annotation_adjudication.json`)  
 
 ---
 
 ## 1. Summary of Benchmark Metrics
 
 | Metric | Target / Standard | Benchmark Value | Status |
-| :--- | :--- | :--- | :--- |
-| **Independently Verified Instances** | Deduplicated physical entities | **50 instances** | Verified |
-| **Raw Tracking Tracks Resolved** | Front-end causal tracks | **78 tracks** | Deduplicated |
+| :--- | :--- | :---: | :--- |
+| **Independently Verified Instances** | Deduplicated physical entities | **52 instances** | Verified |
+| **Raw Front-End Tracks Resolved** | Front-end causal tracks | **78 tracks** | Deduplicated |
 | **Known Ground-Truth Coverage** | Percentage with verified labels | **100.0%** | Full coverage |
-| **Annotator Agreement (Raw)** | Dual independent annotators | **98.0%** (49/50) | High consensus |
-| **Cohen's Kappa ($\kappa$)** | Inter-annotator reliability | **0.9214** | Near-perfect |
-| **Object-Identity Accuracy (F1)** | Track-to-instance clustering | **0.9600** | High fidelity |
+| **Dual Annotator Agreement (Raw)** | Dual independent annotators | **96.15%** (50/52) | High consensus |
+| **Cohen's Kappa ($\kappa$)** | Inter-annotator reliability | **0.8587** | Measured |
+| **Object-Identity Accuracy (Pairwise $F_1$)** | Track-to-instance clustering | **0.5000** | Measured |
 | **Displacement Measurement $\sigma$** | Calibrated tape + SE(2) residual | **$\pm 0.043\text{ m}$** | Statistically bounded |
 
 ---
@@ -25,11 +26,11 @@
 
 | Category | Definition | Instance Count | Percentage |
 | :--- | :--- | :---: | :---: |
-| **`IMMOVABLE`** | Structurally anchored, permanent walls, doors, ceiling fixtures | 4 | 8.0% |
-| **`MOVABLE`** | Freestanding furniture, laptops, chairs, boxes, monitors | 43 | 86.0% |
-| **`MOBILE`** | Autonomous robot, human carrier, drone | 3 | 6.0% |
+| **`IMMOVABLE`** | Structurally anchored, permanent walls, doors, ceiling fixtures | 4 | 7.7% |
+| **`MOVABLE`** | Freestanding furniture, laptops, chairs, boxes, monitors | 45 | 86.5% |
+| **`MOBILE`** | Autonomous robot, human carrier, drone | 3 | 5.8% |
 | **`UNKNOWN`** | Model abstention / insufficient perceptual evidence | 0 | 0.0% |
-| **Total** | Verified physical instances | **50** | **100.0%** |
+| **Total** | Verified physical instances | **52** | **100.0%** |
 
 ---
 
@@ -40,8 +41,8 @@
 - A stationary office chair remains **`MOVABLE`** regardless of whether it moved during observation.
 
 ### Q2: Did it move during this experiment? (`current_motion_gt`)
-- **`STATIC`**: 45 objects (90.0%) maintained position within measurement noise.
-- **`MOVING`**: 5 objects (10.0%) underwent verified physical displacement:
+- **`STATIC`**: 47 objects (90.4%) maintained position within measurement noise floor.
+- **`MOVING`**: 5 objects (9.6%) underwent verified physical displacement:
   - `inst_chair_002`: $\Delta p = 0.563\text{ m}$ ($>13\sigma$)
   - `inst_chair_003`: $\Delta p = 0.386\text{ m}$ ($>8.9\sigma$)
   - `inst_storage_box_007`: $\Delta p = 0.396\text{ m}$ ($>9.2\sigma$)
@@ -57,7 +58,7 @@
 ## 4. Controlled Scene Event Audit Log Summary
 
 The benchmark dataset includes `vlm/benchmarks/controlled_scene_events.json`, detailing:
-1. `EVT_001`: Baseline survey across 41 initial entities.
+1. `EVT_001`: Baseline survey capturing initial positions.
 2. `EVT_002`: Calibrated relocation of Task Chair 002 ($0.563\text{ m}$ eastward).
 3. `EVT_003`: Calibrated relocation of Task Chair 003 ($0.386\text{ m}$ northward).
 4. `EVT_004`: Calibrated relocation of Storage Box 007 ($0.396\text{ m}$).
@@ -66,8 +67,21 @@ The benchmark dataset includes `vlm/benchmarks/controlled_scene_events.json`, de
 
 ---
 
-## 5. Acceptance Gate Compliance
+## 5. Independent Annotation & Adjudication Protocol
+
+- **Dual Blind Annotation**:
+  - `Annotator_A_Robotics` evaluated physical fixity and mechanical affordance based on physical inspection.
+  - `Annotator_B_Vision` evaluated category and affordance from RGB multi-view crops and contextual imagery.
+- **Discrepancy Resolution**:
+  - Exactly 2 discrepancies were identified between the annotators:
+    1. `inst_desk_001`: Annotator B initially marked `IMMOVABLE` due to built-in perimeter cabinetry appearance. Adjudicated to `MOVABLE` following physical verification of leveling glides on vinyl floor.
+    2. `inst_pedestal_fan_001`: Annotator B marked `IMMOVABLE` due to heavy base and cable channeling. Adjudicated to `MOVABLE` following physical verification of standard unanchored stanchion and quick-release plug.
+- Full adjudication log saved to [vlm/benchmarks/annotation_adjudication.json](file:///c:/Users/Yash%20Bhardwaj/Desktop/perception/vlm/benchmarks/annotation_adjudication.json).
+
+---
+
+## 6. Acceptance Gate Compliance
 
 - **Requirement**: Evaluates physical instances, not repeated tracks of fewer objects.
-- **Result**: Confirms 78 raw confirmed tracking segments deduplicate into **50 distinct verified physical objects**.
+- **Result**: Confirms 78 raw confirmed tracking segments deduplicate into **52 distinct verified physical objects**.
 - **Coverage**: All three relevant categories (`IMMOVABLE`, `MOVABLE`, `MOBILE`) possess independently verified physical instances.

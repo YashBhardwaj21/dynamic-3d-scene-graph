@@ -5,6 +5,7 @@
   "current_motion_gt": "STATIC",
   "displacement_gt": 0.0,
   "total_views": 3,
+  "angular_diversity_verified": true,
   "views": [
     {
       "view_index": 0,

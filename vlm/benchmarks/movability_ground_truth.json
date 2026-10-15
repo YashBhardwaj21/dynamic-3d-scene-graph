@@ -57,13 +57,13 @@
     },
     "percent_known_ground_truth": 100.0,
     "inter_annotator_agreement": {
-      "raw_agreement_pct": 98.08,
-      "cohens_kappa": 0.9252
+      "raw_agreement_pct": 96.15,
+      "cohens_kappa": 0.8587
     },
     "object_identity_accuracy": {
-      "precision": 0.9231,
-      "recall": 0.9231,
-      "f1_score": 0.9231
+      "precision": 0.3333,
+      "recall": 1.0,
+      "f1_score": 0.5
     }
   },
   "physical_objects": [

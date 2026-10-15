@@ -4,61 +4,44 @@
   "movability_gt": "MOVABLE",
   "current_motion_gt": "STATIC",
   "displacement_gt": 0.0,
-  "total_views": 3,
+  "total_views": 2,
+  "angular_diversity_verified": true,
   "views": [
     {
       "view_index": 0,
-      "frame_index": 35,
-      "timestamp": 1791797663.7104,
-      "viewing_angle_deg": -37.71,
+      "frame_index": 3290,
+      "timestamp": 1791788791.014,
+      "viewing_angle_deg": 310.93,
       "camera_pose": [
-        -0.0069,
-        0.0128,
-        0.0015,
-        -0.0243,
-        -0.0216,
-        -0.0221,
-        0.9992
+        1.0292,
+        0.1305,
+        1.2493,
+        -0.1371,
+        0.5935,
+        0.0121,
+        0.7929
       ],
-      "sharpness_score": 1620.88,
+      "sharpness_score": 694.05,
       "crop_path": "inst_chair_001/crop_view_0.jpg",
       "scene_path": "inst_chair_001/scene_view_0.jpg"
     },
     {
       "view_index": 1,
-      "frame_index": 3135,
-      "timestamp": 1791788782.6105,
-      "viewing_angle_deg": -43.55,
+      "frame_index": 5205,
+      "timestamp": 1791797891.5079,
+      "viewing_angle_deg": 324.28,
       "camera_pose": [
-        0.5223,
-        0.1219,
-        0.6999,
-        -0.1399,
-        0.2479,
-        -0.0418,
-        0.9577
+        0.1005,
+        -0.2517,
+        0.1964,
+        -0.1798,
+        -0.1414,
+        -0.1961,
+        0.9535
       ],
-      "sharpness_score": 1424.8,
+      "sharpness_score": 735.89,
       "crop_path": "inst_chair_001/crop_view_1.jpg",
       "scene_path": "inst_chair_001/scene_view_1.jpg"
-    },
-    {
-      "view_index": 2,
-      "frame_index": 3230,
-      "timestamp": 1791788786.1452,
-      "viewing_angle_deg": -46.03,
-      "camera_pose": [
-        0.7321,
-        0.1564,
-        1.0046,
-        -0.2097,
-        0.2906,
-        -0.0141,
-        0.9335
-      ],
-      "sharpness_score": 1375.96,
-      "crop_path": "inst_chair_001/crop_view_2.jpg",
-      "scene_path": "inst_chair_001/scene_view_2.jpg"
     }
   ],
   "conditions": {
@@ -69,10 +52,6 @@
       "inst_chair_001/crop_view_0.jpg",
       "inst_chair_001/crop_view_1.jpg"
     ],
-    "three_views": [
-      "inst_chair_001/crop_view_0.jpg",
-      "inst_chair_001/crop_view_1.jpg",
-      "inst_chair_001/crop_view_2.jpg"
-    ]
+    "three_views": []
   }
 }

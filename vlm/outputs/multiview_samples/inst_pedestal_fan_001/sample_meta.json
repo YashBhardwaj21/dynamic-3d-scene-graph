@@ -4,13 +4,14 @@
   "movability_gt": "MOVABLE",
   "current_motion_gt": "STATIC",
   "displacement_gt": 0.0,
-  "total_views": 3,
+  "total_views": 1,
+  "angular_diversity_verified": false,
   "views": [
     {
       "view_index": 0,
       "frame_index": 2530,
       "timestamp": 1791788751.7306,
-      "viewing_angle_deg": -178.01,
+      "viewing_angle_deg": 181.99,
       "camera_pose": [
         1.9441,
         -0.2597,
@@ -23,56 +24,13 @@
       "sharpness_score": 311.78,
       "crop_path": "inst_pedestal_fan_001/crop_view_0.jpg",
       "scene_path": "inst_pedestal_fan_001/scene_view_0.jpg"
-    },
-    {
-      "view_index": 1,
-      "frame_index": 2390,
-      "timestamp": 1791788746.5282,
-      "viewing_angle_deg": -179.2,
-      "camera_pose": [
-        2.3352,
-        -0.3382,
-        -1.2105,
-        -0.1286,
-        -0.6238,
-        -0.0338,
-        0.7702
-      ],
-      "sharpness_score": 283.66,
-      "crop_path": "inst_pedestal_fan_001/crop_view_1.jpg",
-      "scene_path": "inst_pedestal_fan_001/scene_view_1.jpg"
-    },
-    {
-      "view_index": 2,
-      "frame_index": 2375,
-      "timestamp": 1791788745.9613,
-      "viewing_angle_deg": -179.1,
-      "camera_pose": [
-        2.4081,
-        -0.3291,
-        -1.2308,
-        -0.1613,
-        -0.6189,
-        -0.0583,
-        0.7665
-      ],
-      "sharpness_score": 317.2,
-      "crop_path": "inst_pedestal_fan_001/crop_view_2.jpg",
-      "scene_path": "inst_pedestal_fan_001/scene_view_2.jpg"
     }
   ],
   "conditions": {
     "one_view": [
       "inst_pedestal_fan_001/crop_view_0.jpg"
     ],
-    "two_views": [
-      "inst_pedestal_fan_001/crop_view_0.jpg",
-      "inst_pedestal_fan_001/crop_view_1.jpg"
-    ],
-    "three_views": [
-      "inst_pedestal_fan_001/crop_view_0.jpg",
-      "inst_pedestal_fan_001/crop_view_1.jpg",
-      "inst_pedestal_fan_001/crop_view_2.jpg"
-    ]
+    "two_views": [],
+    "three_views": []
   }
 }

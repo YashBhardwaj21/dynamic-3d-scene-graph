@@ -4,61 +4,44 @@
   "movability_gt": "MOVABLE",
   "current_motion_gt": "STATIC",
   "displacement_gt": 0.0,
-  "total_views": 3,
+  "total_views": 2,
+  "angular_diversity_verified": true,
   "views": [
     {
       "view_index": 0,
-      "frame_index": 2455,
-      "timestamp": 1791788748.8625,
-      "viewing_angle_deg": -170.0,
+      "frame_index": 4715,
+      "timestamp": 1791788866.4462,
+      "viewing_angle_deg": 192.71,
       "camera_pose": [
-        2.1103,
-        -0.2986,
-        -1.0731,
-        -0.09,
-        -0.6325,
-        -0.0202,
-        0.7691
+        1.7513,
+        -0.2117,
+        -0.6581,
+        -0.1546,
+        -0.4796,
+        -0.0769,
+        0.8603
       ],
-      "sharpness_score": 1003.24,
+      "sharpness_score": 700.94,
       "crop_path": "inst_backpack_002/crop_view_0.jpg",
       "scene_path": "inst_backpack_002/scene_view_0.jpg"
     },
     {
       "view_index": 1,
-      "frame_index": 2915,
-      "timestamp": 1791788765.2697,
-      "viewing_angle_deg": -157.92,
+      "frame_index": 2960,
+      "timestamp": 1791788769.8716,
+      "viewing_angle_deg": 207.69,
       "camera_pose": [
-        0.6807,
-        -0.0966,
-        -0.2814,
-        -0.1946,
-        -0.6165,
-        -0.0363,
-        0.7621
+        0.3278,
+        -0.0456,
+        -0.0175,
+        -0.1752,
+        -0.5467,
+        -0.0148,
+        0.8186
       ],
-      "sharpness_score": 386.31,
+      "sharpness_score": 200.91,
       "crop_path": "inst_backpack_002/crop_view_1.jpg",
       "scene_path": "inst_backpack_002/scene_view_1.jpg"
-    },
-    {
-      "view_index": 2,
-      "frame_index": 2500,
-      "timestamp": 1791788750.5301,
-      "viewing_angle_deg": -169.32,
-      "camera_pose": [
-        2.0119,
-        -0.2751,
-        -1.0664,
-        -0.1292,
-        -0.6659,
-        -0.0957,
-        0.7285
-      ],
-      "sharpness_score": 863.82,
-      "crop_path": "inst_backpack_002/crop_view_2.jpg",
-      "scene_path": "inst_backpack_002/scene_view_2.jpg"
     }
   ],
   "conditions": {
@@ -69,10 +52,6 @@
       "inst_backpack_002/crop_view_0.jpg",
       "inst_backpack_002/crop_view_1.jpg"
     ],
-    "three_views": [
-      "inst_backpack_002/crop_view_0.jpg",
-      "inst_backpack_002/crop_view_1.jpg",
-      "inst_backpack_002/crop_view_2.jpg"
-    ]
+    "three_views": []
   }
 }

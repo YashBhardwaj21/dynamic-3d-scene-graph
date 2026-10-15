@@ -22,16 +22,16 @@
       "Annotator_A_Robotics",
       "Annotator_B_ComputerVision"
     ],
-    "raw_agreement_pct": 98.08,
-    "cohens_kappa": 0.9252,
+    "raw_agreement_pct": 96.15,
+    "cohens_kappa": 0.8587,
     "discrepancies_resolved": 1
   },
   "object_identity_accuracy": {
     "raw_tracks": 78,
     "verified_instances": 52,
-    "clustering_precision": 0.9231,
-    "clustering_recall": 0.9231,
-    "clustering_f1": 0.9231
+    "clustering_precision": 0.3333,
+    "clustering_recall": 1.0,
+    "clustering_f1": 0.5
   },
   "displacement_measurement_uncertainty": {
     "tape_measure_sigma_m": 0.02,

@@ -5,12 +5,13 @@
   "current_motion_gt": "STATIC",
   "displacement_gt": 0.0,
   "total_views": 3,
+  "angular_diversity_verified": true,
   "views": [
     {
       "view_index": 0,
       "frame_index": 1020,
       "timestamp": 1791788680.0331,
-      "viewing_angle_deg": -95.21,
+      "viewing_angle_deg": 264.79,
       "camera_pose": [
         1.9291,
         0.0125,
@@ -28,7 +29,7 @@
       "view_index": 1,
       "frame_index": 3385,
       "timestamp": 1791788794.182,
-      "viewing_angle_deg": -82.48,
+      "viewing_angle_deg": 277.52,
       "camera_pose": [
         1.2851,
         0.1252,
@@ -46,7 +47,7 @@
       "view_index": 2,
       "frame_index": 845,
       "timestamp": 1791797700.1925,
-      "viewing_angle_deg": -66.51,
+      "viewing_angle_deg": 293.49,
       "camera_pose": [
         0.4897,
         -0.0852,

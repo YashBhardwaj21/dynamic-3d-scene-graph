@@ -4,6 +4,7 @@ import pytest
 import math
 import sys
 from pathlib import Path
+import numpy as np
 
 # Add project root and vlm to sys.path
 root_dir = Path(__file__).resolve().parent.parent.parent
@@ -56,7 +57,7 @@ def test_geometric_quaternion_orthonormality():
 
 
 def test_geometric_evidence_extraction():
-    """Verify geometric record bounds and consistency score computation."""
+    """Verify geometric record bounds, provenance tracking, and consistency score."""
     extractor = GeometricEvidenceExtractor()
     sample_obs = {
         "obs_id": "test_001",
@@ -72,13 +73,35 @@ def test_geometric_evidence_extraction():
         "bbox_xyxy": [100.0, 150.0, 300.0, 350.0],
     }
 
+    # Case A: No MapPoints loaded -> depth valid, but reprojection marked missing (no fake fallbacks)
     rec = extractor.extract_observation_geometry(sample_obs)
     assert rec.depth_valid is True
     assert math.isclose(rec.measured_depth_m, 2.0, abs_tol=1e-3)
-    assert 0.0 <= rec.inlier_ratio <= 1.0
+    assert rec.reprojection_residual_valid is False
+    assert rec.mean_reprojection_residual_px is None
+    assert rec.provenance == "DERIVED_DEPTH_ONLY"
     assert 0.0 <= rec.geometric_consistency_score <= 1.0
-    assert rec.mean_reprojection_residual_px >= 0.0
-    assert rec.has_valid_evidence is True
+
+    # Case B: With MapPoints loaded in front of camera -> genuine reprojection residual and inlier ratio measured
+    obs_b = dict(sample_obs)
+    obs_b["camera_pose"] = [0.0, 0.0, 0.0, 0, 0, 0, 1]
+    obs_b["bbox_min_floor"] = [-0.5, -0.5, 1.0]
+    obs_b["bbox_max_floor"] = [0.5, 0.5, 3.0]
+    obs_b["bbox_xyxy"] = [200.0, 150.0, 450.0, 350.0]
+    extractor.mappoints = np.array([
+        [0.0, 0.0, 2.0],
+        [0.05, 0.02, 2.2],
+        [-0.05, -0.02, 1.8],
+    ], dtype=np.float64)
+    rec_measured = extractor.extract_observation_geometry(obs_b)
+    assert rec_measured.depth_valid is True
+    assert rec_measured.reprojection_residual_valid is True
+    assert rec_measured.mean_reprojection_residual_px is not None
+    assert rec_measured.mean_reprojection_residual_px >= 0.0
+    assert rec_measured.inlier_ratio is not None
+    assert 0.0 <= rec_measured.inlier_ratio <= 1.0
+    assert rec_measured.provenance == "MEASURED_FULL"
+    assert rec_measured.has_valid_evidence is True
 
 
 def test_temporal_ego_motion_compensation():

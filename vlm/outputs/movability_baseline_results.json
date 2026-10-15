@@ -4,7 +4,7 @@
     "model": "Qwen2.5-VL-3B-Instruct (GGUF Q4_K_M)",
     "execution_platform": "Local CPU (WSL2 / 12-core Intel i5-1335U)",
     "num_physical_objects": 39,
-    "timestamp": "2026-10-13 11:02:44"
+    "timestamp": "2026-10-15 05:34:02"
   },
   "experiments": {
     "M0_class_prior": {
@@ -83,7 +83,9 @@
               "pedestal fan": 1.0
             },
             "by_views": {
-              "3": 1.0
+              "1": 1.0,
+              "3": 1.0,
+              "2": 1.0
             },
             "by_sharpness": {
               "low": 1.0,
@@ -100,15 +102,15 @@
           "abstain": false,
           "json_valid": true,
           "schema_valid": true,
-          "latency_s": 1.1205673217773438e-05,
+          "latency_s": 6.67572021484375e-06,
           "token_usage": {
             "prompt_tokens": 0,
             "completion_tokens": 0,
             "total_tokens": 0
           },
           "ground_truth": "IMMOVABLE",
-          "total_views": 3,
-          "sharpness": 149.14333333333332
+          "total_views": 1,
+          "sharpness": 130.31
         },
         {
           "object_id": "inst_ceiling_fan_001",
@@ -117,15 +119,15 @@
           "abstain": false,
           "json_valid": true,
           "schema_valid": true,
-          "latency_s": 1.9073486328125e-06,
+          "latency_s": 3.337860107421875e-06,
           "token_usage": {
             "prompt_tokens": 0,
             "completion_tokens": 0,
             "total_tokens": 0
           },
           "ground_truth": "IMMOVABLE",
-          "total_views": 3,
-          "sharpness": 2114.7033333333334
+          "total_views": 1,
+          "sharpness": 1667.0
         },
         {
           "object_id": "inst_chair_002",
@@ -134,7 +136,7 @@
           "abstain": false,
           "json_valid": true,
           "schema_valid": true,
-          "latency_s": 1.1920928955078125e-06,
+          "latency_s": 1.430511474609375e-06,
           "token_usage": {
             "prompt_tokens": 0,
             "completion_tokens": 0,
@@ -142,7 +144,7 @@
           },
           "ground_truth": "MOVABLE",
           "total_views": 3,
-          "sharpness": 2509.996666666667
+          "sharpness": 1096.33
         },
         {
           "object_id": "inst_chair_003",
@@ -151,7 +153,7 @@
           "abstain": false,
           "json_valid": true,
           "schema_valid": true,
-          "latency_s": 9.5367431640625e-07,
+          "latency_s": 2.384185791015625e-07,
           "token_usage": {
             "prompt_tokens": 0,
             "completion_tokens": 0,
@@ -159,7 +161,7 @@
           },
           "ground_truth": "MOVABLE",
           "total_views": 3,
-          "sharpness": 3055.77
+          "sharpness": 2033.5466666666669
         },
         {
           "object_id": "inst_storage_box_007",
@@ -175,8 +177,8 @@
             "total_tokens": 0
           },
           "ground_truth": "MOVABLE",
-          "total_views": 3,
-          "sharpness": 1341.0366666666666
+          "total_views": 2,
+          "sharpness": 515.005
         },
         {
           "object_id": "inst_desk_001",
@@ -185,7 +187,7 @@
           "abstain": false,
           "json_valid": true,
           "schema_valid": true,
-          "latency_s": 1.1920928955078125e-06,
+          "latency_s": 7.152557373046875e-07,
           "token_usage": {
             "prompt_tokens": 0,
             "completion_tokens": 0,
@@ -193,129 +195,10 @@
           },
           "ground_truth": "MOVABLE",
           "total_views": 3,
-          "sharpness": 4351.839999999999
+          "sharpness": 3988.3199999999997
         },
         {
           "object_id": "inst_desk_003",
-          "object_class": "desk",
-          "movability": "MOVABLE",
-          "abstain": false,
-          "json_valid": true,
-          "schema_valid": true,
-          "latency_s": 9.5367431640625e-07,
-          "token_usage": {
-            "prompt_tokens": 0,
-            "completion_tokens": 0,
-            "total_tokens": 0
-          },
-          "ground_truth": "MOVABLE",
-          "total_views": 3,
-          "sharpness": 1317.5200000000002
-        },
-        {
-          "object_id": "inst_desk_005",
-          "object_class": "desk",
-          "movability": "MOVABLE",
-          "abstain": false,
-          "json_valid": true,
-          "schema_valid": true,
-          "latency_s": 7.152557373046875e-07,
-          "token_usage": {
-            "prompt_tokens": 0,
-            "completion_tokens": 0,
-            "total_tokens": 0
-          },
-          "ground_truth": "MOVABLE",
-          "total_views": 3,
-          "sharpness": 992.5533333333333
-        },
-        {
-          "object_id": "inst_desk_008",
-          "object_class": "desk",
-          "movability": "MOVABLE",
-          "abstain": false,
-          "json_valid": true,
-          "schema_valid": true,
-          "latency_s": 7.152557373046875e-07,
-          "token_usage": {
-            "prompt_tokens": 0,
-            "completion_tokens": 0,
-            "total_tokens": 0
-          },
-          "ground_truth": "MOVABLE",
-          "total_views": 3,
-          "sharpness": 943.0466666666666
-        },
-        {
-          "object_id": "inst_desk_018",
-          "object_class": "desk",
-          "movability": "MOVABLE",
-          "abstain": false,
-          "json_valid": true,
-          "schema_valid": true,
-          "latency_s": 1.1920928955078125e-06,
-          "token_usage": {
-            "prompt_tokens": 0,
-            "completion_tokens": 0,
-            "total_tokens": 0
-          },
-          "ground_truth": "MOVABLE",
-          "total_views": 3,
-          "sharpness": 1996.9866666666667
-        },
-        {
-          "object_id": "inst_desk_023",
-          "object_class": "desk",
-          "movability": "MOVABLE",
-          "abstain": false,
-          "json_valid": true,
-          "schema_valid": true,
-          "latency_s": 1.1920928955078125e-06,
-          "token_usage": {
-            "prompt_tokens": 0,
-            "completion_tokens": 0,
-            "total_tokens": 0
-          },
-          "ground_truth": "MOVABLE",
-          "total_views": 3,
-          "sharpness": 1292.03
-        },
-        {
-          "object_id": "inst_desk_025",
-          "object_class": "desk",
-          "movability": "MOVABLE",
-          "abstain": false,
-          "json_valid": true,
-          "schema_valid": true,
-          "latency_s": 7.152557373046875e-07,
-          "token_usage": {
-            "prompt_tokens": 0,
-            "completion_tokens": 0,
-            "total_tokens": 0
-          },
-          "ground_truth": "MOVABLE",
-          "total_views": 3,
-          "sharpness": 1424.9766666666665
-        },
-        {
-          "object_id": "inst_desk_031",
-          "object_class": "desk",
-          "movability": "MOVABLE",
-          "abstain": false,
-          "json_valid": true,
-          "schema_valid": true,
-          "latency_s": 7.152557373046875e-07,
-          "token_usage": {
-            "prompt_tokens": 0,
-            "completion_tokens": 0,
-            "total_tokens": 0
-          },
-          "ground_truth": "MOVABLE",
-          "total_views": 3,
-          "sharpness": 1360.8366666666666
-        },
-        {
-          "object_id": "inst_desk_012",
           "object_class": "desk",
           "movability": "MOVABLE",
           "abstain": false,
@@ -328,11 +211,45 @@
             "total_tokens": 0
           },
           "ground_truth": "MOVABLE",
-          "total_views": 3,
-          "sharpness": 3893.263333333333
+          "total_views": 2,
+          "sharpness": 802.7
         },
         {
-          "object_id": "inst_desk_016",
+          "object_id": "inst_desk_005",
+          "object_class": "desk",
+          "movability": "MOVABLE",
+          "abstain": false,
+          "json_valid": true,
+          "schema_valid": true,
+          "latency_s": 2.384185791015625e-07,
+          "token_usage": {
+            "prompt_tokens": 0,
+            "completion_tokens": 0,
+            "total_tokens": 0
+          },
+          "ground_truth": "MOVABLE",
+          "total_views": 1,
+          "sharpness": 843.53
+        },
+        {
+          "object_id": "inst_desk_008",
+          "object_class": "desk",
+          "movability": "MOVABLE",
+          "abstain": false,
+          "json_valid": true,
+          "schema_valid": true,
+          "latency_s": 2.384185791015625e-07,
+          "token_usage": {
+            "prompt_tokens": 0,
+            "completion_tokens": 0,
+            "total_tokens": 0
+          },
+          "ground_truth": "MOVABLE",
+          "total_views": 1,
+          "sharpness": 995.18
+        },
+        {
+          "object_id": "inst_desk_018",
           "object_class": "desk",
           "movability": "MOVABLE",
           "abstain": false,
@@ -345,8 +262,93 @@
             "total_tokens": 0
           },
           "ground_truth": "MOVABLE",
-          "total_views": 3,
-          "sharpness": 1379.0466666666669
+          "total_views": 1,
+          "sharpness": 2519.57
+        },
+        {
+          "object_id": "inst_desk_023",
+          "object_class": "desk",
+          "movability": "MOVABLE",
+          "abstain": false,
+          "json_valid": true,
+          "schema_valid": true,
+          "latency_s": 2.384185791015625e-07,
+          "token_usage": {
+            "prompt_tokens": 0,
+            "completion_tokens": 0,
+            "total_tokens": 0
+          },
+          "ground_truth": "MOVABLE",
+          "total_views": 1,
+          "sharpness": 1975.58
+        },
+        {
+          "object_id": "inst_desk_025",
+          "object_class": "desk",
+          "movability": "MOVABLE",
+          "abstain": false,
+          "json_valid": true,
+          "schema_valid": true,
+          "latency_s": 2.384185791015625e-07,
+          "token_usage": {
+            "prompt_tokens": 0,
+            "completion_tokens": 0,
+            "total_tokens": 0
+          },
+          "ground_truth": "MOVABLE",
+          "total_views": 1,
+          "sharpness": 1212.68
+        },
+        {
+          "object_id": "inst_desk_031",
+          "object_class": "desk",
+          "movability": "MOVABLE",
+          "abstain": false,
+          "json_valid": true,
+          "schema_valid": true,
+          "latency_s": 2.384185791015625e-07,
+          "token_usage": {
+            "prompt_tokens": 0,
+            "completion_tokens": 0,
+            "total_tokens": 0
+          },
+          "ground_truth": "MOVABLE",
+          "total_views": 2,
+          "sharpness": 1045.985
+        },
+        {
+          "object_id": "inst_desk_012",
+          "object_class": "desk",
+          "movability": "MOVABLE",
+          "abstain": false,
+          "json_valid": true,
+          "schema_valid": true,
+          "latency_s": 2.384185791015625e-07,
+          "token_usage": {
+            "prompt_tokens": 0,
+            "completion_tokens": 0,
+            "total_tokens": 0
+          },
+          "ground_truth": "MOVABLE",
+          "total_views": 1,
+          "sharpness": 4041.43
+        },
+        {
+          "object_id": "inst_desk_016",
+          "object_class": "desk",
+          "movability": "MOVABLE",
+          "abstain": false,
+          "json_valid": true,
+          "schema_valid": true,
+          "latency_s": 2.384185791015625e-07,
+          "token_usage": {
+            "prompt_tokens": 0,
+            "completion_tokens": 0,
+            "total_tokens": 0
+          },
+          "ground_truth": "MOVABLE",
+          "total_views": 1,
+          "sharpness": 857.07
         },
         {
           "object_id": "inst_desk_017",
@@ -362,8 +364,8 @@
             "total_tokens": 0
           },
           "ground_truth": "MOVABLE",
-          "total_views": 3,
-          "sharpness": 1080.03
+          "total_views": 2,
+          "sharpness": 650.65
         },
         {
           "object_id": "inst_desk_024",
@@ -372,7 +374,7 @@
           "abstain": false,
           "json_valid": true,
           "schema_valid": true,
-          "latency_s": 4.76837158203125e-07,
+          "latency_s": 2.384185791015625e-07,
           "token_usage": {
             "prompt_tokens": 0,
             "completion_tokens": 0,
@@ -389,15 +391,15 @@
           "abstain": false,
           "json_valid": true,
           "schema_valid": true,
-          "latency_s": 9.5367431640625e-07,
+          "latency_s": 2.384185791015625e-07,
           "token_usage": {
             "prompt_tokens": 0,
             "completion_tokens": 0,
             "total_tokens": 0
           },
           "ground_truth": "MOVABLE",
-          "total_views": 3,
-          "sharpness": 1473.88
+          "total_views": 2,
+          "sharpness": 714.97
         },
         {
           "object_id": "inst_chair_004",
@@ -406,15 +408,15 @@
           "abstain": false,
           "json_valid": true,
           "schema_valid": true,
-          "latency_s": 9.5367431640625e-07,
+          "latency_s": 2.384185791015625e-06,
           "token_usage": {
             "prompt_tokens": 0,
             "completion_tokens": 0,
             "total_tokens": 0
           },
           "ground_truth": "MOVABLE",
-          "total_views": 3,
-          "sharpness": 1075.0066666666667
+          "total_views": 2,
+          "sharpness": 916.015
         },
         {
           "object_id": "inst_chair_005",
@@ -423,7 +425,7 @@
           "abstain": false,
           "json_valid": true,
           "schema_valid": true,
-          "latency_s": 7.152557373046875e-07,
+          "latency_s": 2.384185791015625e-07,
           "token_usage": {
             "prompt_tokens": 0,
             "completion_tokens": 0,
@@ -431,7 +433,7 @@
           },
           "ground_truth": "MOVABLE",
           "total_views": 3,
-          "sharpness": 2701.763333333334
+          "sharpness": 954.9766666666666
         },
         {
           "object_id": "inst_chair_007",
@@ -440,7 +442,7 @@
           "abstain": false,
           "json_valid": true,
           "schema_valid": true,
-          "latency_s": 9.5367431640625e-07,
+          "latency_s": 2.384185791015625e-07,
           "token_usage": {
             "prompt_tokens": 0,
             "completion_tokens": 0,
@@ -448,7 +450,7 @@
           },
           "ground_truth": "MOVABLE",
           "total_views": 3,
-          "sharpness": 5381.813333333334
+          "sharpness": 2574.7133333333336
         },
         {
           "object_id": "inst_chair_008",
@@ -457,15 +459,15 @@
           "abstain": false,
           "json_valid": true,
           "schema_valid": true,
-          "latency_s": 4.76837158203125e-07,
+          "latency_s": 2.384185791015625e-07,
           "token_usage": {
             "prompt_tokens": 0,
             "completion_tokens": 0,
             "total_tokens": 0
           },
           "ground_truth": "MOVABLE",
-          "total_views": 3,
-          "sharpness": 4936.346666666667
+          "total_views": 2,
+          "sharpness": 1871.1799999999998
         },
         {
           "object_id": "inst_chair_009",
@@ -474,15 +476,15 @@
           "abstain": false,
           "json_valid": true,
           "schema_valid": true,
-          "latency_s": 4.76837158203125e-07,
+          "latency_s": 2.384185791015625e-07,
           "token_usage": {
             "prompt_tokens": 0,
             "completion_tokens": 0,
             "total_tokens": 0
           },
           "ground_truth": "MOVABLE",
-          "total_views": 3,
-          "sharpness": 5509.099999999999
+          "total_views": 1,
+          "sharpness": 3435.02
         },
         {
           "object_id": "inst_chair_011",
@@ -491,15 +493,15 @@
           "abstain": false,
           "json_valid": true,
           "schema_valid": true,
-          "latency_s": 7.152557373046875e-07,
+          "latency_s": 2.384185791015625e-07,
           "token_usage": {
             "prompt_tokens": 0,
             "completion_tokens": 0,
             "total_tokens": 0
           },
           "ground_truth": "MOVABLE",
-          "total_views": 3,
-          "sharpness": 2011.8499999999997
+          "total_views": 1,
+          "sharpness": 795.81
         },
         {
           "object_id": "inst_chair_017",
@@ -508,15 +510,15 @@
           "abstain": false,
           "json_valid": true,
           "schema_valid": true,
-          "latency_s": 4.76837158203125e-07,
+          "latency_s": 2.384185791015625e-07,
           "token_usage": {
             "prompt_tokens": 0,
             "completion_tokens": 0,
             "total_tokens": 0
           },
           "ground_truth": "MOVABLE",
-          "total_views": 3,
-          "sharpness": 1479.8999999999999
+          "total_views": 1,
+          "sharpness": 1060.99
         },
         {
           "object_id": "inst_chair_018",
@@ -525,15 +527,15 @@
           "abstain": false,
           "json_valid": true,
           "schema_valid": true,
-          "latency_s": 4.76837158203125e-07,
+          "latency_s": 2.384185791015625e-07,
           "token_usage": {
             "prompt_tokens": 0,
             "completion_tokens": 0,
             "total_tokens": 0
           },
           "ground_truth": "MOVABLE",
-          "total_views": 3,
-          "sharpness": 3346.1499999999996
+          "total_views": 2,
+          "sharpness": 1783.37
         },
         {
           "object_id": "inst_chair_019",
@@ -542,18 +544,35 @@
           "abstain": false,
           "json_valid": true,
           "schema_valid": true,
-          "latency_s": 5.245208740234375e-06,
+          "latency_s": 0.0,
           "token_usage": {
             "prompt_tokens": 0,
             "completion_tokens": 0,
             "total_tokens": 0
           },
           "ground_truth": "MOVABLE",
-          "total_views": 3,
-          "sharpness": 838.15
+          "total_views": 1,
+          "sharpness": 949.4
         },
         {
           "object_id": "inst_chair_021",
+          "object_class": "chair",
+          "movability": "MOVABLE",
+          "abstain": false,
+          "json_valid": true,
+          "schema_valid": true,
+          "latency_s": 2.384185791015625e-07,
+          "token_usage": {
+            "prompt_tokens": 0,
+            "completion_tokens": 0,
+            "total_tokens": 0
+          },
+          "ground_truth": "MOVABLE",
+          "total_views": 2,
+          "sharpness": 2344.125
+        },
+        {
+          "object_id": "inst_chair_027",
           "object_class": "chair",
           "movability": "MOVABLE",
           "abstain": false,
@@ -567,24 +586,7 @@
           },
           "ground_truth": "MOVABLE",
           "total_views": 3,
-          "sharpness": 2734.94
-        },
-        {
-          "object_id": "inst_chair_027",
-          "object_class": "chair",
-          "movability": "MOVABLE",
-          "abstain": false,
-          "json_valid": true,
-          "schema_valid": true,
-          "latency_s": 7.152557373046875e-07,
-          "token_usage": {
-            "prompt_tokens": 0,
-            "completion_tokens": 0,
-            "total_tokens": 0
-          },
-          "ground_truth": "MOVABLE",
-          "total_views": 3,
-          "sharpness": 1884.6299999999999
+          "sharpness": 1278.2466666666667
         },
         {
           "object_id": "inst_chair_030",
@@ -593,15 +595,15 @@
           "abstain": false,
           "json_valid": true,
           "schema_valid": true,
-          "latency_s": 7.152557373046875e-07,
+          "latency_s": 2.384185791015625e-07,
           "token_usage": {
             "prompt_tokens": 0,
             "completion_tokens": 0,
             "total_tokens": 0
           },
           "ground_truth": "MOVABLE",
-          "total_views": 3,
-          "sharpness": 907.5266666666666
+          "total_views": 2,
+          "sharpness": 845.2950000000001
         },
         {
           "object_id": "inst_chair_032",
@@ -610,15 +612,15 @@
           "abstain": false,
           "json_valid": true,
           "schema_valid": true,
-          "latency_s": 7.152557373046875e-07,
+          "latency_s": 0.0,
           "token_usage": {
             "prompt_tokens": 0,
             "completion_tokens": 0,
             "total_tokens": 0
           },
           "ground_truth": "MOVABLE",
-          "total_views": 3,
-          "sharpness": 3450.72
+          "total_views": 2,
+          "sharpness": 1470.665
         },
         {
           "object_id": "inst_chair_035",
@@ -627,15 +629,15 @@
           "abstain": false,
           "json_valid": true,
           "schema_valid": true,
-          "latency_s": 2.1457672119140625e-06,
+          "latency_s": 2.384185791015625e-07,
           "token_usage": {
             "prompt_tokens": 0,
             "completion_tokens": 0,
             "total_tokens": 0
           },
           "ground_truth": "MOVABLE",
-          "total_views": 3,
-          "sharpness": 515.2833333333333
+          "total_views": 1,
+          "sharpness": 511.95
         },
         {
           "object_id": "inst_storage_box_001",
@@ -644,7 +646,7 @@
           "abstain": false,
           "json_valid": true,
           "schema_valid": true,
-          "latency_s": 1.1920928955078125e-06,
+          "latency_s": 4.76837158203125e-07,
           "token_usage": {
             "prompt_tokens": 0,
             "completion_tokens": 0,
@@ -661,15 +663,15 @@
           "abstain": false,
           "json_valid": true,
           "schema_valid": true,
-          "latency_s": 9.5367431640625e-07,
+          "latency_s": 2.384185791015625e-07,
           "token_usage": {
             "prompt_tokens": 0,
             "completion_tokens": 0,
             "total_tokens": 0
           },
           "ground_truth": "MOVABLE",
-          "total_views": 3,
-          "sharpness": 4594.3
+          "total_views": 2,
+          "sharpness": 1599.7400000000002
         },
         {
           "object_id": "inst_laptop_001",
@@ -678,15 +680,15 @@
           "abstain": false,
           "json_valid": true,
           "schema_valid": true,
-          "latency_s": 1.1920928955078125e-06,
+          "latency_s": 2.384185791015625e-07,
           "token_usage": {
             "prompt_tokens": 0,
             "completion_tokens": 0,
             "total_tokens": 0
           },
           "ground_truth": "MOVABLE",
-          "total_views": 3,
-          "sharpness": 2913.49
+          "total_views": 2,
+          "sharpness": 1479.31
         },
         {
           "object_id": "inst_monitor_001",
@@ -695,15 +697,15 @@
           "abstain": false,
           "json_valid": true,
           "schema_valid": true,
-          "latency_s": 1.9073486328125e-06,
+          "latency_s": 9.5367431640625e-07,
           "token_usage": {
             "prompt_tokens": 0,
             "completion_tokens": 0,
             "total_tokens": 0
           },
           "ground_truth": "MOVABLE",
-          "total_views": 3,
-          "sharpness": 1497.8799999999999
+          "total_views": 2,
+          "sharpness": 840.9300000000001
         },
         {
           "object_id": "inst_backpack_001",
@@ -712,15 +714,15 @@
           "abstain": false,
           "json_valid": true,
           "schema_valid": true,
-          "latency_s": 1.1920928955078125e-06,
+          "latency_s": 4.76837158203125e-07,
           "token_usage": {
             "prompt_tokens": 0,
             "completion_tokens": 0,
             "total_tokens": 0
           },
           "ground_truth": "MOVABLE",
-          "total_views": 3,
-          "sharpness": 1160.2933333333333
+          "total_views": 2,
+          "sharpness": 678.46
         },
         {
           "object_id": "inst_backpack_002",
@@ -729,15 +731,15 @@
           "abstain": false,
           "json_valid": true,
           "schema_valid": true,
-          "latency_s": 7.152557373046875e-07,
+          "latency_s": 2.384185791015625e-07,
           "token_usage": {
             "prompt_tokens": 0,
             "completion_tokens": 0,
             "total_tokens": 0
           },
           "ground_truth": "MOVABLE",
-          "total_views": 3,
-          "sharpness": 751.1233333333333
+          "total_views": 2,
+          "sharpness": 450.925
         },
         {
           "object_id": "inst_pedestal_fan_001",
@@ -746,15 +748,15 @@
           "abstain": false,
           "json_valid": true,
           "schema_valid": true,
-          "latency_s": 1.1920928955078125e-06,
+          "latency_s": 2.384185791015625e-07,
           "token_usage": {
             "prompt_tokens": 0,
             "completion_tokens": 0,
             "total_tokens": 0
           },
           "ground_truth": "MOVABLE",
-          "total_views": 3,
-          "sharpness": 304.21333333333337
+          "total_views": 1,
+          "sharpness": 311.78
         }
       ]
     },

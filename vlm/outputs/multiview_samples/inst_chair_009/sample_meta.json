@@ -4,75 +4,33 @@
   "movability_gt": "MOVABLE",
   "current_motion_gt": "STATIC",
   "displacement_gt": 0.0,
-  "total_views": 3,
+  "total_views": 1,
+  "angular_diversity_verified": false,
   "views": [
     {
       "view_index": 0,
-      "frame_index": 1195,
-      "timestamp": 1791788691.9382,
-      "viewing_angle_deg": -157.02,
+      "frame_index": 1465,
+      "timestamp": 1791788705.7443,
+      "viewing_angle_deg": 197.46,
       "camera_pose": [
-        2.716,
-        -0.0891,
-        0.809,
-        -0.0479,
-        0.7034,
-        0.0448,
-        0.7077
+        3.6622,
+        -0.2203,
+        0.1686,
+        -0.0599,
+        0.6674,
+        0.0298,
+        0.7417
       ],
-      "sharpness_score": 5813.25,
+      "sharpness_score": 3435.02,
       "crop_path": "inst_chair_009/crop_view_0.jpg",
       "scene_path": "inst_chair_009/scene_view_0.jpg"
-    },
-    {
-      "view_index": 1,
-      "frame_index": 1245,
-      "timestamp": 1791788694.2724,
-      "viewing_angle_deg": -157.9,
-      "camera_pose": [
-        2.8775,
-        -0.0943,
-        0.7106,
-        -0.0516,
-        0.7101,
-        0.0374,
-        0.7012
-      ],
-      "sharpness_score": 5413.55,
-      "crop_path": "inst_chair_009/crop_view_1.jpg",
-      "scene_path": "inst_chair_009/scene_view_1.jpg"
-    },
-    {
-      "view_index": 2,
-      "frame_index": 1220,
-      "timestamp": 1791788693.072,
-      "viewing_angle_deg": -157.21,
-      "camera_pose": [
-        2.7748,
-        -0.08,
-        0.7454,
-        -0.0578,
-        0.7205,
-        0.0546,
-        0.6889
-      ],
-      "sharpness_score": 5300.5,
-      "crop_path": "inst_chair_009/crop_view_2.jpg",
-      "scene_path": "inst_chair_009/scene_view_2.jpg"
     }
   ],
   "conditions": {
     "one_view": [
       "inst_chair_009/crop_view_0.jpg"
     ],
-    "two_views": [
-      "inst_chair_009/crop_view_0.jpg",
-      "inst_chair_009/crop_view_1.jpg"
-    ],
-    "three_views": [
-      "inst_chair_009/crop_view_0.jpg",
-      "inst_chair_009/crop_view_1.jpg",
-      "inst_chair_009/crop_view_2.jpg"
-    ]
+    "two_views": [],
+    "three_views": []
   }
 }
