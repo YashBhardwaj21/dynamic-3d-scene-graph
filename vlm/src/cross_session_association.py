@@ -483,83 +483,42 @@ def build_canonical_session_track_mapping(
     canonical_map: Dict[Tuple[str, str], str] = {}
     gt_cross_pairs: Dict[Tuple[str, str], Dict[str, Any]] = {}
 
-    if p_canon.exists():
-        with open(p_canon, "r", encoding="utf-8") as f:
-            data = json.load(f)
-        annotations = data.get("annotations", [])
-        inst_records = defaultdict(list)
-        for a in annotations:
-            sess = a["source_session"]
-            trk = a["local_track_id"]
-            inst = a["physical_instance_id"]
-            key = (sess, trk)
-            if key in canonical_map and canonical_map[key] != inst:
-                raise ValueError(f"Contradictory annotation for {key}: {canonical_map[key]} vs {inst}")
-            canonical_map[key] = inst
-            inst_records[inst].append(a)
+    if not p_canon.exists():
+        raise FileNotFoundError(
+            f"Canonical cross-session benchmark missing at: {p_canon}. "
+            f"Implicit fallback to movability_ground_truth.json is prohibited."
+        )
 
-        for inst, recs in inst_records.items():
-            s1_trks = sorted(set(r["local_track_id"] for r in recs if "recording_01" in r["source_session"]))
-            s2_trks = sorted(set(r["local_track_id"] for r in recs if "recording_02" in r["source_session"]))
-            if s1_trks and s2_trks:
-                sample = recs[0]
-                for t1 in s1_trks:
-                    for t2 in s2_trks:
-                        gt_cross_pairs[(t1, t2)] = {
-                            "physical_instance_id": inst,
-                            "presence": sample.get("presence", "PRESENT_BOTH"),
-                            "motion": sample.get("motion", "STATIC"),
-                            "true_displacement_m": sample.get("true_displacement_m", 0.0),
-                        }
-        return canonical_map, gt_cross_pairs
+    canonical_map: Dict[Tuple[str, str], str] = {}
+    gt_cross_pairs: Dict[Tuple[str, str], Dict[str, Any]] = {}
 
-    # Fallback to direct extraction from movability_ground_truth.json
-    p_gt = gt_path if gt_path else (repo_root / "vlm" / "benchmarks" / "movability_ground_truth.json")
-    with open(p_gt, "r", encoding="utf-8") as f:
-        gt_data = json.load(f)
-    for obj in gt_data.get("physical_objects", []):
-        inst_id = obj["object_instance_id"]
-        tracks = obj.get("associated_tracks", [])
-        sessions = obj.get("sessions_observed", [])
-        disp = obj.get("displacement_gt", 0.0)
-        has_s1 = any("recording_01" in s for s in sessions)
-        has_s2 = any("recording_02" in s for s in sessions)
-        s1_sess = "semantic_mapping_my_desk_recording_01"
-        s2_sess = "semantic_mapping_my_desk_recording_02"
+    with open(p_canon, "r", encoding="utf-8") as f:
+        data = json.load(f)
+    annotations = data.get("annotations", [])
+    inst_records = defaultdict(list)
+    for a in annotations:
+        sess = a["source_session"]
+        trk = a["local_track_id"]
+        inst = a["physical_instance_id"]
+        key = (sess, trk)
+        if key in canonical_map and canonical_map[key] != inst:
+            raise ValueError(f"Contradictory annotation for {key}: {canonical_map[key]} vs {inst}")
+        canonical_map[key] = inst
+        inst_records[inst].append(a)
 
-        s1_trks = []
-        s2_trks = []
-        for t in tracks:
-            if t.endswith("_s2"):
-                canonical_map[(s2_sess, t[:-3])] = inst_id
-                s2_trks.append(t[:-3])
-            elif not has_s2 and has_s1:
-                canonical_map[(s1_sess, t)] = inst_id
-                s1_trks.append(t)
-            elif not has_s1 and has_s2:
-                canonical_map[(s2_sess, t)] = inst_id
-                s2_trks.append(t)
-            elif len(tracks) == 2:
-                canonical_map[(s1_sess, tracks[0])] = inst_id
-                canonical_map[(s2_sess, tracks[1])] = inst_id
-                s1_trks.append(tracks[0])
-                s2_trks.append(tracks[1])
-            else:
-                canonical_map[(s1_sess, t)] = inst_id
-                canonical_map[(s2_sess, t)] = inst_id
-                s1_trks.append(t)
-                s2_trks.append(t)
-
+    for inst, recs in inst_records.items():
+        s1_trks = sorted(set(r["local_track_id"] for r in recs if "recording_01" in r["source_session"]))
+        s2_trks = sorted(set(r["local_track_id"] for r in recs if "recording_02" in r["source_session"]))
         if s1_trks and s2_trks:
-            for t1 in set(s1_trks):
-                for t2 in set(s2_trks):
+            sample = recs[0]
+            for t1 in s1_trks:
+                for t2 in s2_trks:
                     gt_cross_pairs[(t1, t2)] = {
-                        "physical_instance_id": inst_id,
-                        "presence": "PRESENT_BOTH",
-                        "motion": obj.get("current_motion_gt", "STATIC"),
-                        "true_displacement_m": disp,
+                        "physical_instance_id": inst,
+                        "presence": sample.get("presence", "PRESENT_BOTH"),
+                        "motion": sample.get("motion", "STATIC"),
+                        "true_displacement_m": sample.get("true_displacement_m", 0.0),
                     }
-
     return canonical_map, gt_cross_pairs
 
 
@@ -571,18 +530,34 @@ def evaluate_matcher_against_ground_truth(
 
     Transparent Denominators:
     - Annotated Evaluation Subset: Matches where both S1 and S2 entities are annotated in GT.
-    - True Positives (TP): Annotated pairs where inst1 == inst2.
+    - True Positives (TP): Annotated pairs where inst1 == inst2 (correctly resolving physical identity).
     - False Merges (FM): Annotated pairs where inst1 != inst2 (merging distinct physical objects).
     - Unannotated Candidate Pairs: Matches outside GT annotation scope (reported separately, NOT counted as false positives).
-    - Recall on Static Multi-Session GT: TP / Total static ground truth cross-session pairs (26 instances).
-    - Recall on All Multi-Session GT: TP / Total ground truth cross-session pairs (30 instances).
+    - Physical-Instance Level Recall: Evaluated against the 30 multi-session ground-truth instances
+      (26 static, 4 relocated) to eliminate track Cartesian product distortion.
     """
     canonical_map, gt_cross_pairs = build_canonical_session_track_mapping(gt_path)
+
+    # Multi-session ground-truth physical instances
+    all_multi_session_instances: Set[str] = set()
+    static_multi_session_instances: Set[str] = set()
+    relocated_multi_session_instances: Set[str] = set()
+
+    for pair_meta in gt_cross_pairs.values():
+        inst_id = pair_meta["physical_instance_id"]
+        all_multi_session_instances.add(inst_id)
+        if pair_meta.get("motion") == "STATIC":
+            static_multi_session_instances.add(inst_id)
+        else:
+            relocated_multi_session_instances.add(inst_id)
 
     annotated_eval_matches = []
     unannotated_matches = []
     true_positives = 0
     false_merges = 0
+    recovered_instances: Set[str] = set()
+    recovered_static_instances: Set[str] = set()
+    recovered_relocated_instances: Set[str] = set()
 
     for m in association_result.matched_pairs:
         t1 = m.s1_entity_id
@@ -606,6 +581,11 @@ def evaluate_matcher_against_ground_truth(
             annotated_eval_matches.append(rec)
             if is_correct:
                 true_positives += 1
+                recovered_instances.add(inst1)
+                if inst1 in static_multi_session_instances:
+                    recovered_static_instances.add(inst1)
+                else:
+                    recovered_relocated_instances.add(inst1)
             else:
                 false_merges += 1
         else:
@@ -614,13 +594,15 @@ def evaluate_matcher_against_ground_truth(
             unannotated_matches.append(rec)
 
     total_annotated = len(annotated_eval_matches)
-    total_gt_cross_pairs = len(gt_cross_pairs)
-    static_gt_pairs = len([v for v in gt_cross_pairs.values() if v.get("motion") == "STATIC"])
-    relocated_gt_pairs = len([v for v in gt_cross_pairs.values() if v.get("motion") != "STATIC"])
+    missed_static_instances = sorted(static_multi_session_instances - recovered_static_instances)
+    missed_relocated_instances = sorted(relocated_multi_session_instances - recovered_relocated_instances)
+
+    n_static = max(1, len(static_multi_session_instances))
+    n_all = max(1, len(all_multi_session_instances))
 
     precision_on_annotated = (true_positives / max(1, total_annotated)) * 100.0 if total_annotated > 0 else 0.0
-    recall_on_static = (true_positives / max(1, static_gt_pairs)) * 100.0 if static_gt_pairs > 0 else 0.0
-    recall_on_all = (true_positives / max(1, total_gt_cross_pairs)) * 100.0 if total_gt_cross_pairs > 0 else 0.0
+    recall_on_static = (len(recovered_static_instances) / n_static) * 100.0
+    recall_on_all = (len(recovered_instances) / n_all) * 100.0
     f1_on_annotated = (
         (2 * precision_on_annotated * recall_on_static / (precision_on_annotated + recall_on_static))
         if (precision_on_annotated + recall_on_static) > 0 else 0.0
@@ -633,12 +615,22 @@ def evaluate_matcher_against_ground_truth(
         "true_positive_matches": true_positives,
         "false_merges": false_merges,
         "unannotated_candidate_pairs_count": len(unannotated_matches),
-        "total_ground_truth_cross_session_pairs": total_gt_cross_pairs,
-        "static_ground_truth_cross_session_pairs": static_gt_pairs,
-        "relocated_ground_truth_cross_session_pairs": relocated_gt_pairs,
+        "total_multi_session_instances": len(all_multi_session_instances),
+        "static_multi_session_instances": len(static_multi_session_instances),
+        "relocated_multi_session_instances": len(relocated_multi_session_instances),
+        "recovered_static_instances_count": len(recovered_static_instances),
+        "recovered_all_instances_count": len(recovered_instances),
+        "missed_static_instances_count": len(missed_static_instances),
+        "missed_static_instances": missed_static_instances,
+        "missed_relocated_instances": missed_relocated_instances,
+        "total_ground_truth_cross_session_pairs": len(all_multi_session_instances),
+        "static_ground_truth_cross_session_pairs": len(static_multi_session_instances),
+        "relocated_ground_truth_cross_session_pairs": len(relocated_multi_session_instances),
         "precision_on_annotated_subset_pct": round(precision_on_annotated, 2),
         "recall_on_static_multi_session_pct": round(recall_on_static, 2),
+        "static_instance_recall_pct": round(recall_on_static, 2),
         "recall_on_all_multi_session_pct": round(recall_on_all, 2),
+        "all_instance_recall_pct": round(recall_on_all, 2),
         "f1_on_annotated_subset_pct": round(f1_on_annotated, 2),
         "ambiguous_pairs_rejected_count": len(association_result.ambiguous_pairs),
         "annotated_evaluated_matches": annotated_eval_matches,

@@ -179,8 +179,18 @@ def test_report_to_json_agreement(tmp_path):
     assert sel_f1 in content
 
 
-def test_router_decision_invariant_to_ground_truth_mutation():
-    """Verify that mutating benchmark ground truth labels cannot alter the selective routing decision.
+@pytest.mark.parametrize(
+    "entity_id,semantic_class",
+    [
+        ("inst_chair_002", "chair"),
+        ("inst_desk_001", "desk"),
+        ("inst_storage_box_007", "storage box"),
+        ("inst_door_001", "door"),
+        ("inst_rc_car_robot_001", "robot"),
+    ],
+)
+def test_router_decision_invariant_to_ground_truth_mutation(entity_id: str, semantic_class: str):
+    """Verify across multiple classes that mutating benchmark ground truth labels cannot alter the selective routing decision.
 
     Ground-truth motion, displacement, and movability labels must strictly belong to reference
     evaluation and never leak into policy decisions.
@@ -188,26 +198,26 @@ def test_router_decision_invariant_to_ground_truth_mutation():
     from vlm.src.stage5_adapter import Stage5EvidenceAdapter
     from vlm.src.router_policy import evaluate_router_policy
 
+    manifest_path = root_dir / "vlm" / "benchmarks" / "router_evaluation_manifest.json"
+    if not manifest_path.exists():
+        pytest.skip("Benchmark manifest not available.")
+
+    with open(manifest_path, "r", encoding="utf-8") as f:
+        manifest_data = json.load(f)["evaluation_instances"]
+
+    manifest_entry = next((x for x in manifest_data if x["entity_id"] == entity_id), None)
+    if manifest_entry is None:
+        pytest.skip(f"Instance {entity_id} not found in manifest.")
+
     adapter = Stage5EvidenceAdapter(repo_root=root_dir)
 
-    entry = {
-        "entity_id": "inst_chair_002",
-        "semantic_class": "chair",
-        "s1_obs_id": "chair_002",
-        "s2_obs_id": "chair_001",
-        # Benign manifest target fields
-        "contextual_movability_gt": "MOVABLE",
-        "observed_motion_gt": "STATIC",
-        "displacement_gt": 0.0,
-    }
-
     # Build evidence strictly from SLAM observations & registration
-    ev_original = adapter.build_instance_evidence(entry)
+    ev_original = adapter.build_instance_evidence(manifest_entry)
     decision_original = evaluate_router_policy(ev_original)
 
     # 1. Mutate ground truth target fields in entry
-    mutated_entry = dict(entry)
-    mutated_entry["contextual_movability_gt"] = "IMMOVABLE"
+    mutated_entry = dict(manifest_entry)
+    mutated_entry["contextual_movability_gt"] = "IMMOVABLE" if manifest_entry.get("contextual_movability_gt") != "IMMOVABLE" else "MOBILE"
     mutated_entry["observed_motion_gt"] = "DYNAMIC_FLYING"
     mutated_entry["displacement_gt"] = 12.345
     mutated_entry["current_motion_gt"] = "DISPLACED_RUNAWAY"
@@ -215,8 +225,8 @@ def test_router_decision_invariant_to_ground_truth_mutation():
     ev_after_gt_mutation = adapter.build_instance_evidence(mutated_entry)
     decision_after_gt_mutation = evaluate_router_policy(ev_after_gt_mutation)
 
-    assert ev_original["observed_motion"] == ev_after_gt_mutation["observed_motion"]
-    assert ev_original["world_displacement_m"] == ev_after_gt_mutation["world_displacement_m"]
+    assert ev_original.get("observed_motion") == ev_after_gt_mutation.get("observed_motion")
+    assert ev_original.get("world_displacement_m") == ev_after_gt_mutation.get("world_displacement_m")
     assert decision_original.decision == decision_after_gt_mutation.decision
     assert decision_original.vlm_required == decision_after_gt_mutation.vlm_required
     assert decision_original.reason_codes == decision_after_gt_mutation.reason_codes
@@ -233,4 +243,5 @@ def test_router_decision_invariant_to_ground_truth_mutation():
     assert decision_injected.decision == decision_original.decision
     assert decision_injected.vlm_required == decision_original.vlm_required
     assert decision_injected.reason_codes == decision_original.reason_codes
+
 

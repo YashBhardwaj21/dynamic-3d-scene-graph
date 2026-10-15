@@ -546,4 +546,141 @@ def test_fusion_duplicate_tracker_id_different_physical_instances():
     assert np.linalg.norm(fusion.nodes["inst_desk_016"].centroid_world[:2] - fusion.nodes["inst_desk_008"].centroid_world[:2]) > 4.0
 
 
+def test_scene_graph_end_to_end_orchestration():
+    """Verify complete pipeline orchestration from raw observations through registration, matching, to persistent scene graph."""
+    from vlm.src.stage5_adapter import load_registration_audit
+    from vlm.src.cross_session_association import CrossSessionCandidateMatcher
+
+    reg_path = root_dir / "vlm" / "outputs" / "stage5_registration_audit.json"
+    if not reg_path.exists():
+        pytest.skip("Registration audit artifact missing")
+    reg = load_registration_audit(reg_path)
+
+    # 1. Simulate raw observations from two sessions
+    # S1 chair at [1.0, 2.0, 0.45]
+    s1_obs = [
+        {
+            "global_entity_id": "chair_001",
+            "local_track_id": "chair_001",
+            "semantic_class": "chair",
+            "source_session": "recording_01",
+            "centroid_floor": [1.0, 2.0],
+            "spatial_extent_m": 0.50,
+            "obs_id": "s1_obs_1",
+        },
+        {
+            "global_entity_id": "chair_001",
+            "local_track_id": "chair_001",
+            "semantic_class": "chair",
+            "source_session": "recording_01",
+            "centroid_floor": [1.02, 1.98],
+            "spatial_extent_m": 0.50,
+            "obs_id": "s1_obs_2",
+        },
+    ]
+
+    # S2 chair observed in local session 2 frame:
+    # True ref position is [1.01, 1.99, 0.45]
+    # S2 local = R_12^T @ (p_ref - t)
+    p_ref_target = np.array([1.01, 1.99], dtype=np.float64)
+    p_s2_local = reg.R_12.T @ (p_ref_target - reg.translation_m)
+
+    s2_obs = [
+        {
+            "global_entity_id": "chair_009",
+            "local_track_id": "chair_009",
+            "semantic_class": "chair",
+            "source_session": "recording_02",
+            "centroid_floor": list(p_s2_local),
+            "spatial_extent_m": 0.50,
+            "obs_id": "s2_obs_1",
+        },
+        {
+            "global_entity_id": "chair_009",
+            "local_track_id": "chair_009",
+            "semantic_class": "chair",
+            "source_session": "recording_02",
+            "centroid_floor": list(p_s2_local + 0.01),
+            "spatial_extent_m": 0.50,
+            "obs_id": "s2_obs_2",
+        },
+    ]
+
+    # 2. Extract clusters
+    all_obs = s1_obs + s2_obs
+    s1_clusters = CrossSessionCandidateMatcher.extract_clusters_from_observations(all_obs, "recording_01", min_obs=2)
+    s2_clusters = CrossSessionCandidateMatcher.extract_clusters_from_observations(all_obs, "recording_02", min_obs=2)
+
+    assert "chair_001" in s1_clusters
+    assert "chair_009" in s2_clusters
+
+    # 3. Match across sessions with robust registration
+    matcher = CrossSessionCandidateMatcher()
+    match_result = matcher.match_entities(s1_clusters, s2_clusters, reg)
+
+    assert len(match_result.matched_pairs) == 1
+    m = match_result.matched_pairs[0]
+    assert m.s1_entity_id == "chair_001"
+    assert m.s2_entity_id == "chair_009"
+
+    # 4. Contextual scene graph fusion across sessions
+    fusion = ContextualSceneGraphFusion()
+
+    # Ingest S1 observation with valid 3D height
+    routed_s1 = {"prediction": "MOVABLE", "observed_motion": "STATIC"}
+    fusion.update_or_create_node(
+        entity_id=m.persistent_entity_id,
+        semantic_class="chair",
+        routed_result=routed_s1,
+        observation_meta={
+            "source_session": "semantic_mapping_my_desk_recording_01",
+            "local_track_id": "chair_001",
+            "obs_id": "s1_obs_1",
+            "centroid": [1.0, 2.0, 0.45],
+            "coordinate_frame": "reference_frame",
+        },
+    )
+
+    # Ingest S2 observation with local coordinate frame requiring registration transformation
+    routed_s2 = {"prediction": "MOVABLE", "observed_motion": "STATIC"}
+    node_updated = fusion.update_or_create_node(
+        entity_id=m.persistent_entity_id,
+        semantic_class="chair",
+        routed_result=routed_s2,
+        observation_meta={
+            "source_session": "semantic_mapping_my_desk_recording_02",
+            "local_track_id": "chair_009",
+            "obs_id": "s2_obs_1",
+            "centroid": [float(p_s2_local[0]), float(p_s2_local[1]), 0.46],
+            "coordinate_frame": "session_02_local",
+            "registration": reg,
+        },
+    )
+
+    # 5. Assert authoritative guarantees
+    assert node_updated.coordinate_frame == "reference_frame"
+    assert node_updated.source_sessions == ["semantic_mapping_my_desk_recording_01", "semantic_mapping_my_desk_recording_02"]
+    assert node_updated.source_track_ids == ["chair_001", "chair_009"]
+    assert node_updated.geometry_valid is True
+    assert node_updated.centroid_world[2] == pytest.approx(0.455, abs=0.01)
+
+    persistent = node_updated.to_persistent_entity()
+    assert persistent.source_track_ids == ["chair_001", "chair_009"]
+    assert persistent.lifecycle_state == EntityLifecycleState.CONFIRMED
+
+    # 6. Verify 2D observation does NOT fabricate 3D geometry
+    obs_2d_only = {
+        "source_session": "semantic_mapping_my_desk_recording_01",
+        "local_track_id": "trk_2d_only",
+        "centroid": [1.5, 2.5],  # Only 2 elements
+        "coordinate_frame": "reference_frame",
+    }
+    node_2d = fusion.update_or_create_node("phys_2d_only", "chair", routed_s1, obs_2d_only)
+    assert node_2d.geometry_valid is False
+    assert node_2d.centroid_world is None
+    persistent_2d = node_2d.to_persistent_entity()
+    assert persistent_2d.lifecycle_state == EntityLifecycleState.TENTATIVE
+
+
+
 

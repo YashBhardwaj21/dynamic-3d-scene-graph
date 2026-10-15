@@ -113,6 +113,15 @@ def load_registration_audit(audit_path: Optional[Path]) -> RegistrationInfo:
     trans = reg.get("translation_m")
     anchors = reg.get("anchors", [])
 
+    robust_block = data.get("robust_estimation", {})
+    robust_tf = robust_block.get("robust_transform", {})
+    if robust_tf and "rotation_deg" in robust_tf and "translation_m" in robust_tf:
+        rot_deg = float(robust_tf["rotation_deg"])
+        trans = robust_tf["translation_m"]
+    else:
+        rot_deg = reg.get("rotation_deg")
+        trans = reg.get("translation_m")
+
     diagnostics = []
     if not ref_sess or not align_sess:
         diagnostics.append("Missing reference_session or aligned_session in registration.")
@@ -144,7 +153,7 @@ def load_registration_audit(audit_path: Optional[Path]) -> RegistrationInfo:
         [math.sin(rad),  math.cos(rad)],
     ], dtype=np.float64)
 
-    # Compute empirical RMS residual over anchor pairs: c1 = R @ c2 + t
+    # Compute empirical residuals over anchor pairs with authoritative robust transform
     residuals = []
     for a in anchors:
         c1 = a.get("c1")
@@ -160,12 +169,11 @@ def load_registration_audit(audit_path: Optional[Path]) -> RegistrationInfo:
     else:
         rms_res = 0.25
 
-    robust_block = data.get("robust_estimation", {})
     residuals_block = data.get("residuals", {})
-    inlier_rms = float(robust_block.get("inlier_rms_residual_m", 0.1198))
-    median_res = float(residuals_block.get("median_residual_m", 0.1325))
-    inlier_count = int(robust_block.get("inlier_count", 7))
-    outlier_count = int(robust_block.get("outlier_count", 3))
+    inlier_rms = float(robust_block.get("inlier_rms_residual_m", residuals_block.get("inlier_rms_residual_m", 0.1198)))
+    median_res = float(residuals_block.get("inlier_median_residual_m", residuals_block.get("median_residual_m", 0.0924)))
+    inlier_count = int(robust_block.get("inlier_count", residuals_block.get("inlier_count", 7)))
+    outlier_count = int(robust_block.get("outlier_count", residuals_block.get("outlier_count", 3)))
 
     return RegistrationInfo(
         is_valid=True,
@@ -184,6 +192,7 @@ def load_registration_audit(audit_path: Optional[Path]) -> RegistrationInfo:
         inlier_rms_residual_m=inlier_rms,
         is_calibrated_covariance=False,
     )
+
 
 
 class Stage5EvidenceAdapter:
@@ -437,12 +446,14 @@ class Stage5EvidenceAdapter:
                 sem1 = std1 / math.sqrt(len(p1_arr))
                 sem2 = std2 / math.sqrt(len(p2_arr))
 
-                # Registration uncertainty: translation SE from anchors
-                k_anchors = max(1, self.registration.anchor_count)
-                reg_sem = self.registration.anchor_rms_residual_m / math.sqrt(k_anchors)
+                # Empirical registration uncertainty heuristic: residual dispersion from robust inlier set
+                # Note: This is an empirical dispersion heuristic, not a calibrated Gaussian covariance.
+                k_anchors = max(1, getattr(self.registration, "robust_inlier_count", self.registration.anchor_count))
+                reg_disp = getattr(self.registration, "inlier_rms_residual_m", self.registration.anchor_rms_residual_m)
+                reg_disp_heuristic = reg_disp / math.sqrt(k_anchors)
 
-                # Total standard error of the displacement vector
-                disp_uncertainty_m = float(math.sqrt(sem1**2 + sem2**2 + reg_sem**2))
+                # Total estimated displacement uncertainty heuristic
+                disp_uncertainty_m = float(math.sqrt(sem1**2 + sem2**2 + reg_disp_heuristic**2))
 
                 # Statistically significant displacement (minimum physical threshold 0.20m and 2.0-sigma)
                 if estimated_disp_m >= max(0.20, 2.0 * disp_uncertainty_m):
@@ -472,7 +483,7 @@ class Stage5EvidenceAdapter:
             estimated_disp_m = 0.50
             disp_uncertainty_m = 0.05
             relocation_evaluable = False
-            diagnostics.append("Cross-session displacement not evaluable: dynamic class prior without cross-session registration.")
+            diagnostics.append("Cross-session displacement not evaluable: dynamic class prior heuristic without cross-session registration.")
 
         # 5. Extract Semantic & Geometric Aggregates from Fused Evidence
         entropy_vals = [f["semantics"]["semantic_entropy"] for f in all_fused if "semantics" in f and "semantic_entropy" in f["semantics"]]

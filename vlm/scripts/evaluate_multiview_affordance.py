@@ -216,10 +216,12 @@ def run_genuine_multiview_evaluation() -> Dict[str, Any]:
         for inst in pop_instances:
             eid = inst["object_instance_id"]
             sem = inst["semantic_class"].lower().strip()
-            m1_data = m1_records.get(eid, {})
+            if eid not in m1_records:
+                raise KeyError(f"Missing required M1 checkpoint record for {eid} in Condition B.")
+            m1_data = m1_records[eid]
             pred = m1_data.get("movability", "UNKNOWN")
-            lat_s = m1_data.get("latency_s", 16.0)
-            tok = m1_data.get("token_usage", {}).get("total_tokens", 330)
+            lat_s = m1_data["latency_s"]
+            tok = m1_data.get("token_usage", {}).get("total_tokens", 0)
             abstained = m1_data.get("abstain", False) or pred in ["UNKNOWN", None]
             recs_b.append({
                 "entity_id": eid,
@@ -241,10 +243,12 @@ def run_genuine_multiview_evaluation() -> Dict[str, Any]:
         for inst in pop_instances:
             eid = inst["object_instance_id"]
             sem = inst["semantic_class"].lower().strip()
-            m2_data = m2_records.get(eid, {})
+            if eid not in m2_records:
+                raise KeyError(f"Missing required M2 checkpoint record for {eid} in Condition C.")
+            m2_data = m2_records[eid]
             pred = m2_data.get("movability", "UNKNOWN")
-            lat_s = m2_data.get("latency_s", 24.19)
-            tok = m2_data.get("token_usage", {}).get("total_tokens", 424)
+            lat_s = m2_data["latency_s"]
+            tok = m2_data.get("token_usage", {}).get("total_tokens", 0)
             abstained = m2_data.get("abstain", False) or pred in ["UNKNOWN", None]
             recs_c.append({
                 "entity_id": eid,
@@ -265,10 +269,12 @@ def run_genuine_multiview_evaluation() -> Dict[str, Any]:
         for inst in pop_instances:
             eid = inst["object_instance_id"]
             sem = inst["semantic_class"].lower().strip()
-            m3_data = m3_records.get(eid, {})
+            if eid not in m3_records:
+                raise KeyError(f"Missing required M3 checkpoint record for {eid} in Condition D.")
+            m3_data = m3_records[eid]
             pred = m3_data.get("movability", "UNKNOWN")
-            lat_s = m3_data.get("latency_s", 21.0)
-            tok = m3_data.get("token_usage", {}).get("total_tokens", 455)
+            lat_s = m3_data["latency_s"]
+            tok = m3_data.get("token_usage", {}).get("total_tokens", 0)
             abstained = m3_data.get("abstain", False) or pred in ["UNKNOWN", None]
             recs_d.append({
                 "entity_id": eid,
@@ -309,10 +315,12 @@ def run_genuine_multiview_evaluation() -> Dict[str, Any]:
             decision = evaluate_router_policy(ev)
 
             if decision.vlm_required:
-                m3_data = m3_records.get(eid, {})
+                if eid not in m3_records:
+                    raise KeyError(f"Missing required M3 checkpoint record for escalated entity {eid} in Condition E.")
+                m3_data = m3_records[eid]
                 pred = m3_data.get("movability", cheap_pred)
-                lat_s = m3_data.get("latency_s", 21.0)
-                tok = m3_data.get("token_usage", {}).get("total_tokens", 455)
+                lat_s = m3_data["latency_s"]
+                tok = m3_data.get("token_usage", {}).get("total_tokens", 0)
                 vlm_used = True
                 views = m3_data.get("total_views", 2)
                 reason = f"SELECTIVE_ROUTER_ESCALATED ({','.join(decision.reason_codes)})"
@@ -432,7 +440,7 @@ def generate_multiview_markdown(results: Dict[str, Any]):
         "This evaluation benchmarks contextual movability and physical affordance reasoning across 6 controlled conditions using **genuine Qwen2.5-VL-3B-Instruct model inference records**.",
         "",
         "### Key Corrections & Methodological Upgrades:",
-        "1. **Zero Scripted Rules:** Eliminated all hardcoded prediction rules (`if sem in ...`) and synthetic latency constants. Condition E executes the actual estimator-aware routing policy on measured evidence.",
+        "1. **Ground-Truth-Free Deterministic Routing:** Condition E executes the estimator-aware routing policy on measured SLAM evidence and deterministic class priors without ground-truth motion/displacement leakage or synthetic fallback constants.",
         "2. **Genuine Measured Latencies:** Wall-clock timings represent actual end-to-end model execution from recorded benchmarks (single-view M1: ~16.0s; multi-view M2: ~24.2s; multi-view structured M3: ~20.8s; prior: <0.1ms).",
         "3. **Token Usage Accounting:** Measured prompt tokens (287–394), completion tokens (41–54), and total tokens (329–455) are tracked directly per instance.",
         "4. **Strict Split Separation & Class-Support Accounting:** Evaluated on **28 held-out physical furniture instances** (zero manifest overlap), alongside the **full 39 verified crop instances**.",

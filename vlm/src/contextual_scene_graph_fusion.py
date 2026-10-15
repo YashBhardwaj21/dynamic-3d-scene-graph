@@ -109,8 +109,8 @@ class ContextualSceneGraphNode:
             "semantic_confidence": round(float(self.semantic_confidence), 4),
             "geometric_confidence": round(float(self.geometric_confidence), 4),
             "evidence_provenance": self.evidence_provenance,
-            "source_sessions": list(set(self.source_sessions)),
-            "source_track_ids": list(set(self.source_track_ids)),
+            "source_sessions": sorted(set(self.source_sessions)),
+            "source_track_ids": sorted(set(self.source_track_ids)),
             "contributing_observations_count": len(self.contributing_observation_ids),
             "total_observations_count": self.total_observations_count,
             "relocation_evaluable": self.relocation_evaluable,
@@ -176,7 +176,7 @@ class ContextualSceneGraphNode:
             last_observed=self.last_seen,
             visibility_state=VisibilityState.VISIBLE,
             lifecycle_state=lifecycle,
-            source_track_ids=list(set(self.source_track_ids)) if self.source_track_ids else [self.entity_id],
+            source_track_ids=sorted(set(self.source_track_ids)),
             attributes=attrs,
         )
 
@@ -227,7 +227,7 @@ class ContextualSceneGraphFusion:
                 if raw_centroid is not None and len(raw_centroid) >= 2 and all(x is not None for x in raw_centroid[:2]):
                     c2_floor = np.array(raw_centroid[:2], dtype=np.float64)
                     c1_aligned = reg.R_12 @ c2_floor + reg.translation_m
-                    c_rest = list(raw_centroid[2:]) if len(raw_centroid) > 2 else [0.0]
+                    c_rest = list(raw_centroid[2:]) if len(raw_centroid) > 2 else []
                     raw_centroid = [float(c1_aligned[0]), float(c1_aligned[1])] + c_rest
                     coord_frame = "reference_frame"
             else:
@@ -237,12 +237,10 @@ class ContextualSceneGraphFusion:
 
         geometry_valid = False
         centroid_arr: Optional[np.ndarray] = None
-        if raw_centroid is not None and len(raw_centroid) >= 2 and all(x is not None for x in raw_centroid[:2]):
+        # Strict 3D geometry: require full 3D coordinates (x, y, z); do not fabricate z = 0.0
+        if raw_centroid is not None and len(raw_centroid) >= 3 and all(x is not None for x in raw_centroid[:3]):
             geometry_valid = True
-            c_3d = list(raw_centroid[:3])
-            while len(c_3d) < 3:
-                c_3d.append(0.0)
-            centroid_arr = np.array(c_3d, dtype=np.float64)
+            centroid_arr = np.array(raw_centroid[:3], dtype=np.float64)
 
         extent = float(obs_meta.get("spatial_extent_m")) if obs_meta.get("spatial_extent_m") is not None else None
 
@@ -270,7 +268,7 @@ class ContextualSceneGraphFusion:
                 geometry_valid=geometry_valid,
                 centroid_world=centroid_arr.copy() if centroid_arr is not None else None,
                 spatial_extent_m=extent,
-                coordinate_frame=obs_meta.get("coordinate_frame", "floor_map"),
+                coordinate_frame=coord_frame,
                 semantic_confidence=0.90 if new_movability != ContextualMovability.UNKNOWN else 0.40,
                 geometric_confidence=0.85 if (geometry_valid and obs_meta.get("depth_valid", True)) else 0.0,
                 evidence_provenance=routed_result.get("evidence_provenance", "MEASURED_FULL" if geometry_valid else "MISSING"),
@@ -297,6 +295,8 @@ class ContextualSceneGraphFusion:
         node = self.nodes[entity_id]
         node.last_seen = ts
         node.total_observations_count += 1
+        if coord_frame == "reference_frame":
+            node.coordinate_frame = "reference_frame"
         if session and session not in node.source_sessions:
             node.source_sessions.append(session)
         if track_id and track_id not in node.source_track_ids:

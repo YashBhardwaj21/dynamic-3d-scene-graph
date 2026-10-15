@@ -129,7 +129,7 @@ The unmatched observations correspond to legitimate physical objects that receiv
 ### 6.1 Independent Robust SE(2) Registration Validation
 - **RANSAC Inliers:** 7 / 10 correspondences (70.0% inlier ratio).
 - **Inlier Residuals:** Median = **`0.0925 m`**, RMS = **`0.1198 m`**, Max = **`0.1983 m`**.
-- **Aggregate Residuals (All 10 Anchors):** Median = `0.1325 m`, RMS = `0.3054 m`, Max = `0.5711 m`.
+- **Aggregate Residuals (All 10 Anchors):** Median = `0.1113 m`, RMS = `0.3087 m`, Max = `0.6181 m`.
 - **Held-Out Cross-Validation:** 5-fold cross-validation on correspondences yields held-out mean test error of **`0.2974 m`**.
 - **Empirical Residual Dispersion vs Calibrated Covariance:** Registration uncertainty is derived from empirical inlier anchor dispersion ($0.1198\text{ m}$). It is **not** modelled as an uncalibrated heuristic Gaussian covariance, preserving spatial gate rigor without statistical overclaiming.
 
@@ -138,9 +138,9 @@ All three methods are evaluated on identical clusters extracted from real record
 
 | Association Method | Total Matched | Ambiguous Rejected | Annotated Evaluated | True Positives (TP) | False Merges (FM) | Annotated Precision | Static GT Recall | Macro-F1 (Annotated) |
 |---|:---:|:---:|:---:|:---:|:---:|:---:|:---:|:---:|
-| **Baseline 1: Nearest Centroid** | 47 | 0 | 12 | 7 | 5 | **`58.3%`** | 26.9% | 36.8% |
-| **Baseline 2: Hungarian Gated** | 42 | 0 | 12 | 7 | 5 | **`58.3%`** | 26.9% | 36.8% |
-| **Proposed: Uncertainty + Ambiguity Rejection** | **34** | **8** | **11** | **7** | **4** | **`63.6%`** | **26.9%** | **`37.8%`** |
+| **Baseline 1: Nearest Centroid** | 48 | 0 | 12 | 7 | 5 | **`58.3%`** | 23.1% | 33.1% |
+| **Baseline 2: Hungarian Gated** | 43 | 0 | 12 | 7 | 5 | **`58.3%`** | 23.1% | 33.1% |
+| **Proposed: Uncertainty + Ambiguity Rejection** | **33** | **10** | **11** | **7** | **4** | **`63.6%`** | **23.1%** | **`33.9%`** |
 
 > [!NOTE]
 > **Symmetric Ambiguity Benefit:** The proposed method rejects 8 ambiguous candidate pairs where competing nearby clusters prevent confident matching. By doing so, it successfully filters out a false merge on the annotated evaluation benchmark, improving precision from 58.3% to **63.6%** without degrading true positives on verified persistent instances.
@@ -149,16 +149,16 @@ All three methods are evaluated on identical clusters extracted from real record
 
 | Persistent Entity ID | S1 Entity ID | S2 Entity ID | Class | Floor Distance | Status |
 |---|:---:|:---:|:---:|:---:|:---:|
-| `phys_backpack_001` | `backpack_001` | `backpack_001` | `backpack` | `0.113 m` | **`MATCHED`** |
-| `phys_ceiling fan_010` | `ceiling fan_010` | `ceiling fan_001` | `ceiling fan` | `0.239 m` | **`MATCHED`** |
-| `phys_chair_001` | `chair_001` | `chair_003` | `chair` | `0.140 m` | **`MATCHED`** |
-| `phys_chair_002` | `chair_002` | `chair_004` | `chair` | `0.118 m` | **`MATCHED`** |
-| `phys_chair_005` | `chair_005` | `chair_007` | `chair` | `0.081 m` | **`MATCHED`** |
-| `phys_chair_007` | `chair_007` | `chair_014` | `chair` | `0.034 m` | **`MATCHED`** |
-| `phys_chair_008` | `chair_008` | `chair_015` | `chair` | `0.197 m` | **`MATCHED`** |
-| `phys_chair_011` | `chair_011` | `chair_022` | `chair` | `0.087 m` | **`MATCHED`** |
-| `phys_chair_019` | `chair_019` | `chair_011` | `chair` | `0.194 m` | **`MATCHED`** |
-| `phys_chair_020` | `chair_020` | `chair_036` | `chair` | `0.263 m` | **`MATCHED`** |
+| `phys_backpack_001` | `backpack_001` | `backpack_001` | `backpack` | `0.082 m` | **`MATCHED`** |
+| `phys_ceiling fan_010` | `ceiling fan_010` | `ceiling fan_001` | `ceiling fan` | `0.248 m` | **`MATCHED`** |
+| `phys_chair_001` | `chair_001` | `chair_003` | `chair` | `0.148 m` | **`MATCHED`** |
+| `phys_chair_002` | `chair_002` | `chair_004` | `chair` | `0.094 m` | **`MATCHED`** |
+| `phys_chair_005` | `chair_005` | `chair_007` | `chair` | `0.061 m` | **`MATCHED`** |
+| `phys_chair_007` | `chair_007` | `chair_014` | `chair` | `0.031 m` | **`MATCHED`** |
+| `phys_chair_011` | `chair_011` | `chair_022` | `chair` | `0.058 m` | **`MATCHED`** |
+| `phys_chair_019` | `chair_019` | `chair_011` | `chair` | `0.142 m` | **`MATCHED`** |
+| `phys_chair_020` | `chair_020` | `chair_036` | `chair` | `0.219 m` | **`MATCHED`** |
+| `phys_chair_025` | `chair_025` | `chair_046` | `chair` | `0.115 m` | **`MATCHED`** |
 
 ---
 *Generated automatically by `vlm/scripts/audit_semantic_associations.py`.*

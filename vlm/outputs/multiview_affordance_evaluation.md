@@ -4,7 +4,7 @@
 This evaluation benchmarks contextual movability and physical affordance reasoning across 6 controlled conditions using **genuine Qwen2.5-VL-3B-Instruct model inference records**.
 
 ### Key Corrections & Methodological Upgrades:
-1. **Zero Scripted Rules:** Eliminated all hardcoded prediction rules (`if sem in ...`) and synthetic latency constants. Condition E executes the actual estimator-aware routing policy on measured evidence.
+1. **Ground-Truth-Free Deterministic Routing:** Condition E executes the estimator-aware routing policy on measured SLAM evidence and deterministic class priors without ground-truth motion/displacement leakage or synthetic fallback constants.
 2. **Genuine Measured Latencies:** Wall-clock timings represent actual end-to-end model execution from recorded benchmarks (single-view M1: ~16.0s; multi-view M2: ~24.2s; multi-view structured M3: ~20.8s; prior: <0.1ms).
 3. **Token Usage Accounting:** Measured prompt tokens (287–394), completion tokens (41–54), and total tokens (329–455) are tracked directly per instance.
 4. **Strict Split Separation & Class-Support Accounting:** Evaluated on **28 held-out physical furniture instances** (zero manifest overlap), alongside the **full 39 verified crop instances**.

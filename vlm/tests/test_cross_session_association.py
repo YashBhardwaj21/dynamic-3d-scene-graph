@@ -388,3 +388,33 @@ def test_compare_association_baselines_contract():
         assert "annotated_eval_pairs_count" in eval_dict
 
 
+def test_registration_runtime_robust_transform_agreement():
+    """Verify that load_registration_audit matches the RANSAC robust transform and residuals."""
+    from pathlib import Path
+    from vlm.src.stage5_adapter import load_registration_audit
+
+    repo_root = Path(__file__).resolve().parent.parent.parent
+    reg_path = repo_root / "vlm" / "outputs" / "stage5_registration_audit.json"
+    if not reg_path.exists():
+        pytest.skip("Registration audit artifact missing")
+
+    reg = load_registration_audit(reg_path)
+    assert reg.is_valid is True
+    assert reg.rotation_deg == pytest.approx(-15.558, abs=0.01)
+    assert np.allclose(reg.translation_m, [-0.1059, 0.0486], atol=1e-3)
+    assert reg.anchor_count == 10
+    # All-anchor RMS residual ~ 0.3087m
+    assert reg.anchor_rms_residual_m == pytest.approx(0.3087, abs=0.01)
+    # Robust inlier RMS residual ~ 0.1198m
+    assert reg.inlier_rms_residual_m == pytest.approx(0.1198, abs=0.01)
+    assert reg.median_residual_m == pytest.approx(0.0924, abs=0.01)
+
+
+def test_canonical_benchmark_missing_fails_closed(tmp_path):
+    """Verify that missing canonical identity annotations file fails closed with FileNotFoundError."""
+    missing_file = tmp_path / "nonexistent_annotations.json"
+    with pytest.raises(FileNotFoundError, match="Canonical cross-session benchmark missing"):
+        build_canonical_session_track_mapping(missing_file)
+
+
+

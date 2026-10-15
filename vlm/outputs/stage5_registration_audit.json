@@ -1,10 +1,10 @@
 {
   "reference_session": "semantic_mapping_my_desk_recording_01",
   "aligned_session": "semantic_mapping_my_desk_recording_02",
-  "rotation_deg": -16.13,
+  "rotation_deg": -15.558,
   "translation_m": [
-    -0.0815,
-    0.093
+    -0.1059,
+    0.0486
   ],
   "anchors": [
     {
@@ -18,7 +18,9 @@
       "c2": [
         2.9203,
         -1.4855
-      ]
+      ],
+      "residual_m": 0.0583,
+      "is_robust_inlier": true
     },
     {
       "class": "desk",
@@ -31,7 +33,9 @@
       "c2": [
         4.4157,
         -1.7385
-      ]
+      ],
+      "residual_m": 0.1254,
+      "is_robust_inlier": true
     },
     {
       "class": "desk",
@@ -44,7 +48,9 @@
       "c2": [
         1.5285,
         -5.5769
-      ]
+      ],
+      "residual_m": 0.0456,
+      "is_robust_inlier": true
     },
     {
       "class": "desk",
@@ -57,7 +63,9 @@
       "c2": [
         3.0996,
         -6.3574
-      ]
+      ],
+      "residual_m": 0.0924,
+      "is_robust_inlier": true
     },
     {
       "class": "desk",
@@ -70,7 +78,9 @@
       "c2": [
         -1.5246,
         -3.5928
-      ]
+      ],
+      "residual_m": 0.0724,
+      "is_robust_inlier": true
     },
     {
       "class": "desk",
@@ -83,7 +93,9 @@
       "c2": [
         -0.9879,
         -2.0203
-      ]
+      ],
+      "residual_m": 0.6181,
+      "is_robust_inlier": false
     },
     {
       "class": "desk",
@@ -96,7 +108,9 @@
       "c2": [
         5.728,
         -2.1012
-      ]
+      ],
+      "residual_m": 0.5643,
+      "is_robust_inlier": false
     },
     {
       "class": "desk",
@@ -109,7 +123,9 @@
       "c2": [
         1.2726,
         -0.9282
-      ]
+      ],
+      "residual_m": 0.3896,
+      "is_robust_inlier": false
     },
     {
       "class": "storage box",
@@ -122,7 +138,9 @@
       "c2": [
         2.5053,
         -2.5079
-      ]
+      ],
+      "residual_m": 0.2366,
+      "is_robust_inlier": true
     },
     {
       "class": "storage box",
@@ -135,86 +153,21 @@
       "c2": [
         -0.6144,
         -0.5981
-      ]
+      ],
+      "residual_m": 0.0971,
+      "is_robust_inlier": true
     }
   ],
   "residuals": {
-    "rms_residual_m": 0.3054,
-    "median_residual_m": 0.1325,
-    "max_residual_m": 0.5711,
-    "mean_residual_m": 0.2393,
-    "per_anchor_residuals": [
-      {
-        "anchor_index": 1,
-        "semantic_class": "desk",
-        "id_session1": "desk_001",
-        "id_session2": "desk_001",
-        "residual_m": 0.0508
-      },
-      {
-        "anchor_index": 2,
-        "semantic_class": "desk",
-        "id_session1": "desk_004",
-        "id_session2": "desk_003",
-        "residual_m": 0.1284
-      },
-      {
-        "anchor_index": 3,
-        "semantic_class": "desk",
-        "id_session1": "desk_005",
-        "id_session2": "desk_014",
-        "residual_m": 0.1
-      },
-      {
-        "anchor_index": 4,
-        "semantic_class": "desk",
-        "id_session1": "desk_008",
-        "id_session2": "desk_016",
-        "residual_m": 0.1267
-      },
-      {
-        "anchor_index": 5,
-        "semantic_class": "desk",
-        "id_session1": "desk_018",
-        "id_session2": "desk_029",
-        "residual_m": 0.1365
-      },
-      {
-        "anchor_index": 6,
-        "semantic_class": "desk",
-        "id_session1": "desk_023",
-        "id_session2": "desk_034",
-        "residual_m": 0.5711
-      },
-      {
-        "anchor_index": 7,
-        "semantic_class": "desk",
-        "id_session1": "desk_025",
-        "id_session2": "desk_006",
-        "residual_m": 0.5572
-      },
-      {
-        "anchor_index": 8,
-        "semantic_class": "desk",
-        "id_session1": "desk_031",
-        "id_session2": "desk_002",
-        "residual_m": 0.4247
-      },
-      {
-        "anchor_index": 9,
-        "semantic_class": "storage box",
-        "id_session1": "storage box_001",
-        "id_session2": "storage box_003",
-        "residual_m": 0.211
-      },
-      {
-        "anchor_index": 10,
-        "semantic_class": "storage box",
-        "id_session1": "storage box_007",
-        "id_session2": "storage box_011",
-        "residual_m": 0.0861
-      }
-    ]
+    "median_residual_m": 0.1113,
+    "rms_residual_m": 0.3087,
+    "max_residual_m": 0.6181,
+    "min_residual_m": 0.0456,
+    "inlier_count": 7,
+    "outlier_count": 3,
+    "inlier_rms_residual_m": 0.1198,
+    "inlier_median_residual_m": 0.0924,
+    "inlier_max_residual_m": 0.2366
   },
   "leave_one_out_sensitivity": [
     {
@@ -386,7 +339,7 @@
       ]
     },
     "inlier_rms_residual_m": 0.1198,
-    "inlier_median_residual_m": 0.0925,
+    "inlier_median_residual_m": 0.0924,
     "outliers": [
       {
         "anchor_index": 6,
@@ -532,5 +485,16 @@
       }
     ],
     "uncertainty_characterization": "Empirical spatial residual dispersion from robust inlier set (sigma_inlier=0.1198m, sigma_full=0.3054m). Must NOT be labeled as calibrated covariance."
-  }
+  },
+  "R_12": [
+    [
+      0.9634,
+      0.2682
+    ],
+    [
+      -0.2682,
+      0.9634
+    ]
+  ],
+  "transform_provenance": "RANSAC_ROBUST_SE2_INLIER_SVD"
 }
