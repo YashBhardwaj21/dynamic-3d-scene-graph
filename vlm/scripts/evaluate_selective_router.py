@@ -45,6 +45,11 @@ def compute_metrics(records: List[Dict[str, Any]]) -> Dict[str, Any]:
 
     abstain_count = 0
     vlm_query_count = 0
+    vlm_query_requested_count = 0
+    vlm_inference_executed_count = 0
+    vlm_cache_hits_count = 0
+    vlm_outputs_valid_count = 0
+    vlm_predictions_accepted_count = 0
     decision_latencies_ms = []
     end_to_end_latencies_s = []
 
@@ -59,8 +64,17 @@ def compute_metrics(records: List[Dict[str, Any]]) -> Dict[str, Any]:
         e2e_s = (r.get("decision_latency_ms", 0.05) + inf_ms) / 1000.0
         end_to_end_latencies_s.append(e2e_s)
 
+        # Detailed query accounting
         if r.get("vlm_required", False):
-            vlm_query_count += 1
+            vlm_query_requested_count += 1
+        if r.get("vlm_inference_executed", False):
+            vlm_inference_executed_count += 1
+        if r.get("vlm_cache_hit", False):
+            vlm_cache_hits_count += 1
+        if r.get("vlm_output_valid", False) or (r.get("vlm_cache_hit", False) and not abstained):
+            vlm_outputs_valid_count += 1
+        if r.get("vlm_prediction_accepted", False) or (r.get("vlm_cache_hit", False) and pred in eval_classes):
+            vlm_predictions_accepted_count += 1
 
         total_by_gt[gt] += 1
         if abstained:
@@ -88,9 +102,16 @@ def compute_metrics(records: List[Dict[str, Any]]) -> Dict[str, Any]:
     balanced_acc = float(np.mean([recalls[c] for c in eval_classes if total_by_gt[c] > 0]))
     macro_f1 = float(np.mean([f1s[c] for c in eval_classes if total_by_gt[c] > 0]))
 
-    # Efficiency metrics
-    query_rate_pct = (vlm_query_count / max(1, total)) * 100.0
+    # Queries invoked = actual VLM results used (live executed + cache hits)
+    # When VLM is disabled, queries invoked is strictly 0.
+    vlm_queries_invoked = vlm_inference_executed_count + vlm_cache_hits_count
+    query_rate_pct = (vlm_queries_invoked / max(1, total)) * 100.0
     abstention_rate_pct = (abstain_count / max(1, total)) * 100.0
+
+    queried_latencies_s = [
+        end_to_end_latencies_s[i] for i, r in enumerate(records)
+        if r.get("vlm_inference_executed") or r.get("vlm_cache_hit")
+    ]
 
     return {
         "quality": {
@@ -104,18 +125,31 @@ def compute_metrics(records: List[Dict[str, Any]]) -> Dict[str, Any]:
         },
         "efficiency": {
             "total_instances": total,
-            "vlm_queries_invoked": vlm_query_count,
-            "vlm_queries_avoided": total - vlm_query_count,
+            "vlm_queries_requested": vlm_query_requested_count,
+            "vlm_inference_executed": vlm_inference_executed_count,
+            "vlm_cache_hits": vlm_cache_hits_count,
+            "vlm_queries_invoked": vlm_queries_invoked,
+            "vlm_queries_avoided": total - vlm_queries_invoked,
             "vlm_query_rate_pct": round(query_rate_pct, 2),
+            "vlm_outputs_valid": vlm_outputs_valid_count,
+            "vlm_predictions_accepted": vlm_predictions_accepted_count,
             "decision_latency_ms": {
+                "population": "all_instances",
                 "mean": round(float(np.mean(decision_latencies_ms)), 3),
                 "p50": round(float(np.percentile(decision_latencies_ms, 50)), 3),
                 "p95": round(float(np.percentile(decision_latencies_ms, 95)), 3),
             },
             "end_to_end_latency_s": {
+                "population": "all_instances_unqueried_include_0ms",
                 "mean": round(float(np.mean(end_to_end_latencies_s)), 3),
                 "p50": round(float(np.percentile(end_to_end_latencies_s, 50)), 3),
                 "p95": round(float(np.percentile(end_to_end_latencies_s, 95)), 3),
+            },
+            "queried_instances_latency_s": {
+                "population": "queried_instances_only",
+                "mean": round(float(np.mean(queried_latencies_s)), 3) if queried_latencies_s else 0.0,
+                "p50": round(float(np.percentile(queried_latencies_s, 50)), 3) if queried_latencies_s else 0.0,
+                "p95": round(float(np.percentile(queried_latencies_s, 95)), 3) if queried_latencies_s else 0.0,
             },
         },
         "reliability": {

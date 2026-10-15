@@ -7,9 +7,12 @@ Maintains strict separation between:
 1. Contextual movability: IMMOVABLE (fixed/mounted), MOVABLE (transportable furniture),
    MOBILE (self-propelled agent or carrier).
 2. Observed motion: STATIC, DISPLACED, DYNAMIC, UNCERTAIN during observed interval.
-3. Physical relocation: verified SE(2)/SE(3) measured change in object position.
-
-Preserves geometric state even when contextual semantics is UNKNOWN or ambiguous.
+3. Cross-session physical relocation: verified SE(2)/SE(3) measured change in object position.
+4. Support / mounting relationship: mounted_to_structure, freestanding_on_surface, self_propelled.
+5. Geometry validity: explicit missing/unavailable geometry state. Does NOT fabricate fake
+   geometry or mark entities confirmed when measurements are missing.
+6. Identity tracking: distinguishes source_track_ids (tracker IDs) from contributing_observation_ids (observation IDs).
+7. Mathematically exact running mean without cap-induced drift.
 """
 
 from __future__ import annotations
@@ -61,22 +64,30 @@ class ContextualSceneGraphNode:
     physical_support: Optional[str] = None  # "mounted_to_structure", "freestanding_on_surface", "self_propelled"
     
     # 3D spatial geometry in verified reference coordinate frame
-    centroid_world: np.ndarray = field(default_factory=lambda: np.zeros(3, dtype=np.float64))
-    spatial_extent_m: float = 0.0
+    geometry_valid: bool = False
+    centroid_world: Optional[np.ndarray] = None
+    spatial_extent_m: Optional[float] = None
     bounding_box_min: Optional[np.ndarray] = None
     bounding_box_max: Optional[np.ndarray] = None
     coordinate_frame: str = "floor_map"
     
     # Evidence confidence & tracking
-    semantic_confidence: float = 0.80
-    geometric_confidence: float = 0.80
-    evidence_provenance: str = "MEASURED_FULL"
+    semantic_confidence: float = 0.50
+    geometric_confidence: float = 0.0
+    evidence_provenance: str = "MISSING"
     source_sessions: List[str] = field(default_factory=list)
+    source_track_ids: List[str] = field(default_factory=list)
     contributing_observation_ids: List[str] = field(default_factory=list)
     first_seen: float = 0.0
     last_seen: float = 0.0
     total_observations_count: int = 0
+    valid_geometry_observations_count: int = 0
     
+    # Cross-session relocation
+    relocation_evaluable: bool = False
+    measured_displacement_m: Optional[float] = None
+    displacement_uncertainty_m: Optional[float] = None
+
     # Selective router metadata
     vlm_query_requested: bool = False
     vlm_inference_executed: bool = False
@@ -91,25 +102,33 @@ class ContextualSceneGraphNode:
             "contextual_movability": self.contextual_movability.value if isinstance(self.contextual_movability, ContextualMovability) else str(self.contextual_movability),
             "observed_motion": self.observed_motion.value if isinstance(self.observed_motion, ObservedMotionState) else str(self.observed_motion),
             "physical_support": self.physical_support,
-            "centroid_world": [round(float(x), 4) for x in self.centroid_world],
-            "spatial_extent_m": round(float(self.spatial_extent_m), 4),
+            "geometry_valid": self.geometry_valid,
+            "centroid_world": [round(float(x), 4) for x in self.centroid_world] if self.centroid_world is not None else None,
+            "spatial_extent_m": round(float(self.spatial_extent_m), 4) if self.spatial_extent_m is not None else None,
             "coordinate_frame": self.coordinate_frame,
             "semantic_confidence": round(float(self.semantic_confidence), 4),
             "geometric_confidence": round(float(self.geometric_confidence), 4),
             "evidence_provenance": self.evidence_provenance,
             "source_sessions": list(set(self.source_sessions)),
+            "source_track_ids": list(set(self.source_track_ids)),
             "contributing_observations_count": len(self.contributing_observation_ids),
+            "total_observations_count": self.total_observations_count,
+            "relocation_evaluable": self.relocation_evaluable,
+            "measured_displacement_m": self.measured_displacement_m,
+            "displacement_uncertainty_m": self.displacement_uncertainty_m,
             "first_seen": self.first_seen,
             "last_seen": self.last_seen,
             "vlm_decision": self.vlm_decision,
             "vlm_query_requested": self.vlm_query_requested,
+            "vlm_inference_executed": self.vlm_inference_executed,
             "vlm_reason_codes": self.vlm_reason_codes,
         }
 
     def to_persistent_entity(self) -> Any:
         """Convert to authoritative PersistentEntity object for scene graph integration."""
         pose = np.eye(4, dtype=np.float64)
-        pose[:3, 3] = self.centroid_world
+        if self.geometry_valid and self.centroid_world is not None:
+            pose[:3, 3] = self.centroid_world
 
         ent_type = EntityType.OBJECT
         if self.contextual_movability == ContextualMovability.MOBILE or self.semantic_class in ["person", "robot"]:
@@ -123,28 +142,41 @@ class ContextualSceneGraphNode:
             )
         ]
 
+        # Explicit lifecycle state: Do not confirm entities without valid geometry or verified semantics
+        if self.geometry_valid and self.semantic_confidence >= 0.70 and self.total_observations_count >= 2:
+            lifecycle = EntityLifecycleState.CONFIRMED
+        else:
+            lifecycle = EntityLifecycleState.TENTATIVE
+
         attrs = {
             "contextual_movability": self.contextual_movability.value if isinstance(self.contextual_movability, ContextualMovability) else str(self.contextual_movability),
             "observed_motion": self.observed_motion.value if isinstance(self.observed_motion, ObservedMotionState) else str(self.observed_motion),
             "physical_support": self.physical_support,
+            "geometry_valid": self.geometry_valid,
             "spatial_extent_m": self.spatial_extent_m,
             "evidence_provenance": self.evidence_provenance,
+            "relocation_evaluable": self.relocation_evaluable,
+            "measured_displacement_m": self.measured_displacement_m,
+            "displacement_uncertainty_m": self.displacement_uncertainty_m,
+            "contributing_observation_ids": list(self.contributing_observation_ids[:50]),
             "vlm_decision": self.vlm_decision,
             "vlm_reason_codes": self.vlm_reason_codes,
         }
+
+        unc_diag = (1.0 - min(0.9, self.geometric_confidence)) if self.geometry_valid else 1.0
 
         return PersistentEntity(
             entity_id=self.entity_id,
             entity_type=ent_type,
             semantic_hypotheses=hypotheses,
             pose=pose,
-            uncertainty=np.eye(3, dtype=np.float64) * (1.0 - min(0.9, self.geometric_confidence)),
+            uncertainty=np.eye(3, dtype=np.float64) * unc_diag,
             first_seen=self.first_seen,
             last_seen=self.last_seen,
             last_observed=self.last_seen,
             visibility_state=VisibilityState.VISIBLE,
-            lifecycle_state=EntityLifecycleState.CONFIRMED,
-            source_track_ids=list(self.contributing_observation_ids[:10]),
+            lifecycle_state=lifecycle,
+            source_track_ids=list(set(self.source_track_ids)) if self.source_track_ids else [self.entity_id],
             attributes=attrs,
         )
 
@@ -167,14 +199,33 @@ class ContextualSceneGraphFusion:
         Guarantees:
         - Geometric centroid and extent are preserved even if semantic movability is UNKNOWN.
         - Movability and observed physical motion remain distinct attributes.
-        - Contradictory VLM observations decay confidence or abstain without destroying geometry.
+        - Does NOT initialize fake geometry from absent measurements.
+        - Running mean statistics update without cap-induced drift:
+            m_k = m_{k-1} + (x_k - m_{k-1}) / k
+        - source_track_ids strictly stores tracker IDs, not observation IDs.
         """
         obs_meta = observation_meta or {}
         ts = float(obs_meta.get("timestamp", time.time()))
         session = obs_meta.get("source_session", "session_01")
         obs_id = obs_meta.get("obs_id", "")
-        centroid = np.array(obs_meta.get("centroid", [0.0, 0.0, 0.0]), dtype=np.float64)
-        extent = float(obs_meta.get("spatial_extent_m", 0.5))
+        track_id = obs_meta.get("local_track_id", "")
+
+        # Strict geometry extraction: No fake defaults
+        raw_centroid = obs_meta.get("centroid")
+        if raw_centroid is None:
+            raw_centroid = obs_meta.get("centroid_floor")
+        if raw_centroid is None:
+            raw_centroid = obs_meta.get("centroid_world")
+        geometry_valid = False
+        centroid_arr: Optional[np.ndarray] = None
+        if raw_centroid is not None and len(raw_centroid) >= 2 and all(x is not None for x in raw_centroid[:2]):
+            geometry_valid = True
+            c_3d = list(raw_centroid[:3])
+            while len(c_3d) < 3:
+                c_3d.append(0.0)
+            centroid_arr = np.array(c_3d, dtype=np.float64)
+
+        extent = float(obs_meta.get("spatial_extent_m")) if obs_meta.get("spatial_extent_m") is not None else None
 
         pred_movability_str = routed_result.get("prediction", "UNKNOWN")
         if pred_movability_str in ["IMMOVABLE", "MOVABLE", "MOBILE"]:
@@ -197,17 +248,23 @@ class ContextualSceneGraphFusion:
                 contextual_movability=new_movability,
                 observed_motion=new_motion,
                 physical_support=routed_result.get("physical_support"),
-                centroid_world=centroid.copy(),
+                geometry_valid=geometry_valid,
+                centroid_world=centroid_arr.copy() if centroid_arr is not None else None,
                 spatial_extent_m=extent,
                 coordinate_frame=obs_meta.get("coordinate_frame", "floor_map"),
                 semantic_confidence=0.90 if new_movability != ContextualMovability.UNKNOWN else 0.40,
-                geometric_confidence=0.85 if obs_meta.get("depth_valid", True) else 0.30,
-                evidence_provenance=routed_result.get("evidence_provenance", "MEASURED_FULL"),
-                source_sessions=[session],
+                geometric_confidence=0.85 if (geometry_valid and obs_meta.get("depth_valid", True)) else 0.0,
+                evidence_provenance=routed_result.get("evidence_provenance", "MEASURED_FULL" if geometry_valid else "MISSING"),
+                source_sessions=[session] if session else [],
+                source_track_ids=[track_id] if track_id else [],
                 contributing_observation_ids=[obs_id] if obs_id else [],
                 first_seen=ts,
                 last_seen=ts,
                 total_observations_count=1,
+                valid_geometry_observations_count=1 if geometry_valid else 0,
+                relocation_evaluable=bool(routed_result.get("relocation_evaluable", False)),
+                measured_displacement_m=routed_result.get("world_displacement_m"),
+                displacement_uncertainty_m=routed_result.get("displacement_uncertainty_m"),
                 vlm_query_requested=bool(routed_result.get("vlm_required", False)),
                 vlm_inference_executed=bool(routed_result.get("vlm_inference_executed", False)),
                 vlm_decision=routed_result.get("decision", "RESOLVE_CHEAP"),
@@ -221,17 +278,29 @@ class ContextualSceneGraphFusion:
         node = self.nodes[entity_id]
         node.last_seen = ts
         node.total_observations_count += 1
-        if session not in node.source_sessions:
+        if session and session not in node.source_sessions:
             node.source_sessions.append(session)
+        if track_id and track_id not in node.source_track_ids:
+            node.source_track_ids.append(track_id)
         if obs_id and obs_id not in node.contributing_observation_ids:
             node.contributing_observation_ids.append(obs_id)
 
-        # 1. Geometric position update (running average filter)
-        n = min(node.total_observations_count, 50)
-        if np.any(centroid != 0.0):
-            node.centroid_world = node.centroid_world + (centroid - node.centroid_world) / n
-        if extent > 0.0:
-            node.spatial_extent_m = node.spatial_extent_m + (extent - node.spatial_extent_m) / n
+        # 1. Exact incremental geometric mean (m_k = m_{k-1} + (x_k - m_{k-1}) / k)
+        if geometry_valid and centroid_arr is not None:
+            node.valid_geometry_observations_count += 1
+            k = node.valid_geometry_observations_count
+            if node.centroid_world is None:
+                node.centroid_world = centroid_arr.copy()
+                node.geometry_valid = True
+                node.geometric_confidence = 0.85
+            else:
+                node.centroid_world = node.centroid_world + (centroid_arr - node.centroid_world) / k
+
+            if extent is not None:
+                if node.spatial_extent_m is None:
+                    node.spatial_extent_m = extent
+                else:
+                    node.spatial_extent_m = node.spatial_extent_m + (extent - node.spatial_extent_m) / k
 
         # 2. Observed motion update
         if new_motion == ObservedMotionState.DISPLACED:
@@ -263,4 +332,19 @@ class ContextualSceneGraphFusion:
             if r_code not in node.vlm_reason_codes:
                 node.vlm_reason_codes.append(r_code)
 
+        if routed_result.get("relocation_evaluable") is not None:
+            node.relocation_evaluable = bool(routed_result["relocation_evaluable"])
+        if routed_result.get("world_displacement_m") is not None:
+            node.measured_displacement_m = routed_result["world_displacement_m"]
+        if routed_result.get("displacement_uncertainty_m") is not None:
+            node.displacement_uncertainty_m = routed_result["displacement_uncertainty_m"]
+
         return node
+
+    def serialize_to_json(self) -> Dict[str, Any]:
+        """Serialize complete persistent scene graph to JSON-compatible dictionary."""
+        return {
+            "total_nodes": len(self.nodes),
+            "timestamp": time.time(),
+            "nodes": {eid: node.to_dict() for eid, node in self.nodes.items()},
+        }

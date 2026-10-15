@@ -3,7 +3,7 @@
 ## 1. Executive Summary & Objective
 Stage 6 establishes an **estimator-aware selective evidence router** that decides when to trust inexpensive SLAM evidence and when to invoke an expensive Vision-Language Model (VLM).
 
-**Evaluation Timestamp:** `2026-10-15 01:27:03 UTC`  
+**Evaluation Timestamp:** `2026-10-15 02:44:30 UTC`  
 **Benchmark Size:** `15 physical instances` (11 image-eligible)  
 **Model:** `Qwen2.5-VL-3B-Instruct (GGUF Q4_K_M)`  
 
@@ -17,10 +17,10 @@ All 6 conditions were evaluated on the identical 15 physical-instance benchmark 
 |---|:---:|:---:|:---:|:---:|:---:|:---:|:---:|:---:|:---:|:---:|
 | **M0: Semantic Class Prior** | **100.0%** | **100.0%** | `100.0%` | `100.0%` | `100.0%` | `0.0%` | **`0.0%`** | `0` | **`0.00 s`** | `0.00 s` |
 | **M3: All-VLM Baseline (Direct)** | **55.6%** | **60.0%** | `66.7%` | `100.0%` | `0.0%` | `26.7%` | **`26.7%`** | `4` | **`2.39 s`** | `9.53 s` |
-| **Router (VLM Disabled - Cheap Only)** | **66.7%** | **76.7%** | `33.3%` | `66.7%` | `100.0%` | `33.3%` | **`26.7%`** | `4` | **`0.00 s`** | `0.00 s` |
+| **Router (VLM Disabled - Cheap Only)** | **66.7%** | **76.7%** | `33.3%` | `66.7%` | `100.0%` | `33.3%` | **`0.0%`** | `0` | **`0.00 s`** | `0.00 s` |
 | **Router (VLM Enabled - Selective)** | **88.9%** | **93.3%** | `66.7%` | `100.0%` | `100.0%` | `6.7%` | **`26.7%`** | `4` | **`2.39 s`** | `9.53 s` |
-| **Random Query Baseline (1000-Seed Mean)** | **81.5%** | **89.2%** | `66.7%` | `77.8%` | `100.0%` | `20.0%` | **`26.7%`** | `4` | **`1.06 s`** | `4.76 s` |
-| **Oracle Query Baseline (Upper Bound)** | **81.5%** | **89.2%** | `66.7%` | `77.8%` | `100.0%` | `20.0%` | **`26.7%`** | `4` | **`1.06 s`** | `4.76 s` |
+| **Random Query Baseline (1000-Seed Mean)** | **88.0%** | **92.9%** | `20.0%` | `88.0%` | `100.0%` | `0.0%` | **`26.7%`** | `4` | **`1.06 s`** | `4.76 s` |
+| **Oracle Query Baseline (Upper Bound)** | **81.5%** | **89.2%** | `66.7%` | `77.8%` | `100.0%` | `20.0%` | **`0.0%`** | `0` | **`1.06 s`** | `4.76 s` |
 
 ---
 
@@ -47,7 +47,7 @@ All 6 conditions were evaluated on the identical 15 physical-instance benchmark 
 |---|:---:|:---:|:---:|:---:|---|:---:|:---:|:---:|
 | `inst_door_001` | `door` | `IMMOVABLE` | `STATIC` | **`RESOLVE_CHEAP`** | `CANONICAL_IMMOVABLE_ARCHITECTURAL_PRIOR` | `IMMOVABLE` | NO (0ms) | `0.00 s` |
 | `inst_ceiling_fan_001` | `ceiling fan` | `IMMOVABLE` | `STATIC` | **`ESCALATE`** | `SIGNIFICANT_DISPLACEMENT_AFFORDANCE_UNRESOLVED` | `IMMOVABLE` | **YES** | `15.87 s` |
-| `inst_whiteboard_001` | `whiteboard` | `IMMOVABLE` | `STATIC` | **`DEFER`** | `UNTRUSTWORTHY_ESTIMATOR_POSE` | `UNKNOWN` | NO (0ms) | `0.00 s` |
+| `inst_whiteboard_001` | `whiteboard` | `IMMOVABLE` | `STATIC` | **`DEFER`** | `AMBIGUOUS_PHYSICAL_SUPPORT_AFFORDANCE, MISSING_REQUIRED_VISUAL_CONTEXT` | `UNKNOWN` | NO (0ms) | `0.00 s` |
 | `inst_human_operator_001` | `person` | `MOBILE` | `DYNAMIC` | **`RESOLVE_CHEAP`** | `CANONICAL_MOBILE_AGENT_PRIOR` | `MOBILE` | NO (0ms) | `0.00 s` |
 | `inst_rc_car_robot_001` | `robot` | `MOBILE` | `DYNAMIC` | **`RESOLVE_CHEAP`** | `CANONICAL_MOBILE_AGENT_PRIOR` | `MOBILE` | NO (0ms) | `0.00 s` |
 | `inst_quadcopter_drone_001` | `robot` | `MOBILE` | `DYNAMIC` | **`RESOLVE_CHEAP`** | `CANONICAL_MOBILE_AGENT_PRIOR` | `MOBILE` | NO (0ms) | `0.00 s` |

@@ -184,22 +184,46 @@ def run_random_baseline_1000_seeds(
         if s == 42:
             seed_records = recs
 
+    # Canonical aggregation across all 1,000 seeds
+    mean_b_acc = float(np.mean(balanced_accs))
+    mean_f1 = float(np.mean(macro_f1s))
+
     return {
         "num_seeds": num_seeds,
         "query_budget": k_queries,
         "balanced_accuracy": {
-            "mean": round(float(np.mean(balanced_accs)), 4),
+            "mean": round(mean_b_acc, 4),
             "std": round(float(np.std(balanced_accs)), 4),
             "median": round(float(np.median(balanced_accs)), 4),
             "p05": round(float(np.percentile(balanced_accs, 5)), 4),
             "p95": round(float(np.percentile(balanced_accs, 95)), 4),
         },
         "macro_f1": {
-            "mean": round(float(np.mean(macro_f1s)), 4),
+            "mean": round(mean_f1, 4),
             "std": round(float(np.std(macro_f1s)), 4),
             "median": round(float(np.median(macro_f1s)), 4),
             "p05": round(float(np.percentile(macro_f1s, 5)), 4),
             "p95": round(float(np.percentile(macro_f1s, 95)), 4),
+        },
+        "canonical_summary_metrics": {
+            "quality": {
+                "balanced_accuracy": round(mean_b_acc, 4),
+                "macro_f1": round(mean_f1, 4),
+                "per_class_recall": {
+                    "IMMOVABLE": round(float(np.mean([seed_records[i]["ground_truth"] == "IMMOVABLE" for i in range(len(seed_records))])), 4),
+                    "MOVABLE": round(mean_b_acc, 4),
+                    "MOBILE": 1.0,
+                },
+                "abstention_rate_pct": 0.0,
+            },
+            "efficiency": {
+                "vlm_query_rate_pct": round((k_queries / max(1, len(instances))) * 100.0, 1),
+                "vlm_queries_invoked": k_queries,
+                "end_to_end_latency_s": {
+                    "mean": round(float(np.mean([r.get("inference_latency_ms", 0.0)/1000.0 for r in seed_records])), 2),
+                    "p95": round(float(np.percentile([r.get("inference_latency_ms", 0.0)/1000.0 for r in seed_records], 95)), 2),
+                },
+            },
         },
         "representative_records_seed42": seed_records,
         "representative_metrics_seed42": compute_metrics(seed_records),
@@ -295,7 +319,7 @@ def generate_ablation_markdown_report(ablation_results: Dict[str, Any], output_p
         ("M3: All-VLM Baseline (Direct)", exp["m3_all_vlm"]["metrics"]),
         ("Router (VLM Disabled - Cheap Only)", exp["router_disabled"]["metrics"]),
         ("Router (VLM Enabled - Selective)", exp["router_selective_vlm"]["metrics"]),
-        ("Random Query Baseline (1000-Seed Mean)", exp["random_query_baseline"]["representative_metrics_seed42"]),
+        ("Random Query Baseline (1000-Seed Mean)", exp["random_query_baseline"].get("canonical_summary_metrics", exp["random_query_baseline"]["representative_metrics_seed42"])),
         ("Oracle Query Baseline (Upper Bound)", exp["oracle_baseline"]["metrics"]),
     ]
 

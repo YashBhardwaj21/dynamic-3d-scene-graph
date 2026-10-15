@@ -231,6 +231,10 @@ class SelectiveRouter:
             "decision_latency_ms": round(t_pol_elapsed_ms, 3),
             "inference_latency_ms": 0.0,
             "token_usage": None,
+            "observed_motion": evidence.get("observed_motion", "STATIC"),
+            "world_displacement_m": evidence.get("world_displacement_m"),
+            "displacement_uncertainty_m": evidence.get("displacement_uncertainty_m"),
+            "relocation_evaluable": evidence.get("relocation_evaluable", False),
         }
 
         # Case 1: Resolved cheaply by prior / geometry

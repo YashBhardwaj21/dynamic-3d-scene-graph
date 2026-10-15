@@ -1,7 +1,7 @@
 {
   "metadata": {
     "title": "Stage 6 Selective Router Ablation Matrix",
-    "timestamp": 1792027623.5821545,
+    "timestamp": 1792032270.9132702,
     "vlm_model": "Qwen2.5-VL-3B-Instruct (GGUF Q4_K_M)",
     "total_instances": 15,
     "eligible_image_instances": 11,
@@ -54,15 +54,28 @@
         },
         "efficiency": {
           "total_instances": 15,
+          "vlm_queries_requested": 0,
+          "vlm_inference_executed": 0,
+          "vlm_cache_hits": 0,
           "vlm_queries_invoked": 0,
           "vlm_queries_avoided": 15,
           "vlm_query_rate_pct": 0.0,
+          "vlm_outputs_valid": 0,
+          "vlm_predictions_accepted": 0,
           "decision_latency_ms": {
+            "population": "all_instances",
             "mean": 0.001,
             "p50": 0.001,
             "p95": 0.003
           },
           "end_to_end_latency_s": {
+            "population": "all_instances_unqueried_include_0ms",
+            "mean": 0.0,
+            "p50": 0.0,
+            "p95": 0.0
+          },
+          "queried_instances_latency_s": {
+            "population": "queried_instances_only",
             "mean": 0.0,
             "p50": 0.0,
             "p95": 0.0
@@ -144,7 +157,7 @@
           "vlm_required": false,
           "views_used": 0,
           "evidence_valid": true,
-          "decision_latency_ms": 0.0,
+          "decision_latency_ms": 0.001,
           "inference_latency_ms": 0.0,
           "reason_codes": [
             "CHEAP_SEMANTIC_CLASS_PRIOR"
@@ -159,7 +172,7 @@
           "vlm_required": false,
           "views_used": 0,
           "evidence_valid": true,
-          "decision_latency_ms": 0.0,
+          "decision_latency_ms": 0.001,
           "inference_latency_ms": 0.0,
           "reason_codes": [
             "CHEAP_SEMANTIC_CLASS_PRIOR"
@@ -189,7 +202,7 @@
           "vlm_required": false,
           "views_used": 0,
           "evidence_valid": true,
-          "decision_latency_ms": 0.0,
+          "decision_latency_ms": 0.001,
           "inference_latency_ms": 0.0,
           "reason_codes": [
             "CHEAP_SEMANTIC_CLASS_PRIOR"
@@ -219,7 +232,7 @@
           "vlm_required": false,
           "views_used": 0,
           "evidence_valid": true,
-          "decision_latency_ms": 0.0,
+          "decision_latency_ms": 0.002,
           "inference_latency_ms": 0.0,
           "reason_codes": [
             "CHEAP_SEMANTIC_CLASS_PRIOR"
@@ -294,7 +307,7 @@
           "vlm_required": false,
           "views_used": 0,
           "evidence_valid": true,
-          "decision_latency_ms": 0.001,
+          "decision_latency_ms": 0.0,
           "inference_latency_ms": 0.0,
           "reason_codes": [
             "CHEAP_SEMANTIC_CLASS_PRIOR"
@@ -348,18 +361,31 @@
         },
         "efficiency": {
           "total_instances": 15,
+          "vlm_queries_requested": 4,
+          "vlm_inference_executed": 0,
+          "vlm_cache_hits": 4,
           "vlm_queries_invoked": 4,
           "vlm_queries_avoided": 11,
           "vlm_query_rate_pct": 26.67,
+          "vlm_outputs_valid": 11,
+          "vlm_predictions_accepted": 11,
           "decision_latency_ms": {
-            "mean": 0.034,
-            "p50": 0.034,
+            "population": "all_instances",
+            "mean": 0.022,
+            "p50": 0.013,
             "p95": 0.05
           },
           "end_to_end_latency_s": {
+            "population": "all_instances_unqueried_include_0ms",
             "mean": 2.394,
             "p50": 0.0,
             "p95": 9.534
+          },
+          "queried_instances_latency_s": {
+            "population": "queried_instances_only",
+            "mean": 8.976,
+            "p50": 6.817,
+            "p95": 14.515
           }
         },
         "reliability": {
@@ -387,9 +413,13 @@
           "views_used": 0,
           "prediction": "IMMOVABLE",
           "abstained": false,
-          "decision_latency_ms": 0.012,
+          "decision_latency_ms": 0.019,
           "inference_latency_ms": 0.0,
           "token_usage": null,
+          "observed_motion": "DISPLACED",
+          "world_displacement_m": 0.0404,
+          "displacement_uncertainty_m": 0.04,
+          "relocation_evaluable": false,
           "ground_truth": "IMMOVABLE",
           "semantic_class": "door"
         },
@@ -402,8 +432,8 @@
           "evidence_valid": true,
           "evidence_provenance": "MEASURED_FULL",
           "vlm_query_requested": true,
-          "vlm_inference_executed": true,
-          "vlm_cache_hit": false,
+          "vlm_inference_executed": false,
+          "vlm_cache_hit": true,
           "vlm_output_valid": true,
           "vlm_prediction_accepted": true,
           "vlm_required": true,
@@ -411,7 +441,7 @@
           "views_used": 1,
           "prediction": "IMMOVABLE",
           "abstained": false,
-          "decision_latency_ms": 0.023,
+          "decision_latency_ms": 0.013,
           "inference_latency_ms": 15872.99,
           "token_usage": {
             "completion_tokens": 57,
@@ -421,6 +451,10 @@
               "cached_tokens": 291
             }
           },
+          "observed_motion": "DISPLACED",
+          "world_displacement_m": 5.2885,
+          "displacement_uncertainty_m": 0.1184,
+          "relocation_evaluable": true,
           "ground_truth": "IMMOVABLE",
           "semantic_class": "ceiling fan"
         },
@@ -506,9 +540,13 @@
           "views_used": 0,
           "prediction": "MOVABLE",
           "abstained": false,
-          "decision_latency_ms": 0.044,
+          "decision_latency_ms": 0.015,
           "inference_latency_ms": 0.0,
           "token_usage": null,
+          "observed_motion": "DISPLACED",
+          "world_displacement_m": 0.1026,
+          "displacement_uncertainty_m": 0.1021,
+          "relocation_evaluable": true,
           "ground_truth": "MOVABLE",
           "semantic_class": "desk"
         },
@@ -530,9 +568,13 @@
           "views_used": 0,
           "prediction": "MOVABLE",
           "abstained": false,
-          "decision_latency_ms": 0.034,
+          "decision_latency_ms": 0.014,
           "inference_latency_ms": 0.0,
           "token_usage": null,
+          "observed_motion": "DISPLACED",
+          "world_displacement_m": 0.1297,
+          "displacement_uncertainty_m": 0.0977,
+          "relocation_evaluable": true,
           "ground_truth": "MOVABLE",
           "semantic_class": "desk"
         },
@@ -554,9 +596,13 @@
           "views_used": 0,
           "prediction": "MOVABLE",
           "abstained": false,
-          "decision_latency_ms": 0.027,
+          "decision_latency_ms": 0.007,
           "inference_latency_ms": 0.0,
           "token_usage": null,
+          "observed_motion": "DISPLACED",
+          "world_displacement_m": 0.1832,
+          "displacement_uncertainty_m": 0.04,
+          "relocation_evaluable": false,
           "ground_truth": "MOVABLE",
           "semantic_class": "laptop"
         },
@@ -578,9 +624,13 @@
           "views_used": 0,
           "prediction": "MOVABLE",
           "abstained": false,
-          "decision_latency_ms": 0.026,
+          "decision_latency_ms": 0.005,
           "inference_latency_ms": 0.0,
           "token_usage": null,
+          "observed_motion": "DISPLACED",
+          "world_displacement_m": 0.2354,
+          "displacement_uncertainty_m": 0.04,
+          "relocation_evaluable": false,
           "ground_truth": "MOVABLE",
           "semantic_class": "backpack"
         },
@@ -593,8 +643,8 @@
           "evidence_valid": true,
           "evidence_provenance": "MEASURED_FULL",
           "vlm_query_requested": true,
-          "vlm_inference_executed": true,
-          "vlm_cache_hit": false,
+          "vlm_inference_executed": false,
+          "vlm_cache_hit": true,
           "vlm_output_valid": true,
           "vlm_prediction_accepted": true,
           "vlm_required": true,
@@ -602,7 +652,7 @@
           "views_used": 1,
           "prediction": "MOVABLE",
           "abstained": false,
-          "decision_latency_ms": 0.051,
+          "decision_latency_ms": 0.011,
           "inference_latency_ms": 6396.13,
           "token_usage": {
             "completion_tokens": 54,
@@ -612,6 +662,10 @@
               "cached_tokens": 300
             }
           },
+          "observed_motion": "DISPLACED",
+          "world_displacement_m": 0.617,
+          "displacement_uncertainty_m": 0.1085,
+          "relocation_evaluable": true,
           "ground_truth": "MOVABLE",
           "semantic_class": "chair"
         },
@@ -633,9 +687,13 @@
           "views_used": 0,
           "prediction": "MOVABLE",
           "abstained": false,
-          "decision_latency_ms": 0.021,
+          "decision_latency_ms": 0.012,
           "inference_latency_ms": 0.0,
           "token_usage": null,
+          "observed_motion": "DISPLACED",
+          "world_displacement_m": 0.2828,
+          "displacement_uncertainty_m": 0.0974,
+          "relocation_evaluable": true,
           "ground_truth": "MOVABLE",
           "semantic_class": "chair"
         },
@@ -648,8 +706,8 @@
           "evidence_valid": true,
           "evidence_provenance": "MEASURED_FULL",
           "vlm_query_requested": true,
-          "vlm_inference_executed": true,
-          "vlm_cache_hit": false,
+          "vlm_inference_executed": false,
+          "vlm_cache_hit": true,
           "vlm_output_valid": true,
           "vlm_prediction_accepted": true,
           "vlm_required": true,
@@ -657,7 +715,7 @@
           "views_used": 2,
           "prediction": "MOVABLE",
           "abstained": false,
-          "decision_latency_ms": 0.015,
+          "decision_latency_ms": 0.007,
           "inference_latency_ms": 6817.29,
           "token_usage": {
             "completion_tokens": 55,
@@ -667,6 +725,10 @@
               "cached_tokens": 388
             }
           },
+          "observed_motion": "DISPLACED",
+          "world_displacement_m": 0.5365,
+          "displacement_uncertainty_m": 0.0982,
+          "relocation_evaluable": true,
           "ground_truth": "MOVABLE",
           "semantic_class": "storage box"
         },
@@ -679,8 +741,8 @@
           "evidence_valid": true,
           "evidence_provenance": "MEASURED_FULL",
           "vlm_query_requested": true,
-          "vlm_inference_executed": true,
-          "vlm_cache_hit": false,
+          "vlm_inference_executed": false,
+          "vlm_cache_hit": true,
           "vlm_output_valid": true,
           "vlm_prediction_accepted": true,
           "vlm_required": true,
@@ -688,7 +750,7 @@
           "views_used": 1,
           "prediction": "MOVABLE",
           "abstained": false,
-          "decision_latency_ms": 0.02,
+          "decision_latency_ms": 0.011,
           "inference_latency_ms": 6815.86,
           "token_usage": {
             "completion_tokens": 60,
@@ -698,6 +760,10 @@
               "cached_tokens": 310
             }
           },
+          "observed_motion": "DISPLACED",
+          "world_displacement_m": 0.0315,
+          "displacement_uncertainty_m": 0.04,
+          "relocation_evaluable": false,
           "ground_truth": "MOVABLE",
           "semantic_class": "pedestal fan"
         },
@@ -719,9 +785,13 @@
           "views_used": 0,
           "prediction": "MOVABLE",
           "abstained": false,
-          "decision_latency_ms": 0.04,
+          "decision_latency_ms": 0.01,
           "inference_latency_ms": 0.0,
           "token_usage": null,
+          "observed_motion": "DISPLACED",
+          "world_displacement_m": 0.1657,
+          "displacement_uncertainty_m": 0.04,
+          "relocation_evaluable": false,
           "ground_truth": "MOVABLE",
           "semantic_class": "computer monitor"
         }
@@ -773,15 +843,28 @@
         },
         "efficiency": {
           "total_instances": 15,
-          "vlm_queries_invoked": 4,
-          "vlm_queries_avoided": 11,
-          "vlm_query_rate_pct": 26.67,
+          "vlm_queries_requested": 4,
+          "vlm_inference_executed": 0,
+          "vlm_cache_hits": 0,
+          "vlm_queries_invoked": 0,
+          "vlm_queries_avoided": 15,
+          "vlm_query_rate_pct": 0.0,
+          "vlm_outputs_valid": 15,
+          "vlm_predictions_accepted": 15,
           "decision_latency_ms": {
-            "mean": 0.015,
-            "p50": 0.013,
-            "p95": 0.029
+            "population": "all_instances",
+            "mean": 0.006,
+            "p50": 0.006,
+            "p95": 0.009
           },
           "end_to_end_latency_s": {
+            "population": "all_instances_unqueried_include_0ms",
+            "mean": 0.0,
+            "p50": 0.0,
+            "p95": 0.0
+          },
+          "queried_instances_latency_s": {
+            "population": "queried_instances_only",
             "mean": 0.0,
             "p50": 0.0,
             "p95": 0.0
@@ -812,9 +895,13 @@
           "views_used": 0,
           "prediction": "IMMOVABLE",
           "abstained": false,
-          "decision_latency_ms": 0.038,
+          "decision_latency_ms": 0.01,
           "inference_latency_ms": 0.0,
           "token_usage": null,
+          "observed_motion": "STATIC",
+          "world_displacement_m": 0.0404,
+          "displacement_uncertainty_m": 0.04,
+          "relocation_evaluable": false,
           "ground_truth": "IMMOVABLE",
           "semantic_class": "door",
           "observed_motion_gt": "STATIC"
@@ -837,9 +924,13 @@
           "views_used": 0,
           "prediction": "UNKNOWN",
           "abstained": true,
-          "decision_latency_ms": 0.013,
+          "decision_latency_ms": 0.009,
           "inference_latency_ms": 0.0,
           "token_usage": null,
+          "observed_motion": "DISPLACED",
+          "world_displacement_m": 5.2885,
+          "displacement_uncertainty_m": 0.1184,
+          "relocation_evaluable": true,
           "ground_truth": "IMMOVABLE",
           "semantic_class": "ceiling fan",
           "observed_motion_gt": "STATIC"
@@ -848,7 +939,8 @@
           "entity_id": "inst_whiteboard_001",
           "decision": "DEFER",
           "reason_codes": [
-            "UNTRUSTWORTHY_ESTIMATOR_POSE"
+            "AMBIGUOUS_PHYSICAL_SUPPORT_AFFORDANCE",
+            "MISSING_REQUIRED_VISUAL_CONTEXT"
           ],
           "evidence_valid": false,
           "evidence_provenance": "MEASURED_FULL",
@@ -862,9 +954,13 @@
           "views_used": 0,
           "prediction": "UNKNOWN",
           "abstained": true,
-          "decision_latency_ms": 0.008,
+          "decision_latency_ms": 0.006,
           "inference_latency_ms": 0.0,
           "token_usage": null,
+          "observed_motion": "STATIC",
+          "world_displacement_m": 0.0,
+          "displacement_uncertainty_m": 0.04,
+          "relocation_evaluable": false,
           "ground_truth": "IMMOVABLE",
           "semantic_class": "whiteboard",
           "observed_motion_gt": "STATIC"
@@ -887,9 +983,13 @@
           "views_used": 0,
           "prediction": "MOBILE",
           "abstained": false,
-          "decision_latency_ms": 0.011,
+          "decision_latency_ms": 0.006,
           "inference_latency_ms": 0.0,
           "token_usage": null,
+          "observed_motion": "DISPLACED",
+          "world_displacement_m": 1.8598,
+          "displacement_uncertainty_m": 0.1016,
+          "relocation_evaluable": true,
           "ground_truth": "MOBILE",
           "semantic_class": "person",
           "observed_motion_gt": "DYNAMIC"
@@ -912,9 +1012,13 @@
           "views_used": 0,
           "prediction": "MOBILE",
           "abstained": false,
-          "decision_latency_ms": 0.008,
+          "decision_latency_ms": 0.004,
           "inference_latency_ms": 0.0,
           "token_usage": null,
+          "observed_motion": "STATIC",
+          "world_displacement_m": 0.0,
+          "displacement_uncertainty_m": 0.04,
+          "relocation_evaluable": false,
           "ground_truth": "MOBILE",
           "semantic_class": "robot",
           "observed_motion_gt": "DYNAMIC"
@@ -937,9 +1041,13 @@
           "views_used": 0,
           "prediction": "MOBILE",
           "abstained": false,
-          "decision_latency_ms": 0.007,
+          "decision_latency_ms": 0.003,
           "inference_latency_ms": 0.0,
           "token_usage": null,
+          "observed_motion": "STATIC",
+          "world_displacement_m": 0.0,
+          "displacement_uncertainty_m": 0.04,
+          "relocation_evaluable": false,
           "ground_truth": "MOBILE",
           "semantic_class": "robot",
           "observed_motion_gt": "DYNAMIC"
@@ -962,9 +1070,13 @@
           "views_used": 0,
           "prediction": "MOVABLE",
           "abstained": false,
-          "decision_latency_ms": 0.013,
+          "decision_latency_ms": 0.007,
           "inference_latency_ms": 0.0,
           "token_usage": null,
+          "observed_motion": "STATIC",
+          "world_displacement_m": 0.1026,
+          "displacement_uncertainty_m": 0.1021,
+          "relocation_evaluable": true,
           "ground_truth": "MOVABLE",
           "semantic_class": "desk",
           "observed_motion_gt": "STATIC"
@@ -987,9 +1099,13 @@
           "views_used": 0,
           "prediction": "MOVABLE",
           "abstained": false,
-          "decision_latency_ms": 0.013,
+          "decision_latency_ms": 0.007,
           "inference_latency_ms": 0.0,
           "token_usage": null,
+          "observed_motion": "STATIC",
+          "world_displacement_m": 0.1297,
+          "displacement_uncertainty_m": 0.0977,
+          "relocation_evaluable": true,
           "ground_truth": "MOVABLE",
           "semantic_class": "desk",
           "observed_motion_gt": "STATIC"
@@ -1012,9 +1128,13 @@
           "views_used": 0,
           "prediction": "MOVABLE",
           "abstained": false,
-          "decision_latency_ms": 0.011,
+          "decision_latency_ms": 0.004,
           "inference_latency_ms": 0.0,
           "token_usage": null,
+          "observed_motion": "STATIC",
+          "world_displacement_m": 0.1832,
+          "displacement_uncertainty_m": 0.04,
+          "relocation_evaluable": false,
           "ground_truth": "MOVABLE",
           "semantic_class": "laptop",
           "observed_motion_gt": "STATIC"
@@ -1037,9 +1157,13 @@
           "views_used": 0,
           "prediction": "MOVABLE",
           "abstained": false,
-          "decision_latency_ms": 0.017,
+          "decision_latency_ms": 0.004,
           "inference_latency_ms": 0.0,
           "token_usage": null,
+          "observed_motion": "STATIC",
+          "world_displacement_m": 0.2354,
+          "displacement_uncertainty_m": 0.04,
+          "relocation_evaluable": false,
           "ground_truth": "MOVABLE",
           "semantic_class": "backpack",
           "observed_motion_gt": "STATIC"
@@ -1062,9 +1186,13 @@
           "views_used": 0,
           "prediction": "UNKNOWN",
           "abstained": true,
-          "decision_latency_ms": 0.011,
+          "decision_latency_ms": 0.006,
           "inference_latency_ms": 0.0,
           "token_usage": null,
+          "observed_motion": "DISPLACED",
+          "world_displacement_m": 0.617,
+          "displacement_uncertainty_m": 0.1085,
+          "relocation_evaluable": true,
           "ground_truth": "MOVABLE",
           "semantic_class": "chair",
           "observed_motion_gt": "DISPLACED"
@@ -1087,9 +1215,13 @@
           "views_used": 0,
           "prediction": "MOVABLE",
           "abstained": false,
-          "decision_latency_ms": 0.016,
+          "decision_latency_ms": 0.008,
           "inference_latency_ms": 0.0,
           "token_usage": null,
+          "observed_motion": "DISPLACED",
+          "world_displacement_m": 0.2828,
+          "displacement_uncertainty_m": 0.0974,
+          "relocation_evaluable": true,
           "ground_truth": "MOVABLE",
           "semantic_class": "chair",
           "observed_motion_gt": "DISPLACED"
@@ -1112,9 +1244,13 @@
           "views_used": 0,
           "prediction": "UNKNOWN",
           "abstained": true,
-          "decision_latency_ms": 0.025,
+          "decision_latency_ms": 0.006,
           "inference_latency_ms": 0.0,
           "token_usage": null,
+          "observed_motion": "DISPLACED",
+          "world_displacement_m": 0.5365,
+          "displacement_uncertainty_m": 0.0982,
+          "relocation_evaluable": true,
           "ground_truth": "MOVABLE",
           "semantic_class": "storage box",
           "observed_motion_gt": "DISPLACED"
@@ -1137,9 +1273,13 @@
           "views_used": 0,
           "prediction": "UNKNOWN",
           "abstained": true,
-          "decision_latency_ms": 0.017,
+          "decision_latency_ms": 0.004,
           "inference_latency_ms": 0.0,
           "token_usage": null,
+          "observed_motion": "STATIC",
+          "world_displacement_m": 0.0315,
+          "displacement_uncertainty_m": 0.04,
+          "relocation_evaluable": false,
           "ground_truth": "MOVABLE",
           "semantic_class": "pedestal fan",
           "observed_motion_gt": "STATIC"
@@ -1162,9 +1302,13 @@
           "views_used": 0,
           "prediction": "MOVABLE",
           "abstained": false,
-          "decision_latency_ms": 0.015,
+          "decision_latency_ms": 0.004,
           "inference_latency_ms": 0.0,
           "token_usage": null,
+          "observed_motion": "STATIC",
+          "world_displacement_m": 0.1657,
+          "displacement_uncertainty_m": 0.04,
+          "relocation_evaluable": false,
           "ground_truth": "MOVABLE",
           "semantic_class": "computer monitor",
           "observed_motion_gt": "STATIC"
@@ -1217,18 +1361,31 @@
         },
         "efficiency": {
           "total_instances": 15,
+          "vlm_queries_requested": 4,
+          "vlm_inference_executed": 0,
+          "vlm_cache_hits": 4,
           "vlm_queries_invoked": 4,
           "vlm_queries_avoided": 11,
           "vlm_query_rate_pct": 26.67,
+          "vlm_outputs_valid": 15,
+          "vlm_predictions_accepted": 15,
           "decision_latency_ms": {
-            "mean": 0.012,
-            "p50": 0.013,
-            "p95": 0.017
+            "population": "all_instances",
+            "mean": 0.006,
+            "p50": 0.006,
+            "p95": 0.008
           },
           "end_to_end_latency_s": {
+            "population": "all_instances_unqueried_include_0ms",
             "mean": 2.393,
             "p50": 0.0,
             "p95": 9.534
+          },
+          "queried_instances_latency_s": {
+            "population": "queried_instances_only",
+            "mean": 8.976,
+            "p50": 6.817,
+            "p95": 14.515
           }
         },
         "reliability": {
@@ -1256,9 +1413,13 @@
           "views_used": 0,
           "prediction": "IMMOVABLE",
           "abstained": false,
-          "decision_latency_ms": 0.01,
+          "decision_latency_ms": 0.007,
           "inference_latency_ms": 0.0,
           "token_usage": null,
+          "observed_motion": "STATIC",
+          "world_displacement_m": 0.0404,
+          "displacement_uncertainty_m": 0.04,
+          "relocation_evaluable": false,
           "ground_truth": "IMMOVABLE",
           "semantic_class": "door",
           "observed_motion_gt": "STATIC"
@@ -1281,7 +1442,7 @@
           "views_used": 1,
           "prediction": "IMMOVABLE",
           "abstained": false,
-          "decision_latency_ms": 0.017,
+          "decision_latency_ms": 0.006,
           "inference_latency_ms": 15872.99,
           "token_usage": {
             "completion_tokens": 57,
@@ -1291,6 +1452,10 @@
               "cached_tokens": 291
             }
           },
+          "observed_motion": "DISPLACED",
+          "world_displacement_m": 5.2885,
+          "displacement_uncertainty_m": 0.1184,
+          "relocation_evaluable": true,
           "ground_truth": "IMMOVABLE",
           "semantic_class": "ceiling fan",
           "observed_motion_gt": "STATIC"
@@ -1299,7 +1464,8 @@
           "entity_id": "inst_whiteboard_001",
           "decision": "DEFER",
           "reason_codes": [
-            "UNTRUSTWORTHY_ESTIMATOR_POSE"
+            "AMBIGUOUS_PHYSICAL_SUPPORT_AFFORDANCE",
+            "MISSING_REQUIRED_VISUAL_CONTEXT"
           ],
           "evidence_valid": false,
           "evidence_provenance": "MEASURED_FULL",
@@ -1313,9 +1479,13 @@
           "views_used": 0,
           "prediction": "UNKNOWN",
           "abstained": true,
-          "decision_latency_ms": 0.011,
+          "decision_latency_ms": 0.007,
           "inference_latency_ms": 0.0,
           "token_usage": null,
+          "observed_motion": "STATIC",
+          "world_displacement_m": 0.0,
+          "displacement_uncertainty_m": 0.04,
+          "relocation_evaluable": false,
           "ground_truth": "IMMOVABLE",
           "semantic_class": "whiteboard",
           "observed_motion_gt": "STATIC"
@@ -1338,9 +1508,13 @@
           "views_used": 0,
           "prediction": "MOBILE",
           "abstained": false,
-          "decision_latency_ms": 0.013,
+          "decision_latency_ms": 0.007,
           "inference_latency_ms": 0.0,
           "token_usage": null,
+          "observed_motion": "DISPLACED",
+          "world_displacement_m": 1.8598,
+          "displacement_uncertainty_m": 0.1016,
+          "relocation_evaluable": true,
           "ground_truth": "MOBILE",
           "semantic_class": "person",
           "observed_motion_gt": "DYNAMIC"
@@ -1363,9 +1537,13 @@
           "views_used": 0,
           "prediction": "MOBILE",
           "abstained": false,
-          "decision_latency_ms": 0.008,
+          "decision_latency_ms": 0.004,
           "inference_latency_ms": 0.0,
           "token_usage": null,
+          "observed_motion": "STATIC",
+          "world_displacement_m": 0.0,
+          "displacement_uncertainty_m": 0.04,
+          "relocation_evaluable": false,
           "ground_truth": "MOBILE",
           "semantic_class": "robot",
           "observed_motion_gt": "DYNAMIC"
@@ -1388,9 +1566,13 @@
           "views_used": 0,
           "prediction": "MOBILE",
           "abstained": false,
-          "decision_latency_ms": 0.009,
+          "decision_latency_ms": 0.003,
           "inference_latency_ms": 0.0,
           "token_usage": null,
+          "observed_motion": "STATIC",
+          "world_displacement_m": 0.0,
+          "displacement_uncertainty_m": 0.04,
+          "relocation_evaluable": false,
           "ground_truth": "MOBILE",
           "semantic_class": "robot",
           "observed_motion_gt": "DYNAMIC"
@@ -1413,9 +1595,13 @@
           "views_used": 0,
           "prediction": "MOVABLE",
           "abstained": false,
-          "decision_latency_ms": 0.014,
+          "decision_latency_ms": 0.007,
           "inference_latency_ms": 0.0,
           "token_usage": null,
+          "observed_motion": "STATIC",
+          "world_displacement_m": 0.1026,
+          "displacement_uncertainty_m": 0.1021,
+          "relocation_evaluable": true,
           "ground_truth": "MOVABLE",
           "semantic_class": "desk",
           "observed_motion_gt": "STATIC"
@@ -1438,9 +1624,13 @@
           "views_used": 0,
           "prediction": "MOVABLE",
           "abstained": false,
-          "decision_latency_ms": 0.013,
+          "decision_latency_ms": 0.005,
           "inference_latency_ms": 0.0,
           "token_usage": null,
+          "observed_motion": "STATIC",
+          "world_displacement_m": 0.1297,
+          "displacement_uncertainty_m": 0.0977,
+          "relocation_evaluable": true,
           "ground_truth": "MOVABLE",
           "semantic_class": "desk",
           "observed_motion_gt": "STATIC"
@@ -1463,9 +1653,13 @@
           "views_used": 0,
           "prediction": "MOVABLE",
           "abstained": false,
-          "decision_latency_ms": 0.01,
+          "decision_latency_ms": 0.004,
           "inference_latency_ms": 0.0,
           "token_usage": null,
+          "observed_motion": "STATIC",
+          "world_displacement_m": 0.1832,
+          "displacement_uncertainty_m": 0.04,
+          "relocation_evaluable": false,
           "ground_truth": "MOVABLE",
           "semantic_class": "laptop",
           "observed_motion_gt": "STATIC"
@@ -1488,9 +1682,13 @@
           "views_used": 0,
           "prediction": "MOVABLE",
           "abstained": false,
-          "decision_latency_ms": 0.009,
+          "decision_latency_ms": 0.005,
           "inference_latency_ms": 0.0,
           "token_usage": null,
+          "observed_motion": "STATIC",
+          "world_displacement_m": 0.2354,
+          "displacement_uncertainty_m": 0.04,
+          "relocation_evaluable": false,
           "ground_truth": "MOVABLE",
           "semantic_class": "backpack",
           "observed_motion_gt": "STATIC"
@@ -1513,7 +1711,7 @@
           "views_used": 1,
           "prediction": "MOVABLE",
           "abstained": false,
-          "decision_latency_ms": 0.013,
+          "decision_latency_ms": 0.006,
           "inference_latency_ms": 6396.13,
           "token_usage": {
             "completion_tokens": 54,
@@ -1523,6 +1721,10 @@
               "cached_tokens": 300
             }
           },
+          "observed_motion": "DISPLACED",
+          "world_displacement_m": 0.617,
+          "displacement_uncertainty_m": 0.1085,
+          "relocation_evaluable": true,
           "ground_truth": "MOVABLE",
           "semantic_class": "chair",
           "observed_motion_gt": "DISPLACED"
@@ -1545,9 +1747,13 @@
           "views_used": 0,
           "prediction": "MOVABLE",
           "abstained": false,
-          "decision_latency_ms": 0.017,
+          "decision_latency_ms": 0.011,
           "inference_latency_ms": 0.0,
           "token_usage": null,
+          "observed_motion": "DISPLACED",
+          "world_displacement_m": 0.2828,
+          "displacement_uncertainty_m": 0.0974,
+          "relocation_evaluable": true,
           "ground_truth": "MOVABLE",
           "semantic_class": "chair",
           "observed_motion_gt": "DISPLACED"
@@ -1570,7 +1776,7 @@
           "views_used": 2,
           "prediction": "MOVABLE",
           "abstained": false,
-          "decision_latency_ms": 0.013,
+          "decision_latency_ms": 0.006,
           "inference_latency_ms": 6817.29,
           "token_usage": {
             "completion_tokens": 55,
@@ -1580,6 +1786,10 @@
               "cached_tokens": 388
             }
           },
+          "observed_motion": "DISPLACED",
+          "world_displacement_m": 0.5365,
+          "displacement_uncertainty_m": 0.0982,
+          "relocation_evaluable": true,
           "ground_truth": "MOVABLE",
           "semantic_class": "storage box",
           "observed_motion_gt": "DISPLACED"
@@ -1602,7 +1812,7 @@
           "views_used": 1,
           "prediction": "MOVABLE",
           "abstained": false,
-          "decision_latency_ms": 0.013,
+          "decision_latency_ms": 0.007,
           "inference_latency_ms": 6815.86,
           "token_usage": {
             "completion_tokens": 60,
@@ -1612,6 +1822,10 @@
               "cached_tokens": 310
             }
           },
+          "observed_motion": "STATIC",
+          "world_displacement_m": 0.0315,
+          "displacement_uncertainty_m": 0.04,
+          "relocation_evaluable": false,
           "ground_truth": "MOVABLE",
           "semantic_class": "pedestal fan",
           "observed_motion_gt": "STATIC"
@@ -1634,9 +1848,13 @@
           "views_used": 0,
           "prediction": "MOVABLE",
           "abstained": false,
-          "decision_latency_ms": 0.013,
+          "decision_latency_ms": 0.007,
           "inference_latency_ms": 0.0,
           "token_usage": null,
+          "observed_motion": "STATIC",
+          "world_displacement_m": 0.1657,
+          "displacement_uncertainty_m": 0.04,
+          "relocation_evaluable": false,
           "ground_truth": "MOVABLE",
           "semantic_class": "computer monitor",
           "observed_motion_gt": "STATIC"
@@ -1659,6 +1877,26 @@
         "median": 0.9333,
         "p05": 0.8917,
         "p95": 0.9804
+      },
+      "canonical_summary_metrics": {
+        "quality": {
+          "balanced_accuracy": 0.8796,
+          "macro_f1": 0.9293,
+          "per_class_recall": {
+            "IMMOVABLE": 0.2,
+            "MOVABLE": 0.8796,
+            "MOBILE": 1.0
+          },
+          "abstention_rate_pct": 0.0
+        },
+        "efficiency": {
+          "vlm_query_rate_pct": 26.7,
+          "vlm_queries_invoked": 4,
+          "end_to_end_latency_s": {
+            "mean": 1.06,
+            "p95": 4.76
+          }
+        }
       },
       "representative_records_seed42": [
         {
@@ -1930,18 +2168,31 @@
         },
         "efficiency": {
           "total_instances": 15,
-          "vlm_queries_invoked": 4,
-          "vlm_queries_avoided": 11,
-          "vlm_query_rate_pct": 26.67,
+          "vlm_queries_requested": 4,
+          "vlm_inference_executed": 0,
+          "vlm_cache_hits": 0,
+          "vlm_queries_invoked": 0,
+          "vlm_queries_avoided": 15,
+          "vlm_query_rate_pct": 0.0,
+          "vlm_outputs_valid": 0,
+          "vlm_predictions_accepted": 0,
           "decision_latency_ms": {
+            "population": "all_instances",
             "mean": 0.043,
             "p50": 0.04,
             "p95": 0.05
           },
           "end_to_end_latency_s": {
+            "population": "all_instances_unqueried_include_0ms",
             "mean": 1.058,
             "p50": 0.0,
             "p95": 4.762
+          },
+          "queried_instances_latency_s": {
+            "population": "queried_instances_only",
+            "mean": 0.0,
+            "p50": 0.0,
+            "p95": 0.0
           }
         },
         "reliability": {
@@ -1997,18 +2248,31 @@
         },
         "efficiency": {
           "total_instances": 15,
-          "vlm_queries_invoked": 4,
-          "vlm_queries_avoided": 11,
-          "vlm_query_rate_pct": 26.67,
+          "vlm_queries_requested": 4,
+          "vlm_inference_executed": 0,
+          "vlm_cache_hits": 0,
+          "vlm_queries_invoked": 0,
+          "vlm_queries_avoided": 15,
+          "vlm_query_rate_pct": 0.0,
+          "vlm_outputs_valid": 0,
+          "vlm_predictions_accepted": 0,
           "decision_latency_ms": {
+            "population": "all_instances",
             "mean": 0.043,
             "p50": 0.04,
             "p95": 0.05
           },
           "end_to_end_latency_s": {
+            "population": "all_instances_unqueried_include_0ms",
             "mean": 1.058,
             "p50": 0.0,
             "p95": 4.762
+          },
+          "queried_instances_latency_s": {
+            "population": "queried_instances_only",
+            "mean": 0.0,
+            "p50": 0.0,
+            "p95": 0.0
           }
         },
         "reliability": {
