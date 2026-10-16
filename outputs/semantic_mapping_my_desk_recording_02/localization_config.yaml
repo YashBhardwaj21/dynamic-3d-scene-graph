@@ -1,9 +1,0 @@
-localization:
-  atlas_file: null
-  floor_transform_file: floor_plane.json
-  map_directory: /mnt/c/Users/Yash Bhardwaj/Desktop/perception/outputs/semantic_mapping_my_desk_recording_02
-  max_covariance: 0.05
-  min_inliers_tracked: 15
-  reference_trajectory: trajectory/CameraTrajectory.txt
-  status: REPLAY_ONLY (Atlas not available)
-  trajectory_sha256: 8540d609be58bd578fa423e53f7abf96e65a38de904dac682cc2f1d3f93ded66

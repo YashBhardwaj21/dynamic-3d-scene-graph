@@ -1,8 +1,0 @@
-navigation:
-  controller_type: SkidSteerPurePursuit
-  costmap_file: navigation_costmap.yaml
-  goal_tolerance_pos_m: 0.08
-  goal_tolerance_yaw_rad: 0.12
-  max_angular_speed_radps: 1.5
-  max_linear_speed_mps: 0.35
-  planner_type: AStar

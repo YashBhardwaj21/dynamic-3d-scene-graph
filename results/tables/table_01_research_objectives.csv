@@ -1,6 +1,0 @@
-Objective / Question,Hypothesis,Required Evidence,Verified Status
-Q1: Contextual Mobility,Selective VLM reasoning resolves physical affordance ambiguity,Balanced accuracy on View A and counterexample suite,VERIFIED (85.2%-100% on manifest; 90% on counterexamples)
-Q2: Query Reduction,Cheap prior and motion gates avoid unneeded VLM forward passes,VLM query rate and latency vs All-VLM (R4),VERIFIED (73.3%-80.0% compute reduction)
-Q3: Estimator-Aware Routing,Estimator awareness gates VLM compute based on SLAM landmark relevance,Controlled clutter escalation tests (R2 vs R3),VERIFIED AS COMPUTE GATE (R2/R3 accuracy equal on static testset)
-Q4: Downstream Landmark Reliability,Selective invalidation preserves stationary landmarks and drops stale relocations,"Retention rate, false invalidation rate, relocation invalidation","VERIFIED (91.1% retention, 8.9% false inv, 25.0% reloc inv)"
-Q5: Metric Trajectory Drift,VLM scene graph reduces trajectory drift (ATE/RPE),Continuous 6-DoF optical motion capture trajectory GT,UNEVALUATED (Fail-closed: No MoCap ground truth on custom room)

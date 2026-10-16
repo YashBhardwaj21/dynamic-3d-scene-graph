@@ -1,0 +1,19 @@
+{
+  "version": "1.0.0",
+  "map_id": "fused_desk_run",
+  "current_pose": {
+    "x_m": 0.0,
+    "y_m": 0.0,
+    "yaw_rad": 0.0,
+    "yaw_deg": 0.0,
+    "timestamp_s": 1792127064.4819567,
+    "source": "navigation_arrival"
+  },
+  "last_confirmed_stopping_pose": {
+    "x_m": 0.0,
+    "y_m": 0.0,
+    "yaw_rad": 0.0,
+    "yaw_deg": 0.0,
+    "last_target": "origin"
+  }
+}

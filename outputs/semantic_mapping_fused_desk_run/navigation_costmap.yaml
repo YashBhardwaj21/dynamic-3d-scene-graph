@@ -1,9 +1,0 @@
-free_thresh: 0.196
-image: navigation_costmap.pgm
-negate: 0
-occupied_thresh: 0.65
-origin:
-- -7.3500000000000005
-- -11.100000000000001
-- 0.0
-resolution: 0.05

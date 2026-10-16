@@ -1,7 +1,0 @@
-Discrepancy ID,Issue Title,Reported Finding vs Reality,Resolution / Mitigation,Verified Status
-DISC-01,Tracklet Consolidation Recall,Initial claims reported recall solved; actual data shows 7/30 instances before and after,Report exact 7/30 count honestly as negative/constrained result,RESOLVED
-DISC-02,Semantic F1 vs Coverage,100% Macro-F1 misconstrued as 100% coverage; actual mapped coverage is 55.57%,Report coverage alongside F1 in all tables and texts,RESOLVED
-DISC-03,Downstream Landmark Discrepancies,Claims of 0% false invalidation contradicted 4 false invalidations in JSON,Reconciled report and JSON on verified 41/45 retention and 4 false invs,RESOLVED
-DISC-04,Controlled Relocation Errors,Initial 2D box midpoint projection had 30.42% relative error (exceeding 30%),Depth-weighted MAD outlier rejection brings error to 22.28% (MAE 9.53cm),RESOLVED
-DISC-05,R2 vs R3 Classification Parity,Estimator awareness claimed to improve classification; actually acts as compute gate,Explicitly document R2/R3 accuracy parity on test set,RESOLVED
-DISC-06,TUM Trajectory Contamination,Older draft borrowed TUM ATE/RPE; custom room lacks 6-DoF MoCap,Fail-closed reporting: ATE/RPE marked UNEVALUATED,RESOLVED

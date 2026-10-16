@@ -1,6 +1,0 @@
-robot_footprint:
-  camera_offset_x_m: 0.12
-  camera_offset_z_m: 0.16
-  radius_m: 0.18
-  safety_margin_m: 0.05
-  track_width_m: 0.2

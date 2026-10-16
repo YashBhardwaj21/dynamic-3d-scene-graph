@@ -1,9 +1,0 @@
-### Table 02 Related Methods: Comparison with State-of-the-Art Dynamic Semantic Mapping and Scene Graph Systems
-
-| System | Sensor Modality | Semantic Source | Dynamic Object Handling | Downstream Evaluation | Primary Limitation |
-| :--- | :---: | :---: | :---: | :---: | :---: |
-| Kimera (Rosinol et al., 2020) | Stereo / RGB-D + IMU | 2D Segmentation (Minkowski) | Pre-filtered moving agents | 3D Mesh + ATE | Static world assumption; cannot reason about movable furniture |
-| Hydra (Hughes et al., 2022) | RGB-D + Odom | 2D Deep Net (Dense) | Static background only | Hierarchical Scene Graph | No physical affordance reasoning; stationary relocations distort map |
-| ConceptGraphs (Gu et al., 2023) | RGB-D Sequence | 2D SAM + CLIP / VLM | Averaged centroid fusion | Open-vocabulary query | Batch offline only; phantom centroids on multi-session relocated objects |
-| SayPlan (Rana et al., 2023) | Pre-built Scene Graph | LLM Navigation Planner | Static representation | Task success rate | Downstream planning only; does not maintain or update metric scene graph |
-| Ours (Dynamic 3D Scene Graph) | RGB-D + RTAB-Map | YOLOE + Qwen2.5-VL-3B | Estimator-aware selective router | Metric retention + Relocation | Tracker fragmentation (82.44% short tracks); unconstrained trajectory unevaluated |

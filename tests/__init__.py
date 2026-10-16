@@ -1,1 +1,0 @@
-"""Scene graph test suite."""

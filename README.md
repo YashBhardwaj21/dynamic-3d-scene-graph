@@ -1,8 +1,13 @@
 # Dynamic 3D Scene Graph: Persistent Identity, Contextual Affordance & Multi-View VLM Reasoning
 
+> [!NOTE]
+> **Dedicated VLM Research Branch (`research-vlm`)**  
+> This branch is dedicated to the Vision-Language Model (VLM) subsystem, multimodal evidence fusion adapter, and evaluation benchmarks. All implementation files, datasets, and tests are self-contained in the [`vlm/`](vlm/) directory.  
+> 👉 **See [`vlm/README.md`](vlm/README.md) for full documentation, quickstart, and reproduction steps.**
+
 [![Python 3.10+](https://img.shields.io/badge/python-3.10%2B-blue.svg)](https://www.python.org/downloads/)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
-[![Testing: Pytest](https://img.shields.io/badge/tests-86%20passed-brightgreen.svg)]()
+[![Testing: Pytest](https://img.shields.io/badge/tests-121%20passed-brightgreen.svg)]()
 
 A robust, uncertainty-aware framework for indoor robot perception that bridges 3D metric-semantic SLAM and vision-language model (VLM) reasoning. It maintains **persistent physical identity across independent SLAM sessions**, detects physical object relocation, grounds contextual object affordance (immovable fixtures vs. movable furniture vs. mobile agents), and selectively escalates complex scenes to multi-view VLMs without ground-truth leakage.
 
