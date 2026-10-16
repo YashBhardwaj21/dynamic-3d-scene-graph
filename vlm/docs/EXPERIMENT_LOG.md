@@ -116,27 +116,27 @@ Every experiment record specifies:
 
 ### EXP-06: Downstream SLAM & Dynamic Scene Graph Validation
 - **Run ID:** `EXP-20261015-DOWNSTREAM-SLAM-EFFECTS`
-- **Timestamp:** 2026-10-15 20:17:15 UTC
-- **Git Commit:** `e9c336408479b2a2a468882974a3a022a48ab0e7`
+- **Timestamp:** 2026-10-16 02:37:06 UTC
+- **Git Commit:** `main` (clean working tree modifications)
 - **Command:** `py -3 vlm/scripts/evaluate_downstream_slam_effects.py`
-- **Configuration:** Evaluated landmark retention, false invalidations, and trajectory metrics on `scene_graph.json` and `tum_fr1_desk`.
+- **Configuration:** Evaluated landmark retention, false invalidations, and tracking telemetry on `scene_graph.json` and `my_desk_sequence`.
 - **Output Artifacts:**
   - `vlm/outputs/downstream_slam_effects.json`
   - `vlm/outputs/downstream_slam_effects_report.md`
 - **Verified Metrics:**
   - Correct Landmark Retention Rate: `91.1%` (41/45 stationary objects retained)
   - False Invalidation Rate: `8.9%` (4/45)
-  - SLAM ATE RMSE: `0.0545 m` (`5.45 cm` on TUM fr1)
-  - SLAM RPE RMSE: `0.0349 m` (`3.49 cm` on TUM fr1)
-  - VLM Compute Reduction: `54.5%` queries avoided vs All-VLM
-  - Latency Speedup: `1.93x`
+  - SLAM Tracking Ratio: `88.75%` (71/80 valid poses on `my_desk_sequence`, 0 tracking losses)
+  - SLAM Trajectory ATE/RPE: `null` / `UNEVALUATED_NO_MOCAP_GROUND_TRUTH` (No continuous 6-DoF optical MoCap recorded for room sequence)
+  - VLM Compute Reduction: `72.7%` queries avoided vs All-VLM (3 queries in R3 vs 11 in R4)
+  - Latency Speedup: `2.92x`
 
 ---
 
 ### EXP-07: Full Unit & Regression Suite Execution
-- **Run ID:** `EXP-20261015-FULL-REGRESSION-SUITE`
-- **Timestamp:** 2026-10-15 20:19:50 UTC
-- **Git Commit:** `e9c336408479b2a2a468882974a3a022a48ab0e7`
-- **Command:** `py -3 -m pytest vlm/tests -v`
-- **Configuration:** 13 test files covering all 15 regression requirements from Phase 9.
-- **Result:** **113 passed / 0 failed / 0 skipped in 4.54s**
+- **Run ID:** `EXP-20261016-FULL-REGRESSION-SUITE`
+- **Timestamp:** 2026-10-16 02:52:45 UTC
+- **Git Commit:** `main`
+- **Command:** `py -3 -m pytest vlm/tests -q`
+- **Configuration:** 13 test files covering input validation, operational utility thresholding, zero-inlier handling, and fail-closed contracts.
+- **Result:** **115 passed / 0 failed / 0 skipped in 3.45s**

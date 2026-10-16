@@ -40,24 +40,24 @@ This document provides definitive, evidence-grounded answers to the governing re
 ---
 
 ### Question 4: Does any improvement translate into better SLAM observation handling or localization?
-- **Finding:** **Yes, for metric landmark retention, map consistency, and loop-closure protection, with verified trajectory error bounds on benchmark sequences.**
+- **Finding:** **Yes, for metric landmark retention, map consistency, and loop-closure protection across multi-session scene graph fusion, while continuous trajectory ATE/RPE error remains unevaluated on the physical sequence.**
 - **Empirical Evidence:**
   - **Landmark Retention vs Invalidation:** In the 195-node persistent scene graph (`scene_graph.json`), the framework achieves:
     - **91.1% Correct Landmark Retention** (41 of 45 stationary entities preserved as metric landmarks).
     - **8.9% False Invalidation Rate** (zero false landmark culling on verified stationary objects).
     - **100.0% Relocation Invalidation Rate** across matched displaced objects, correctly invalidating prior coordinates to prevent loop-closure distortion.
   - **Decoupled Pose History:** 12 confirmed relocated entities decouple current coordinates from historical coordinates, completely avoiding multi-modal phantom centroid averaging.
-  - **Metric Trajectory Error:** On the TUM benchmark sequence (`tum_fr1_desk`), the pose estimator achieves **0.0545 m ATE RMSE** (5.45 cm) and **0.0349 m RPE RMSE** (3.49 cm) with 100% tracking continuity.
-  - **Boundary Caveat:** On `my_desk_sequence`, ground truth is established for object instances via physical steel tape measurement and stationary SE(2) anchor registration, not continuous optical motion capture.
+  - **Live SLAM Tracking Telemetry:** On the physical room recording (`my_desk_sequence`), the backend achieves **88.75% tracking ratio** (71/80 valid poses), **0 tracking-loss interruptions**, 54.96 mean inliers, and 95.1 mean matches.
+  - **Trajectory ATE/RPE Boundary:** Continuous 6-DoF optical motion capture ground truth was not recorded for `my_desk_sequence`. In accordance with fail-closed scientific integrity, trajectory ATE and RPE RMSE metrics are reported as `null` / unevaluated rather than borrowing external benchmarks or reporting synthetic fallbacks. Ground truth for object relocations is established via calibrated steel tape measurement ($\sigma = 0.02\text{ m}$) and stationary SE(2) anchor registration (residual RMSE $0.1198\text{ m}$).
 
 ---
 
 ### Question 5: Which improvements are statistically credible, and which remain exploratory?
 - **Statistically Credible & Verified:**
-  1. **Compute Reduction**: 54.5%–63.6% reduction in VLM inference calls on matched populations is mathematically exact and deterministically verified.
+  1. **Compute Reduction**: 54.5%–72.7% reduction in VLM inference calls on matched populations is mathematically exact and deterministically verified (3 queries in R3 vs 11 in R4).
   2. **Inter-Annotator Agreement**: $\kappa = 0.8587$ across dual human annotators confirms high ground-truth reliability.
   3. **SE(2) Registration Accuracy**: Consensus inlier residual RMSE of $0.1198\text{ m}$ across 7 rigid anchors is statistically bounded.
-  4. **Monte-Carlo Selection Variance**: Random query baseline evaluated over 1,000 seeds yields mean balanced accuracy of $89.7\% \pm 7.3\%$ ($p_{05} = 77.8\%, p_{95} = 100.0\%$), establishing that random query selection has high variance.
+  4. **Monte-Carlo Selection Variance**: Random query baseline evaluated over 1,000 seeds yields mean balanced accuracy of $93.9\% \pm 6.7\%$ ($p_{05} = 81.5\%, p_{95} = 100.0\%$), establishing query-selection variability on fixed data.
   5. **Failure of Naive Dictionary on Counterexamples**: Drop from 85.2% to 30.0% on edge cases demonstrates clear prior breakdown.
 - **Exploratory & Constrained:**
   1. **Cross-Session Physical Instance Recall (23.33%)**: Constrained by upstream tracker fragmentation (72.78% tracks $\le 4$ frames); improving this requires tracker redesign outside `vlm/`.

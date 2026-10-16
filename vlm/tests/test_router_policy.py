@@ -142,3 +142,69 @@ def test_unified_evaluate_router_policy():
     r4 = evaluate_router_policy(ev, policy="R4")
     assert r4.decision == "ESCALATE"
     assert r4.vlm_required
+
+
+def test_r2_vs_r3_divergence_on_estimator_influence():
+    """Verify that R2 and R3 make divergent decisions when estimator utility warrants it.
+
+    Under ambiguous physical support (e.g. pedestal fan):
+    - Case A (High influence): Key landmark actively constraining SLAM -> R2 and R3 both escalate.
+    - Case B (Low influence): Background clutter with poor geometry -> R2 escalates (blind to SLAM),
+      but R3 avoids query (resolves cheap) because expected SLAM loss reduction does not justify VLM cost.
+    """
+    # High influence case
+    ev_high = {
+        "entity_id": "inst_fan_high",
+        "semantic_class": "pedestal fan",
+        "has_valid_pose": True,
+        "depth_valid": True,
+        "observed_motion": "STATIC",
+        "has_images": True,
+        "views_count": 2,
+        "s1_obs_count": 8,
+        "geometric_consistency_score": 0.90,
+    }
+    r2_high = evaluate_policy_r2(ev_high)
+    r3_high = evaluate_policy_r3(ev_high)
+    assert r2_high.decision == "ESCALATE"
+    assert r3_high.decision == "ESCALATE"
+    assert r3_high.query_utility is not None and r3_high.query_utility >= 0.0
+
+    # Low influence case (poor geometric consistency / peripheral clutter)
+    ev_low = {
+        "entity_id": "inst_fan_low",
+        "semantic_class": "pedestal fan",
+        "has_valid_pose": True,
+        "depth_valid": True,
+        "observed_motion": "STATIC",
+        "has_images": True,
+        "views_count": 1,
+        "total_observations": 1,
+        "geometric_consistency_score": 0.10,
+    }
+    r2_low = evaluate_policy_r2(ev_low)
+    r3_low = evaluate_policy_r3(ev_low)
+    # R2 escalates purely on affordance ambiguity
+    assert r2_low.decision == "ESCALATE"
+    assert r2_low.vlm_required is True
+    # R3 avoids query because expected SLAM loss reduction does not justify VLM compute cost
+    assert r3_low.decision == "RESOLVE_CHEAP"
+    assert r3_low.vlm_required is False
+    assert r3_low.query_utility is not None and r3_low.query_utility < 0.0
+    assert "SUBTHRESHOLD_QUERY_UTILITY_AVOIDED" in r3_low.reason_codes
+
+
+def test_backend_zero_inliers_sets_zero_influence():
+    """Verify that backend telemetry with zero inliers drops estimator influence to 0.0."""
+    from vlm.src.router_policy import compute_estimator_influence_with_provenance
+    ev_zero_inliers = {
+        "entity_id": "clutter_01",
+        "has_valid_pose": True,
+        "depth_valid": True,
+        "inlier_count": 0,
+        "inlier_ratio": 0.0,
+        "s1_obs_count": 10,
+    }
+    score, prov = compute_estimator_influence_with_provenance(ev_zero_inliers)
+    assert score == 0.0
+    assert prov == "MEASURED_BACKEND_ZERO_INLIERS"

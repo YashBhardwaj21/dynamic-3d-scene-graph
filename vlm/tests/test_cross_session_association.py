@@ -455,4 +455,40 @@ def test_relocation_aware_candidate_matching():
     assert len(res_reloc.unmatched_s2) == 0
 
 
+def test_consolidate_intra_session_clusters_merges_close_tracklets():
+    """Verify that co-located tracklets of same class are merged, while distinct objects remain separate."""
+    # Two fragmented chair tracks at (1.0, 1.0) and (1.1, 1.05) - distance ~0.11m < 0.35m
+    c1 = _make_cluster("chair_A", "chair", 1.0, 1.0, n_obs=10)
+    c2 = _make_cluster("chair_B", "chair", 1.1, 1.05, n_obs=5)
+    # Distinct chair at (2.5, 2.5) - distance > 0.35m
+    c3 = _make_cluster("chair_C", "chair", 2.5, 2.5, n_obs=8)
+    # Desk at (1.05, 1.02) - distance ~0.05m but different class
+    d1 = _make_cluster("desk_1", "desk", 1.05, 1.02, n_obs=12)
+
+    raw_clusters = {"chair_A": c1, "chair_B": c2, "chair_C": c3, "desk_1": d1}
+    consolidated = CrossSessionCandidateMatcher.consolidate_intra_session_clusters(
+        raw_clusters, max_merge_distance_m=0.35
+    )
+
+    # chair_A and chair_B should be merged into 1 cluster, chair_C separate, desk_1 separate -> total 3
+    assert len(consolidated) == 3
+    assert "chair_C" in consolidated
+    assert "desk_1" in consolidated
+
+    # Representative should be chair_A (higher obs count: 10 vs 5)
+    assert "chair_A" in consolidated
+    merged_chair = consolidated["chair_A"]
+    assert merged_chair.observations_count == 15
+    assert set(merged_chair.local_track_ids) == {"chair_A", "chair_B"}
+    assert set(merged_chair.merged_entity_ids) == {"chair_A", "chair_B"}
+    # Weighted centroid: (1.0*10 + 1.1*5)/15 = 15.5/15 = 1.0333
+    assert merged_chair.centroid_floor[0] == pytest.approx(1.0333, abs=0.01)
+
+
+def test_consolidate_empty_clusters_returns_empty():
+    """Edge case: consolidating empty dict returns empty dict."""
+    res = CrossSessionCandidateMatcher.consolidate_intra_session_clusters({})
+    assert res == {}
+
+
 

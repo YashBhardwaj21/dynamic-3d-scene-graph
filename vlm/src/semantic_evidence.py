@@ -42,9 +42,14 @@ CLASS_MOBILITY_PRIORS: Dict[str, Tuple[Literal["IMMOVABLE", "MOVABLE", "MOBILE",
     "mouse": ("MOVABLE", 0.95, "Computer pointing device"),
     "pedestal fan": ("MOVABLE", 0.92, "Freestanding floor cooling fan"),
     "fan": ("MOVABLE", 0.88, "Floor or desk fan"),
+    "projector": ("IMMOVABLE", 0.95, "Overhead ceiling or wall mounted projection fixture"),
+    "whiteboard": ("IMMOVABLE", 0.94, "Wall-mounted dry-erase communication board"),
+    "toolbox": ("MOVABLE", 0.91, "Portable hardware tool storage container"),
+    "computer mouse": ("MOVABLE", 0.95, "Computer pointing device peripheral"),
     # Intrinsically mobile carriers
     "robot": ("MOBILE", 0.96, "Autonomously mobile wheeled robotic platform"),
     "rc car": ("MOBILE", 0.96, "Radio-controlled mobile chassis"),
+    "quadcopter drone": ("MOBILE", 0.96, "Aerial autonomous or teleoperated robotic platform"),
     "person": ("MOBILE", 0.99, "Dynamic human agent"),
 }
 

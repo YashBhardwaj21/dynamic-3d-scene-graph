@@ -46,6 +46,7 @@ class EntityCluster:
     centroid_3d: Optional[np.ndarray] = None  # Measured 3D [x, y, z] centroid from observations
     centroid_aligned: Optional[np.ndarray] = None
     position_uncertainty_m: float = 0.05
+    merged_entity_ids: List[str] = field(default_factory=list)
 
 
 @dataclass
@@ -178,9 +179,115 @@ class CrossSessionCandidateMatcher:
                 depth_valid=depth_valid,
                 centroid_3d=c_3d,
                 position_uncertainty_m=sem_pos,
+                merged_entity_ids=[eid],
             )
 
         return clusters
+
+    @staticmethod
+    def consolidate_intra_session_clusters(
+        clusters: Dict[str, EntityCluster],
+        max_merge_distance_m: float = 0.35,
+        max_extent_relative_diff: float = 0.60,
+    ) -> Dict[str, EntityCluster]:
+        """Consolidate fragmented short tracklets of identical semantic class within spatial threshold.
+
+        Remedies upstream tracker fragmentation (72.78% tracks <= 4 frames) by linking
+        spatially co-located tracklets of the same class into unified physical entity clusters.
+        Preserves complete union of local track IDs, observation IDs, merged entity IDs,
+        and computes observation-weighted centroids.
+        """
+        if not clusters:
+            return {}
+
+        keys = sorted(clusters.keys())
+        adj: Dict[str, Set[str]] = {k: set() for k in keys}
+        for i in range(len(keys)):
+            k1 = keys[i]
+            c1 = clusters[k1]
+            for j in range(i + 1, len(keys)):
+                k2 = keys[j]
+                c2 = clusters[k2]
+                if c1.semantic_class.lower().strip() != c2.semantic_class.lower().strip():
+                    continue
+                dist = float(np.linalg.norm(c1.centroid_floor - c2.centroid_floor))
+                if dist > max_merge_distance_m:
+                    continue
+                max_ext = max(c1.spatial_extent_m, c2.spatial_extent_m, 0.10)
+                rel_ext = abs(c1.spatial_extent_m - c2.spatial_extent_m) / max_ext
+                if rel_ext > max_extent_relative_diff:
+                    continue
+                adj[k1].add(k2)
+                adj[k2].add(k1)
+
+        visited: Set[str] = set()
+        consolidated: Dict[str, EntityCluster] = {}
+        for k in keys:
+            if k in visited:
+                continue
+            comp: List[str] = []
+            queue = [k]
+            visited.add(k)
+            while queue:
+                curr = queue.pop(0)
+                comp.append(curr)
+                for neighbor in sorted(adj[curr]):
+                    if neighbor not in visited:
+                        visited.add(neighbor)
+                        queue.append(neighbor)
+
+            if len(comp) == 1:
+                c = copy.copy(clusters[comp[0]])
+                if not c.merged_entity_ids:
+                    c.merged_entity_ids = [c.entity_id]
+                consolidated[comp[0]] = c
+                continue
+
+            # Pick primary representative as the cluster with largest observation count
+            rep = max(comp, key=lambda x: (clusters[x].observations_count, -len(x)))
+            total_obs = sum(clusters[x].observations_count for x in comp)
+            all_trks = sorted(set(t for x in comp for t in clusters[x].local_track_ids))
+            all_obs = sorted(set(o for x in comp for o in clusters[x].observation_ids))
+            all_eids = sorted(set(e for x in comp for e in (clusters[x].merged_entity_ids or [x])))
+
+            # Observation-weighted floor centroid
+            weights = np.array([clusters[x].observations_count for x in comp], dtype=np.float64)
+            pts_floor = np.array([clusters[x].centroid_floor for x in comp], dtype=np.float64)
+            c_floor = np.average(pts_floor, axis=0, weights=weights)
+
+            # 3D centroid if available
+            valid_3d = [clusters[x] for x in comp if clusters[x].centroid_3d is not None]
+            if valid_3d:
+                w_3d = np.array([c.observations_count for c in valid_3d], dtype=np.float64)
+                pts_3d = np.array([c.centroid_3d for c in valid_3d], dtype=np.float64)
+                c_3d = np.average(pts_3d, axis=0, weights=w_3d)
+            else:
+                c_3d = None
+
+            max_ext = max(clusters[x].spatial_extent_m for x in comp)
+            max_disp = max(clusters[x].centroid_std for x in comp)
+            min_unc = min(clusters[x].position_uncertainty_m for x in comp)
+            has_pose = all(clusters[x].has_valid_pose for x in comp)
+            depth_valid = any(clusters[x].depth_valid for x in comp)
+
+            consolidated[rep] = EntityCluster(
+                entity_id=rep,
+                semantic_class=clusters[rep].semantic_class,
+                source_session=clusters[rep].source_session,
+                centroid_floor=c_floor,
+                centroid_std=max_disp,
+                spatial_extent_m=max_ext,
+                observations_count=total_obs,
+                local_track_ids=all_trks,
+                observation_ids=all_obs,
+                has_valid_pose=has_pose,
+                depth_valid=depth_valid,
+                centroid_3d=c_3d,
+                position_uncertainty_m=min_unc,
+                merged_entity_ids=all_eids,
+            )
+
+        return consolidated
 
     def _align_session2(
         self,
@@ -661,6 +768,8 @@ def build_canonical_session_track_mapping(
 def evaluate_matcher_against_ground_truth(
     association_result: AssociationResult,
     gt_path: Optional[Path] = None,
+    s1_clusters: Optional[Dict[str, EntityCluster]] = None,
+    s2_clusters: Optional[Dict[str, EntityCluster]] = None,
 ) -> Dict[str, Any]:
     """Rigorously evaluate cross-session physical identity matches against benchmark ground truth.
 
@@ -700,6 +809,20 @@ def evaluate_matcher_against_ground_truth(
         t2 = m.s2_entity_id
         inst1 = canonical_map.get(("semantic_mapping_my_desk_recording_01", t1))
         inst2 = canonical_map.get(("semantic_mapping_my_desk_recording_02", t2))
+
+        # Check merged cluster aliases if direct entity ID is unannotated
+        if inst1 is None and s1_clusters and t1 in s1_clusters:
+            for alias in getattr(s1_clusters[t1], "merged_entity_ids", []):
+                cand = canonical_map.get(("semantic_mapping_my_desk_recording_01", alias))
+                if cand is not None:
+                    inst1 = cand
+                    break
+        if inst2 is None and s2_clusters and t2 in s2_clusters:
+            for alias in getattr(s2_clusters[t2], "merged_entity_ids", []):
+                cand = canonical_map.get(("semantic_mapping_my_desk_recording_02", alias))
+                if cand is not None:
+                    inst2 = cand
+                    break
 
         rec = {
             "s1_entity": t1,
@@ -892,19 +1015,19 @@ def compare_association_baselines(
 
     # 1. Nearest Centroid
     res_b1 = matcher.match_entities_nearest_centroid(s1_clusters, s2_clusters, registration)
-    eval_b1 = evaluate_matcher_against_ground_truth(res_b1, gt_path)
+    eval_b1 = evaluate_matcher_against_ground_truth(res_b1, gt_path, s1_clusters=s1_clusters, s2_clusters=s2_clusters)
 
     # 2. Hungarian Gated
     res_b2 = matcher.match_entities_hungarian_gated(s1_clusters, s2_clusters, registration)
-    eval_b2 = evaluate_matcher_against_ground_truth(res_b2, gt_path)
+    eval_b2 = evaluate_matcher_against_ground_truth(res_b2, gt_path, s1_clusters=s1_clusters, s2_clusters=s2_clusters)
 
     # 3. Proposed Method (Static Proximity + Uncertainty + Ambiguity)
     res_b3 = matcher.match_entities(s1_clusters, s2_clusters, registration)
-    eval_b3 = evaluate_matcher_against_ground_truth(res_b3, gt_path)
+    eval_b3 = evaluate_matcher_against_ground_truth(res_b3, gt_path, s1_clusters=s1_clusters, s2_clusters=s2_clusters)
 
     # 4. Proposed Relocation-Aware Method (Static Proximity + Relocation Hypotheses)
     res_b4 = matcher.match_entities_relocation_aware(s1_clusters, s2_clusters, registration)
-    eval_b4 = evaluate_matcher_against_ground_truth(res_b4, gt_path)
+    eval_b4 = evaluate_matcher_against_ground_truth(res_b4, gt_path, s1_clusters=s1_clusters, s2_clusters=s2_clusters)
 
     return {
         "baseline_1_nearest_centroid": {"result": res_b1, "evaluation": eval_b1},

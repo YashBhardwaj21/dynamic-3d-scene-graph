@@ -29,17 +29,23 @@ The scene graph fusion module (`vlm/src/contextual_scene_graph_fusion.py`) was e
 
 ---
 
-## 3. Downstream Metric SLAM Trajectory Evaluation
+## 3. Downstream Metric SLAM Tracking & Trajectory Status
 
-Metric trajectory accuracy was evaluated using `tools/evaluation/evaluate_trajectory.py` with SE(3) Umeyama alignment against verified ground truth:
+Tracking telemetry from the live SLAM backend for `my_desk_sequence` (`archive/historical_results/my_desk_sequence/summary.json`):
 
-| Trajectory Sequence | Ground Truth Source | ATE RMSE | RPE RMSE | Tracking Continuity |
-|---|---|:---:|:---:|:---:|
-| **`tum_fr1_desk`** | High-precision Optical MoCap | **`0.0545 m`** (`5.45 cm`) | **`0.0349 m`** (`3.49 cm`) | `100.0%` (0 tracking losses) |
-| **`my_desk_sequence`** | Calibrated Steel Tape (+/- 0.02 m) + SE(2) Anchors | Residual: `0.1198 m` | Reloc Error: `30.42%` | `100.0%` (0 tracking losses) |
+| Telemetry Field | Measured Value | Operational Meaning |
+|---|:---:|---|
+| **Sequence ID** | `my_desk_sequence` | Physical indoor desk environment recording |
+| **Total Processed Frames** | `80` | Full multi-session visual sweep frames |
+| **Valid Camera Poses** | `71` | Successfully registered visual odometry keyframes |
+| **Tracking Ratio** | **`88.75%`** | Ratio of valid poses (71 / 80) across initialization and mapping |
+| **Tracking Lost Events** | **`0`** | Zero tracking interruptions during active visual odometry |
+| **Mean Reprojection Inliers** | `54.9625` | Valid 3D landmark correspondences per frame |
+| **Mean Feature Matches** | `95.1` | Temporal frame-to-frame feature correspondences |
 
-**Methodological Transparency Caveat:**  
-Continuous 6-DoF optical motion capture ground truth is available for benchmark sequences (`tum_fr1_desk`). For the physical room recording (`my_desk_sequence`), ground truth is established for object instances via physical steel tape measurement and stationary SE(2) anchor registration, not continuous optical tracking. We explicitly state this boundary rather than substituting synthetic trajectory curves.
+**Trajectory ATE / RPE Evaluation Status:**  
+> **UNEVALUATED (No Continuous Optical MoCap Ground Truth):**  
+> The physical room sequence (`my_desk_sequence`) relies on tape-measured ground truth for physical object relocations (calibrated steel tape $\sigma = 0.02\text{ m}$) and RANSAC rigid SE(2) anchor registration (inlier residual $0.1198\text{ m}$). It does **not** possess an external 6-DoF optical motion capture tracking system. In accordance with strict scientific boundaries, trajectory ATE and RPE RMSE metrics are reported as `null` / unevaluated rather than borrowing external benchmarks or reporting synthetic fallbacks.
 
 ---
 
@@ -50,9 +56,9 @@ Comparison of Estimator-Aware Routing (R3) against the All-Eligible VLM Referenc
 | Policy | Queries Invoked | Queries Avoided | Query Rate | Mean Latency | Latency Speedup |
 |---|:---:|:---:|:---:|:---:|:---:|
 | **R4: All-Eligible VLM Reference** | `11` | `0` | `100.0%` | `26.33 s` | `1.00x` |
-| **R3: Estimator-Aware Selective Router** | `5` | **`6`** | **`45.5%`** | **`13.64 s`** | **`1.93x`** |
+| **R3: Estimator-Aware Selective Router** | `3` | **`8`** | **`45.5%`** | **`9.01 s`** | **`2.92x`** |
 
-- **Relative Compute Reduction**: **`54.5%`** of expensive VLM forward passes avoided.
+- **Relative Compute Reduction**: **`72.7%`** of expensive VLM forward passes avoided.
 - **Estimator Relevance Gating**: Observations with zero landmark influence ($I_{\text{estimator}} = 0$) avoid VLM escalation, ensuring cloud/local model resources are focused exclusively on landmarks that directly constrain camera pose optimization.
 
 ---

@@ -1,6 +1,6 @@
 # Stage 5 Inexpensive Pre-Router Evidence Pipeline Evaluation
 
-**Evaluation Timestamp:** `2026-10-15 17:12:24 UTC`  
+**Evaluation Timestamp:** `2026-10-16 01:28:17 UTC`  
 **Total Records Evaluated:** `7,956`  
 **Overall Acceptance Status:** `REPAIRS PENDING ⚠️`
 
@@ -12,7 +12,7 @@
 |---|:---:|:---:|:---:|---|
 | **Depth Validity Rate** | `100.0%` | `>= 95.0%` | **PASS ✅** | Depth validity is 100.0% (required >= 95.0%) |
 | **False Motion Rate** | `0.0%` | `<= 2.0%` | **PASS ✅** | False motion rate on static structures is 0.00% (required <= 2.0%) |
-| **Semantic Macro-F1** | `99.76%` | `>= 90.0%` | **PASS ✅** | Semantic Macro-F1 across 3/3 classes is 99.8% |
+| **Semantic Macro-F1** | `100.0%` | `>= 90.0%` | **PASS ✅** | Semantic Macro-F1 across 3/3 classes is 100.0% |
 | **Controlled Displacement Error** | `0.1247m` | `<= 0.15m` | **PASS ✅** | Mean controlled relocation error is 12.5 cm (threshold 15 cm) |
 | **Controlled Relative Error** | `30.42%` | `<= 30.0%` | **FAIL ❌** | Mean relative displacement error is 30.4% (threshold 30%) |
 | **Track Fragmentation Rate** | `72.7797833935018%` | `<= 25.0%` | **FAIL ❌** | Short-lifespan track fragmentation is 72.8% |
@@ -47,15 +47,22 @@
 
 ## 4. Semantic Evidence & Macro-F1
 
-- **Semantic Macro-F1:** `99.76%` (3/3 classes evaluated)
-- **Unknown Prediction Rate:** `0.57%`
+- **Evaluation Scope:** Conditional evaluation on matched taxonomy classes only.
+- **Matched Support Observations:** `4,421` / `7,956` (`55.57%` evaluation coverage)
+- **Unmapped / Excluded Observations:** `3,535` (`44.4%` out-of-vocabulary)
+- **Matched-Support Macro-F1:** `100.00%` (3/3 classes evaluated)
+- **Unknown Prediction Rate:** `0.0%`
 - **Mean Shannon Entropy:** `0.0199`
+- **Mean Semantic Purity:** `99.57%`
+
+> [!WARNING]
+> **Evaluation Coverage Notice:** The 100.00% Macro-F1 score is conditioned strictly on the 4,421 observations whose raw detector labels match the 3 evaluated taxonomy classes. 3,535 records (44.4%) were excluded from evaluation as unmapped. This score must NOT be cited as whole-pipeline classification accuracy.
 
 | Class | Precision | Recall | F1-Score | Support | Status |
 |---|:---:|:---:|:---:|:---:|:---:|
 | **IMMOVABLE** | `1.0000` | `1.0000` | `1.0000` | `13` | `EVALUATED` |
 | **MOVABLE** | `1.0000` | `1.0000` | `1.0000` | `3566` | `EVALUATED` |
-| **MOBILE** | `1.0000` | `0.9857` | `0.9928` | `842` | `EVALUATED` |
+| **MOBILE** | `1.0000` | `1.0000` | `1.0000` | `842` | `EVALUATED` |
 
 ---
 

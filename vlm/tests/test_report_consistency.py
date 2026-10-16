@@ -57,3 +57,31 @@ def test_stage6_report_consistency_with_json(tmp_path):
 
     assert acc_str in content
     assert query_str in content
+
+
+def test_downstream_slam_effects_no_tum_and_no_fallbacks():
+    """Verify Phase 2 contract: zero TUM references in VLM downstream evaluation and no synthetic fallbacks."""
+    downstream_json = root_dir / "vlm" / "outputs" / "downstream_slam_effects.json"
+    downstream_report = root_dir / "vlm" / "outputs" / "downstream_slam_effects_report.md"
+
+    assert downstream_json.exists()
+    assert downstream_report.exists()
+
+    with open(downstream_json, "r", encoding="utf-8") as f:
+        data = json.load(f)
+
+    # 1. Trajectory metrics must be null/unevaluated without MoCap
+    slam_m = data["slam_trajectory_metrics"]
+    assert slam_m["ate_rmse_m"] is None
+    assert slam_m["rpe_rmse_m"] is None
+    assert slam_m["has_optical_mocap_ground_truth"] is False
+    assert slam_m["trajectory_status"] == "UNEVALUATED_NO_MOCAP_GROUND_TRUTH"
+    assert slam_m["evaluation_sequence"] == "my_desk_sequence"
+
+    # 2. Zero TUM occurrences in downstream evaluation artifacts
+    json_text = downstream_json.read_text(encoding="utf-8").lower()
+    report_text = downstream_report.read_text(encoding="utf-8").lower()
+    assert "tum_fr1_desk" not in json_text
+    assert "tum" not in json_text
+    assert "tum_fr1_desk" not in report_text
+    assert "tum" not in report_text

@@ -1,7 +1,7 @@
 {
   "stage": 5,
   "title": "Stage 5 Inexpensive Pre-Router Evidence Pipeline Evaluation",
-  "timestamp_evaluated": 1792084344.0853517,
+  "timestamp_evaluated": 1792114097.0187163,
   "total_records": 7956,
   "acceptance_gate_passed": false,
   "acceptance_gates": [
@@ -27,13 +27,13 @@
     },
     {
       "name": "Semantic Macro-F1",
-      "value": 99.76,
+      "value": 100.0,
       "threshold": 90.0,
       "op": ">=",
       "units": "%",
       "passed": true,
       "status": "PASS",
-      "reason": "Semantic Macro-F1 across 3/3 classes is 99.8%"
+      "reason": "Semantic Macro-F1 across 3/3 classes is 100.0%"
     },
     {
       "name": "Controlled Displacement Error",
@@ -150,13 +150,13 @@
     "mean_temporal_persistence_score": 0.5309
   },
   "semantics": {
-    "macro_f1": 0.9976,
-    "matched_support_macro_f1": 0.9976,
+    "macro_f1": 1.0,
+    "matched_support_macro_f1": 1.0,
     "matched_observations_count": 4421,
     "evaluation_coverage_pct": 55.57,
     "classes_evaluated": 3,
     "total_classes": 3,
-    "unknown_rate_pct": 0.57,
+    "unknown_rate_pct": 0.0,
     "mean_semantic_entropy": 0.0199,
     "mean_semantic_purity": 0.9957,
     "per_class": {
@@ -176,8 +176,8 @@
       },
       "MOBILE": {
         "precision": 1.0,
-        "recall": 0.9857,
-        "f1": 0.9928,
+        "recall": 1.0,
+        "f1": 1.0,
         "support": 842,
         "status": "EVALUATED"
       }
@@ -198,17 +198,17 @@
       "MOBILE": {
         "IMMOVABLE": 0,
         "MOVABLE": 0,
-        "MOBILE": 830,
-        "UNKNOWN": 12
+        "MOBILE": 842,
+        "UNKNOWN": 0
       }
     },
     "unmatched_observations_count": 3535
   },
   "evidence_validity": {
     "total_records_processed": 7956,
-    "valid_records_count": 7942,
-    "validity_percentage": 99.82,
-    "missing_value_frequency_pct": 0.18,
+    "valid_records_count": 7956,
+    "validity_percentage": 100.0,
+    "missing_value_frequency_pct": 0.0,
     "provenance_breakdown": {
       "MEASURED_FULL": 7666,
       "DERIVED_DEPTH_ONLY": 290

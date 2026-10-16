@@ -82,11 +82,8 @@ py -3 vlm/scripts/run_full_experiment.py
 ---
 
 ### Step 6: Evaluate Downstream SLAM Effects & Landmark Reliability
-Directly evaluates downstream metric SLAM landmark retention, false invalidation, trajectory error, and compute reduction:
+Directly evaluates downstream metric SLAM landmark retention, false invalidation, tracking telemetry, and compute reduction:
 ```bash
-# Evaluate benchmark trajectory error (TUM fr1 desk)
-py -3 tools/evaluation/evaluate_trajectory.py --sequence tum_fr1_desk --estimated_tum archive/historical_results/tum_fr1_desk/estimated.tum --groundtruth archive/historical_results/tum_fr1_desk/groundtruth.tum --output_dir vlm/outputs/downstream_slam_evaluation
-
 # Evaluate downstream landmark reliability and compute avoidance
 py -3 vlm/scripts/evaluate_downstream_slam_effects.py
 ```
@@ -98,9 +95,11 @@ py -3 vlm/scripts/evaluate_downstream_slam_effects.py
 - Total Scene Graph Nodes: `195`
 - Correct Landmark Retention Rate: `91.1%` (41 / 45 stationary entities)
 - False Invalidation Rate: `8.9%` (4 / 45)
-- SLAM ATE RMSE: `0.0545 m` (`5.45 cm`)
-- SLAM RPE RMSE: `0.0349 m` (`3.49 cm`)
-- VLM Compute Reduction: `54.5%` queries avoided vs All-VLM
+- Relocation Invalidation Rate: `100.0%`
+- SLAM Tracking Ratio: `88.75%` (71 / 80 valid poses on `my_desk_sequence`)
+- SLAM Trajectory ATE/RPE: `null` / `UNEVALUATED_NO_MOCAP_GROUND_TRUTH` (fail-closed boundary: no continuous optical MoCap on room sequence)
+- VLM Compute Reduction: `72.7%` queries avoided vs All-VLM (3 queries in R3 vs 11 in R4)
+- Latency Speedup: `2.92x`
 
 ---
 

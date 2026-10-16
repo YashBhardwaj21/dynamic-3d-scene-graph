@@ -1,7 +1,7 @@
 {
   "metadata": {
     "title": "Downstream SLAM and Scene Graph Validation",
-    "timestamp": 1792095436.5473027,
+    "timestamp": 1792099230.481473,
     "scene_graph_source": "C:\\Users\\Yash Bhardwaj\\Desktop\\perception\\vlm\\outputs\\full_experiment_run\\scene_graph.json",
     "total_scene_graph_nodes": 195
   },
@@ -19,21 +19,27 @@
     "phantom_centroid_drift_avoided": true
   },
   "slam_trajectory_metrics": {
-    "evaluation_sequence": "tum_fr1_desk",
-    "has_optical_mocap_ground_truth": true,
-    "ate_rmse_m": 0.0545,
-    "rpe_rmse_m": 0.0349,
-    "physical_room_ground_truth_method": "Calibrated steel tape measure (sigma = 0.02m) + RANSAC SE(2) anchors (sigma = 0.1198m)",
+    "evaluation_sequence": "my_desk_sequence",
+    "has_optical_mocap_ground_truth": false,
+    "trajectory_status": "UNEVALUATED_NO_MOCAP_GROUND_TRUTH",
+    "ate_rmse_m": null,
+    "rpe_rmse_m": null,
+    "total_frames": 80,
+    "valid_poses": 71,
+    "tracking_ratio_pct": 88.75,
     "tracking_loss_frequency": 0,
-    "tracking_continuity_pct": 100.0
+    "mean_inliers": 54.9625,
+    "mean_matches": 95.1,
+    "physical_room_ground_truth_method": "Calibrated steel tape measure (sigma = 0.02m) + RANSAC SE(2) anchors (sigma = 0.1198m)",
+    "note": "Continuous 6-DoF optical motion capture is not recorded for my_desk_sequence. In accordance with fail-closed scientific boundaries, trajectory ATE/RPE error metrics are reported as null/unevaluated rather than substituting external benchmark or synthetic values."
   },
   "compute_and_query_efficiency": {
-    "r3_queries_invoked": 5,
+    "r3_queries_invoked": 3,
     "r4_all_vlm_queries": 11,
-    "queries_avoided": 6,
-    "relative_compute_reduction_pct": 54.5,
-    "r3_mean_latency_s": 13.642,
+    "queries_avoided": 8,
+    "relative_compute_reduction_pct": 72.7,
+    "r3_mean_latency_s": 9.007,
     "r4_mean_latency_s": 26.333,
-    "latency_speedup_factor": 1.93
+    "latency_speedup_factor": 2.92
   }
 }

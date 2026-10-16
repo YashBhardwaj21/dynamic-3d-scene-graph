@@ -57,6 +57,7 @@ class RouterDecision:
     confidence: float = 1.0
     query_utility: Optional[float] = None
     estimator_influence: Optional[float] = None
+    estimator_provenance: Optional[str] = None
 
     def to_dict(self) -> Dict[str, Any]:
         return {
@@ -68,40 +69,87 @@ class RouterDecision:
             "confidence": round(self.confidence, 4),
             "query_utility": round(self.query_utility, 4) if self.query_utility is not None else None,
             "estimator_influence": round(self.estimator_influence, 4) if self.estimator_influence is not None else None,
+            "estimator_provenance": self.estimator_provenance,
         }
 
 
-def compute_estimator_influence(evidence: Dict[str, Any]) -> float:
-    """Compute normalized SLAM landmark influence score in [0.0, 1.0].
+def compute_estimator_influence_with_provenance(evidence: Dict[str, Any]) -> Tuple[float, str]:
+    """Compute normalized SLAM landmark influence score in [0.0, 1.0] and its provenance.
 
-    Derived from:
-    - Total observation support (s1_obs_count + s2_obs_count or total_observations)
-    - Geometric consistency score
-    - Valid pose stability
+    Evaluates whether the landmark observation physically and geometrically constrains
+    the state estimator (e.g. optimizer inlier support, residuals, depth uncertainty,
+    observation count, pose validity, and displacement state).
+
+    Distinguishes:
+    - 'MEASURED_BACKEND': low-level SLAM optimizer residuals and inlier counts exist.
+    - 'PROXY_SUPPORT': heuristic fallback based on observation frequency and consistency.
     """
     has_valid_pose = evidence.get("has_valid_pose", True)
-    if not has_valid_pose:
-        return 0.0
+    if not has_valid_pose or evidence.get("pose_valid") is False:
+        return 0.0, "INVALID_ESTIMATOR_POSE"
+
+    if evidence.get("depth_valid") is False:
+        return 0.0, "INVALID_DEPTH_ESTIMATOR_UNCONSTRAINED"
+
+    # Check for direct measured SLAM backend telemetry
+    measured_inliers = evidence.get("inlier_count")
+    if measured_inliers is None:
+        measured_inliers = evidence.get("mappoints_inlier_count")
+    inlier_ratio = evidence.get("inlier_ratio")
+    if inlier_ratio is None:
+        inlier_ratio = evidence.get("point_to_bbox_inlier_ratio")
+    mean_residual = evidence.get("mean_reprojection_residual_px")
+    if mean_residual is None:
+        mean_residual = evidence.get("mean_residual_px")
 
     s1_cnt = int(evidence.get("s1_obs_count", 0))
     s2_cnt = int(evidence.get("s2_obs_count", 0))
     total_obs = s1_cnt + s2_cnt
     if total_obs == 0:
-        total_obs = int(evidence.get("total_observations", evidence.get("views_count", 1)))
+        total_obs = int(evidence.get("total_observations", evidence.get("observation_count", 0)))
 
-    # Observation support factor: saturation at 10 observations
-    obs_factor = min(1.0, total_obs / 10.0)
+    if total_obs > 0:
+        obs_factor = min(1.0, total_obs / 10.0)
+    else:
+        views_cnt = int(evidence.get("views_count", 1))
+        obs_factor = min(1.0, max(0.70, views_cnt / 2.0))
 
-    # Geometric consistency factor in [0.5, 1.0]
-    geo_score = float(evidence.get("geometric_consistency_score", 0.90) or 0.90)
-    geo_factor = max(0.2, min(1.0, geo_score))
+    # If backend optimizer telemetry exists:
+    if inlier_ratio is not None or measured_inliers is not None:
+        # Zero inliers means the landmark provides ZERO constraint to the optimizer
+        if (measured_inliers is not None and measured_inliers == 0) or (inlier_ratio is not None and inlier_ratio == 0.0):
+            return 0.0, "MEASURED_BACKEND_ZERO_INLIERS"
 
-    # Parallax / displacement presence increases state-estimation sensitivity
+        ratio_val = float(inlier_ratio) if inlier_ratio is not None else min(1.0, float(measured_inliers or 0) / 20.0)
+        # Residual penalty: large residuals degrade metric trust
+        res_factor = 1.0
+        if mean_residual is not None and mean_residual > 20.0:
+            res_factor = max(0.0, 1.0 - (float(mean_residual) - 20.0) / 80.0)
+
+        world_disp = evidence.get("world_displacement_m")
+        disp_factor = 1.25 if (world_disp is not None and world_disp > 0.25) else 1.0
+
+        influence = min(1.0, obs_factor * ratio_val * res_factor * disp_factor)
+        return round(influence, 4), "MEASURED_BACKEND"
+
+    # Fallback / Proxy Support
+    geo_score = evidence.get("geometric_consistency_score")
+    if geo_score is None:
+        geo_factor = 0.85 if evidence.get("depth_valid", True) else 0.0
+    else:
+        geo_factor = max(0.0, min(1.0, float(geo_score)))  # Strict: no artificial 0.2 floor
+
     world_disp = evidence.get("world_displacement_m")
-    disp_factor = 1.2 if (world_disp is not None and world_disp > 0.25) else 1.0
+    disp_factor = 1.25 if (world_disp is not None and world_disp > 0.25) else 1.0
 
     influence = min(1.0, obs_factor * geo_factor * disp_factor)
-    return round(influence, 4)
+    return round(influence, 4), "PROXY_SUPPORT"
+
+
+def compute_estimator_influence(evidence: Dict[str, Any]) -> float:
+    """Compute normalized SLAM landmark influence score in [0.0, 1.0]."""
+    score, _ = compute_estimator_influence_with_provenance(evidence)
+    return score
 
 
 def evaluate_policy_r0(evidence: Dict[str, Any]) -> RouterDecision:
@@ -288,13 +336,20 @@ def evaluate_policy_r2(evidence: Dict[str, Any]) -> RouterDecision:
 def evaluate_policy_r3(
     evidence: Dict[str, Any],
     lambda_cost: float = DEFAULT_VLM_COST,
+    utility_threshold: float = 0.0,
 ) -> RouterDecision:
     """R3: Estimator-Aware Selective Routing.
 
     Evaluates:
         query_utility = delta_L_SLAM - lambda_cost * C_VLM
-    where delta_L_SLAM is proportional to the object's landmark influence on the
-    SLAM state estimator and the ambiguity of its physical relocation state.
+    where delta_L_SLAM quantifies expected SLAM trajectory/map loss reduction if an
+    ambiguous or displaced object's true affordance is resolved to prevent map corruption.
+
+    Operational Decision Rule:
+        If query_utility >= utility_threshold:
+            ESCALATE to VLM (expected SLAM loss reduction justifies inference compute).
+        Else:
+            RESOLVE_CHEAP (low estimator relevance or sub-threshold utility; query avoided).
     """
     entity_id = str(evidence.get("entity_id", "unknown"))
     sem_class = str(evidence.get("semantic_class", "object")).lower().strip()
@@ -320,6 +375,7 @@ def evaluate_policy_r3(
             confidence=0.0,
             query_utility=-1.0,
             estimator_influence=0.0,
+            estimator_provenance="INVALID_ESTIMATOR_POSE",
         )
 
     if has_valid_depth is False and observed_motion in ["MOVING", "DISPLACED"]:
@@ -332,10 +388,11 @@ def evaluate_policy_r3(
             confidence=0.0,
             query_utility=-1.0,
             estimator_influence=0.0,
+            estimator_provenance="INVALID_DEPTH_ON_MOVING_TARGET",
         )
 
-    # Calculate explicit estimator influence signal
-    est_influence = compute_estimator_influence(evidence)
+    # Calculate explicit estimator influence signal and provenance
+    est_influence, est_prov = compute_estimator_influence_with_provenance(evidence)
 
     # Canonical mobile agents resolved cheaply without VLM
     if sem_class in CANONICAL_MOBILE or prior_mobility == "MOBILE":
@@ -348,6 +405,7 @@ def evaluate_policy_r3(
             confidence=0.98,
             query_utility=0.0,
             estimator_influence=est_influence,
+            estimator_provenance=est_prov,
         )
 
     # Determine relocation and affordance ambiguity factors
@@ -371,12 +429,19 @@ def evaluate_policy_r3(
     if semantic_entropy >= ENTROPY_AMBIGUITY_THRESHOLD:
         ambiguity_factors.append("HIGH_SEMANTIC_AMBIGUITY")
 
-    # If evidence is ambiguous, calculate expected SLAM loss reduction:
-    # A displaced object with high landmark influence poses severe loop-closure distortion risk.
+    # If evidence is ambiguous, calculate operational query utility:
     if ambiguity_factors:
-        # Base expected loss reduction scaled by estimator influence
-        # delta_L_SLAM = base_risk * estimator_influence
-        base_risk = 1.0 if is_displaced else 0.8
+        # Base expected loss reduction:
+        # Displaced landmark: severe risk of loop-closure distortion (1.0).
+        # Physical support ambiguity (mounted vs freestanding): intermediate risk (0.70).
+        # Semantic entropy alone: lower risk (0.40).
+        if is_displaced:
+            base_risk = 1.0
+        elif sem_class in AMBIGUOUS_AFFORDANCE_CLASSES:
+            base_risk = 0.85
+        else:
+            base_risk = 0.60
+
         delta_L_slam = base_risk * est_influence
 
         # Query utility = delta_L_slam - lambda_cost * C_vlm (where C_vlm = 1.0 normalized)
@@ -393,33 +458,43 @@ def evaluate_policy_r3(
                 confidence=0.30,
                 query_utility=round(utility, 4),
                 estimator_influence=est_influence,
+                estimator_provenance=est_prov,
             )
 
-        # Estimator-aware gating:
-        # If estimator influence is non-zero (landmarks actively inform SLAM trajectory),
-        # escalate to protect SLAM consistency.
-        # If estimator influence is zero (e.g. unreferenced background feature), avoid query.
-        if est_influence > 0.0:
+        # Operational Estimator-Utility Gating:
+        # Escalate if and only if query utility meets or exceeds decision threshold
+        if utility >= utility_threshold:
             return RouterDecision(
                 entity_id=entity_id,
                 decision="ESCALATE",
-                reason_codes=ambiguity_factors + ["HIGH_ESTIMATOR_RELEVANCE"],
+                reason_codes=ambiguity_factors + [
+                    "HIGH_ESTIMATOR_RELEVANCE",
+                    "POSITIVE_QUERY_UTILITY",
+                    f"ESTIMATOR_INFLUENCE_{est_influence:.2f}",
+                    f"PROVENANCE_{est_prov}",
+                ],
                 vlm_required=True,
                 cheap_label=None,
                 confidence=0.90,
                 query_utility=round(utility, 4),
                 estimator_influence=est_influence,
+                estimator_provenance=est_prov,
             )
         else:
+            # Query avoided because expected SLAM loss reduction does not justify VLM cost
             return RouterDecision(
                 entity_id=entity_id,
                 decision="RESOLVE_CHEAP",
-                reason_codes=ambiguity_factors + ["ZERO_ESTIMATOR_RELEVANCE_QUERY_AVOIDED"],
+                reason_codes=ambiguity_factors + [
+                    "SUBTHRESHOLD_QUERY_UTILITY_AVOIDED",
+                    f"ESTIMATOR_INFLUENCE_{est_influence:.2f}",
+                ],
                 vlm_required=False,
-                cheap_label="MOVABLE" if is_displaced else "IMMOVABLE",
-                confidence=0.60,
+                cheap_label="MOVABLE" if is_displaced else (prior_mobility or "MOVABLE"),
+                confidence=0.70,
                 query_utility=round(utility, 4),
                 estimator_influence=est_influence,
+                estimator_provenance=est_prov,
             )
 
     # Stationary architectural elements
@@ -433,6 +508,7 @@ def evaluate_policy_r3(
             confidence=0.99,
             query_utility=0.0,
             estimator_influence=est_influence,
+            estimator_provenance=est_prov,
         )
 
     # Stationary movable furniture
@@ -446,6 +522,7 @@ def evaluate_policy_r3(
             confidence=0.95,
             query_utility=0.0,
             estimator_influence=est_influence,
+            estimator_provenance=est_prov,
         )
 
     # Unknown category: escalate if images available and influence exists
