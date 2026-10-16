@@ -491,4 +491,71 @@ def test_consolidate_empty_clusters_returns_empty():
     assert res == {}
 
 
+def test_consolidate_intra_session_clusters_covisible_rejection():
+    """Two nearby tracklets of same class with overlapping lifespans must NOT be merged."""
+    # Two chairs 0.20m apart, but co-visible for 100 frames simultaneously
+    c1 = _make_cluster("chair_left", "chair", 1.0, 1.0, n_obs=100)
+    c1.start_frame = 100
+    c1.end_frame = 200
+
+    c2 = _make_cluster("chair_right", "chair", 1.20, 1.0, n_obs=100)
+    c2.start_frame = 100
+    c2.end_frame = 200
+
+    raw = {"chair_left": c1, "chair_right": c2}
+    consolidated = CrossSessionCandidateMatcher.consolidate_intra_session_clusters(
+        raw, max_merge_distance_m=0.35, max_covisible_overlap_frames=5
+    )
+
+    # Co-visible chairs must NOT be merged
+    assert len(consolidated) == 2
+    assert "chair_left" in consolidated
+    assert "chair_right" in consolidated
+
+
+def test_consolidate_intra_session_clusters_3d_height_rejection():
+    """Two objects at same 2D position but different 3D heights must NOT be merged."""
+    c1 = _make_cluster("chair_floor", "chair", 1.0, 1.0, n_obs=20)
+    c1.centroid_3d = np.array([1.0, 1.0, 0.45])  # chair height
+
+    c2 = _make_cluster("chair_stacked", "chair", 1.05, 1.02, n_obs=20)
+    c2.centroid_3d = np.array([1.05, 1.02, 1.20])  # stacked high height
+
+    raw = {"chair_floor": c1, "chair_stacked": c2}
+    consolidated = CrossSessionCandidateMatcher.consolidate_intra_session_clusters(
+        raw, max_merge_distance_m=0.35
+    )
+    assert len(consolidated) == 2
+
+
+def test_match_entities_uncertainty_adaptive():
+    """Test adaptive matching gate in peripheral drift zones with 3D height gating."""
+    # Peripheral entity at (-1.5, -6.5) where registration drift is higher
+    c1 = _make_cluster("desk_periph_1", "desk", -1.5, -6.5)
+    c1.centroid_3d = np.array([-1.5, -6.5, 0.75])
+
+    # S2 cluster aligned at distance 0.52m (beyond fixed 0.45m gate, within adaptive gate)
+    c2 = _make_cluster("desk_periph_2", "desk", -1.5, -6.5 + 0.52)
+    c2.centroid_3d = np.array([-1.5, -6.5 + 0.52, 0.75])
+
+    s1 = {"desk_periph_1": c1}
+    s2 = {"desk_periph_2": c2}
+
+    reg = _make_reg(rotation_deg=0.0, translation_m=[0.0, 0.0])
+    matcher = CrossSessionCandidateMatcher()
+
+    # Fixed gate 0.45m fails to match at 0.52m
+    res_fixed = matcher.match_entities_hungarian_gated(s1, s2, reg)
+    assert len(res_fixed.matched_pairs) == 0
+
+    # Adaptive gate succeeds in peripheral zone
+    res_adaptive = matcher.match_entities_uncertainty_adaptive(s1, s2, reg, use_3d_height_gate=True)
+    assert len(res_adaptive.matched_pairs) == 1
+    m = res_adaptive.matched_pairs[0]
+    assert m.s1_entity_id == "desk_periph_1"
+    assert m.s2_entity_id == "desk_periph_2"
+    assert m.distance_m == pytest.approx(0.52, abs=0.01)
+
+
+
 

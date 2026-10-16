@@ -285,6 +285,11 @@ class ContextualSceneGraphFusion:
                 total_observations_count=1,
                 valid_geometry_observations_count=1 if geometry_valid else 0,
                 relocation_evaluable=bool(routed_result.get("relocation_evaluable", False)),
+                slam_invalidated=(
+                    semantic_class == "person"
+                    or new_motion in [ObservedMotionState.DYNAMIC, ObservedMotionState.DISPLACED]
+                    or bool(obs_meta.get("is_relocation_event", False))
+                ),
                 measured_displacement_m=routed_result.get("world_displacement_m"),
                 displacement_uncertainty_m=routed_result.get("displacement_uncertainty_m"),
                 vlm_query_requested=bool(routed_result.get("vlm_required", False)),
@@ -300,6 +305,12 @@ class ContextualSceneGraphFusion:
         node = self.nodes[entity_id]
         node.last_seen = ts
         node.total_observations_count += 1
+        if (
+            semantic_class == "person"
+            or new_motion in [ObservedMotionState.DYNAMIC, ObservedMotionState.DISPLACED]
+            or bool(obs_meta.get("is_relocation_event", False))
+        ):
+            node.slam_invalidated = True
         if coord_frame == "reference_frame":
             node.coordinate_frame = "reference_frame"
         if session and session not in node.source_sessions:
@@ -321,7 +332,6 @@ class ContextualSceneGraphFusion:
                 new_motion == ObservedMotionState.DISPLACED
                 or routed_result.get("observed_motion") == "DISPLACED"
                 or bool(obs_meta.get("is_relocation_event", False))
-                or (session and session not in node.source_sessions)
             )
             if spatial_shift >= 0.25 and has_relocation_signal:
                 is_relocation = True

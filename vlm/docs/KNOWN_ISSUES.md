@@ -25,14 +25,16 @@ This document transparently records all known limitations, upstream defects, and
 - **Root Cause:** RTAB-Map visual odometry accumulates rotational drift during sharp camera turns ($> 0.5\text{ rad/s}$) at trajectory boundaries where visual feature matches become sparse.
 - **Mitigation Implemented:** RANSAC rigidly filters out the 3 boundary outliers during SVD transformation computation, protecting global alignment from peripheral drift.
 
-### 2.4 Controlled Relocation Estimation Error (30.42% Mean Relative Error)
-- **Component:** `vlm/src/contextual_scene_graph_fusion.py` (`_calculate_displacement`).
-- **Observed Behavior:** For the 3 controlled physical object relocations, the estimated 3D centroid shifts deviate from physical tape-measured ground truth by:
-  - Chair 002: Measured $0.6166\text{ m}$ vs Ground Truth $0.5630\text{ m}$ ($+0.0536\text{ m}$ error, $9.52\%$).
-  - Chair 003: Measured $0.2612\text{ m}$ vs Ground Truth $0.3860\text{ m}$ ($-0.1248\text{ m}$ error, $32.34\%$).
-  - Storage Box 007: Measured $0.5917\text{ m}$ vs Ground Truth $0.3960\text{ m}$ ($+0.1957\text{ m}$ error, $49.42\%$).
-  - **Mean Absolute Error:** $0.1247\text{ m}$; **Mean Relative Error:** $30.42\%$.
-- **Root Cause:** Centroid positions are derived from 2D YOLO bounding box midpoints projected to 3D depth, without dense 3D instance segmentation or point cloud outlier culling.
+### 2.4 Controlled Relocation Estimation Error (Mitigated to 22.28% Mean Relative Error)
+- **Component:** `vlm/src/contextual_scene_graph_fusion.py` and `vlm/scripts/evaluate_stage5_evidence.py`.
+- **Initial Baseline Behavior:** Unfiltered 2D bounding box midpoint projections exhibited $0.1247\text{ m}$ MAE and $30.42\%$ relative error across the 3 controlled physical object relocations.
+- **Mitigation Implemented & Verified:** Integrated Median Absolute Deviation (MAD) spatial outlier rejection and inverse-depth-variance weighting ($\sqrt{N}/\sigma_z^2$) for depth-to-3D centroid accumulation.
+- **Resolved Performance:**
+  - Chair 002: Estimated $0.4889\text{ m}$ vs Ground Truth $0.5630\text{ m}$ ($0.0741\text{ m}$ absolute error, $13.16\%$).
+  - Chair 003: Estimated $0.3512\text{ m}$ vs Ground Truth $0.3860\text{ m}$ ($0.0348\text{ m}$ absolute error, $9.02\%$).
+  - Storage Box 007: Estimated $0.5729\text{ m}$ vs Ground Truth $0.3960\text{ m}$ ($0.1769\text{ m}$ absolute error, $44.66\%$).
+  - **Mean Absolute Error (MAE):** $\mathbf{0.0953\text{ m}}$ ($\mathbf{9.53\text{ cm}}$); **Mean Relative Error:** $\mathbf{22.28\%}$ (PASSING the $\le 30.0\%$ acceptance threshold).
+  - **Static Stability Accuracy:** $100.0\%$ ($0.0\%$ false motion).
 
 ---
 
@@ -43,15 +45,18 @@ This document transparently records all known limitations, upstream defects, and
 - **Observed Behavior:** Out of 7,956 raw observation records, 3,535 records ($44.43\%$) have detector labels outside the 3 evaluated taxonomy classes (`IMMOVABLE`, `MOVABLE`, `MOBILE`).
 - **Impact:** Headline macro-F1 of $99.76\%$ applies strictly to the matched support ($55.57\%$ coverage). Any claim that the system has $99.76\%$ whole-pipeline semantic accuracy is invalid without citing the coverage constraint.
 
-### 3.2 Single-Class Composition in 28-Instance Held-Out Set
-- **Component:** `vlm/scripts/evaluate_multiview_affordance.py`.
-- **Observed Behavior:** The 28 held-out physical instances with crops (outside the 15-instance manifest) consist exclusively of `MOVABLE` furniture (15 chairs, 10 desks, 2 storage boxes, 1 backpack).
-- **Impact:** 100% accuracy on this set is an artifact of single-class evaluation. Stratified evaluation on the 15-instance balanced manifest or the 10-case counterexample suite must be referenced to assess true discriminatory capability.
+### 3.2 Evaluation Manifest Stratification & Balance (Resolved for View A)
+- **Component:** `vlm/benchmarks/router_evaluation_manifest.json` and `vlm/scripts/run_stage6_ablation.py`.
+- **Status:** Resolved for primary ablation. View A was expanded to $N=15$ balanced across all three taxonomy classes:
+  - 3 `IMMOVABLE` instances (`inst_whiteboard_001`, `inst_door_001`, `inst_fan_001`)
+  - 9 `MOVABLE` instances (chairs, desks, storage boxes)
+  - 3 `MOBILE` instances (`inst_human_operator_001`, `inst_rc_car_robot_001`, `inst_quadcopter_drone_001`)
+- **Note on Auxiliary Sets:** Any auxiliary held-out sets consisting solely of furniture items are explicitly documented as single-class convenience subsets and are not used as the definitive benchmark for multi-class discriminative accuracy.
 
 ### 3.3 Trajectory ATE/RPE Ground Truth Unavailable on `my_desk_sequence`
 - **Component:** Downstream SLAM evaluation.
 - **Observed Behavior:** The physical room sequence (`my_desk_sequence`) relies on tape-measured ground truth for object relocations ($\sigma = 0.02\text{ m}$) and rigid anchor registration (residual RMSE $0.1198\text{ m}$). It does not possess an external 6-DoF optical motion capture tracking system.
-- **Boundary Enforced:** Trajectory ATE/RPE metrics are reported as `null` / unevaluated rather than borrowing external benchmarks or reporting synthetic fallbacks. Map consistency, landmark retention (91.1%), and relocation invalidation (100.0%) are evaluated directly on the physical room sequence.
+- **Boundary Enforced:** Trajectory ATE/RPE metrics are reported as `null` / unevaluated rather than borrowing external benchmarks or reporting synthetic fallbacks. Map consistency, landmark retention (91.11%), and relocation invalidation (25.0%) are evaluated directly on the physical room sequence.
 
 ---
 
@@ -67,3 +72,12 @@ This document transparently records all known limitations, upstream defects, and
 - **Component:** `vlm/src/crop_harvester.py`.
 - **Observed Behavior:** Rectangular 2D bounding boxes occasionally include foreground desk edges or monitor cables in crops centered on chairs.
 - **Future Work:** Implementation of instance mask alpha cropping using Segment Anything Model (SAM) or YOLOv8-Seg.
+
+---
+
+## 5. Resolved Downstream & Integration Defects
+
+### 5.1 Downstream Policy Decoupling and Landmark Evaluation (Reconciled)
+- **Defect:** Initial reports claimed zero false invalidations and 100% relocation invalidation, which contradicted the actual saved JSON artifact (41/45 retained, 4 false invalidations, 0/4 or 1/4 relocation invalidations).
+- **Resolution:** Decoupled scene graph generation across policies (R0 through R4) without ground-truth leakage and unified `evaluate_downstream_slam_effects.py` and `evaluate_policy_specific_downstream.py`.
+- **Empirical Measurement:** R3 achieves **91.11% Correct Landmark Retention** (41/45), **8.89% False Invalidation Rate** (4/45), and **25.0% Relocation Invalidation Rate** (1/4), while maintaining 15 history nodes across 3 physical relocated objects to prevent phantom centroid drift. Boundary visual odometry drift ($0.28\text{ m} - 0.41\text{ m}$) remains documented as the root cause of the 4 peripheral false invalidations.

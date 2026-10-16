@@ -1,22 +1,174 @@
 {
   "metadata": {
     "title": "Downstream SLAM and Scene Graph Validation",
-    "timestamp": 1792099230.481473,
+    "timestamp": 1792124005.5331163,
     "scene_graph_source": "C:\\Users\\Yash Bhardwaj\\Desktop\\perception\\vlm\\outputs\\full_experiment_run\\scene_graph.json",
     "total_scene_graph_nodes": 195
   },
   "landmark_reliability": {
+    "policy": "R3",
     "total_nodes": 195,
+    "unannotated_nodes_count": 146,
     "total_stationary_entities": 45,
     "correctly_retained_landmarks": 41,
     "correct_retention_rate_pct": 91.11,
     "false_invalidations": 4,
     "false_invalidation_rate_pct": 8.89,
+    "falsely_invalidated_entity_ids": [
+      "inst_chair_004",
+      "inst_chair_018",
+      "inst_desk_008",
+      "inst_desk_031"
+    ],
     "total_relocated_entities": 4,
-    "correctly_invalidated_relocations": 0,
-    "relocation_invalidation_rate_pct": 0.0,
+    "correctly_invalidated_relocations": 1,
+    "relocation_invalidation_rate_pct": 25.0,
+    "correctly_invalidated_entity_ids": [
+      "inst_human_operator_001"
+    ],
+    "missed_relocation_entity_ids": [
+      "inst_chair_002",
+      "inst_chair_003",
+      "inst_storage_box_007"
+    ],
     "nodes_preserving_pose_history": 12,
     "phantom_centroid_drift_avoided": true
+  },
+  "policy_scene_graph_comparisons": {
+    "R0": {
+      "policy": "R0",
+      "total_nodes": 194,
+      "unannotated_nodes_count": 145,
+      "total_stationary_entities": 45,
+      "correctly_retained_landmarks": 45,
+      "correct_retention_rate_pct": 100.0,
+      "false_invalidations": 0,
+      "false_invalidation_rate_pct": 0.0,
+      "falsely_invalidated_entity_ids": [],
+      "total_relocated_entities": 4,
+      "correctly_invalidated_relocations": 1,
+      "relocation_invalidation_rate_pct": 25.0,
+      "correctly_invalidated_entity_ids": [
+        "inst_human_operator_001"
+      ],
+      "missed_relocation_entity_ids": [
+        "inst_chair_002",
+        "inst_chair_003",
+        "inst_storage_box_007"
+      ],
+      "nodes_preserving_pose_history": 0,
+      "phantom_centroid_drift_avoided": true
+    },
+    "R1": {
+      "policy": "R1",
+      "total_nodes": 194,
+      "unannotated_nodes_count": 145,
+      "total_stationary_entities": 45,
+      "correctly_retained_landmarks": 42,
+      "correct_retention_rate_pct": 93.33,
+      "false_invalidations": 3,
+      "false_invalidation_rate_pct": 6.67,
+      "falsely_invalidated_entity_ids": [
+        "inst_desk_008",
+        "inst_desk_012",
+        "inst_desk_031"
+      ],
+      "total_relocated_entities": 4,
+      "correctly_invalidated_relocations": 2,
+      "relocation_invalidation_rate_pct": 50.0,
+      "correctly_invalidated_entity_ids": [
+        "inst_chair_003",
+        "inst_human_operator_001"
+      ],
+      "missed_relocation_entity_ids": [
+        "inst_chair_002",
+        "inst_storage_box_007"
+      ],
+      "nodes_preserving_pose_history": 11,
+      "phantom_centroid_drift_avoided": true
+    },
+    "R2": {
+      "policy": "R2",
+      "total_nodes": 195,
+      "unannotated_nodes_count": 146,
+      "total_stationary_entities": 45,
+      "correctly_retained_landmarks": 45,
+      "correct_retention_rate_pct": 100.0,
+      "false_invalidations": 0,
+      "false_invalidation_rate_pct": 0.0,
+      "falsely_invalidated_entity_ids": [],
+      "total_relocated_entities": 4,
+      "correctly_invalidated_relocations": 1,
+      "relocation_invalidation_rate_pct": 25.0,
+      "correctly_invalidated_entity_ids": [
+        "inst_human_operator_001"
+      ],
+      "missed_relocation_entity_ids": [
+        "inst_chair_002",
+        "inst_chair_003",
+        "inst_storage_box_007"
+      ],
+      "nodes_preserving_pose_history": 0,
+      "phantom_centroid_drift_avoided": true
+    },
+    "R3": {
+      "policy": "R3",
+      "total_nodes": 195,
+      "unannotated_nodes_count": 146,
+      "total_stationary_entities": 45,
+      "correctly_retained_landmarks": 41,
+      "correct_retention_rate_pct": 91.11,
+      "false_invalidations": 4,
+      "false_invalidation_rate_pct": 8.89,
+      "falsely_invalidated_entity_ids": [
+        "inst_chair_004",
+        "inst_chair_018",
+        "inst_desk_008",
+        "inst_desk_031"
+      ],
+      "total_relocated_entities": 4,
+      "correctly_invalidated_relocations": 1,
+      "relocation_invalidation_rate_pct": 25.0,
+      "correctly_invalidated_entity_ids": [
+        "inst_human_operator_001"
+      ],
+      "missed_relocation_entity_ids": [
+        "inst_chair_002",
+        "inst_chair_003",
+        "inst_storage_box_007"
+      ],
+      "nodes_preserving_pose_history": 12,
+      "phantom_centroid_drift_avoided": true
+    },
+    "R4": {
+      "policy": "R4",
+      "total_nodes": 195,
+      "unannotated_nodes_count": 146,
+      "total_stationary_entities": 45,
+      "correctly_retained_landmarks": 41,
+      "correct_retention_rate_pct": 91.11,
+      "false_invalidations": 4,
+      "false_invalidation_rate_pct": 8.89,
+      "falsely_invalidated_entity_ids": [
+        "inst_chair_004",
+        "inst_chair_018",
+        "inst_desk_008",
+        "inst_desk_031"
+      ],
+      "total_relocated_entities": 4,
+      "correctly_invalidated_relocations": 1,
+      "relocation_invalidation_rate_pct": 25.0,
+      "correctly_invalidated_entity_ids": [
+        "inst_human_operator_001"
+      ],
+      "missed_relocation_entity_ids": [
+        "inst_chair_002",
+        "inst_chair_003",
+        "inst_storage_box_007"
+      ],
+      "nodes_preserving_pose_history": 12,
+      "phantom_centroid_drift_avoided": true
+    }
   },
   "slam_trajectory_metrics": {
     "evaluation_sequence": "my_desk_sequence",
@@ -35,11 +187,11 @@
   },
   "compute_and_query_efficiency": {
     "r3_queries_invoked": 3,
-    "r4_all_vlm_queries": 11,
-    "queries_avoided": 8,
-    "relative_compute_reduction_pct": 72.7,
-    "r3_mean_latency_s": 9.007,
-    "r4_mean_latency_s": 26.333,
-    "latency_speedup_factor": 2.92
+    "r4_all_vlm_queries": 15,
+    "queries_avoided": 12,
+    "relative_compute_reduction_pct": 80.0,
+    "r3_mean_latency_s": 6.605,
+    "r4_mean_latency_s": 24.211,
+    "latency_speedup_factor": 3.67
   }
 }

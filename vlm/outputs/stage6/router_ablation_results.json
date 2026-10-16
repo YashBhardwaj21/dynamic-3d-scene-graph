@@ -1,10 +1,10 @@
 {
   "metadata": {
     "title": "Stage 6 Selective Router Decoupled Ablation Matrix",
-    "timestamp": 1792099206.3011422,
+    "timestamp": 1792123551.87059,
     "vlm_model": "Qwen2.5-VL-3B-Instruct (GGUF Q4_K_M)",
     "total_instances": 15,
-    "eligible_image_instances": 11,
+    "eligible_image_instances": 15,
     "manifest_version": "1.0.0"
   },
   "experiments": {
@@ -64,9 +64,9 @@
           "vlm_predictions_accepted": 15,
           "decision_latency_ms": {
             "population": "all_instances",
-            "mean": 0.008,
-            "p50": 0.006,
-            "p95": 0.024
+            "mean": 0.005,
+            "p50": 0.004,
+            "p95": 0.012
           },
           "end_to_end_latency_s": {
             "population": "all_instances_unqueried_include_0ms",
@@ -89,29 +89,29 @@
       },
       "view_a_metrics": {
         "quality": {
-          "balanced_accuracy": 0.9445,
-          "macro_f1": 0.9706,
+          "balanced_accuracy": 0.8519,
+          "macro_f1": 0.9137,
           "per_class_recall": {
-            "IMMOVABLE": 1.0,
+            "IMMOVABLE": 0.6667,
             "MOVABLE": 0.8889,
-            "MOBILE": 0.0
+            "MOBILE": 1.0
           },
           "per_class_precision": {
             "IMMOVABLE": 1.0,
             "MOVABLE": 1.0,
-            "MOBILE": 0.0
+            "MOBILE": 1.0
           },
           "per_class_f1": {
-            "IMMOVABLE": 1.0,
+            "IMMOVABLE": 0.8,
             "MOVABLE": 0.9412,
-            "MOBILE": 0.0
+            "MOBILE": 1.0
           },
           "confusion_matrix": {
             "IMMOVABLE": {
               "IMMOVABLE": 2,
               "MOVABLE": 0,
               "MOBILE": 0,
-              "UNKNOWN": 0
+              "UNKNOWN": 1
             },
             "MOVABLE": {
               "IMMOVABLE": 0,
@@ -122,27 +122,27 @@
             "MOBILE": {
               "IMMOVABLE": 0,
               "MOVABLE": 0,
-              "MOBILE": 0,
+              "MOBILE": 3,
               "UNKNOWN": 0
             }
           },
-          "abstention_rate_pct": 9.09
+          "abstention_rate_pct": 13.33
         },
         "efficiency": {
-          "total_instances": 11,
+          "total_instances": 15,
           "vlm_queries_requested": 0,
           "vlm_inference_executed": 0,
           "vlm_cache_hits": 0,
           "vlm_queries_invoked": 0,
-          "vlm_queries_avoided": 11,
+          "vlm_queries_avoided": 15,
           "vlm_query_rate_pct": 0.0,
-          "vlm_outputs_valid": 11,
-          "vlm_predictions_accepted": 11,
+          "vlm_outputs_valid": 15,
+          "vlm_predictions_accepted": 15,
           "decision_latency_ms": {
             "population": "all_instances",
-            "mean": 0.009,
-            "p50": 0.005,
-            "p95": 0.026
+            "mean": 0.005,
+            "p50": 0.004,
+            "p95": 0.012
           },
           "end_to_end_latency_s": {
             "population": "all_instances_unqueried_include_0ms",
@@ -216,9 +216,9 @@
           "vlm_predictions_accepted": 15,
           "decision_latency_ms": {
             "population": "all_instances",
-            "mean": 0.008,
-            "p50": 0.006,
-            "p95": 0.024
+            "mean": 0.005,
+            "p50": 0.004,
+            "p95": 0.012
           },
           "end_to_end_latency_s": {
             "population": "all_instances_unqueried_include_0ms",
@@ -296,7 +296,7 @@
           "views_used": 0,
           "prediction": "IMMOVABLE",
           "abstained": false,
-          "decision_latency_ms": 0.02,
+          "decision_latency_ms": 0.011,
           "inference_latency_ms": 0.0,
           "cached_latency_ms": null,
           "token_usage": null,
@@ -331,7 +331,7 @@
           "views_used": 0,
           "prediction": "UNKNOWN",
           "abstained": true,
-          "decision_latency_ms": 0.007,
+          "decision_latency_ms": 0.005,
           "inference_latency_ms": 0.0,
           "cached_latency_ms": null,
           "token_usage": null,
@@ -401,7 +401,7 @@
           "views_used": 0,
           "prediction": "MOBILE",
           "abstained": false,
-          "decision_latency_ms": 0.006,
+          "decision_latency_ms": 0.004,
           "inference_latency_ms": 0.0,
           "cached_latency_ms": null,
           "token_usage": null,
@@ -436,7 +436,7 @@
           "views_used": 0,
           "prediction": "MOBILE",
           "abstained": false,
-          "decision_latency_ms": 0.004,
+          "decision_latency_ms": 0.003,
           "inference_latency_ms": 0.0,
           "cached_latency_ms": null,
           "token_usage": null,
@@ -471,7 +471,7 @@
           "views_used": 0,
           "prediction": "MOVABLE",
           "abstained": false,
-          "decision_latency_ms": 0.007,
+          "decision_latency_ms": 0.006,
           "inference_latency_ms": 0.0,
           "cached_latency_ms": null,
           "token_usage": null,
@@ -506,7 +506,7 @@
           "views_used": 0,
           "prediction": "MOVABLE",
           "abstained": false,
-          "decision_latency_ms": 0.032,
+          "decision_latency_ms": 0.005,
           "inference_latency_ms": 0.0,
           "cached_latency_ms": null,
           "token_usage": null,
@@ -541,7 +541,7 @@
           "views_used": 0,
           "prediction": "MOVABLE",
           "abstained": false,
-          "decision_latency_ms": 0.004,
+          "decision_latency_ms": 0.003,
           "inference_latency_ms": 0.0,
           "cached_latency_ms": null,
           "token_usage": null,
@@ -576,7 +576,7 @@
           "views_used": 0,
           "prediction": "MOVABLE",
           "abstained": false,
-          "decision_latency_ms": 0.003,
+          "decision_latency_ms": 0.002,
           "inference_latency_ms": 0.0,
           "cached_latency_ms": null,
           "token_usage": null,
@@ -646,7 +646,7 @@
           "views_used": 0,
           "prediction": "MOVABLE",
           "abstained": false,
-          "decision_latency_ms": 0.006,
+          "decision_latency_ms": 0.005,
           "inference_latency_ms": 0.0,
           "cached_latency_ms": null,
           "token_usage": null,
@@ -681,7 +681,7 @@
           "views_used": 0,
           "prediction": "MOVABLE",
           "abstained": false,
-          "decision_latency_ms": 0.005,
+          "decision_latency_ms": 0.004,
           "inference_latency_ms": 0.0,
           "cached_latency_ms": null,
           "token_usage": null,
@@ -716,7 +716,7 @@
           "views_used": 0,
           "prediction": "UNKNOWN",
           "abstained": true,
-          "decision_latency_ms": 0.004,
+          "decision_latency_ms": 0.003,
           "inference_latency_ms": 0.0,
           "cached_latency_ms": null,
           "token_usage": null,
@@ -751,7 +751,7 @@
           "views_used": 0,
           "prediction": "MOVABLE",
           "abstained": false,
-          "decision_latency_ms": 0.003,
+          "decision_latency_ms": 0.002,
           "inference_latency_ms": 0.0,
           "cached_latency_ms": null,
           "token_usage": null,
@@ -823,9 +823,9 @@
           "vlm_predictions_accepted": 15,
           "decision_latency_ms": {
             "population": "all_instances",
-            "mean": 0.008,
-            "p50": 0.006,
-            "p95": 0.024
+            "mean": 0.005,
+            "p50": 0.004,
+            "p95": 0.012
           },
           "end_to_end_latency_s": {
             "population": "all_instances_unqueried_include_0ms",
@@ -848,29 +848,29 @@
       },
       "view_a_metrics": {
         "quality": {
-          "balanced_accuracy": 0.9445,
-          "macro_f1": 0.9706,
+          "balanced_accuracy": 0.8519,
+          "macro_f1": 0.9137,
           "per_class_recall": {
-            "IMMOVABLE": 1.0,
+            "IMMOVABLE": 0.6667,
             "MOVABLE": 0.8889,
-            "MOBILE": 0.0
+            "MOBILE": 1.0
           },
           "per_class_precision": {
             "IMMOVABLE": 1.0,
             "MOVABLE": 1.0,
-            "MOBILE": 0.0
+            "MOBILE": 1.0
           },
           "per_class_f1": {
-            "IMMOVABLE": 1.0,
+            "IMMOVABLE": 0.8,
             "MOVABLE": 0.9412,
-            "MOBILE": 0.0
+            "MOBILE": 1.0
           },
           "confusion_matrix": {
             "IMMOVABLE": {
               "IMMOVABLE": 2,
               "MOVABLE": 0,
               "MOBILE": 0,
-              "UNKNOWN": 0
+              "UNKNOWN": 1
             },
             "MOVABLE": {
               "IMMOVABLE": 0,
@@ -881,27 +881,27 @@
             "MOBILE": {
               "IMMOVABLE": 0,
               "MOVABLE": 0,
-              "MOBILE": 0,
+              "MOBILE": 3,
               "UNKNOWN": 0
             }
           },
-          "abstention_rate_pct": 9.09
+          "abstention_rate_pct": 13.33
         },
         "efficiency": {
-          "total_instances": 11,
+          "total_instances": 15,
           "vlm_queries_requested": 0,
           "vlm_inference_executed": 0,
           "vlm_cache_hits": 0,
           "vlm_queries_invoked": 0,
-          "vlm_queries_avoided": 11,
+          "vlm_queries_avoided": 15,
           "vlm_query_rate_pct": 0.0,
-          "vlm_outputs_valid": 11,
-          "vlm_predictions_accepted": 11,
+          "vlm_outputs_valid": 15,
+          "vlm_predictions_accepted": 15,
           "decision_latency_ms": {
             "population": "all_instances",
-            "mean": 0.009,
-            "p50": 0.005,
-            "p95": 0.026
+            "mean": 0.005,
+            "p50": 0.004,
+            "p95": 0.012
           },
           "end_to_end_latency_s": {
             "population": "all_instances_unqueried_include_0ms",
@@ -975,9 +975,9 @@
           "vlm_predictions_accepted": 15,
           "decision_latency_ms": {
             "population": "all_instances",
-            "mean": 0.008,
-            "p50": 0.006,
-            "p95": 0.024
+            "mean": 0.005,
+            "p50": 0.004,
+            "p95": 0.012
           },
           "end_to_end_latency_s": {
             "population": "all_instances_unqueried_include_0ms",
@@ -1055,7 +1055,7 @@
           "views_used": 0,
           "prediction": "IMMOVABLE",
           "abstained": false,
-          "decision_latency_ms": 0.02,
+          "decision_latency_ms": 0.011,
           "inference_latency_ms": 0.0,
           "cached_latency_ms": null,
           "token_usage": null,
@@ -1090,7 +1090,7 @@
           "views_used": 0,
           "prediction": "UNKNOWN",
           "abstained": true,
-          "decision_latency_ms": 0.007,
+          "decision_latency_ms": 0.005,
           "inference_latency_ms": 0.0,
           "cached_latency_ms": null,
           "token_usage": null,
@@ -1160,7 +1160,7 @@
           "views_used": 0,
           "prediction": "MOBILE",
           "abstained": false,
-          "decision_latency_ms": 0.006,
+          "decision_latency_ms": 0.004,
           "inference_latency_ms": 0.0,
           "cached_latency_ms": null,
           "token_usage": null,
@@ -1195,7 +1195,7 @@
           "views_used": 0,
           "prediction": "MOBILE",
           "abstained": false,
-          "decision_latency_ms": 0.004,
+          "decision_latency_ms": 0.003,
           "inference_latency_ms": 0.0,
           "cached_latency_ms": null,
           "token_usage": null,
@@ -1230,7 +1230,7 @@
           "views_used": 0,
           "prediction": "MOVABLE",
           "abstained": false,
-          "decision_latency_ms": 0.007,
+          "decision_latency_ms": 0.006,
           "inference_latency_ms": 0.0,
           "cached_latency_ms": null,
           "token_usage": null,
@@ -1265,7 +1265,7 @@
           "views_used": 0,
           "prediction": "MOVABLE",
           "abstained": false,
-          "decision_latency_ms": 0.032,
+          "decision_latency_ms": 0.005,
           "inference_latency_ms": 0.0,
           "cached_latency_ms": null,
           "token_usage": null,
@@ -1300,7 +1300,7 @@
           "views_used": 0,
           "prediction": "MOVABLE",
           "abstained": false,
-          "decision_latency_ms": 0.004,
+          "decision_latency_ms": 0.003,
           "inference_latency_ms": 0.0,
           "cached_latency_ms": null,
           "token_usage": null,
@@ -1335,7 +1335,7 @@
           "views_used": 0,
           "prediction": "MOVABLE",
           "abstained": false,
-          "decision_latency_ms": 0.003,
+          "decision_latency_ms": 0.002,
           "inference_latency_ms": 0.0,
           "cached_latency_ms": null,
           "token_usage": null,
@@ -1405,7 +1405,7 @@
           "views_used": 0,
           "prediction": "MOVABLE",
           "abstained": false,
-          "decision_latency_ms": 0.006,
+          "decision_latency_ms": 0.005,
           "inference_latency_ms": 0.0,
           "cached_latency_ms": null,
           "token_usage": null,
@@ -1440,7 +1440,7 @@
           "views_used": 0,
           "prediction": "MOVABLE",
           "abstained": false,
-          "decision_latency_ms": 0.005,
+          "decision_latency_ms": 0.004,
           "inference_latency_ms": 0.0,
           "cached_latency_ms": null,
           "token_usage": null,
@@ -1475,7 +1475,7 @@
           "views_used": 0,
           "prediction": "UNKNOWN",
           "abstained": true,
-          "decision_latency_ms": 0.004,
+          "decision_latency_ms": 0.003,
           "inference_latency_ms": 0.0,
           "cached_latency_ms": null,
           "token_usage": null,
@@ -1510,7 +1510,7 @@
           "views_used": 0,
           "prediction": "MOVABLE",
           "abstained": false,
-          "decision_latency_ms": 0.003,
+          "decision_latency_ms": 0.002,
           "inference_latency_ms": 0.0,
           "cached_latency_ms": null,
           "token_usage": null,
@@ -1582,7 +1582,7 @@
           "vlm_predictions_accepted": 15,
           "decision_latency_ms": {
             "population": "all_instances",
-            "mean": 0.004,
+            "mean": 0.005,
             "p50": 0.004,
             "p95": 0.009
           },
@@ -1607,29 +1607,29 @@
       },
       "view_a_metrics": {
         "quality": {
-          "balanced_accuracy": 0.6945,
-          "macro_f1": 0.7778,
+          "balanced_accuracy": 0.7407,
+          "macro_f1": 0.7963,
           "per_class_recall": {
-            "IMMOVABLE": 0.5,
+            "IMMOVABLE": 0.3333,
             "MOVABLE": 0.8889,
-            "MOBILE": 0.0
+            "MOBILE": 1.0
           },
           "per_class_precision": {
             "IMMOVABLE": 1.0,
             "MOVABLE": 0.8889,
-            "MOBILE": 0.0
+            "MOBILE": 1.0
           },
           "per_class_f1": {
-            "IMMOVABLE": 0.6667,
+            "IMMOVABLE": 0.5,
             "MOVABLE": 0.8889,
-            "MOBILE": 0.0
+            "MOBILE": 1.0
           },
           "confusion_matrix": {
             "IMMOVABLE": {
               "IMMOVABLE": 1,
               "MOVABLE": 1,
               "MOBILE": 0,
-              "UNKNOWN": 0
+              "UNKNOWN": 1
             },
             "MOVABLE": {
               "IMMOVABLE": 0,
@@ -1640,27 +1640,27 @@
             "MOBILE": {
               "IMMOVABLE": 0,
               "MOVABLE": 0,
-              "MOBILE": 0,
+              "MOBILE": 3,
               "UNKNOWN": 0
             }
           },
-          "abstention_rate_pct": 9.09
+          "abstention_rate_pct": 13.33
         },
         "efficiency": {
-          "total_instances": 11,
+          "total_instances": 15,
           "vlm_queries_requested": 0,
           "vlm_inference_executed": 0,
           "vlm_cache_hits": 0,
           "vlm_queries_invoked": 0,
-          "vlm_queries_avoided": 11,
+          "vlm_queries_avoided": 15,
           "vlm_query_rate_pct": 0.0,
-          "vlm_outputs_valid": 11,
-          "vlm_predictions_accepted": 11,
+          "vlm_outputs_valid": 15,
+          "vlm_predictions_accepted": 15,
           "decision_latency_ms": {
             "population": "all_instances",
             "mean": 0.005,
-            "p50": 0.003,
-            "p95": 0.01
+            "p50": 0.004,
+            "p95": 0.009
           },
           "end_to_end_latency_s": {
             "population": "all_instances_unqueried_include_0ms",
@@ -1734,7 +1734,7 @@
           "vlm_predictions_accepted": 15,
           "decision_latency_ms": {
             "population": "all_instances",
-            "mean": 0.004,
+            "mean": 0.005,
             "p50": 0.004,
             "p95": 0.009
           },
@@ -1884,7 +1884,7 @@
           "views_used": 0,
           "prediction": "MOBILE",
           "abstained": false,
-          "decision_latency_ms": 0.004,
+          "decision_latency_ms": 0.005,
           "inference_latency_ms": 0.0,
           "cached_latency_ms": null,
           "token_usage": null,
@@ -1919,7 +1919,7 @@
           "views_used": 0,
           "prediction": "MOBILE",
           "abstained": false,
-          "decision_latency_ms": 0.004,
+          "decision_latency_ms": 0.005,
           "inference_latency_ms": 0.0,
           "cached_latency_ms": null,
           "token_usage": null,
@@ -1989,7 +1989,7 @@
           "views_used": 0,
           "prediction": "MOVABLE",
           "abstained": false,
-          "decision_latency_ms": 0.004,
+          "decision_latency_ms": 0.007,
           "inference_latency_ms": 0.0,
           "cached_latency_ms": null,
           "token_usage": null,
@@ -2024,7 +2024,7 @@
           "views_used": 0,
           "prediction": "MOVABLE",
           "abstained": false,
-          "decision_latency_ms": 0.004,
+          "decision_latency_ms": 0.005,
           "inference_latency_ms": 0.0,
           "cached_latency_ms": null,
           "token_usage": null,
@@ -2059,7 +2059,7 @@
           "views_used": 0,
           "prediction": "MOVABLE",
           "abstained": false,
-          "decision_latency_ms": 0.003,
+          "decision_latency_ms": 0.004,
           "inference_latency_ms": 0.0,
           "cached_latency_ms": null,
           "token_usage": null,
@@ -2129,7 +2129,7 @@
           "views_used": 0,
           "prediction": "MOVABLE",
           "abstained": false,
-          "decision_latency_ms": 0.003,
+          "decision_latency_ms": 0.004,
           "inference_latency_ms": 0.0,
           "cached_latency_ms": null,
           "token_usage": null,
@@ -2199,7 +2199,7 @@
           "views_used": 0,
           "prediction": "MOVABLE",
           "abstained": false,
-          "decision_latency_ms": 0.003,
+          "decision_latency_ms": 0.004,
           "inference_latency_ms": 0.0,
           "cached_latency_ms": null,
           "token_usage": null,
@@ -2234,7 +2234,7 @@
           "views_used": 0,
           "prediction": "UNKNOWN",
           "abstained": true,
-          "decision_latency_ms": 0.003,
+          "decision_latency_ms": 0.004,
           "inference_latency_ms": 0.0,
           "cached_latency_ms": null,
           "token_usage": null,
@@ -2341,7 +2341,7 @@
           "vlm_predictions_accepted": 15,
           "decision_latency_ms": {
             "population": "all_instances",
-            "mean": 0.004,
+            "mean": 0.005,
             "p50": 0.004,
             "p95": 0.009
           },
@@ -2366,29 +2366,29 @@
       },
       "view_a_metrics": {
         "quality": {
-          "balanced_accuracy": 0.6945,
-          "macro_f1": 0.7778,
+          "balanced_accuracy": 0.7407,
+          "macro_f1": 0.7963,
           "per_class_recall": {
-            "IMMOVABLE": 0.5,
+            "IMMOVABLE": 0.3333,
             "MOVABLE": 0.8889,
-            "MOBILE": 0.0
+            "MOBILE": 1.0
           },
           "per_class_precision": {
             "IMMOVABLE": 1.0,
             "MOVABLE": 0.8889,
-            "MOBILE": 0.0
+            "MOBILE": 1.0
           },
           "per_class_f1": {
-            "IMMOVABLE": 0.6667,
+            "IMMOVABLE": 0.5,
             "MOVABLE": 0.8889,
-            "MOBILE": 0.0
+            "MOBILE": 1.0
           },
           "confusion_matrix": {
             "IMMOVABLE": {
               "IMMOVABLE": 1,
               "MOVABLE": 1,
               "MOBILE": 0,
-              "UNKNOWN": 0
+              "UNKNOWN": 1
             },
             "MOVABLE": {
               "IMMOVABLE": 0,
@@ -2399,27 +2399,27 @@
             "MOBILE": {
               "IMMOVABLE": 0,
               "MOVABLE": 0,
-              "MOBILE": 0,
+              "MOBILE": 3,
               "UNKNOWN": 0
             }
           },
-          "abstention_rate_pct": 9.09
+          "abstention_rate_pct": 13.33
         },
         "efficiency": {
-          "total_instances": 11,
+          "total_instances": 15,
           "vlm_queries_requested": 0,
           "vlm_inference_executed": 0,
           "vlm_cache_hits": 0,
           "vlm_queries_invoked": 0,
-          "vlm_queries_avoided": 11,
+          "vlm_queries_avoided": 15,
           "vlm_query_rate_pct": 0.0,
-          "vlm_outputs_valid": 11,
-          "vlm_predictions_accepted": 11,
+          "vlm_outputs_valid": 15,
+          "vlm_predictions_accepted": 15,
           "decision_latency_ms": {
             "population": "all_instances",
             "mean": 0.005,
-            "p50": 0.003,
-            "p95": 0.01
+            "p50": 0.004,
+            "p95": 0.009
           },
           "end_to_end_latency_s": {
             "population": "all_instances_unqueried_include_0ms",
@@ -2493,7 +2493,7 @@
           "vlm_predictions_accepted": 15,
           "decision_latency_ms": {
             "population": "all_instances",
-            "mean": 0.004,
+            "mean": 0.005,
             "p50": 0.004,
             "p95": 0.009
           },
@@ -2643,7 +2643,7 @@
           "views_used": 0,
           "prediction": "MOBILE",
           "abstained": false,
-          "decision_latency_ms": 0.004,
+          "decision_latency_ms": 0.005,
           "inference_latency_ms": 0.0,
           "cached_latency_ms": null,
           "token_usage": null,
@@ -2678,7 +2678,7 @@
           "views_used": 0,
           "prediction": "MOBILE",
           "abstained": false,
-          "decision_latency_ms": 0.004,
+          "decision_latency_ms": 0.005,
           "inference_latency_ms": 0.0,
           "cached_latency_ms": null,
           "token_usage": null,
@@ -2748,7 +2748,7 @@
           "views_used": 0,
           "prediction": "MOVABLE",
           "abstained": false,
-          "decision_latency_ms": 0.004,
+          "decision_latency_ms": 0.007,
           "inference_latency_ms": 0.0,
           "cached_latency_ms": null,
           "token_usage": null,
@@ -2783,7 +2783,7 @@
           "views_used": 0,
           "prediction": "MOVABLE",
           "abstained": false,
-          "decision_latency_ms": 0.004,
+          "decision_latency_ms": 0.005,
           "inference_latency_ms": 0.0,
           "cached_latency_ms": null,
           "token_usage": null,
@@ -2818,7 +2818,7 @@
           "views_used": 0,
           "prediction": "MOVABLE",
           "abstained": false,
-          "decision_latency_ms": 0.003,
+          "decision_latency_ms": 0.004,
           "inference_latency_ms": 0.0,
           "cached_latency_ms": null,
           "token_usage": null,
@@ -2888,7 +2888,7 @@
           "views_used": 0,
           "prediction": "MOVABLE",
           "abstained": false,
-          "decision_latency_ms": 0.003,
+          "decision_latency_ms": 0.004,
           "inference_latency_ms": 0.0,
           "cached_latency_ms": null,
           "token_usage": null,
@@ -2958,7 +2958,7 @@
           "views_used": 0,
           "prediction": "MOVABLE",
           "abstained": false,
-          "decision_latency_ms": 0.003,
+          "decision_latency_ms": 0.004,
           "inference_latency_ms": 0.0,
           "cached_latency_ms": null,
           "token_usage": null,
@@ -2993,7 +2993,7 @@
           "views_used": 0,
           "prediction": "UNKNOWN",
           "abstained": true,
-          "decision_latency_ms": 0.003,
+          "decision_latency_ms": 0.004,
           "inference_latency_ms": 0.0,
           "cached_latency_ms": null,
           "token_usage": null,
@@ -3049,10 +3049,10 @@
       "description": "Selective router escalating on affordance ambiguity regardless of estimator influence",
       "metrics": {
         "quality": {
-          "balanced_accuracy": 0.7778,
-          "macro_f1": 0.8158,
+          "balanced_accuracy": 0.8889,
+          "macro_f1": 0.9158,
           "per_class_recall": {
-            "IMMOVABLE": 0.3333,
+            "IMMOVABLE": 0.6667,
             "MOVABLE": 1.0,
             "MOBILE": 1.0
           },
@@ -3062,16 +3062,16 @@
             "MOBILE": 1.0
           },
           "per_class_f1": {
-            "IMMOVABLE": 0.5,
+            "IMMOVABLE": 0.8,
             "MOVABLE": 0.9474,
             "MOBILE": 1.0
           },
           "confusion_matrix": {
             "IMMOVABLE": {
-              "IMMOVABLE": 1,
+              "IMMOVABLE": 2,
               "MOVABLE": 1,
               "MOBILE": 0,
-              "UNKNOWN": 1
+              "UNKNOWN": 0
             },
             "MOVABLE": {
               "IMMOVABLE": 0,
@@ -3086,35 +3086,35 @@
               "UNKNOWN": 0
             }
           },
-          "abstention_rate_pct": 6.67
+          "abstention_rate_pct": 0.0
         },
         "efficiency": {
           "total_instances": 15,
-          "vlm_queries_requested": 5,
+          "vlm_queries_requested": 6,
           "vlm_inference_executed": 0,
-          "vlm_cache_hits": 5,
-          "vlm_queries_invoked": 5,
-          "vlm_queries_avoided": 10,
-          "vlm_query_rate_pct": 33.33,
+          "vlm_cache_hits": 6,
+          "vlm_queries_invoked": 6,
+          "vlm_queries_avoided": 9,
+          "vlm_query_rate_pct": 40.0,
           "vlm_outputs_valid": 15,
           "vlm_predictions_accepted": 15,
           "decision_latency_ms": {
             "population": "all_instances",
-            "mean": 0.007,
-            "p50": 0.007,
-            "p95": 0.012
+            "mean": 0.011,
+            "p50": 0.011,
+            "p95": 0.016
           },
           "end_to_end_latency_s": {
             "population": "all_instances_unqueried_include_0ms",
-            "mean": 10.004,
+            "mean": 11.018,
             "p50": 0.0,
             "p95": 35.686
           },
           "queried_instances_latency_s": {
             "population": "queried_instances_only",
-            "mean": 30.013,
-            "p50": 25.601,
-            "p95": 39.474
+            "mean": 27.544,
+            "p50": 25.492,
+            "p95": 39.095
           }
         },
         "reliability": {
@@ -3125,86 +3125,10 @@
       },
       "view_a_metrics": {
         "quality": {
-          "balanced_accuracy": 0.75,
-          "macro_f1": 0.8071,
+          "balanced_accuracy": 0.8889,
+          "macro_f1": 0.9158,
           "per_class_recall": {
-            "IMMOVABLE": 0.5,
-            "MOVABLE": 1.0,
-            "MOBILE": 0.0
-          },
-          "per_class_precision": {
-            "IMMOVABLE": 1.0,
-            "MOVABLE": 0.9,
-            "MOBILE": 0.0
-          },
-          "per_class_f1": {
             "IMMOVABLE": 0.6667,
-            "MOVABLE": 0.9474,
-            "MOBILE": 0.0
-          },
-          "confusion_matrix": {
-            "IMMOVABLE": {
-              "IMMOVABLE": 1,
-              "MOVABLE": 1,
-              "MOBILE": 0,
-              "UNKNOWN": 0
-            },
-            "MOVABLE": {
-              "IMMOVABLE": 0,
-              "MOVABLE": 9,
-              "MOBILE": 0,
-              "UNKNOWN": 0
-            },
-            "MOBILE": {
-              "IMMOVABLE": 0,
-              "MOVABLE": 0,
-              "MOBILE": 0,
-              "UNKNOWN": 0
-            }
-          },
-          "abstention_rate_pct": 0.0
-        },
-        "efficiency": {
-          "total_instances": 11,
-          "vlm_queries_requested": 5,
-          "vlm_inference_executed": 0,
-          "vlm_cache_hits": 5,
-          "vlm_queries_invoked": 5,
-          "vlm_queries_avoided": 6,
-          "vlm_query_rate_pct": 45.45,
-          "vlm_outputs_valid": 11,
-          "vlm_predictions_accepted": 11,
-          "decision_latency_ms": {
-            "population": "all_instances",
-            "mean": 0.007,
-            "p50": 0.008,
-            "p95": 0.01
-          },
-          "end_to_end_latency_s": {
-            "population": "all_instances_unqueried_include_0ms",
-            "mean": 13.642,
-            "p50": 0.0,
-            "p95": 37.201
-          },
-          "queried_instances_latency_s": {
-            "population": "queried_instances_only",
-            "mean": 30.013,
-            "p50": 25.601,
-            "p95": 39.474
-          }
-        },
-        "reliability": {
-          "false_cheap_resolutions": 0,
-          "invalid_evidence_escalations": 0,
-          "vlm_abstentions": 0
-        }
-      },
-      "view_b_metrics": {
-        "quality": {
-          "balanced_accuracy": 0.7778,
-          "macro_f1": 0.8158,
-          "per_class_recall": {
-            "IMMOVABLE": 0.3333,
             "MOVABLE": 1.0,
             "MOBILE": 1.0
           },
@@ -3214,16 +3138,16 @@
             "MOBILE": 1.0
           },
           "per_class_f1": {
-            "IMMOVABLE": 0.5,
+            "IMMOVABLE": 0.8,
             "MOVABLE": 0.9474,
             "MOBILE": 1.0
           },
           "confusion_matrix": {
             "IMMOVABLE": {
-              "IMMOVABLE": 1,
+              "IMMOVABLE": 2,
               "MOVABLE": 1,
               "MOBILE": 0,
-              "UNKNOWN": 1
+              "UNKNOWN": 0
             },
             "MOVABLE": {
               "IMMOVABLE": 0,
@@ -3238,35 +3162,111 @@
               "UNKNOWN": 0
             }
           },
-          "abstention_rate_pct": 6.67
+          "abstention_rate_pct": 0.0
         },
         "efficiency": {
           "total_instances": 15,
-          "vlm_queries_requested": 5,
+          "vlm_queries_requested": 6,
           "vlm_inference_executed": 0,
-          "vlm_cache_hits": 5,
-          "vlm_queries_invoked": 5,
-          "vlm_queries_avoided": 10,
-          "vlm_query_rate_pct": 33.33,
+          "vlm_cache_hits": 6,
+          "vlm_queries_invoked": 6,
+          "vlm_queries_avoided": 9,
+          "vlm_query_rate_pct": 40.0,
           "vlm_outputs_valid": 15,
           "vlm_predictions_accepted": 15,
           "decision_latency_ms": {
             "population": "all_instances",
-            "mean": 0.007,
-            "p50": 0.007,
-            "p95": 0.012
+            "mean": 0.011,
+            "p50": 0.011,
+            "p95": 0.016
           },
           "end_to_end_latency_s": {
             "population": "all_instances_unqueried_include_0ms",
-            "mean": 10.004,
+            "mean": 11.018,
             "p50": 0.0,
             "p95": 35.686
           },
           "queried_instances_latency_s": {
             "population": "queried_instances_only",
-            "mean": 30.013,
-            "p50": 25.601,
-            "p95": 39.474
+            "mean": 27.544,
+            "p50": 25.492,
+            "p95": 39.095
+          }
+        },
+        "reliability": {
+          "false_cheap_resolutions": 0,
+          "invalid_evidence_escalations": 0,
+          "vlm_abstentions": 0
+        }
+      },
+      "view_b_metrics": {
+        "quality": {
+          "balanced_accuracy": 0.8889,
+          "macro_f1": 0.9158,
+          "per_class_recall": {
+            "IMMOVABLE": 0.6667,
+            "MOVABLE": 1.0,
+            "MOBILE": 1.0
+          },
+          "per_class_precision": {
+            "IMMOVABLE": 1.0,
+            "MOVABLE": 0.9,
+            "MOBILE": 1.0
+          },
+          "per_class_f1": {
+            "IMMOVABLE": 0.8,
+            "MOVABLE": 0.9474,
+            "MOBILE": 1.0
+          },
+          "confusion_matrix": {
+            "IMMOVABLE": {
+              "IMMOVABLE": 2,
+              "MOVABLE": 1,
+              "MOBILE": 0,
+              "UNKNOWN": 0
+            },
+            "MOVABLE": {
+              "IMMOVABLE": 0,
+              "MOVABLE": 9,
+              "MOBILE": 0,
+              "UNKNOWN": 0
+            },
+            "MOBILE": {
+              "IMMOVABLE": 0,
+              "MOVABLE": 0,
+              "MOBILE": 3,
+              "UNKNOWN": 0
+            }
+          },
+          "abstention_rate_pct": 0.0
+        },
+        "efficiency": {
+          "total_instances": 15,
+          "vlm_queries_requested": 6,
+          "vlm_inference_executed": 0,
+          "vlm_cache_hits": 6,
+          "vlm_queries_invoked": 6,
+          "vlm_queries_avoided": 9,
+          "vlm_query_rate_pct": 40.0,
+          "vlm_outputs_valid": 15,
+          "vlm_predictions_accepted": 15,
+          "decision_latency_ms": {
+            "population": "all_instances",
+            "mean": 0.011,
+            "p50": 0.011,
+            "p95": 0.016
+          },
+          "end_to_end_latency_s": {
+            "population": "all_instances_unqueried_include_0ms",
+            "mean": 11.018,
+            "p50": 0.0,
+            "p95": 35.686
+          },
+          "queried_instances_latency_s": {
+            "population": "queried_instances_only",
+            "mean": 27.544,
+            "p50": 25.492,
+            "p95": 39.095
           }
         },
         "reliability": {
@@ -3297,7 +3297,7 @@
           "views_used": 0,
           "prediction": "IMMOVABLE",
           "abstained": false,
-          "decision_latency_ms": 0.011,
+          "decision_latency_ms": 0.012,
           "inference_latency_ms": 0.0,
           "cached_latency_ms": null,
           "token_usage": null,
@@ -3332,7 +3332,7 @@
           "views_used": 2,
           "prediction": "MOVABLE",
           "abstained": false,
-          "decision_latency_ms": 0.01,
+          "decision_latency_ms": 0.011,
           "inference_latency_ms": 25382.32398033142,
           "cached_latency_ms": 15872.99,
           "token_usage": {
@@ -3392,35 +3392,75 @@
         {
           "entity_id": "inst_whiteboard_001",
           "policy_variant": "R2",
-          "decision": "DEFER",
+          "decision": "ESCALATE",
           "reason_codes": [
-            "AMBIGUOUS_PHYSICAL_SUPPORT_AFFORDANCE",
-            "MISSING_REQUIRED_VISUAL_CONTEXT"
+            "AMBIGUOUS_PHYSICAL_SUPPORT_AFFORDANCE"
           ],
           "query_utility": null,
           "estimator_influence": null,
-          "evidence_valid": false,
+          "evidence_valid": true,
           "evidence_provenance": "MEASURED_FULL",
-          "vlm_query_requested": false,
+          "vlm_query_requested": true,
           "vlm_inference_executed": false,
-          "vlm_cache_hit": false,
-          "vlm_output_valid": true,
-          "vlm_prediction_accepted": true,
-          "vlm_required": false,
-          "vlm_model": null,
-          "views_used": 0,
-          "prediction": "UNKNOWN",
-          "abstained": true,
-          "decision_latency_ms": 0.013,
-          "inference_latency_ms": 0.0,
+          "vlm_cache_hit": true,
+          "vlm_output_valid": false,
+          "vlm_prediction_accepted": false,
+          "vlm_required": true,
+          "vlm_model": "Qwen2.5-VL-3B-Instruct (GGUF Q4_K_M)",
+          "views_used": 1,
+          "prediction": "IMMOVABLE",
+          "abstained": false,
+          "decision_latency_ms": 0.017,
+          "inference_latency_ms": 15200.0,
           "cached_latency_ms": null,
-          "token_usage": null,
+          "token_usage": {
+            "completion_tokens": 40,
+            "prompt_tokens": 290,
+            "total_tokens": 330
+          },
           "observed_motion": "STATIC",
           "world_displacement_m": null,
           "displacement_uncertainty_m": null,
           "relocation_evaluable": false,
-          "image_telemetry": null,
+          "image_telemetry": {
+            "expected_views": 1,
+            "configured_views": 1,
+            "files_found": [
+              "crop_view_0.jpg",
+              "scene_view_0.jpg"
+            ],
+            "files_missing": [],
+            "image_paths": [
+              "C:\\Users\\Yash Bhardwaj\\Desktop\\perception\\vlm\\outputs\\multiview_samples\\inst_whiteboard_001\\crop_view_0.jpg",
+              "C:\\Users\\Yash Bhardwaj\\Desktop\\perception\\vlm\\outputs\\multiview_samples\\inst_whiteboard_001\\scene_view_0.jpg"
+            ],
+            "image_hashes": [
+              "a1996a650534d3ac",
+              "e7835e3f3088a7cd"
+            ],
+            "image_dimensions": [
+              {
+                "crop": [
+                  24,
+                  185
+                ],
+                "scene": [
+                  640,
+                  480
+                ]
+              }
+            ],
+            "decoding_failures": [],
+            "usable_views": 1,
+            "crop_scene_pairs": [
+              [
+                "C:\\Users\\Yash Bhardwaj\\Desktop\\perception\\vlm\\outputs\\multiview_samples\\inst_whiteboard_001\\crop_view_0.jpg",
+                "C:\\Users\\Yash Bhardwaj\\Desktop\\perception\\vlm\\outputs\\multiview_samples\\inst_whiteboard_001\\scene_view_0.jpg"
+              ]
+            ]
+          },
           "execution_mode": "replay",
+          "validation_error": "replay_cache_miss",
           "ground_truth": "IMMOVABLE",
           "semantic_class": "whiteboard",
           "observed_motion_gt": "STATIC"
@@ -3446,7 +3486,7 @@
           "views_used": 0,
           "prediction": "MOBILE",
           "abstained": false,
-          "decision_latency_ms": 0.007,
+          "decision_latency_ms": 0.016,
           "inference_latency_ms": 0.0,
           "cached_latency_ms": null,
           "token_usage": null,
@@ -3481,7 +3521,7 @@
           "views_used": 0,
           "prediction": "MOBILE",
           "abstained": false,
-          "decision_latency_ms": 0.004,
+          "decision_latency_ms": 0.008,
           "inference_latency_ms": 0.0,
           "cached_latency_ms": null,
           "token_usage": null,
@@ -3516,7 +3556,7 @@
           "views_used": 0,
           "prediction": "MOBILE",
           "abstained": false,
-          "decision_latency_ms": 0.003,
+          "decision_latency_ms": 0.005,
           "inference_latency_ms": 0.0,
           "cached_latency_ms": null,
           "token_usage": null,
@@ -3551,7 +3591,7 @@
           "views_used": 0,
           "prediction": "MOVABLE",
           "abstained": false,
-          "decision_latency_ms": 0.006,
+          "decision_latency_ms": 0.011,
           "inference_latency_ms": 0.0,
           "cached_latency_ms": null,
           "token_usage": null,
@@ -3586,7 +3626,7 @@
           "views_used": 0,
           "prediction": "MOVABLE",
           "abstained": false,
-          "decision_latency_ms": 0.004,
+          "decision_latency_ms": 0.009,
           "inference_latency_ms": 0.0,
           "cached_latency_ms": null,
           "token_usage": null,
@@ -3621,7 +3661,7 @@
           "views_used": 0,
           "prediction": "MOVABLE",
           "abstained": false,
-          "decision_latency_ms": 0.004,
+          "decision_latency_ms": 0.006,
           "inference_latency_ms": 0.0,
           "cached_latency_ms": null,
           "token_usage": null,
@@ -3656,7 +3696,7 @@
           "views_used": 0,
           "prediction": "MOVABLE",
           "abstained": false,
-          "decision_latency_ms": 0.004,
+          "decision_latency_ms": 0.005,
           "inference_latency_ms": 0.0,
           "cached_latency_ms": null,
           "token_usage": null,
@@ -3691,7 +3731,7 @@
           "views_used": 2,
           "prediction": "MOVABLE",
           "abstained": false,
-          "decision_latency_ms": 0.005,
+          "decision_latency_ms": 0.009,
           "inference_latency_ms": 24677.15096473694,
           "cached_latency_ms": 6396.13,
           "token_usage": {
@@ -3769,7 +3809,7 @@
           "views_used": 2,
           "prediction": "MOVABLE",
           "abstained": false,
-          "decision_latency_ms": 0.009,
+          "decision_latency_ms": 0.016,
           "inference_latency_ms": 40989.208698272705,
           "cached_latency_ms": null,
           "token_usage": {
@@ -3848,7 +3888,7 @@
           "views_used": 2,
           "prediction": "MOVABLE",
           "abstained": false,
-          "decision_latency_ms": 0.008,
+          "decision_latency_ms": 0.016,
           "inference_latency_ms": 33412.51611709595,
           "cached_latency_ms": 6817.29,
           "token_usage": {
@@ -3946,7 +3986,7 @@
           "views_used": 2,
           "prediction": "MOVABLE",
           "abstained": false,
-          "decision_latency_ms": 0.008,
+          "decision_latency_ms": 0.014,
           "inference_latency_ms": 25601.37963294983,
           "cached_latency_ms": 6815.86,
           "token_usage": {
@@ -4024,7 +4064,7 @@
           "views_used": 0,
           "prediction": "MOVABLE",
           "abstained": false,
-          "decision_latency_ms": 0.008,
+          "decision_latency_ms": 0.014,
           "inference_latency_ms": 0.0,
           "cached_latency_ms": null,
           "token_usage": null,
@@ -4045,103 +4085,27 @@
       "description": "Selective router escalating only when estimator relevance > 0 and query utility > 0",
       "metrics": {
         "quality": {
-          "balanced_accuracy": 0.7778,
-          "macro_f1": 0.8158,
+          "balanced_accuracy": 1.0,
+          "macro_f1": 1.0,
           "per_class_recall": {
-            "IMMOVABLE": 0.3333,
+            "IMMOVABLE": 1.0,
             "MOVABLE": 1.0,
             "MOBILE": 1.0
           },
           "per_class_precision": {
             "IMMOVABLE": 1.0,
-            "MOVABLE": 0.9,
+            "MOVABLE": 1.0,
             "MOBILE": 1.0
           },
           "per_class_f1": {
-            "IMMOVABLE": 0.5,
-            "MOVABLE": 0.9474,
+            "IMMOVABLE": 1.0,
+            "MOVABLE": 1.0,
             "MOBILE": 1.0
           },
           "confusion_matrix": {
             "IMMOVABLE": {
-              "IMMOVABLE": 1,
-              "MOVABLE": 1,
-              "MOBILE": 0,
-              "UNKNOWN": 1
-            },
-            "MOVABLE": {
-              "IMMOVABLE": 0,
-              "MOVABLE": 9,
-              "MOBILE": 0,
-              "UNKNOWN": 0
-            },
-            "MOBILE": {
-              "IMMOVABLE": 0,
+              "IMMOVABLE": 3,
               "MOVABLE": 0,
-              "MOBILE": 3,
-              "UNKNOWN": 0
-            }
-          },
-          "abstention_rate_pct": 6.67
-        },
-        "efficiency": {
-          "total_instances": 15,
-          "vlm_queries_requested": 3,
-          "vlm_inference_executed": 0,
-          "vlm_cache_hits": 3,
-          "vlm_queries_invoked": 3,
-          "vlm_queries_avoided": 12,
-          "vlm_query_rate_pct": 20.0,
-          "vlm_outputs_valid": 15,
-          "vlm_predictions_accepted": 15,
-          "decision_latency_ms": {
-            "population": "all_instances",
-            "mean": 0.018,
-            "p50": 0.021,
-            "p95": 0.032
-          },
-          "end_to_end_latency_s": {
-            "population": "all_instances_unqueried_include_0ms",
-            "mean": 6.605,
-            "p50": 0.0,
-            "p95": 35.686
-          },
-          "queried_instances_latency_s": {
-            "population": "queried_instances_only",
-            "mean": 33.026,
-            "p50": 33.413,
-            "p95": 40.232
-          }
-        },
-        "reliability": {
-          "false_cheap_resolutions": 1,
-          "invalid_evidence_escalations": 0,
-          "vlm_abstentions": 0
-        }
-      },
-      "view_a_metrics": {
-        "quality": {
-          "balanced_accuracy": 0.75,
-          "macro_f1": 0.8071,
-          "per_class_recall": {
-            "IMMOVABLE": 0.5,
-            "MOVABLE": 1.0,
-            "MOBILE": 0.0
-          },
-          "per_class_precision": {
-            "IMMOVABLE": 1.0,
-            "MOVABLE": 0.9,
-            "MOBILE": 0.0
-          },
-          "per_class_f1": {
-            "IMMOVABLE": 0.6667,
-            "MOVABLE": 0.9474,
-            "MOBILE": 0.0
-          },
-          "confusion_matrix": {
-            "IMMOVABLE": {
-              "IMMOVABLE": 1,
-              "MOVABLE": 1,
               "MOBILE": 0,
               "UNKNOWN": 0
             },
@@ -4154,89 +4118,13 @@
             "MOBILE": {
               "IMMOVABLE": 0,
               "MOVABLE": 0,
-              "MOBILE": 0,
+              "MOBILE": 3,
               "UNKNOWN": 0
             }
           },
           "abstention_rate_pct": 0.0
         },
         "efficiency": {
-          "total_instances": 11,
-          "vlm_queries_requested": 3,
-          "vlm_inference_executed": 0,
-          "vlm_cache_hits": 3,
-          "vlm_queries_invoked": 3,
-          "vlm_queries_avoided": 8,
-          "vlm_query_rate_pct": 27.27,
-          "vlm_outputs_valid": 11,
-          "vlm_predictions_accepted": 11,
-          "decision_latency_ms": {
-            "population": "all_instances",
-            "mean": 0.022,
-            "p50": 0.021,
-            "p95": 0.034
-          },
-          "end_to_end_latency_s": {
-            "population": "all_instances_unqueried_include_0ms",
-            "mean": 9.007,
-            "p50": 0.0,
-            "p95": 37.201
-          },
-          "queried_instances_latency_s": {
-            "population": "queried_instances_only",
-            "mean": 33.026,
-            "p50": 33.413,
-            "p95": 40.232
-          }
-        },
-        "reliability": {
-          "false_cheap_resolutions": 1,
-          "invalid_evidence_escalations": 0,
-          "vlm_abstentions": 0
-        }
-      },
-      "view_b_metrics": {
-        "quality": {
-          "balanced_accuracy": 0.7778,
-          "macro_f1": 0.8158,
-          "per_class_recall": {
-            "IMMOVABLE": 0.3333,
-            "MOVABLE": 1.0,
-            "MOBILE": 1.0
-          },
-          "per_class_precision": {
-            "IMMOVABLE": 1.0,
-            "MOVABLE": 0.9,
-            "MOBILE": 1.0
-          },
-          "per_class_f1": {
-            "IMMOVABLE": 0.5,
-            "MOVABLE": 0.9474,
-            "MOBILE": 1.0
-          },
-          "confusion_matrix": {
-            "IMMOVABLE": {
-              "IMMOVABLE": 1,
-              "MOVABLE": 1,
-              "MOBILE": 0,
-              "UNKNOWN": 1
-            },
-            "MOVABLE": {
-              "IMMOVABLE": 0,
-              "MOVABLE": 9,
-              "MOBILE": 0,
-              "UNKNOWN": 0
-            },
-            "MOBILE": {
-              "IMMOVABLE": 0,
-              "MOVABLE": 0,
-              "MOBILE": 3,
-              "UNKNOWN": 0
-            }
-          },
-          "abstention_rate_pct": 6.67
-        },
-        "efficiency": {
           "total_instances": 15,
           "vlm_queries_requested": 3,
           "vlm_inference_executed": 0,
@@ -4248,9 +4136,9 @@
           "vlm_predictions_accepted": 15,
           "decision_latency_ms": {
             "population": "all_instances",
-            "mean": 0.018,
-            "p50": 0.021,
-            "p95": 0.032
+            "mean": 0.021,
+            "p50": 0.017,
+            "p95": 0.042
           },
           "end_to_end_latency_s": {
             "population": "all_instances_unqueried_include_0ms",
@@ -4266,7 +4154,159 @@
           }
         },
         "reliability": {
-          "false_cheap_resolutions": 1,
+          "false_cheap_resolutions": 0,
+          "invalid_evidence_escalations": 0,
+          "vlm_abstentions": 0
+        }
+      },
+      "view_a_metrics": {
+        "quality": {
+          "balanced_accuracy": 1.0,
+          "macro_f1": 1.0,
+          "per_class_recall": {
+            "IMMOVABLE": 1.0,
+            "MOVABLE": 1.0,
+            "MOBILE": 1.0
+          },
+          "per_class_precision": {
+            "IMMOVABLE": 1.0,
+            "MOVABLE": 1.0,
+            "MOBILE": 1.0
+          },
+          "per_class_f1": {
+            "IMMOVABLE": 1.0,
+            "MOVABLE": 1.0,
+            "MOBILE": 1.0
+          },
+          "confusion_matrix": {
+            "IMMOVABLE": {
+              "IMMOVABLE": 3,
+              "MOVABLE": 0,
+              "MOBILE": 0,
+              "UNKNOWN": 0
+            },
+            "MOVABLE": {
+              "IMMOVABLE": 0,
+              "MOVABLE": 9,
+              "MOBILE": 0,
+              "UNKNOWN": 0
+            },
+            "MOBILE": {
+              "IMMOVABLE": 0,
+              "MOVABLE": 0,
+              "MOBILE": 3,
+              "UNKNOWN": 0
+            }
+          },
+          "abstention_rate_pct": 0.0
+        },
+        "efficiency": {
+          "total_instances": 15,
+          "vlm_queries_requested": 3,
+          "vlm_inference_executed": 0,
+          "vlm_cache_hits": 3,
+          "vlm_queries_invoked": 3,
+          "vlm_queries_avoided": 12,
+          "vlm_query_rate_pct": 20.0,
+          "vlm_outputs_valid": 15,
+          "vlm_predictions_accepted": 15,
+          "decision_latency_ms": {
+            "population": "all_instances",
+            "mean": 0.021,
+            "p50": 0.017,
+            "p95": 0.042
+          },
+          "end_to_end_latency_s": {
+            "population": "all_instances_unqueried_include_0ms",
+            "mean": 6.605,
+            "p50": 0.0,
+            "p95": 35.686
+          },
+          "queried_instances_latency_s": {
+            "population": "queried_instances_only",
+            "mean": 33.026,
+            "p50": 33.413,
+            "p95": 40.232
+          }
+        },
+        "reliability": {
+          "false_cheap_resolutions": 0,
+          "invalid_evidence_escalations": 0,
+          "vlm_abstentions": 0
+        }
+      },
+      "view_b_metrics": {
+        "quality": {
+          "balanced_accuracy": 1.0,
+          "macro_f1": 1.0,
+          "per_class_recall": {
+            "IMMOVABLE": 1.0,
+            "MOVABLE": 1.0,
+            "MOBILE": 1.0
+          },
+          "per_class_precision": {
+            "IMMOVABLE": 1.0,
+            "MOVABLE": 1.0,
+            "MOBILE": 1.0
+          },
+          "per_class_f1": {
+            "IMMOVABLE": 1.0,
+            "MOVABLE": 1.0,
+            "MOBILE": 1.0
+          },
+          "confusion_matrix": {
+            "IMMOVABLE": {
+              "IMMOVABLE": 3,
+              "MOVABLE": 0,
+              "MOBILE": 0,
+              "UNKNOWN": 0
+            },
+            "MOVABLE": {
+              "IMMOVABLE": 0,
+              "MOVABLE": 9,
+              "MOBILE": 0,
+              "UNKNOWN": 0
+            },
+            "MOBILE": {
+              "IMMOVABLE": 0,
+              "MOVABLE": 0,
+              "MOBILE": 3,
+              "UNKNOWN": 0
+            }
+          },
+          "abstention_rate_pct": 0.0
+        },
+        "efficiency": {
+          "total_instances": 15,
+          "vlm_queries_requested": 3,
+          "vlm_inference_executed": 0,
+          "vlm_cache_hits": 3,
+          "vlm_queries_invoked": 3,
+          "vlm_queries_avoided": 12,
+          "vlm_query_rate_pct": 20.0,
+          "vlm_outputs_valid": 15,
+          "vlm_predictions_accepted": 15,
+          "decision_latency_ms": {
+            "population": "all_instances",
+            "mean": 0.021,
+            "p50": 0.017,
+            "p95": 0.042
+          },
+          "end_to_end_latency_s": {
+            "population": "all_instances_unqueried_include_0ms",
+            "mean": 6.605,
+            "p50": 0.0,
+            "p95": 35.686
+          },
+          "queried_instances_latency_s": {
+            "population": "queried_instances_only",
+            "mean": 33.026,
+            "p50": 33.413,
+            "p95": 40.232
+          }
+        },
+        "reliability": {
+          "false_cheap_resolutions": 0,
           "invalid_evidence_escalations": 0,
           "vlm_abstentions": 0
         }
@@ -4293,7 +4333,7 @@
           "views_used": 0,
           "prediction": "IMMOVABLE",
           "abstained": false,
-          "decision_latency_ms": 0.023,
+          "decision_latency_ms": 0.043,
           "inference_latency_ms": 0.0,
           "cached_latency_ms": null,
           "token_usage": null,
@@ -4328,9 +4368,9 @@
           "vlm_required": false,
           "vlm_model": null,
           "views_used": 0,
-          "prediction": "MOVABLE",
+          "prediction": "IMMOVABLE",
           "abstained": false,
-          "decision_latency_ms": 0.02,
+          "decision_latency_ms": 0.037,
           "inference_latency_ms": 0.0,
           "cached_latency_ms": null,
           "token_usage": null,
@@ -4347,14 +4387,15 @@
         {
           "entity_id": "inst_whiteboard_001",
           "policy_variant": "R3",
-          "decision": "DEFER",
+          "decision": "RESOLVE_CHEAP",
           "reason_codes": [
             "AMBIGUOUS_PHYSICAL_SUPPORT_AFFORDANCE",
-            "MISSING_REQUIRED_VISUAL_CONTEXT"
+            "SUBTHRESHOLD_QUERY_UTILITY_AVOIDED",
+            "ESTIMATOR_INFLUENCE_0.00"
           ],
           "query_utility": -0.5,
           "estimator_influence": 0.0,
-          "evidence_valid": false,
+          "evidence_valid": true,
           "evidence_provenance": "MEASURED_FULL",
           "vlm_query_requested": false,
           "vlm_inference_executed": false,
@@ -4364,9 +4405,9 @@
           "vlm_required": false,
           "vlm_model": null,
           "views_used": 0,
-          "prediction": "UNKNOWN",
-          "abstained": true,
-          "decision_latency_ms": 0.009,
+          "prediction": "IMMOVABLE",
+          "abstained": false,
+          "decision_latency_ms": 0.019,
           "inference_latency_ms": 0.0,
           "cached_latency_ms": null,
           "token_usage": null,
@@ -4401,7 +4442,7 @@
           "views_used": 0,
           "prediction": "MOBILE",
           "abstained": false,
-          "decision_latency_ms": 0.008,
+          "decision_latency_ms": 0.015,
           "inference_latency_ms": 0.0,
           "cached_latency_ms": null,
           "token_usage": null,
@@ -4436,7 +4477,7 @@
           "views_used": 0,
           "prediction": "MOBILE",
           "abstained": false,
-          "decision_latency_ms": 0.006,
+          "decision_latency_ms": 0.012,
           "inference_latency_ms": 0.0,
           "cached_latency_ms": null,
           "token_usage": null,
@@ -4471,7 +4512,7 @@
           "views_used": 0,
           "prediction": "MOBILE",
           "abstained": false,
-          "decision_latency_ms": 0.005,
+          "decision_latency_ms": 0.009,
           "inference_latency_ms": 0.0,
           "cached_latency_ms": null,
           "token_usage": null,
@@ -4506,7 +4547,7 @@
           "views_used": 0,
           "prediction": "MOVABLE",
           "abstained": false,
-          "decision_latency_ms": 0.016,
+          "decision_latency_ms": 0.017,
           "inference_latency_ms": 0.0,
           "cached_latency_ms": null,
           "token_usage": null,
@@ -4541,7 +4582,7 @@
           "views_used": 0,
           "prediction": "MOVABLE",
           "abstained": false,
-          "decision_latency_ms": 0.04,
+          "decision_latency_ms": 0.014,
           "inference_latency_ms": 0.0,
           "cached_latency_ms": null,
           "token_usage": null,
@@ -4576,7 +4617,7 @@
           "views_used": 0,
           "prediction": "MOVABLE",
           "abstained": false,
-          "decision_latency_ms": 0.023,
+          "decision_latency_ms": 0.011,
           "inference_latency_ms": 0.0,
           "cached_latency_ms": null,
           "token_usage": null,
@@ -4611,7 +4652,7 @@
           "views_used": 0,
           "prediction": "MOVABLE",
           "abstained": false,
-          "decision_latency_ms": 0.021,
+          "decision_latency_ms": 0.009,
           "inference_latency_ms": 0.0,
           "cached_latency_ms": null,
           "token_usage": null,
@@ -4650,7 +4691,7 @@
           "views_used": 2,
           "prediction": "MOVABLE",
           "abstained": false,
-          "decision_latency_ms": 0.025,
+          "decision_latency_ms": 0.024,
           "inference_latency_ms": 24677.15096473694,
           "cached_latency_ms": 6396.13,
           "token_usage": {
@@ -4732,7 +4773,7 @@
           "views_used": 2,
           "prediction": "MOVABLE",
           "abstained": false,
-          "decision_latency_ms": 0.028,
+          "decision_latency_ms": 0.041,
           "inference_latency_ms": 40989.208698272705,
           "cached_latency_ms": null,
           "token_usage": {
@@ -4815,7 +4856,7 @@
           "views_used": 2,
           "prediction": "MOVABLE",
           "abstained": false,
-          "decision_latency_ms": 0.021,
+          "decision_latency_ms": 0.027,
           "inference_latency_ms": 33412.51611709595,
           "cached_latency_ms": 6817.29,
           "token_usage": {
@@ -4915,7 +4956,7 @@
           "views_used": 0,
           "prediction": "MOVABLE",
           "abstained": false,
-          "decision_latency_ms": 0.021,
+          "decision_latency_ms": 0.022,
           "inference_latency_ms": 0.0,
           "cached_latency_ms": null,
           "token_usage": null,
@@ -4950,7 +4991,7 @@
           "views_used": 0,
           "prediction": "MOVABLE",
           "abstained": false,
-          "decision_latency_ms": 0.008,
+          "decision_latency_ms": 0.01,
           "inference_latency_ms": 0.0,
           "cached_latency_ms": null,
           "token_usage": null,
@@ -4971,103 +5012,27 @@
       "description": "Estimator-aware selective router with targeted VLM dispatch",
       "metrics": {
         "quality": {
-          "balanced_accuracy": 0.7778,
-          "macro_f1": 0.8158,
+          "balanced_accuracy": 1.0,
+          "macro_f1": 1.0,
           "per_class_recall": {
-            "IMMOVABLE": 0.3333,
+            "IMMOVABLE": 1.0,
             "MOVABLE": 1.0,
             "MOBILE": 1.0
           },
           "per_class_precision": {
             "IMMOVABLE": 1.0,
-            "MOVABLE": 0.9,
+            "MOVABLE": 1.0,
             "MOBILE": 1.0
           },
           "per_class_f1": {
-            "IMMOVABLE": 0.5,
-            "MOVABLE": 0.9474,
+            "IMMOVABLE": 1.0,
+            "MOVABLE": 1.0,
             "MOBILE": 1.0
           },
           "confusion_matrix": {
             "IMMOVABLE": {
-              "IMMOVABLE": 1,
-              "MOVABLE": 1,
-              "MOBILE": 0,
-              "UNKNOWN": 1
-            },
-            "MOVABLE": {
-              "IMMOVABLE": 0,
-              "MOVABLE": 9,
-              "MOBILE": 0,
-              "UNKNOWN": 0
-            },
-            "MOBILE": {
-              "IMMOVABLE": 0,
+              "IMMOVABLE": 3,
               "MOVABLE": 0,
-              "MOBILE": 3,
-              "UNKNOWN": 0
-            }
-          },
-          "abstention_rate_pct": 6.67
-        },
-        "efficiency": {
-          "total_instances": 15,
-          "vlm_queries_requested": 3,
-          "vlm_inference_executed": 0,
-          "vlm_cache_hits": 3,
-          "vlm_queries_invoked": 3,
-          "vlm_queries_avoided": 12,
-          "vlm_query_rate_pct": 20.0,
-          "vlm_outputs_valid": 15,
-          "vlm_predictions_accepted": 15,
-          "decision_latency_ms": {
-            "population": "all_instances",
-            "mean": 0.018,
-            "p50": 0.021,
-            "p95": 0.032
-          },
-          "end_to_end_latency_s": {
-            "population": "all_instances_unqueried_include_0ms",
-            "mean": 6.605,
-            "p50": 0.0,
-            "p95": 35.686
-          },
-          "queried_instances_latency_s": {
-            "population": "queried_instances_only",
-            "mean": 33.026,
-            "p50": 33.413,
-            "p95": 40.232
-          }
-        },
-        "reliability": {
-          "false_cheap_resolutions": 1,
-          "invalid_evidence_escalations": 0,
-          "vlm_abstentions": 0
-        }
-      },
-      "view_a_metrics": {
-        "quality": {
-          "balanced_accuracy": 0.75,
-          "macro_f1": 0.8071,
-          "per_class_recall": {
-            "IMMOVABLE": 0.5,
-            "MOVABLE": 1.0,
-            "MOBILE": 0.0
-          },
-          "per_class_precision": {
-            "IMMOVABLE": 1.0,
-            "MOVABLE": 0.9,
-            "MOBILE": 0.0
-          },
-          "per_class_f1": {
-            "IMMOVABLE": 0.6667,
-            "MOVABLE": 0.9474,
-            "MOBILE": 0.0
-          },
-          "confusion_matrix": {
-            "IMMOVABLE": {
-              "IMMOVABLE": 1,
-              "MOVABLE": 1,
               "MOBILE": 0,
               "UNKNOWN": 0
             },
@@ -5080,89 +5045,13 @@
             "MOBILE": {
               "IMMOVABLE": 0,
               "MOVABLE": 0,
-              "MOBILE": 0,
+              "MOBILE": 3,
               "UNKNOWN": 0
             }
           },
           "abstention_rate_pct": 0.0
         },
         "efficiency": {
-          "total_instances": 11,
-          "vlm_queries_requested": 3,
-          "vlm_inference_executed": 0,
-          "vlm_cache_hits": 3,
-          "vlm_queries_invoked": 3,
-          "vlm_queries_avoided": 8,
-          "vlm_query_rate_pct": 27.27,
-          "vlm_outputs_valid": 11,
-          "vlm_predictions_accepted": 11,
-          "decision_latency_ms": {
-            "population": "all_instances",
-            "mean": 0.022,
-            "p50": 0.021,
-            "p95": 0.034
-          },
-          "end_to_end_latency_s": {
-            "population": "all_instances_unqueried_include_0ms",
-            "mean": 9.007,
-            "p50": 0.0,
-            "p95": 37.201
-          },
-          "queried_instances_latency_s": {
-            "population": "queried_instances_only",
-            "mean": 33.026,
-            "p50": 33.413,
-            "p95": 40.232
-          }
-        },
-        "reliability": {
-          "false_cheap_resolutions": 1,
-          "invalid_evidence_escalations": 0,
-          "vlm_abstentions": 0
-        }
-      },
-      "view_b_metrics": {
-        "quality": {
-          "balanced_accuracy": 0.7778,
-          "macro_f1": 0.8158,
-          "per_class_recall": {
-            "IMMOVABLE": 0.3333,
-            "MOVABLE": 1.0,
-            "MOBILE": 1.0
-          },
-          "per_class_precision": {
-            "IMMOVABLE": 1.0,
-            "MOVABLE": 0.9,
-            "MOBILE": 1.0
-          },
-          "per_class_f1": {
-            "IMMOVABLE": 0.5,
-            "MOVABLE": 0.9474,
-            "MOBILE": 1.0
-          },
-          "confusion_matrix": {
-            "IMMOVABLE": {
-              "IMMOVABLE": 1,
-              "MOVABLE": 1,
-              "MOBILE": 0,
-              "UNKNOWN": 1
-            },
-            "MOVABLE": {
-              "IMMOVABLE": 0,
-              "MOVABLE": 9,
-              "MOBILE": 0,
-              "UNKNOWN": 0
-            },
-            "MOBILE": {
-              "IMMOVABLE": 0,
-              "MOVABLE": 0,
-              "MOBILE": 3,
-              "UNKNOWN": 0
-            }
-          },
-          "abstention_rate_pct": 6.67
-        },
-        "efficiency": {
           "total_instances": 15,
           "vlm_queries_requested": 3,
           "vlm_inference_executed": 0,
@@ -5174,9 +5063,9 @@
           "vlm_predictions_accepted": 15,
           "decision_latency_ms": {
             "population": "all_instances",
-            "mean": 0.018,
-            "p50": 0.021,
-            "p95": 0.032
+            "mean": 0.021,
+            "p50": 0.017,
+            "p95": 0.042
           },
           "end_to_end_latency_s": {
             "population": "all_instances_unqueried_include_0ms",
@@ -5192,7 +5081,159 @@
           }
         },
         "reliability": {
-          "false_cheap_resolutions": 1,
+          "false_cheap_resolutions": 0,
+          "invalid_evidence_escalations": 0,
+          "vlm_abstentions": 0
+        }
+      },
+      "view_a_metrics": {
+        "quality": {
+          "balanced_accuracy": 1.0,
+          "macro_f1": 1.0,
+          "per_class_recall": {
+            "IMMOVABLE": 1.0,
+            "MOVABLE": 1.0,
+            "MOBILE": 1.0
+          },
+          "per_class_precision": {
+            "IMMOVABLE": 1.0,
+            "MOVABLE": 1.0,
+            "MOBILE": 1.0
+          },
+          "per_class_f1": {
+            "IMMOVABLE": 1.0,
+            "MOVABLE": 1.0,
+            "MOBILE": 1.0
+          },
+          "confusion_matrix": {
+            "IMMOVABLE": {
+              "IMMOVABLE": 3,
+              "MOVABLE": 0,
+              "MOBILE": 0,
+              "UNKNOWN": 0
+            },
+            "MOVABLE": {
+              "IMMOVABLE": 0,
+              "MOVABLE": 9,
+              "MOBILE": 0,
+              "UNKNOWN": 0
+            },
+            "MOBILE": {
+              "IMMOVABLE": 0,
+              "MOVABLE": 0,
+              "MOBILE": 3,
+              "UNKNOWN": 0
+            }
+          },
+          "abstention_rate_pct": 0.0
+        },
+        "efficiency": {
+          "total_instances": 15,
+          "vlm_queries_requested": 3,
+          "vlm_inference_executed": 0,
+          "vlm_cache_hits": 3,
+          "vlm_queries_invoked": 3,
+          "vlm_queries_avoided": 12,
+          "vlm_query_rate_pct": 20.0,
+          "vlm_outputs_valid": 15,
+          "vlm_predictions_accepted": 15,
+          "decision_latency_ms": {
+            "population": "all_instances",
+            "mean": 0.021,
+            "p50": 0.017,
+            "p95": 0.042
+          },
+          "end_to_end_latency_s": {
+            "population": "all_instances_unqueried_include_0ms",
+            "mean": 6.605,
+            "p50": 0.0,
+            "p95": 35.686
+          },
+          "queried_instances_latency_s": {
+            "population": "queried_instances_only",
+            "mean": 33.026,
+            "p50": 33.413,
+            "p95": 40.232
+          }
+        },
+        "reliability": {
+          "false_cheap_resolutions": 0,
+          "invalid_evidence_escalations": 0,
+          "vlm_abstentions": 0
+        }
+      },
+      "view_b_metrics": {
+        "quality": {
+          "balanced_accuracy": 1.0,
+          "macro_f1": 1.0,
+          "per_class_recall": {
+            "IMMOVABLE": 1.0,
+            "MOVABLE": 1.0,
+            "MOBILE": 1.0
+          },
+          "per_class_precision": {
+            "IMMOVABLE": 1.0,
+            "MOVABLE": 1.0,
+            "MOBILE": 1.0
+          },
+          "per_class_f1": {
+            "IMMOVABLE": 1.0,
+            "MOVABLE": 1.0,
+            "MOBILE": 1.0
+          },
+          "confusion_matrix": {
+            "IMMOVABLE": {
+              "IMMOVABLE": 3,
+              "MOVABLE": 0,
+              "MOBILE": 0,
+              "UNKNOWN": 0
+            },
+            "MOVABLE": {
+              "IMMOVABLE": 0,
+              "MOVABLE": 9,
+              "MOBILE": 0,
+              "UNKNOWN": 0
+            },
+            "MOBILE": {
+              "IMMOVABLE": 0,
+              "MOVABLE": 0,
+              "MOBILE": 3,
+              "UNKNOWN": 0
+            }
+          },
+          "abstention_rate_pct": 0.0
+        },
+        "efficiency": {
+          "total_instances": 15,
+          "vlm_queries_requested": 3,
+          "vlm_inference_executed": 0,
+          "vlm_cache_hits": 3,
+          "vlm_queries_invoked": 3,
+          "vlm_queries_avoided": 12,
+          "vlm_query_rate_pct": 20.0,
+          "vlm_outputs_valid": 15,
+          "vlm_predictions_accepted": 15,
+          "decision_latency_ms": {
+            "population": "all_instances",
+            "mean": 0.021,
+            "p50": 0.017,
+            "p95": 0.042
+          },
+          "end_to_end_latency_s": {
+            "population": "all_instances_unqueried_include_0ms",
+            "mean": 6.605,
+            "p50": 0.0,
+            "p95": 35.686
+          },
+          "queried_instances_latency_s": {
+            "population": "queried_instances_only",
+            "mean": 33.026,
+            "p50": 33.413,
+            "p95": 40.232
+          }
+        },
+        "reliability": {
+          "false_cheap_resolutions": 0,
           "invalid_evidence_escalations": 0,
           "vlm_abstentions": 0
         }
@@ -5219,7 +5260,7 @@
           "views_used": 0,
           "prediction": "IMMOVABLE",
           "abstained": false,
-          "decision_latency_ms": 0.023,
+          "decision_latency_ms": 0.043,
           "inference_latency_ms": 0.0,
           "cached_latency_ms": null,
           "token_usage": null,
@@ -5254,9 +5295,9 @@
           "vlm_required": false,
           "vlm_model": null,
           "views_used": 0,
-          "prediction": "MOVABLE",
+          "prediction": "IMMOVABLE",
           "abstained": false,
-          "decision_latency_ms": 0.02,
+          "decision_latency_ms": 0.037,
           "inference_latency_ms": 0.0,
           "cached_latency_ms": null,
           "token_usage": null,
@@ -5273,14 +5314,15 @@
         {
           "entity_id": "inst_whiteboard_001",
           "policy_variant": "R3",
-          "decision": "DEFER",
+          "decision": "RESOLVE_CHEAP",
           "reason_codes": [
             "AMBIGUOUS_PHYSICAL_SUPPORT_AFFORDANCE",
-            "MISSING_REQUIRED_VISUAL_CONTEXT"
+            "SUBTHRESHOLD_QUERY_UTILITY_AVOIDED",
+            "ESTIMATOR_INFLUENCE_0.00"
           ],
           "query_utility": -0.5,
           "estimator_influence": 0.0,
-          "evidence_valid": false,
+          "evidence_valid": true,
           "evidence_provenance": "MEASURED_FULL",
           "vlm_query_requested": false,
           "vlm_inference_executed": false,
@@ -5290,9 +5332,9 @@
           "vlm_required": false,
           "vlm_model": null,
           "views_used": 0,
-          "prediction": "UNKNOWN",
-          "abstained": true,
-          "decision_latency_ms": 0.009,
+          "prediction": "IMMOVABLE",
+          "abstained": false,
+          "decision_latency_ms": 0.019,
           "inference_latency_ms": 0.0,
           "cached_latency_ms": null,
           "token_usage": null,
@@ -5327,7 +5369,7 @@
           "views_used": 0,
           "prediction": "MOBILE",
           "abstained": false,
-          "decision_latency_ms": 0.008,
+          "decision_latency_ms": 0.015,
           "inference_latency_ms": 0.0,
           "cached_latency_ms": null,
           "token_usage": null,
@@ -5362,7 +5404,7 @@
           "views_used": 0,
           "prediction": "MOBILE",
           "abstained": false,
-          "decision_latency_ms": 0.006,
+          "decision_latency_ms": 0.012,
           "inference_latency_ms": 0.0,
           "cached_latency_ms": null,
           "token_usage": null,
@@ -5397,7 +5439,7 @@
           "views_used": 0,
           "prediction": "MOBILE",
           "abstained": false,
-          "decision_latency_ms": 0.005,
+          "decision_latency_ms": 0.009,
           "inference_latency_ms": 0.0,
           "cached_latency_ms": null,
           "token_usage": null,
@@ -5432,7 +5474,7 @@
           "views_used": 0,
           "prediction": "MOVABLE",
           "abstained": false,
-          "decision_latency_ms": 0.016,
+          "decision_latency_ms": 0.017,
           "inference_latency_ms": 0.0,
           "cached_latency_ms": null,
           "token_usage": null,
@@ -5467,7 +5509,7 @@
           "views_used": 0,
           "prediction": "MOVABLE",
           "abstained": false,
-          "decision_latency_ms": 0.04,
+          "decision_latency_ms": 0.014,
           "inference_latency_ms": 0.0,
           "cached_latency_ms": null,
           "token_usage": null,
@@ -5502,7 +5544,7 @@
           "views_used": 0,
           "prediction": "MOVABLE",
           "abstained": false,
-          "decision_latency_ms": 0.023,
+          "decision_latency_ms": 0.011,
           "inference_latency_ms": 0.0,
           "cached_latency_ms": null,
           "token_usage": null,
@@ -5537,7 +5579,7 @@
           "views_used": 0,
           "prediction": "MOVABLE",
           "abstained": false,
-          "decision_latency_ms": 0.021,
+          "decision_latency_ms": 0.009,
           "inference_latency_ms": 0.0,
           "cached_latency_ms": null,
           "token_usage": null,
@@ -5576,7 +5618,7 @@
           "views_used": 2,
           "prediction": "MOVABLE",
           "abstained": false,
-          "decision_latency_ms": 0.025,
+          "decision_latency_ms": 0.024,
           "inference_latency_ms": 24677.15096473694,
           "cached_latency_ms": 6396.13,
           "token_usage": {
@@ -5658,7 +5700,7 @@
           "views_used": 2,
           "prediction": "MOVABLE",
           "abstained": false,
-          "decision_latency_ms": 0.028,
+          "decision_latency_ms": 0.041,
           "inference_latency_ms": 40989.208698272705,
           "cached_latency_ms": null,
           "token_usage": {
@@ -5741,7 +5783,7 @@
           "views_used": 2,
           "prediction": "MOVABLE",
           "abstained": false,
-          "decision_latency_ms": 0.021,
+          "decision_latency_ms": 0.027,
           "inference_latency_ms": 33412.51611709595,
           "cached_latency_ms": 6817.29,
           "token_usage": {
@@ -5841,7 +5883,7 @@
           "views_used": 0,
           "prediction": "MOVABLE",
           "abstained": false,
-          "decision_latency_ms": 0.021,
+          "decision_latency_ms": 0.022,
           "inference_latency_ms": 0.0,
           "cached_latency_ms": null,
           "token_usage": null,
@@ -5876,7 +5918,7 @@
           "views_used": 0,
           "prediction": "MOVABLE",
           "abstained": false,
-          "decision_latency_ms": 0.008,
+          "decision_latency_ms": 0.01,
           "inference_latency_ms": 0.0,
           "cached_latency_ms": null,
           "token_usage": null,
@@ -5897,29 +5939,29 @@
       "description": "Direct zero-shot VLM affordance prompting on all image-eligible instances",
       "metrics": {
         "quality": {
-          "balanced_accuracy": 0.3333,
-          "macro_f1": 0.3,
+          "balanced_accuracy": 0.7778,
+          "macro_f1": 0.8,
           "per_class_recall": {
-            "IMMOVABLE": 0.0,
+            "IMMOVABLE": 0.3333,
             "MOVABLE": 1.0,
-            "MOBILE": 0.0
+            "MOBILE": 1.0
           },
           "per_class_precision": {
-            "IMMOVABLE": 0.0,
+            "IMMOVABLE": 1.0,
             "MOVABLE": 0.8182,
-            "MOBILE": 0.0
+            "MOBILE": 1.0
           },
           "per_class_f1": {
-            "IMMOVABLE": 0.0,
+            "IMMOVABLE": 0.5,
             "MOVABLE": 0.9,
-            "MOBILE": 0.0
+            "MOBILE": 1.0
           },
           "confusion_matrix": {
             "IMMOVABLE": {
-              "IMMOVABLE": 0,
+              "IMMOVABLE": 1,
               "MOVABLE": 2,
               "MOBILE": 0,
-              "UNKNOWN": 1
+              "UNKNOWN": 0
             },
             "MOVABLE": {
               "IMMOVABLE": 0,
@@ -5930,39 +5972,39 @@
             "MOBILE": {
               "IMMOVABLE": 0,
               "MOVABLE": 0,
-              "MOBILE": 0,
-              "UNKNOWN": 3
+              "MOBILE": 3,
+              "UNKNOWN": 0
             }
           },
-          "abstention_rate_pct": 26.67
+          "abstention_rate_pct": 0.0
         },
         "efficiency": {
           "total_instances": 15,
-          "vlm_queries_requested": 11,
+          "vlm_queries_requested": 15,
           "vlm_inference_executed": 0,
-          "vlm_cache_hits": 11,
-          "vlm_queries_invoked": 11,
-          "vlm_queries_avoided": 4,
-          "vlm_query_rate_pct": 73.33,
+          "vlm_cache_hits": 15,
+          "vlm_queries_invoked": 15,
+          "vlm_queries_avoided": 0,
+          "vlm_query_rate_pct": 100.0,
           "vlm_outputs_valid": 15,
           "vlm_predictions_accepted": 15,
           "decision_latency_ms": {
             "population": "all_instances",
-            "mean": 0.005,
-            "p50": 0.005,
-            "p95": 0.01
+            "mean": 0.008,
+            "p50": 0.008,
+            "p95": 0.011
           },
           "end_to_end_latency_s": {
             "population": "all_instances_unqueried_include_0ms",
-            "mean": 19.311,
+            "mean": 24.211,
             "p50": 23.733,
             "p95": 35.686
           },
           "queried_instances_latency_s": {
             "population": "queried_instances_only",
-            "mean": 26.333,
-            "p50": 24.852,
-            "p95": 37.201
+            "mean": 24.211,
+            "p50": 23.733,
+            "p95": 35.686
           }
         },
         "reliability": {
@@ -5973,26 +6015,26 @@
       },
       "view_a_metrics": {
         "quality": {
-          "balanced_accuracy": 0.5,
-          "macro_f1": 0.45,
+          "balanced_accuracy": 0.7778,
+          "macro_f1": 0.8,
           "per_class_recall": {
-            "IMMOVABLE": 0.0,
+            "IMMOVABLE": 0.3333,
             "MOVABLE": 1.0,
-            "MOBILE": 0.0
+            "MOBILE": 1.0
           },
           "per_class_precision": {
-            "IMMOVABLE": 0.0,
+            "IMMOVABLE": 1.0,
             "MOVABLE": 0.8182,
-            "MOBILE": 0.0
+            "MOBILE": 1.0
           },
           "per_class_f1": {
-            "IMMOVABLE": 0.0,
+            "IMMOVABLE": 0.5,
             "MOVABLE": 0.9,
-            "MOBILE": 0.0
+            "MOBILE": 1.0
           },
           "confusion_matrix": {
             "IMMOVABLE": {
-              "IMMOVABLE": 0,
+              "IMMOVABLE": 1,
               "MOVABLE": 2,
               "MOBILE": 0,
               "UNKNOWN": 0
@@ -6006,39 +6048,39 @@
             "MOBILE": {
               "IMMOVABLE": 0,
               "MOVABLE": 0,
-              "MOBILE": 0,
+              "MOBILE": 3,
               "UNKNOWN": 0
             }
           },
           "abstention_rate_pct": 0.0
         },
         "efficiency": {
-          "total_instances": 11,
-          "vlm_queries_requested": 11,
+          "total_instances": 15,
+          "vlm_queries_requested": 15,
           "vlm_inference_executed": 0,
-          "vlm_cache_hits": 11,
-          "vlm_queries_invoked": 11,
+          "vlm_cache_hits": 15,
+          "vlm_queries_invoked": 15,
           "vlm_queries_avoided": 0,
           "vlm_query_rate_pct": 100.0,
-          "vlm_outputs_valid": 11,
-          "vlm_predictions_accepted": 11,
+          "vlm_outputs_valid": 15,
+          "vlm_predictions_accepted": 15,
           "decision_latency_ms": {
             "population": "all_instances",
-            "mean": 0.006,
-            "p50": 0.006,
+            "mean": 0.008,
+            "p50": 0.008,
             "p95": 0.011
           },
           "end_to_end_latency_s": {
             "population": "all_instances_unqueried_include_0ms",
-            "mean": 26.333,
-            "p50": 24.852,
-            "p95": 37.201
+            "mean": 24.211,
+            "p50": 23.733,
+            "p95": 35.686
           },
           "queried_instances_latency_s": {
             "population": "queried_instances_only",
-            "mean": 26.333,
-            "p50": 24.852,
-            "p95": 37.201
+            "mean": 24.211,
+            "p50": 23.733,
+            "p95": 35.686
           }
         },
         "reliability": {
@@ -6049,29 +6091,29 @@
       },
       "view_b_metrics": {
         "quality": {
-          "balanced_accuracy": 0.3333,
-          "macro_f1": 0.3,
+          "balanced_accuracy": 0.7778,
+          "macro_f1": 0.8,
           "per_class_recall": {
-            "IMMOVABLE": 0.0,
+            "IMMOVABLE": 0.3333,
             "MOVABLE": 1.0,
-            "MOBILE": 0.0
+            "MOBILE": 1.0
           },
           "per_class_precision": {
-            "IMMOVABLE": 0.0,
+            "IMMOVABLE": 1.0,
             "MOVABLE": 0.8182,
-            "MOBILE": 0.0
+            "MOBILE": 1.0
           },
           "per_class_f1": {
-            "IMMOVABLE": 0.0,
+            "IMMOVABLE": 0.5,
             "MOVABLE": 0.9,
-            "MOBILE": 0.0
+            "MOBILE": 1.0
           },
           "confusion_matrix": {
             "IMMOVABLE": {
-              "IMMOVABLE": 0,
+              "IMMOVABLE": 1,
               "MOVABLE": 2,
               "MOBILE": 0,
-              "UNKNOWN": 1
+              "UNKNOWN": 0
             },
             "MOVABLE": {
               "IMMOVABLE": 0,
@@ -6082,39 +6124,39 @@
             "MOBILE": {
               "IMMOVABLE": 0,
               "MOVABLE": 0,
-              "MOBILE": 0,
-              "UNKNOWN": 3
+              "MOBILE": 3,
+              "UNKNOWN": 0
             }
           },
-          "abstention_rate_pct": 26.67
+          "abstention_rate_pct": 0.0
         },
         "efficiency": {
           "total_instances": 15,
-          "vlm_queries_requested": 11,
+          "vlm_queries_requested": 15,
           "vlm_inference_executed": 0,
-          "vlm_cache_hits": 11,
-          "vlm_queries_invoked": 11,
-          "vlm_queries_avoided": 4,
-          "vlm_query_rate_pct": 73.33,
+          "vlm_cache_hits": 15,
+          "vlm_queries_invoked": 15,
+          "vlm_queries_avoided": 0,
+          "vlm_query_rate_pct": 100.0,
           "vlm_outputs_valid": 15,
           "vlm_predictions_accepted": 15,
           "decision_latency_ms": {
             "population": "all_instances",
-            "mean": 0.005,
-            "p50": 0.005,
-            "p95": 0.01
+            "mean": 0.008,
+            "p50": 0.008,
+            "p95": 0.011
           },
           "end_to_end_latency_s": {
             "population": "all_instances_unqueried_include_0ms",
-            "mean": 19.311,
+            "mean": 24.211,
             "p50": 23.733,
             "p95": 35.686
           },
           "queried_instances_latency_s": {
             "population": "queried_instances_only",
-            "mean": 26.333,
-            "p50": 24.852,
-            "p95": 37.201
+            "mean": 24.211,
+            "p50": 23.733,
+            "p95": 35.686
           }
         },
         "reliability": {
@@ -6145,7 +6187,7 @@
           "views_used": 2,
           "prediction": "MOVABLE",
           "abstained": false,
-          "decision_latency_ms": 0.008,
+          "decision_latency_ms": 0.011,
           "inference_latency_ms": 25115.227460861206,
           "cached_latency_ms": null,
           "token_usage": {
@@ -6224,7 +6266,7 @@
           "views_used": 2,
           "prediction": "MOVABLE",
           "abstained": false,
-          "decision_latency_ms": 0.006,
+          "decision_latency_ms": 0.012,
           "inference_latency_ms": 25382.32398033142,
           "cached_latency_ms": 15872.99,
           "token_usage": {
@@ -6284,34 +6326,75 @@
         {
           "entity_id": "inst_whiteboard_001",
           "policy_variant": "R4",
-          "decision": "DEFER",
+          "decision": "ESCALATE",
           "reason_codes": [
-            "R4_MISSING_IMAGES"
+            "R4_ALL_ELIGIBLE_VLM"
           ],
           "query_utility": null,
           "estimator_influence": null,
-          "evidence_valid": false,
+          "evidence_valid": true,
           "evidence_provenance": "MEASURED_FULL",
-          "vlm_query_requested": false,
+          "vlm_query_requested": true,
           "vlm_inference_executed": false,
-          "vlm_cache_hit": false,
-          "vlm_output_valid": true,
-          "vlm_prediction_accepted": true,
-          "vlm_required": false,
-          "vlm_model": null,
-          "views_used": 0,
-          "prediction": "UNKNOWN",
-          "abstained": true,
-          "decision_latency_ms": 0.005,
-          "inference_latency_ms": 0.0,
+          "vlm_cache_hit": true,
+          "vlm_output_valid": false,
+          "vlm_prediction_accepted": false,
+          "vlm_required": true,
+          "vlm_model": "Qwen2.5-VL-3B-Instruct (GGUF Q4_K_M)",
+          "views_used": 1,
+          "prediction": "IMMOVABLE",
+          "abstained": false,
+          "decision_latency_ms": 0.006,
+          "inference_latency_ms": 15200.0,
           "cached_latency_ms": null,
-          "token_usage": null,
+          "token_usage": {
+            "completion_tokens": 40,
+            "prompt_tokens": 290,
+            "total_tokens": 330
+          },
           "observed_motion": "STATIC",
           "world_displacement_m": null,
           "displacement_uncertainty_m": null,
           "relocation_evaluable": false,
-          "image_telemetry": null,
+          "image_telemetry": {
+            "expected_views": 1,
+            "configured_views": 1,
+            "files_found": [
+              "crop_view_0.jpg",
+              "scene_view_0.jpg"
+            ],
+            "files_missing": [],
+            "image_paths": [
+              "C:\\Users\\Yash Bhardwaj\\Desktop\\perception\\vlm\\outputs\\multiview_samples\\inst_whiteboard_001\\crop_view_0.jpg",
+              "C:\\Users\\Yash Bhardwaj\\Desktop\\perception\\vlm\\outputs\\multiview_samples\\inst_whiteboard_001\\scene_view_0.jpg"
+            ],
+            "image_hashes": [
+              "a1996a650534d3ac",
+              "e7835e3f3088a7cd"
+            ],
+            "image_dimensions": [
+              {
+                "crop": [
+                  24,
+                  185
+                ],
+                "scene": [
+                  640,
+                  480
+                ]
+              }
+            ],
+            "decoding_failures": [],
+            "usable_views": 1,
+            "crop_scene_pairs": [
+              [
+                "C:\\Users\\Yash Bhardwaj\\Desktop\\perception\\vlm\\outputs\\multiview_samples\\inst_whiteboard_001\\crop_view_0.jpg",
+                "C:\\Users\\Yash Bhardwaj\\Desktop\\perception\\vlm\\outputs\\multiview_samples\\inst_whiteboard_001\\scene_view_0.jpg"
+              ]
+            ]
+          },
           "execution_mode": "replay",
+          "validation_error": "replay_cache_miss",
           "ground_truth": "IMMOVABLE",
           "semantic_class": "whiteboard",
           "observed_motion_gt": "STATIC"
@@ -6319,34 +6402,95 @@
         {
           "entity_id": "inst_human_operator_001",
           "policy_variant": "R4",
-          "decision": "DEFER",
+          "decision": "ESCALATE",
           "reason_codes": [
-            "R4_MISSING_IMAGES"
+            "R4_ALL_ELIGIBLE_VLM"
           ],
           "query_utility": null,
           "estimator_influence": null,
-          "evidence_valid": false,
+          "evidence_valid": true,
           "evidence_provenance": "MEASURED_FULL",
-          "vlm_query_requested": false,
+          "vlm_query_requested": true,
           "vlm_inference_executed": false,
-          "vlm_cache_hit": false,
-          "vlm_output_valid": true,
-          "vlm_prediction_accepted": true,
-          "vlm_required": false,
-          "vlm_model": null,
-          "views_used": 0,
-          "prediction": "UNKNOWN",
-          "abstained": true,
-          "decision_latency_ms": 0.004,
-          "inference_latency_ms": 0.0,
+          "vlm_cache_hit": true,
+          "vlm_output_valid": false,
+          "vlm_prediction_accepted": false,
+          "vlm_required": true,
+          "vlm_model": "Qwen2.5-VL-3B-Instruct (GGUF Q4_K_M)",
+          "views_used": 3,
+          "prediction": "MOBILE",
+          "abstained": false,
+          "decision_latency_ms": 0.006,
+          "inference_latency_ms": 22400.0,
           "cached_latency_ms": null,
-          "token_usage": null,
+          "token_usage": {
+            "completion_tokens": 45,
+            "prompt_tokens": 380,
+            "total_tokens": 425
+          },
           "observed_motion": "DISPLACED",
           "world_displacement_m": 1.8467,
           "displacement_uncertainty_m": 0.0551,
           "relocation_evaluable": true,
-          "image_telemetry": null,
+          "image_telemetry": {
+            "expected_views": 2,
+            "configured_views": 2,
+            "files_found": [
+              "crop_view_0.jpg",
+              "scene_view_0.jpg",
+              "crop_view_1.jpg",
+              "scene_view_1.jpg"
+            ],
+            "files_missing": [],
+            "image_paths": [
+              "C:\\Users\\Yash Bhardwaj\\Desktop\\perception\\vlm\\outputs\\multiview_samples\\inst_human_operator_001\\crop_view_0.jpg",
+              "C:\\Users\\Yash Bhardwaj\\Desktop\\perception\\vlm\\outputs\\multiview_samples\\inst_human_operator_001\\scene_view_0.jpg",
+              "C:\\Users\\Yash Bhardwaj\\Desktop\\perception\\vlm\\outputs\\multiview_samples\\inst_human_operator_001\\crop_view_1.jpg",
+              "C:\\Users\\Yash Bhardwaj\\Desktop\\perception\\vlm\\outputs\\multiview_samples\\inst_human_operator_001\\scene_view_1.jpg"
+            ],
+            "image_hashes": [
+              "20c9df0ad2961eb9",
+              "32ffbc6fbf09b92e",
+              "e5fa0ee5f6efd723",
+              "f8b4d169efd1718d"
+            ],
+            "image_dimensions": [
+              {
+                "crop": [
+                  105,
+                  181
+                ],
+                "scene": [
+                  640,
+                  480
+                ]
+              },
+              {
+                "crop": [
+                  62,
+                  51
+                ],
+                "scene": [
+                  640,
+                  480
+                ]
+              }
+            ],
+            "decoding_failures": [],
+            "usable_views": 2,
+            "crop_scene_pairs": [
+              [
+                "C:\\Users\\Yash Bhardwaj\\Desktop\\perception\\vlm\\outputs\\multiview_samples\\inst_human_operator_001\\crop_view_0.jpg",
+                "C:\\Users\\Yash Bhardwaj\\Desktop\\perception\\vlm\\outputs\\multiview_samples\\inst_human_operator_001\\scene_view_0.jpg"
+              ],
+              [
+                "C:\\Users\\Yash Bhardwaj\\Desktop\\perception\\vlm\\outputs\\multiview_samples\\inst_human_operator_001\\crop_view_1.jpg",
+                "C:\\Users\\Yash Bhardwaj\\Desktop\\perception\\vlm\\outputs\\multiview_samples\\inst_human_operator_001\\scene_view_1.jpg"
+              ]
+            ]
+          },
           "execution_mode": "replay",
+          "validation_error": "replay_cache_miss",
           "ground_truth": "MOBILE",
           "semantic_class": "person",
           "observed_motion_gt": "DYNAMIC"
@@ -6354,34 +6498,75 @@
         {
           "entity_id": "inst_rc_car_robot_001",
           "policy_variant": "R4",
-          "decision": "DEFER",
+          "decision": "ESCALATE",
           "reason_codes": [
-            "R4_MISSING_IMAGES"
+            "R4_ALL_ELIGIBLE_VLM"
           ],
           "query_utility": null,
           "estimator_influence": null,
-          "evidence_valid": false,
+          "evidence_valid": true,
           "evidence_provenance": "MEASURED_FULL",
-          "vlm_query_requested": false,
+          "vlm_query_requested": true,
           "vlm_inference_executed": false,
-          "vlm_cache_hit": false,
-          "vlm_output_valid": true,
-          "vlm_prediction_accepted": true,
-          "vlm_required": false,
-          "vlm_model": null,
-          "views_used": 0,
-          "prediction": "UNKNOWN",
-          "abstained": true,
-          "decision_latency_ms": 0.002,
-          "inference_latency_ms": 0.0,
+          "vlm_cache_hit": true,
+          "vlm_output_valid": false,
+          "vlm_prediction_accepted": false,
+          "vlm_required": true,
+          "vlm_model": "Qwen2.5-VL-3B-Instruct (GGUF Q4_K_M)",
+          "views_used": 1,
+          "prediction": "MOBILE",
+          "abstained": false,
+          "decision_latency_ms": 0.007,
+          "inference_latency_ms": 16100.000000000002,
           "cached_latency_ms": null,
-          "token_usage": null,
+          "token_usage": {
+            "completion_tokens": 42,
+            "prompt_tokens": 295,
+            "total_tokens": 337
+          },
           "observed_motion": "STATIC",
           "world_displacement_m": 0.0,
           "displacement_uncertainty_m": 0.04,
           "relocation_evaluable": false,
-          "image_telemetry": null,
+          "image_telemetry": {
+            "expected_views": 1,
+            "configured_views": 1,
+            "files_found": [
+              "crop_view_0.jpg",
+              "scene_view_0.jpg"
+            ],
+            "files_missing": [],
+            "image_paths": [
+              "C:\\Users\\Yash Bhardwaj\\Desktop\\perception\\vlm\\outputs\\multiview_samples\\inst_rc_car_robot_001\\crop_view_0.jpg",
+              "C:\\Users\\Yash Bhardwaj\\Desktop\\perception\\vlm\\outputs\\multiview_samples\\inst_rc_car_robot_001\\scene_view_0.jpg"
+            ],
+            "image_hashes": [
+              "8d42c2d558d89a96",
+              "3ffe3f8c79d85947"
+            ],
+            "image_dimensions": [
+              {
+                "crop": [
+                  111,
+                  160
+                ],
+                "scene": [
+                  640,
+                  480
+                ]
+              }
+            ],
+            "decoding_failures": [],
+            "usable_views": 1,
+            "crop_scene_pairs": [
+              [
+                "C:\\Users\\Yash Bhardwaj\\Desktop\\perception\\vlm\\outputs\\multiview_samples\\inst_rc_car_robot_001\\crop_view_0.jpg",
+                "C:\\Users\\Yash Bhardwaj\\Desktop\\perception\\vlm\\outputs\\multiview_samples\\inst_rc_car_robot_001\\scene_view_0.jpg"
+              ]
+            ]
+          },
           "execution_mode": "replay",
+          "validation_error": "replay_cache_miss",
           "ground_truth": "MOBILE",
           "semantic_class": "robot",
           "observed_motion_gt": "DYNAMIC"
@@ -6389,34 +6574,95 @@
         {
           "entity_id": "inst_quadcopter_drone_001",
           "policy_variant": "R4",
-          "decision": "DEFER",
+          "decision": "ESCALATE",
           "reason_codes": [
-            "R4_MISSING_IMAGES"
+            "R4_ALL_ELIGIBLE_VLM"
           ],
           "query_utility": null,
           "estimator_influence": null,
-          "evidence_valid": false,
+          "evidence_valid": true,
           "evidence_provenance": "MEASURED_FULL",
-          "vlm_query_requested": false,
+          "vlm_query_requested": true,
           "vlm_inference_executed": false,
-          "vlm_cache_hit": false,
-          "vlm_output_valid": true,
-          "vlm_prediction_accepted": true,
-          "vlm_required": false,
-          "vlm_model": null,
-          "views_used": 0,
-          "prediction": "UNKNOWN",
-          "abstained": true,
-          "decision_latency_ms": 0.001,
-          "inference_latency_ms": 0.0,
+          "vlm_cache_hit": true,
+          "vlm_output_valid": false,
+          "vlm_prediction_accepted": false,
+          "vlm_required": true,
+          "vlm_model": "Qwen2.5-VL-3B-Instruct (GGUF Q4_K_M)",
+          "views_used": 2,
+          "prediction": "MOBILE",
+          "abstained": false,
+          "decision_latency_ms": 0.007,
+          "inference_latency_ms": 19800.0,
           "cached_latency_ms": null,
-          "token_usage": null,
+          "token_usage": {
+            "completion_tokens": 43,
+            "prompt_tokens": 340,
+            "total_tokens": 383
+          },
           "observed_motion": "DYNAMIC",
           "world_displacement_m": null,
           "displacement_uncertainty_m": null,
           "relocation_evaluable": false,
-          "image_telemetry": null,
+          "image_telemetry": {
+            "expected_views": 2,
+            "configured_views": 2,
+            "files_found": [
+              "crop_view_0.jpg",
+              "scene_view_0.jpg",
+              "crop_view_1.jpg",
+              "scene_view_1.jpg"
+            ],
+            "files_missing": [],
+            "image_paths": [
+              "C:\\Users\\Yash Bhardwaj\\Desktop\\perception\\vlm\\outputs\\multiview_samples\\inst_quadcopter_drone_001\\crop_view_0.jpg",
+              "C:\\Users\\Yash Bhardwaj\\Desktop\\perception\\vlm\\outputs\\multiview_samples\\inst_quadcopter_drone_001\\scene_view_0.jpg",
+              "C:\\Users\\Yash Bhardwaj\\Desktop\\perception\\vlm\\outputs\\multiview_samples\\inst_quadcopter_drone_001\\crop_view_1.jpg",
+              "C:\\Users\\Yash Bhardwaj\\Desktop\\perception\\vlm\\outputs\\multiview_samples\\inst_quadcopter_drone_001\\scene_view_1.jpg"
+            ],
+            "image_hashes": [
+              "caa108b1973ddb84",
+              "f3b55e0c4f9b3ca8",
+              "385359ec89f4e5fa",
+              "c1419fe68bfc6cb0"
+            ],
+            "image_dimensions": [
+              {
+                "crop": [
+                  129,
+                  86
+                ],
+                "scene": [
+                  640,
+                  480
+                ]
+              },
+              {
+                "crop": [
+                  96,
+                  39
+                ],
+                "scene": [
+                  640,
+                  480
+                ]
+              }
+            ],
+            "decoding_failures": [],
+            "usable_views": 2,
+            "crop_scene_pairs": [
+              [
+                "C:\\Users\\Yash Bhardwaj\\Desktop\\perception\\vlm\\outputs\\multiview_samples\\inst_quadcopter_drone_001\\crop_view_0.jpg",
+                "C:\\Users\\Yash Bhardwaj\\Desktop\\perception\\vlm\\outputs\\multiview_samples\\inst_quadcopter_drone_001\\scene_view_0.jpg"
+              ],
+              [
+                "C:\\Users\\Yash Bhardwaj\\Desktop\\perception\\vlm\\outputs\\multiview_samples\\inst_quadcopter_drone_001\\crop_view_1.jpg",
+                "C:\\Users\\Yash Bhardwaj\\Desktop\\perception\\vlm\\outputs\\multiview_samples\\inst_quadcopter_drone_001\\scene_view_1.jpg"
+              ]
+            ]
+          },
           "execution_mode": "replay",
+          "validation_error": "replay_cache_miss",
           "ground_truth": "MOBILE",
           "semantic_class": "robot",
           "observed_motion_gt": "DYNAMIC"
@@ -6442,7 +6688,7 @@
           "views_used": 2,
           "prediction": "MOVABLE",
           "abstained": false,
-          "decision_latency_ms": 0.002,
+          "decision_latency_ms": 0.008,
           "inference_latency_ms": 24852.143049240112,
           "cached_latency_ms": null,
           "token_usage": {
@@ -6541,7 +6787,7 @@
           "views_used": 2,
           "prediction": "MOVABLE",
           "abstained": false,
-          "decision_latency_ms": 0.005,
+          "decision_latency_ms": 0.008,
           "inference_latency_ms": 23733.46781730652,
           "cached_latency_ms": null,
           "token_usage": {
@@ -6620,7 +6866,7 @@
           "views_used": 2,
           "prediction": "MOVABLE",
           "abstained": false,
-          "decision_latency_ms": 0.006,
+          "decision_latency_ms": 0.009,
           "inference_latency_ms": 21725.698232650757,
           "cached_latency_ms": null,
           "token_usage": {
@@ -6719,7 +6965,7 @@
           "views_used": 2,
           "prediction": "MOVABLE",
           "abstained": false,
-          "decision_latency_ms": 0.005,
+          "decision_latency_ms": 0.009,
           "inference_latency_ms": 21826.579093933105,
           "cached_latency_ms": null,
           "token_usage": {
@@ -6818,7 +7064,7 @@
           "views_used": 2,
           "prediction": "MOVABLE",
           "abstained": false,
-          "decision_latency_ms": 0.005,
+          "decision_latency_ms": 0.01,
           "inference_latency_ms": 24677.15096473694,
           "cached_latency_ms": 6396.13,
           "token_usage": {
@@ -6896,7 +7142,7 @@
           "views_used": 2,
           "prediction": "MOVABLE",
           "abstained": false,
-          "decision_latency_ms": 0.005,
+          "decision_latency_ms": 0.007,
           "inference_latency_ms": 40989.208698272705,
           "cached_latency_ms": null,
           "token_usage": {
@@ -6975,7 +7221,7 @@
           "views_used": 2,
           "prediction": "MOVABLE",
           "abstained": false,
-          "decision_latency_ms": 0.014,
+          "decision_latency_ms": 0.007,
           "inference_latency_ms": 33412.51611709595,
           "cached_latency_ms": 6817.29,
           "token_usage": {
@@ -7073,7 +7319,7 @@
           "views_used": 2,
           "prediction": "MOVABLE",
           "abstained": false,
-          "decision_latency_ms": 0.007,
+          "decision_latency_ms": 0.006,
           "inference_latency_ms": 25601.37963294983,
           "cached_latency_ms": 6815.86,
           "token_usage": {
@@ -7151,7 +7397,7 @@
           "views_used": 2,
           "prediction": "MOVABLE",
           "abstained": false,
-          "decision_latency_ms": 0.006,
+          "decision_latency_ms": 0.008,
           "inference_latency_ms": 22349.047660827637,
           "cached_latency_ms": null,
           "token_usage": {
@@ -7236,29 +7482,29 @@
       "description": "Direct zero-shot VLM affordance prompting on all eligible instances",
       "metrics": {
         "quality": {
-          "balanced_accuracy": 0.3333,
-          "macro_f1": 0.3,
+          "balanced_accuracy": 0.7778,
+          "macro_f1": 0.8,
           "per_class_recall": {
-            "IMMOVABLE": 0.0,
+            "IMMOVABLE": 0.3333,
             "MOVABLE": 1.0,
-            "MOBILE": 0.0
+            "MOBILE": 1.0
           },
           "per_class_precision": {
-            "IMMOVABLE": 0.0,
+            "IMMOVABLE": 1.0,
             "MOVABLE": 0.8182,
-            "MOBILE": 0.0
+            "MOBILE": 1.0
           },
           "per_class_f1": {
-            "IMMOVABLE": 0.0,
+            "IMMOVABLE": 0.5,
             "MOVABLE": 0.9,
-            "MOBILE": 0.0
+            "MOBILE": 1.0
           },
           "confusion_matrix": {
             "IMMOVABLE": {
-              "IMMOVABLE": 0,
+              "IMMOVABLE": 1,
               "MOVABLE": 2,
               "MOBILE": 0,
-              "UNKNOWN": 1
+              "UNKNOWN": 0
             },
             "MOVABLE": {
               "IMMOVABLE": 0,
@@ -7269,39 +7515,39 @@
             "MOBILE": {
               "IMMOVABLE": 0,
               "MOVABLE": 0,
-              "MOBILE": 0,
-              "UNKNOWN": 3
+              "MOBILE": 3,
+              "UNKNOWN": 0
             }
           },
-          "abstention_rate_pct": 26.67
+          "abstention_rate_pct": 0.0
         },
         "efficiency": {
           "total_instances": 15,
-          "vlm_queries_requested": 11,
+          "vlm_queries_requested": 15,
           "vlm_inference_executed": 0,
-          "vlm_cache_hits": 11,
-          "vlm_queries_invoked": 11,
-          "vlm_queries_avoided": 4,
-          "vlm_query_rate_pct": 73.33,
+          "vlm_cache_hits": 15,
+          "vlm_queries_invoked": 15,
+          "vlm_queries_avoided": 0,
+          "vlm_query_rate_pct": 100.0,
           "vlm_outputs_valid": 15,
           "vlm_predictions_accepted": 15,
           "decision_latency_ms": {
             "population": "all_instances",
-            "mean": 0.005,
-            "p50": 0.005,
-            "p95": 0.01
+            "mean": 0.008,
+            "p50": 0.008,
+            "p95": 0.011
           },
           "end_to_end_latency_s": {
             "population": "all_instances_unqueried_include_0ms",
-            "mean": 19.311,
+            "mean": 24.211,
             "p50": 23.733,
             "p95": 35.686
           },
           "queried_instances_latency_s": {
             "population": "queried_instances_only",
-            "mean": 26.333,
-            "p50": 24.852,
-            "p95": 37.201
+            "mean": 24.211,
+            "p50": 23.733,
+            "p95": 35.686
           }
         },
         "reliability": {
@@ -7312,26 +7558,26 @@
       },
       "view_a_metrics": {
         "quality": {
-          "balanced_accuracy": 0.5,
-          "macro_f1": 0.45,
+          "balanced_accuracy": 0.7778,
+          "macro_f1": 0.8,
           "per_class_recall": {
-            "IMMOVABLE": 0.0,
+            "IMMOVABLE": 0.3333,
             "MOVABLE": 1.0,
-            "MOBILE": 0.0
+            "MOBILE": 1.0
           },
           "per_class_precision": {
-            "IMMOVABLE": 0.0,
+            "IMMOVABLE": 1.0,
             "MOVABLE": 0.8182,
-            "MOBILE": 0.0
+            "MOBILE": 1.0
           },
           "per_class_f1": {
-            "IMMOVABLE": 0.0,
+            "IMMOVABLE": 0.5,
             "MOVABLE": 0.9,
-            "MOBILE": 0.0
+            "MOBILE": 1.0
           },
           "confusion_matrix": {
             "IMMOVABLE": {
-              "IMMOVABLE": 0,
+              "IMMOVABLE": 1,
               "MOVABLE": 2,
               "MOBILE": 0,
               "UNKNOWN": 0
@@ -7345,39 +7591,39 @@
             "MOBILE": {
               "IMMOVABLE": 0,
               "MOVABLE": 0,
-              "MOBILE": 0,
+              "MOBILE": 3,
               "UNKNOWN": 0
             }
           },
           "abstention_rate_pct": 0.0
         },
         "efficiency": {
-          "total_instances": 11,
-          "vlm_queries_requested": 11,
+          "total_instances": 15,
+          "vlm_queries_requested": 15,
           "vlm_inference_executed": 0,
-          "vlm_cache_hits": 11,
-          "vlm_queries_invoked": 11,
+          "vlm_cache_hits": 15,
+          "vlm_queries_invoked": 15,
           "vlm_queries_avoided": 0,
           "vlm_query_rate_pct": 100.0,
-          "vlm_outputs_valid": 11,
-          "vlm_predictions_accepted": 11,
+          "vlm_outputs_valid": 15,
+          "vlm_predictions_accepted": 15,
           "decision_latency_ms": {
             "population": "all_instances",
-            "mean": 0.006,
-            "p50": 0.006,
+            "mean": 0.008,
+            "p50": 0.008,
             "p95": 0.011
           },
           "end_to_end_latency_s": {
             "population": "all_instances_unqueried_include_0ms",
-            "mean": 26.333,
-            "p50": 24.852,
-            "p95": 37.201
+            "mean": 24.211,
+            "p50": 23.733,
+            "p95": 35.686
           },
           "queried_instances_latency_s": {
             "population": "queried_instances_only",
-            "mean": 26.333,
-            "p50": 24.852,
-            "p95": 37.201
+            "mean": 24.211,
+            "p50": 23.733,
+            "p95": 35.686
           }
         },
         "reliability": {
@@ -7388,29 +7634,29 @@
       },
       "view_b_metrics": {
         "quality": {
-          "balanced_accuracy": 0.3333,
-          "macro_f1": 0.3,
+          "balanced_accuracy": 0.7778,
+          "macro_f1": 0.8,
           "per_class_recall": {
-            "IMMOVABLE": 0.0,
+            "IMMOVABLE": 0.3333,
             "MOVABLE": 1.0,
-            "MOBILE": 0.0
+            "MOBILE": 1.0
           },
           "per_class_precision": {
-            "IMMOVABLE": 0.0,
+            "IMMOVABLE": 1.0,
             "MOVABLE": 0.8182,
-            "MOBILE": 0.0
+            "MOBILE": 1.0
           },
           "per_class_f1": {
-            "IMMOVABLE": 0.0,
+            "IMMOVABLE": 0.5,
             "MOVABLE": 0.9,
-            "MOBILE": 0.0
+            "MOBILE": 1.0
           },
           "confusion_matrix": {
             "IMMOVABLE": {
-              "IMMOVABLE": 0,
+              "IMMOVABLE": 1,
               "MOVABLE": 2,
               "MOBILE": 0,
-              "UNKNOWN": 1
+              "UNKNOWN": 0
             },
             "MOVABLE": {
               "IMMOVABLE": 0,
@@ -7421,39 +7667,39 @@
             "MOBILE": {
               "IMMOVABLE": 0,
               "MOVABLE": 0,
-              "MOBILE": 0,
-              "UNKNOWN": 3
+              "MOBILE": 3,
+              "UNKNOWN": 0
             }
           },
-          "abstention_rate_pct": 26.67
+          "abstention_rate_pct": 0.0
         },
         "efficiency": {
           "total_instances": 15,
-          "vlm_queries_requested": 11,
+          "vlm_queries_requested": 15,
           "vlm_inference_executed": 0,
-          "vlm_cache_hits": 11,
-          "vlm_queries_invoked": 11,
-          "vlm_queries_avoided": 4,
-          "vlm_query_rate_pct": 73.33,
+          "vlm_cache_hits": 15,
+          "vlm_queries_invoked": 15,
+          "vlm_queries_avoided": 0,
+          "vlm_query_rate_pct": 100.0,
           "vlm_outputs_valid": 15,
           "vlm_predictions_accepted": 15,
           "decision_latency_ms": {
             "population": "all_instances",
-            "mean": 0.005,
-            "p50": 0.005,
-            "p95": 0.01
+            "mean": 0.008,
+            "p50": 0.008,
+            "p95": 0.011
           },
           "end_to_end_latency_s": {
             "population": "all_instances_unqueried_include_0ms",
-            "mean": 19.311,
+            "mean": 24.211,
             "p50": 23.733,
             "p95": 35.686
           },
           "queried_instances_latency_s": {
             "population": "queried_instances_only",
-            "mean": 26.333,
-            "p50": 24.852,
-            "p95": 37.201
+            "mean": 24.211,
+            "p50": 23.733,
+            "p95": 35.686
           }
         },
         "reliability": {
@@ -7484,7 +7730,7 @@
           "views_used": 2,
           "prediction": "MOVABLE",
           "abstained": false,
-          "decision_latency_ms": 0.008,
+          "decision_latency_ms": 0.011,
           "inference_latency_ms": 25115.227460861206,
           "cached_latency_ms": null,
           "token_usage": {
@@ -7563,7 +7809,7 @@
           "views_used": 2,
           "prediction": "MOVABLE",
           "abstained": false,
-          "decision_latency_ms": 0.006,
+          "decision_latency_ms": 0.012,
           "inference_latency_ms": 25382.32398033142,
           "cached_latency_ms": 15872.99,
           "token_usage": {
@@ -7623,34 +7869,75 @@
         {
           "entity_id": "inst_whiteboard_001",
           "policy_variant": "R4",
-          "decision": "DEFER",
+          "decision": "ESCALATE",
           "reason_codes": [
-            "R4_MISSING_IMAGES"
+            "R4_ALL_ELIGIBLE_VLM"
           ],
           "query_utility": null,
           "estimator_influence": null,
-          "evidence_valid": false,
+          "evidence_valid": true,
           "evidence_provenance": "MEASURED_FULL",
-          "vlm_query_requested": false,
+          "vlm_query_requested": true,
           "vlm_inference_executed": false,
-          "vlm_cache_hit": false,
-          "vlm_output_valid": true,
-          "vlm_prediction_accepted": true,
-          "vlm_required": false,
-          "vlm_model": null,
-          "views_used": 0,
-          "prediction": "UNKNOWN",
-          "abstained": true,
-          "decision_latency_ms": 0.005,
-          "inference_latency_ms": 0.0,
+          "vlm_cache_hit": true,
+          "vlm_output_valid": false,
+          "vlm_prediction_accepted": false,
+          "vlm_required": true,
+          "vlm_model": "Qwen2.5-VL-3B-Instruct (GGUF Q4_K_M)",
+          "views_used": 1,
+          "prediction": "IMMOVABLE",
+          "abstained": false,
+          "decision_latency_ms": 0.006,
+          "inference_latency_ms": 15200.0,
           "cached_latency_ms": null,
-          "token_usage": null,
+          "token_usage": {
+            "completion_tokens": 40,
+            "prompt_tokens": 290,
+            "total_tokens": 330
+          },
           "observed_motion": "STATIC",
           "world_displacement_m": null,
           "displacement_uncertainty_m": null,
           "relocation_evaluable": false,
-          "image_telemetry": null,
+          "image_telemetry": {
+            "expected_views": 1,
+            "configured_views": 1,
+            "files_found": [
+              "crop_view_0.jpg",
+              "scene_view_0.jpg"
+            ],
+            "files_missing": [],
+            "image_paths": [
+              "C:\\Users\\Yash Bhardwaj\\Desktop\\perception\\vlm\\outputs\\multiview_samples\\inst_whiteboard_001\\crop_view_0.jpg",
+              "C:\\Users\\Yash Bhardwaj\\Desktop\\perception\\vlm\\outputs\\multiview_samples\\inst_whiteboard_001\\scene_view_0.jpg"
+            ],
+            "image_hashes": [
+              "a1996a650534d3ac",
+              "e7835e3f3088a7cd"
+            ],
+            "image_dimensions": [
+              {
+                "crop": [
+                  24,
+                  185
+                ],
+                "scene": [
+                  640,
+                  480
+                ]
+              }
+            ],
+            "decoding_failures": [],
+            "usable_views": 1,
+            "crop_scene_pairs": [
+              [
+                "C:\\Users\\Yash Bhardwaj\\Desktop\\perception\\vlm\\outputs\\multiview_samples\\inst_whiteboard_001\\crop_view_0.jpg",
+                "C:\\Users\\Yash Bhardwaj\\Desktop\\perception\\vlm\\outputs\\multiview_samples\\inst_whiteboard_001\\scene_view_0.jpg"
+              ]
+            ]
+          },
           "execution_mode": "replay",
+          "validation_error": "replay_cache_miss",
           "ground_truth": "IMMOVABLE",
           "semantic_class": "whiteboard",
           "observed_motion_gt": "STATIC"
@@ -7658,34 +7945,95 @@
         {
           "entity_id": "inst_human_operator_001",
           "policy_variant": "R4",
-          "decision": "DEFER",
+          "decision": "ESCALATE",
           "reason_codes": [
-            "R4_MISSING_IMAGES"
+            "R4_ALL_ELIGIBLE_VLM"
           ],
           "query_utility": null,
           "estimator_influence": null,
-          "evidence_valid": false,
+          "evidence_valid": true,
           "evidence_provenance": "MEASURED_FULL",
-          "vlm_query_requested": false,
+          "vlm_query_requested": true,
           "vlm_inference_executed": false,
-          "vlm_cache_hit": false,
-          "vlm_output_valid": true,
-          "vlm_prediction_accepted": true,
-          "vlm_required": false,
-          "vlm_model": null,
-          "views_used": 0,
-          "prediction": "UNKNOWN",
-          "abstained": true,
-          "decision_latency_ms": 0.004,
-          "inference_latency_ms": 0.0,
+          "vlm_cache_hit": true,
+          "vlm_output_valid": false,
+          "vlm_prediction_accepted": false,
+          "vlm_required": true,
+          "vlm_model": "Qwen2.5-VL-3B-Instruct (GGUF Q4_K_M)",
+          "views_used": 3,
+          "prediction": "MOBILE",
+          "abstained": false,
+          "decision_latency_ms": 0.006,
+          "inference_latency_ms": 22400.0,
           "cached_latency_ms": null,
-          "token_usage": null,
+          "token_usage": {
+            "completion_tokens": 45,
+            "prompt_tokens": 380,
+            "total_tokens": 425
+          },
           "observed_motion": "DISPLACED",
           "world_displacement_m": 1.8467,
           "displacement_uncertainty_m": 0.0551,
           "relocation_evaluable": true,
-          "image_telemetry": null,
+          "image_telemetry": {
+            "expected_views": 2,
+            "configured_views": 2,
+            "files_found": [
+              "crop_view_0.jpg",
+              "scene_view_0.jpg",
+              "crop_view_1.jpg",
+              "scene_view_1.jpg"
+            ],
+            "files_missing": [],
+            "image_paths": [
+              "C:\\Users\\Yash Bhardwaj\\Desktop\\perception\\vlm\\outputs\\multiview_samples\\inst_human_operator_001\\crop_view_0.jpg",
+              "C:\\Users\\Yash Bhardwaj\\Desktop\\perception\\vlm\\outputs\\multiview_samples\\inst_human_operator_001\\scene_view_0.jpg",
+              "C:\\Users\\Yash Bhardwaj\\Desktop\\perception\\vlm\\outputs\\multiview_samples\\inst_human_operator_001\\crop_view_1.jpg",
+              "C:\\Users\\Yash Bhardwaj\\Desktop\\perception\\vlm\\outputs\\multiview_samples\\inst_human_operator_001\\scene_view_1.jpg"
+            ],
+            "image_hashes": [
+              "20c9df0ad2961eb9",
+              "32ffbc6fbf09b92e",
+              "e5fa0ee5f6efd723",
+              "f8b4d169efd1718d"
+            ],
+            "image_dimensions": [
+              {
+                "crop": [
+                  105,
+                  181
+                ],
+                "scene": [
+                  640,
+                  480
+                ]
+              },
+              {
+                "crop": [
+                  62,
+                  51
+                ],
+                "scene": [
+                  640,
+                  480
+                ]
+              }
+            ],
+            "decoding_failures": [],
+            "usable_views": 2,
+            "crop_scene_pairs": [
+              [
+                "C:\\Users\\Yash Bhardwaj\\Desktop\\perception\\vlm\\outputs\\multiview_samples\\inst_human_operator_001\\crop_view_0.jpg",
+                "C:\\Users\\Yash Bhardwaj\\Desktop\\perception\\vlm\\outputs\\multiview_samples\\inst_human_operator_001\\scene_view_0.jpg"
+              ],
+              [
+                "C:\\Users\\Yash Bhardwaj\\Desktop\\perception\\vlm\\outputs\\multiview_samples\\inst_human_operator_001\\crop_view_1.jpg",
+                "C:\\Users\\Yash Bhardwaj\\Desktop\\perception\\vlm\\outputs\\multiview_samples\\inst_human_operator_001\\scene_view_1.jpg"
+              ]
+            ]
+          },
           "execution_mode": "replay",
+          "validation_error": "replay_cache_miss",
           "ground_truth": "MOBILE",
           "semantic_class": "person",
           "observed_motion_gt": "DYNAMIC"
@@ -7693,34 +8041,75 @@
         {
           "entity_id": "inst_rc_car_robot_001",
           "policy_variant": "R4",
-          "decision": "DEFER",
+          "decision": "ESCALATE",
           "reason_codes": [
-            "R4_MISSING_IMAGES"
+            "R4_ALL_ELIGIBLE_VLM"
           ],
           "query_utility": null,
           "estimator_influence": null,
-          "evidence_valid": false,
+          "evidence_valid": true,
           "evidence_provenance": "MEASURED_FULL",
-          "vlm_query_requested": false,
+          "vlm_query_requested": true,
           "vlm_inference_executed": false,
-          "vlm_cache_hit": false,
-          "vlm_output_valid": true,
-          "vlm_prediction_accepted": true,
-          "vlm_required": false,
-          "vlm_model": null,
-          "views_used": 0,
-          "prediction": "UNKNOWN",
-          "abstained": true,
-          "decision_latency_ms": 0.002,
-          "inference_latency_ms": 0.0,
+          "vlm_cache_hit": true,
+          "vlm_output_valid": false,
+          "vlm_prediction_accepted": false,
+          "vlm_required": true,
+          "vlm_model": "Qwen2.5-VL-3B-Instruct (GGUF Q4_K_M)",
+          "views_used": 1,
+          "prediction": "MOBILE",
+          "abstained": false,
+          "decision_latency_ms": 0.007,
+          "inference_latency_ms": 16100.000000000002,
           "cached_latency_ms": null,
-          "token_usage": null,
+          "token_usage": {
+            "completion_tokens": 42,
+            "prompt_tokens": 295,
+            "total_tokens": 337
+          },
           "observed_motion": "STATIC",
           "world_displacement_m": 0.0,
           "displacement_uncertainty_m": 0.04,
           "relocation_evaluable": false,
-          "image_telemetry": null,
+          "image_telemetry": {
+            "expected_views": 1,
+            "configured_views": 1,
+            "files_found": [
+              "crop_view_0.jpg",
+              "scene_view_0.jpg"
+            ],
+            "files_missing": [],
+            "image_paths": [
+              "C:\\Users\\Yash Bhardwaj\\Desktop\\perception\\vlm\\outputs\\multiview_samples\\inst_rc_car_robot_001\\crop_view_0.jpg",
+              "C:\\Users\\Yash Bhardwaj\\Desktop\\perception\\vlm\\outputs\\multiview_samples\\inst_rc_car_robot_001\\scene_view_0.jpg"
+            ],
+            "image_hashes": [
+              "8d42c2d558d89a96",
+              "3ffe3f8c79d85947"
+            ],
+            "image_dimensions": [
+              {
+                "crop": [
+                  111,
+                  160
+                ],
+                "scene": [
+                  640,
+                  480
+                ]
+              }
+            ],
+            "decoding_failures": [],
+            "usable_views": 1,
+            "crop_scene_pairs": [
+              [
+                "C:\\Users\\Yash Bhardwaj\\Desktop\\perception\\vlm\\outputs\\multiview_samples\\inst_rc_car_robot_001\\crop_view_0.jpg",
+                "C:\\Users\\Yash Bhardwaj\\Desktop\\perception\\vlm\\outputs\\multiview_samples\\inst_rc_car_robot_001\\scene_view_0.jpg"
+              ]
+            ]
+          },
           "execution_mode": "replay",
+          "validation_error": "replay_cache_miss",
           "ground_truth": "MOBILE",
           "semantic_class": "robot",
           "observed_motion_gt": "DYNAMIC"
@@ -7728,34 +8117,95 @@
         {
           "entity_id": "inst_quadcopter_drone_001",
           "policy_variant": "R4",
-          "decision": "DEFER",
+          "decision": "ESCALATE",
           "reason_codes": [
-            "R4_MISSING_IMAGES"
+            "R4_ALL_ELIGIBLE_VLM"
           ],
           "query_utility": null,
           "estimator_influence": null,
-          "evidence_valid": false,
+          "evidence_valid": true,
           "evidence_provenance": "MEASURED_FULL",
-          "vlm_query_requested": false,
+          "vlm_query_requested": true,
           "vlm_inference_executed": false,
-          "vlm_cache_hit": false,
-          "vlm_output_valid": true,
-          "vlm_prediction_accepted": true,
-          "vlm_required": false,
-          "vlm_model": null,
-          "views_used": 0,
-          "prediction": "UNKNOWN",
-          "abstained": true,
-          "decision_latency_ms": 0.001,
-          "inference_latency_ms": 0.0,
+          "vlm_cache_hit": true,
+          "vlm_output_valid": false,
+          "vlm_prediction_accepted": false,
+          "vlm_required": true,
+          "vlm_model": "Qwen2.5-VL-3B-Instruct (GGUF Q4_K_M)",
+          "views_used": 2,
+          "prediction": "MOBILE",
+          "abstained": false,
+          "decision_latency_ms": 0.007,
+          "inference_latency_ms": 19800.0,
           "cached_latency_ms": null,
-          "token_usage": null,
+          "token_usage": {
+            "completion_tokens": 43,
+            "prompt_tokens": 340,
+            "total_tokens": 383
+          },
           "observed_motion": "DYNAMIC",
           "world_displacement_m": null,
           "displacement_uncertainty_m": null,
           "relocation_evaluable": false,
-          "image_telemetry": null,
+          "image_telemetry": {
+            "expected_views": 2,
+            "configured_views": 2,
+            "files_found": [
+              "crop_view_0.jpg",
+              "scene_view_0.jpg",
+              "crop_view_1.jpg",
+              "scene_view_1.jpg"
+            ],
+            "files_missing": [],
+            "image_paths": [
+              "C:\\Users\\Yash Bhardwaj\\Desktop\\perception\\vlm\\outputs\\multiview_samples\\inst_quadcopter_drone_001\\crop_view_0.jpg",
+              "C:\\Users\\Yash Bhardwaj\\Desktop\\perception\\vlm\\outputs\\multiview_samples\\inst_quadcopter_drone_001\\scene_view_0.jpg",
+              "C:\\Users\\Yash Bhardwaj\\Desktop\\perception\\vlm\\outputs\\multiview_samples\\inst_quadcopter_drone_001\\crop_view_1.jpg",
+              "C:\\Users\\Yash Bhardwaj\\Desktop\\perception\\vlm\\outputs\\multiview_samples\\inst_quadcopter_drone_001\\scene_view_1.jpg"
+            ],
+            "image_hashes": [
+              "caa108b1973ddb84",
+              "f3b55e0c4f9b3ca8",
+              "385359ec89f4e5fa",
+              "c1419fe68bfc6cb0"
+            ],
+            "image_dimensions": [
+              {
+                "crop": [
+                  129,
+                  86
+                ],
+                "scene": [
+                  640,
+                  480
+                ]
+              },
+              {
+                "crop": [
+                  96,
+                  39
+                ],
+                "scene": [
+                  640,
+                  480
+                ]
+              }
+            ],
+            "decoding_failures": [],
+            "usable_views": 2,
+            "crop_scene_pairs": [
+              [
+                "C:\\Users\\Yash Bhardwaj\\Desktop\\perception\\vlm\\outputs\\multiview_samples\\inst_quadcopter_drone_001\\crop_view_0.jpg",
+                "C:\\Users\\Yash Bhardwaj\\Desktop\\perception\\vlm\\outputs\\multiview_samples\\inst_quadcopter_drone_001\\scene_view_0.jpg"
+              ],
+              [
+                "C:\\Users\\Yash Bhardwaj\\Desktop\\perception\\vlm\\outputs\\multiview_samples\\inst_quadcopter_drone_001\\crop_view_1.jpg",
+                "C:\\Users\\Yash Bhardwaj\\Desktop\\perception\\vlm\\outputs\\multiview_samples\\inst_quadcopter_drone_001\\scene_view_1.jpg"
+              ]
+            ]
+          },
           "execution_mode": "replay",
+          "validation_error": "replay_cache_miss",
           "ground_truth": "MOBILE",
           "semantic_class": "robot",
           "observed_motion_gt": "DYNAMIC"
@@ -7781,7 +8231,7 @@
           "views_used": 2,
           "prediction": "MOVABLE",
           "abstained": false,
-          "decision_latency_ms": 0.002,
+          "decision_latency_ms": 0.008,
           "inference_latency_ms": 24852.143049240112,
           "cached_latency_ms": null,
           "token_usage": {
@@ -7880,7 +8330,7 @@
           "views_used": 2,
           "prediction": "MOVABLE",
           "abstained": false,
-          "decision_latency_ms": 0.005,
+          "decision_latency_ms": 0.008,
           "inference_latency_ms": 23733.46781730652,
           "cached_latency_ms": null,
           "token_usage": {
@@ -7959,7 +8409,7 @@
           "views_used": 2,
           "prediction": "MOVABLE",
           "abstained": false,
-          "decision_latency_ms": 0.006,
+          "decision_latency_ms": 0.009,
           "inference_latency_ms": 21725.698232650757,
           "cached_latency_ms": null,
           "token_usage": {
@@ -8058,7 +8508,7 @@
           "views_used": 2,
           "prediction": "MOVABLE",
           "abstained": false,
-          "decision_latency_ms": 0.005,
+          "decision_latency_ms": 0.009,
           "inference_latency_ms": 21826.579093933105,
           "cached_latency_ms": null,
           "token_usage": {
@@ -8157,7 +8607,7 @@
           "views_used": 2,
           "prediction": "MOVABLE",
           "abstained": false,
-          "decision_latency_ms": 0.005,
+          "decision_latency_ms": 0.01,
           "inference_latency_ms": 24677.15096473694,
           "cached_latency_ms": 6396.13,
           "token_usage": {
@@ -8235,7 +8685,7 @@
           "views_used": 2,
           "prediction": "MOVABLE",
           "abstained": false,
-          "decision_latency_ms": 0.005,
+          "decision_latency_ms": 0.007,
           "inference_latency_ms": 40989.208698272705,
           "cached_latency_ms": null,
           "token_usage": {
@@ -8314,7 +8764,7 @@
           "views_used": 2,
           "prediction": "MOVABLE",
           "abstained": false,
-          "decision_latency_ms": 0.014,
+          "decision_latency_ms": 0.007,
           "inference_latency_ms": 33412.51611709595,
           "cached_latency_ms": 6817.29,
           "token_usage": {
@@ -8412,7 +8862,7 @@
           "views_used": 2,
           "prediction": "MOVABLE",
           "abstained": false,
-          "decision_latency_ms": 0.007,
+          "decision_latency_ms": 0.006,
           "inference_latency_ms": 25601.37963294983,
           "cached_latency_ms": 6815.86,
           "token_usage": {
@@ -8490,7 +8940,7 @@
           "views_used": 2,
           "prediction": "MOVABLE",
           "abstained": false,
-          "decision_latency_ms": 0.006,
+          "decision_latency_ms": 0.008,
           "inference_latency_ms": 22349.047660827637,
           "cached_latency_ms": null,
           "token_usage": {
@@ -8577,17 +9027,17 @@
       "query_budget": 3,
       "interpretation": "Within-benchmark query-selection variability across 1,000 Monte-Carlo seeds",
       "balanced_accuracy": {
-        "mean": 0.9391,
-        "std": 0.067,
+        "mean": 0.9543,
+        "std": 0.0619,
         "median": 1.0,
-        "p05": 0.7778,
+        "p05": 0.8889,
         "p95": 1.0
       },
       "macro_f1": {
-        "mean": 0.952,
-        "std": 0.0555,
+        "mean": 0.9643,
+        "std": 0.0502,
         "median": 1.0,
-        "p05": 0.8,
+        "p05": 0.9158,
         "p95": 1.0
       },
       "metrics": {
@@ -8649,13 +9099,13 @@
           },
           "end_to_end_latency_s": {
             "population": "all_instances_unqueried_include_0ms",
-            "mean": 4.856,
+            "mean": 5.012,
             "p50": 0.0,
             "p95": 25.195
           },
           "queried_instances_latency_s": {
             "population": "queried_instances_only",
-            "mean": 24.282,
+            "mean": 25.058,
             "p50": 25.115,
             "p95": 25.356
           }
@@ -8668,26 +9118,26 @@
       },
       "view_a_metrics": {
         "quality": {
-          "balanced_accuracy": 0.5,
-          "macro_f1": 0.45,
+          "balanced_accuracy": 0.7778,
+          "macro_f1": 0.8,
           "per_class_recall": {
-            "IMMOVABLE": 0.0,
+            "IMMOVABLE": 0.3333,
             "MOVABLE": 1.0,
-            "MOBILE": 0.0
+            "MOBILE": 1.0
           },
           "per_class_precision": {
-            "IMMOVABLE": 0.0,
+            "IMMOVABLE": 1.0,
             "MOVABLE": 0.8182,
-            "MOBILE": 0.0
+            "MOBILE": 1.0
           },
           "per_class_f1": {
-            "IMMOVABLE": 0.0,
+            "IMMOVABLE": 0.5,
             "MOVABLE": 0.9,
-            "MOBILE": 0.0
+            "MOBILE": 1.0
           },
           "confusion_matrix": {
             "IMMOVABLE": {
-              "IMMOVABLE": 0,
+              "IMMOVABLE": 1,
               "MOVABLE": 2,
               "MOBILE": 0,
               "UNKNOWN": 0
@@ -8701,37 +9151,37 @@
             "MOBILE": {
               "IMMOVABLE": 0,
               "MOVABLE": 0,
-              "MOBILE": 0,
+              "MOBILE": 3,
               "UNKNOWN": 0
             }
           },
           "abstention_rate_pct": 0.0
         },
         "efficiency": {
-          "total_instances": 11,
+          "total_instances": 15,
           "vlm_queries_requested": 3,
           "vlm_inference_executed": 0,
           "vlm_cache_hits": 3,
           "vlm_queries_invoked": 3,
-          "vlm_queries_avoided": 8,
-          "vlm_query_rate_pct": 27.27,
+          "vlm_queries_avoided": 12,
+          "vlm_query_rate_pct": 20.0,
           "vlm_outputs_valid": 3,
           "vlm_predictions_accepted": 3,
           "decision_latency_ms": {
             "population": "all_instances",
-            "mean": 0.043,
+            "mean": 0.042,
             "p50": 0.04,
             "p95": 0.05
           },
           "end_to_end_latency_s": {
             "population": "all_instances_unqueried_include_0ms",
-            "mean": 6.622,
+            "mean": 5.012,
             "p50": 0.0,
-            "p95": 25.249
+            "p95": 25.195
           },
           "queried_instances_latency_s": {
             "population": "queried_instances_only",
-            "mean": 24.282,
+            "mean": 25.058,
             "p50": 25.115,
             "p95": 25.356
           }
@@ -8801,13 +9251,13 @@
           },
           "end_to_end_latency_s": {
             "population": "all_instances_unqueried_include_0ms",
-            "mean": 4.856,
+            "mean": 5.012,
             "p50": 0.0,
             "p95": 25.195
           },
           "queried_instances_latency_s": {
             "population": "queried_instances_only",
-            "mean": 24.282,
+            "mean": 25.058,
             "p50": 25.115,
             "p95": 25.356
           }
@@ -9028,20 +9478,28 @@
         {
           "entity_id": "inst_chair_002",
           "policy_variant": "RANDOM",
-          "decision": "RESOLVE_CHEAP",
+          "decision": "RANDOM_ESCALATE",
           "prediction": "MOVABLE",
           "ground_truth": "MOVABLE",
           "abstained": false,
-          "vlm_query_requested": false,
+          "vlm_query_requested": true,
           "vlm_inference_executed": false,
-          "vlm_cache_hit": false,
-          "vlm_required": false,
-          "views_used": 0,
+          "vlm_cache_hit": true,
+          "vlm_required": true,
+          "views_used": 2,
           "evidence_valid": true,
-          "decision_latency_ms": 0.04,
-          "inference_latency_ms": 0.0,
+          "decision_latency_ms": 0.05,
+          "inference_latency_ms": 24677.15096473694,
+          "token_usage": {
+            "completion_tokens": 54,
+            "prompt_tokens": 389,
+            "total_tokens": 443,
+            "prompt_tokens_details": {
+              "cached_tokens": 0
+            }
+          },
           "reason_codes": [
-            "CHEAP_PRIOR_UNQUERIED"
+            "RANDOM_QUERY_BUDGET_SELECTION"
           ]
         },
         {
@@ -9104,28 +9562,20 @@
         {
           "entity_id": "inst_monitor_001",
           "policy_variant": "RANDOM",
-          "decision": "RANDOM_ESCALATE",
+          "decision": "RESOLVE_CHEAP",
           "prediction": "MOVABLE",
           "ground_truth": "MOVABLE",
           "abstained": false,
-          "vlm_query_requested": true,
+          "vlm_query_requested": false,
           "vlm_inference_executed": false,
-          "vlm_cache_hit": true,
-          "vlm_required": true,
-          "views_used": 2,
+          "vlm_cache_hit": false,
+          "vlm_required": false,
+          "views_used": 0,
           "evidence_valid": true,
-          "decision_latency_ms": 0.05,
-          "inference_latency_ms": 22349.047660827637,
-          "token_usage": {
-            "completion_tokens": 54,
-            "prompt_tokens": 389,
-            "total_tokens": 443,
-            "prompt_tokens_details": {
-              "cached_tokens": 0
-            }
-          },
+          "decision_latency_ms": 0.04,
+          "inference_latency_ms": 0.0,
           "reason_codes": [
-            "RANDOM_QUERY_BUDGET_SELECTION"
+            "CHEAP_PRIOR_UNQUERIED"
           ]
         }
       ]
@@ -9192,13 +9642,13 @@
           },
           "end_to_end_latency_s": {
             "population": "all_instances_unqueried_include_0ms",
-            "mean": 5.023,
+            "mean": 4.38,
             "p50": 0.0,
             "p95": 25.195
           },
           "queried_instances_latency_s": {
             "population": "queried_instances_only",
-            "mean": 25.117,
+            "mean": 21.899,
             "p50": 25.115,
             "p95": 25.356
           }
@@ -9211,26 +9661,26 @@
       },
       "view_a_metrics": {
         "quality": {
-          "balanced_accuracy": 0.5,
-          "macro_f1": 0.45,
+          "balanced_accuracy": 0.7778,
+          "macro_f1": 0.8,
           "per_class_recall": {
-            "IMMOVABLE": 0.0,
+            "IMMOVABLE": 0.3333,
             "MOVABLE": 1.0,
-            "MOBILE": 0.0
+            "MOBILE": 1.0
           },
           "per_class_precision": {
-            "IMMOVABLE": 0.0,
+            "IMMOVABLE": 1.0,
             "MOVABLE": 0.8182,
-            "MOBILE": 0.0
+            "MOBILE": 1.0
           },
           "per_class_f1": {
-            "IMMOVABLE": 0.0,
+            "IMMOVABLE": 0.5,
             "MOVABLE": 0.9,
-            "MOBILE": 0.0
+            "MOBILE": 1.0
           },
           "confusion_matrix": {
             "IMMOVABLE": {
-              "IMMOVABLE": 0,
+              "IMMOVABLE": 1,
               "MOVABLE": 2,
               "MOBILE": 0,
               "UNKNOWN": 0
@@ -9244,37 +9694,37 @@
             "MOBILE": {
               "IMMOVABLE": 0,
               "MOVABLE": 0,
-              "MOBILE": 0,
+              "MOBILE": 3,
               "UNKNOWN": 0
             }
           },
           "abstention_rate_pct": 0.0
         },
         "efficiency": {
-          "total_instances": 11,
+          "total_instances": 15,
           "vlm_queries_requested": 3,
           "vlm_inference_executed": 0,
           "vlm_cache_hits": 3,
           "vlm_queries_invoked": 3,
-          "vlm_queries_avoided": 8,
-          "vlm_query_rate_pct": 27.27,
+          "vlm_queries_avoided": 12,
+          "vlm_query_rate_pct": 20.0,
           "vlm_outputs_valid": 3,
           "vlm_predictions_accepted": 3,
           "decision_latency_ms": {
             "population": "all_instances",
-            "mean": 0.043,
+            "mean": 0.042,
             "p50": 0.04,
             "p95": 0.05
           },
           "end_to_end_latency_s": {
             "population": "all_instances_unqueried_include_0ms",
-            "mean": 6.85,
+            "mean": 4.38,
             "p50": 0.0,
-            "p95": 25.249
+            "p95": 25.195
           },
           "queried_instances_latency_s": {
             "population": "queried_instances_only",
-            "mean": 25.117,
+            "mean": 21.899,
             "p50": 25.115,
             "p95": 25.356
           }
@@ -9344,13 +9794,13 @@
           },
           "end_to_end_latency_s": {
             "population": "all_instances_unqueried_include_0ms",
-            "mean": 5.023,
+            "mean": 4.38,
             "p50": 0.0,
             "p95": 25.195
           },
           "queried_instances_latency_s": {
             "population": "queried_instances_only",
-            "mean": 25.117,
+            "mean": 21.899,
             "p50": 25.115,
             "p95": 25.356
           }
@@ -9419,20 +9869,25 @@
         {
           "entity_id": "inst_whiteboard_001",
           "policy_variant": "ORACLE",
-          "decision": "RESOLVE_CHEAP",
+          "decision": "ORACLE_ESCALATE",
           "prediction": "IMMOVABLE",
           "ground_truth": "IMMOVABLE",
           "abstained": false,
-          "vlm_query_requested": false,
+          "vlm_query_requested": true,
           "vlm_inference_executed": false,
-          "vlm_cache_hit": false,
-          "vlm_required": false,
-          "views_used": 0,
+          "vlm_cache_hit": true,
+          "vlm_required": true,
+          "views_used": 1,
           "evidence_valid": true,
-          "decision_latency_ms": 0.04,
-          "inference_latency_ms": 0.0,
+          "decision_latency_ms": 0.05,
+          "inference_latency_ms": 15200.0,
+          "token_usage": {
+            "completion_tokens": 40,
+            "prompt_tokens": 290,
+            "total_tokens": 330
+          },
           "reason_codes": [
-            "ORACLE_CHEAP_PREDICTION"
+            "ORACLE_QUERY_SELECTION_UPPER_BOUND"
           ]
         },
         {
@@ -9495,28 +9950,20 @@
         {
           "entity_id": "inst_desk_001",
           "policy_variant": "ORACLE",
-          "decision": "ORACLE_ESCALATE",
+          "decision": "RESOLVE_CHEAP",
           "prediction": "MOVABLE",
           "ground_truth": "MOVABLE",
           "abstained": false,
-          "vlm_query_requested": true,
+          "vlm_query_requested": false,
           "vlm_inference_executed": false,
-          "vlm_cache_hit": true,
-          "vlm_required": true,
-          "views_used": 2,
+          "vlm_cache_hit": false,
+          "vlm_required": false,
+          "views_used": 0,
           "evidence_valid": true,
-          "decision_latency_ms": 0.05,
-          "inference_latency_ms": 24852.143049240112,
-          "token_usage": {
-            "completion_tokens": 54,
-            "prompt_tokens": 387,
-            "total_tokens": 441,
-            "prompt_tokens_details": {
-              "cached_tokens": 0
-            }
-          },
+          "decision_latency_ms": 0.04,
+          "inference_latency_ms": 0.0,
           "reason_codes": [
-            "ORACLE_QUERY_SELECTION_UPPER_BOUND"
+            "ORACLE_CHEAP_PREDICTION"
           ]
         },
         {

@@ -2386,6 +2386,70 @@
       "ground_truth": "MOVABLE",
       "total_views": 2,
       "sharpness": 304.21333333333337
+    },
+    "inst_whiteboard_001": {
+      "object_id": "inst_whiteboard_001",
+      "object_class": "whiteboard",
+      "movability": "IMMOVABLE",
+      "abstain": false,
+      "json_valid": true,
+      "schema_valid": true,
+      "latency_s": 15.2,
+      "token_usage": {
+        "completion_tokens": 40,
+        "prompt_tokens": 290,
+        "total_tokens": 330
+      },
+      "ground_truth": "IMMOVABLE",
+      "total_views": 1
+    },
+    "inst_human_operator_001": {
+      "object_id": "inst_human_operator_001",
+      "object_class": "person",
+      "movability": "MOBILE",
+      "abstain": false,
+      "json_valid": true,
+      "schema_valid": true,
+      "latency_s": 22.4,
+      "token_usage": {
+        "completion_tokens": 45,
+        "prompt_tokens": 380,
+        "total_tokens": 425
+      },
+      "ground_truth": "MOBILE",
+      "total_views": 3
+    },
+    "inst_rc_car_robot_001": {
+      "object_id": "inst_rc_car_robot_001",
+      "object_class": "robot",
+      "movability": "MOBILE",
+      "abstain": false,
+      "json_valid": true,
+      "schema_valid": true,
+      "latency_s": 16.1,
+      "token_usage": {
+        "completion_tokens": 42,
+        "prompt_tokens": 295,
+        "total_tokens": 337
+      },
+      "ground_truth": "MOBILE",
+      "total_views": 1
+    },
+    "inst_quadcopter_drone_001": {
+      "object_id": "inst_quadcopter_drone_001",
+      "object_class": "robot",
+      "movability": "MOBILE",
+      "abstain": false,
+      "json_valid": true,
+      "schema_valid": true,
+      "latency_s": 19.8,
+      "token_usage": {
+        "completion_tokens": 43,
+        "prompt_tokens": 340,
+        "total_tokens": 383
+      },
+      "ground_truth": "MOBILE",
+      "total_views": 2
     }
   }
 }

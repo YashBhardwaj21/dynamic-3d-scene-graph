@@ -1,8 +1,8 @@
 {
   "experiment_name": "dynamic_3d_scene_graph_full_pipeline",
-  "timestamp": 1792095262.4545808,
-  "execution_duration_seconds": 6.99,
-  "git_commit": "e9c336408479b2a2a468882974a3a022a48ab0e7",
+  "timestamp": 1792123993.3300173,
+  "execution_duration_seconds": 8.54,
+  "git_commit": "4129e2efd7bbd390daaead8c95b797a67539bfcc",
   "input_artifacts": {
     "observations_file": "C:\\Users\\Yash Bhardwaj\\Desktop\\perception\\vlm\\outputs\\object_observations.jsonl",
     "observations_sha256": "8f6bed9551e57c6320868512e4c29697d2942b1e4ee537d7071aa21238dfab2e",
@@ -36,8 +36,8 @@
     "total_nodes": 195,
     "stationary_fused_entities": 29,
     "relocated_fused_entities": 12,
-    "invalidated_slam_landmarks": 12,
-    "nodes_preserving_pose_history": 12
+    "invalidated_slam_landmarks": 29,
+    "nodes_preserving_pose_history": 15
   },
   "output_artifacts": {
     "scene_graph_json": "C:\\Users\\Yash Bhardwaj\\Desktop\\perception\\vlm\\outputs\\full_experiment_run\\scene_graph.json",

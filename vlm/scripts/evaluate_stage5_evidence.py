@@ -170,12 +170,49 @@ def evaluate_stage5() -> Dict[str, Any]:
                 continue
 
             pt_xy = np.array(c_floor[:2], dtype=np.float64)
+            depth = o.get("centroid_camera", [0, 0, 1.5])[2] if o.get("centroid_camera") else 1.5
+            pts_count = o.get("points_count", 100)
+
+            rec = {"pt": pt_xy, "depth": depth, "pts_count": pts_count}
             if "recording_01" in sess:
-                s1_entity_points[eid].append(pt_xy)
+                s1_entity_points[eid].append(rec)
             elif "recording_02" in sess:
                 # Transform Session 2 observations into Session 1 world frame
                 pt_trans = R_12 @ pt_xy + t_vec
-                s2_entity_points[eid].append(pt_trans)
+                rec_trans = {"pt": pt_trans, "depth": depth, "pts_count": pts_count}
+                s2_entity_points[eid].append(rec_trans)
+
+    def _compute_robust_centroid(records: List[Dict[str, Any]]) -> Tuple[np.ndarray, float]:
+        """Compute robust 3D centroid with MAD outlier culling and inverse-depth-variance weighting."""
+        if not records:
+            return np.zeros(2), 0.05
+        raw_pts = np.array([r["pt"] for r in records], dtype=np.float64)
+        weights = []
+        for r in records:
+            d = max(0.4, float(r.get("depth", 1.5)))
+            sigma_z = 0.01 * (d ** 2)
+            pts_cnt = max(10, int(r.get("pts_count", 100)))
+            w = math.sqrt(pts_cnt) / (sigma_z ** 2)
+            weights.append(w)
+        weights = np.array(weights, dtype=np.float64)
+
+        med = np.median(raw_pts, axis=0)
+        dists = np.linalg.norm(raw_pts - med, axis=1)
+        mad = float(np.median(dists))
+        thresh = max(0.20, 2.5 * mad)
+
+        inliers = dists <= thresh
+        if np.sum(inliers) >= 2:
+            clean_pts = raw_pts[inliers]
+            clean_w = weights[inliers]
+        else:
+            clean_pts = raw_pts
+            clean_w = weights
+
+        clean_w = clean_w / np.sum(clean_w)
+        centroid = np.sum(clean_pts * clean_w[:, np.newaxis], axis=0)
+        dispersion = float(np.mean(np.std(clean_pts, axis=0))) if len(clean_pts) > 1 else 0.02
+        return centroid, dispersion
 
     # Evaluate controlled physical relocations using true physical instance pairings
     controlled_targets = [
@@ -210,15 +247,12 @@ def evaluate_stage5() -> Dict[str, Any]:
         s1_id = ct["s1_id"]
         s2_id = ct["s2_id"]
         gt_disp = ct["ground_truth_m"]
-        pts1 = s1_entity_points.get(s1_id, [])
-        pts2 = s2_entity_points.get(s2_id, [])
+        recs1 = s1_entity_points.get(s1_id, [])
+        recs2 = s2_entity_points.get(s2_id, [])
 
-        if pts1 and pts2:
-            # Quality-filtered robust centroid estimation via median
-            centroid1 = np.median(pts1, axis=0)
-            centroid2 = np.median(pts2, axis=0)
-            std1 = float(np.mean(np.std(pts1, axis=0))) if len(pts1) > 1 else 0.02
-            std2 = float(np.mean(np.std(pts2, axis=0))) if len(pts2) > 1 else 0.02
+        if recs1 and recs2:
+            centroid1, std1 = _compute_robust_centroid(recs1)
+            centroid2, std2 = _compute_robust_centroid(recs2)
             uncertainty_m = float(math.sqrt(std1**2 + std2**2))
 
             est_disp = float(np.linalg.norm(centroid2 - centroid1))
@@ -238,11 +272,12 @@ def evaluate_stage5() -> Dict[str, Any]:
                 "absolute_error_m": round(err_m, 4),
                 "relative_error_pct": round(rel_err, 2),
                 "estimated_uncertainty_m": round(uncertainty_m, 4),
-                "session1_obs_count": len(pts1),
-                "session2_obs_count": len(pts2),
+                "session1_obs_count": len(recs1),
+                "session2_obs_count": len(recs2),
                 "registration_status": "SE2_REGISTERED",
                 "provenance": ct["provenance"],
             })
+
         else:
             controlled_eval.append({
                 "target": ct["name"],

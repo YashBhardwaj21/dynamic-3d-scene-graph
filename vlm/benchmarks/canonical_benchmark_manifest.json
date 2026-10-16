@@ -13,12 +13,12 @@
       }
     },
     "pop_39_image_eligible": {
-      "count": 39,
+      "count": 43,
       "description": "All 39 physical instances with verified harvested multi-view crops and scenes",
       "categories": {
-        "IMMOVABLE": 2,
+        "IMMOVABLE": 3,
         "MOVABLE": 37,
-        "MOBILE": 0
+        "MOBILE": 3
       }
     },
     "pop_15_balanced_router": {
@@ -2845,10 +2845,26 @@
         "semantic_mapping_my_desk_recording_02"
       ],
       "visual_evidence": {
-        "has_images": false,
-        "views_count": 0,
-        "crops_dir": null,
-        "images": []
+        "has_images": true,
+        "views_count": 3,
+        "crops_dir": "vlm/outputs/multiview_samples/inst_human_operator_001",
+        "images": [
+          {
+            "filename": "crop_view_0.jpg",
+            "relative_path": "vlm/outputs/multiview_samples/inst_human_operator_001/crop_view_0.jpg",
+            "image_type": "crop"
+          },
+          {
+            "filename": "crop_view_1.jpg",
+            "relative_path": "vlm/outputs/multiview_samples/inst_human_operator_001/crop_view_1.jpg",
+            "image_type": "crop"
+          },
+          {
+            "filename": "crop_view_2.jpg",
+            "relative_path": "vlm/outputs/multiview_samples/inst_human_operator_001/crop_view_2.jpg",
+            "image_type": "crop"
+          }
+        ]
       },
       "evaluation_memberships": {
         "pop_52_ground_truth": true,
@@ -3303,10 +3319,21 @@
         "semantic_mapping_my_desk_recording_02"
       ],
       "visual_evidence": {
-        "has_images": false,
-        "views_count": 0,
-        "crops_dir": null,
-        "images": []
+        "has_images": true,
+        "views_count": 2,
+        "crops_dir": "vlm/outputs/multiview_samples/inst_quadcopter_drone_001",
+        "images": [
+          {
+            "filename": "crop_view_0.jpg",
+            "relative_path": "vlm/outputs/multiview_samples/inst_quadcopter_drone_001/crop_view_0.jpg",
+            "image_type": "crop"
+          },
+          {
+            "filename": "crop_view_1.jpg",
+            "relative_path": "vlm/outputs/multiview_samples/inst_quadcopter_drone_001/crop_view_1.jpg",
+            "image_type": "crop"
+          }
+        ]
       },
       "evaluation_memberships": {
         "pop_52_ground_truth": true,
@@ -3341,10 +3368,16 @@
         "semantic_mapping_my_desk_recording_02"
       ],
       "visual_evidence": {
-        "has_images": false,
-        "views_count": 0,
-        "crops_dir": null,
-        "images": []
+        "has_images": true,
+        "views_count": 1,
+        "crops_dir": "vlm/outputs/multiview_samples/inst_rc_car_robot_001",
+        "images": [
+          {
+            "filename": "crop_view_0.jpg",
+            "relative_path": "vlm/outputs/multiview_samples/inst_rc_car_robot_001/crop_view_0.jpg",
+            "image_type": "crop"
+          }
+        ]
       },
       "evaluation_memberships": {
         "pop_52_ground_truth": true,
@@ -3690,10 +3723,16 @@
       "associated_tracks": [],
       "sessions_observed": [],
       "visual_evidence": {
-        "has_images": false,
-        "views_count": 0,
-        "crops_dir": null,
-        "images": []
+        "has_images": true,
+        "views_count": 1,
+        "crops_dir": "vlm/outputs/multiview_samples/inst_whiteboard_001",
+        "images": [
+          {
+            "filename": "crop_view_0.jpg",
+            "relative_path": "vlm/outputs/multiview_samples/inst_whiteboard_001/crop_view_0.jpg",
+            "image_type": "crop"
+          }
+        ]
       },
       "evaluation_memberships": {
         "pop_52_ground_truth": false,

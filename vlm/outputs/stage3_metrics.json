@@ -1,13 +1,13 @@
 {
   "dataset_summary": {
     "total_verified_physical_objects": 52,
-    "objects_with_multiview_samples": 39,
+    "objects_with_multiview_samples": 42,
     "objects_with_3_diverse_views": 8,
-    "objects_with_2_diverse_views": 16,
-    "objects_with_1_view": 15,
-    "total_views_extracted": 71,
-    "mean_views_per_physical_instance": 1.82,
-    "mean_image_sharpness_score": 1509.59
+    "objects_with_2_diverse_views": 18,
+    "objects_with_1_view": 16,
+    "total_views_extracted": 76,
+    "mean_views_per_physical_instance": 1.81,
+    "mean_image_sharpness_score": 1506.9
   },
   "provenance_and_data_integrity": {
     "total_raw_observations_processed": 7956,
@@ -20,13 +20,13 @@
   },
   "viewpoint_diversity": {
     "angular_spread_min_deg": 12.8,
-    "mean_angular_spread_deg": 36.2,
-    "max_angular_spread_deg": 90.5,
+    "mean_angular_spread_deg": 42.0,
+    "max_angular_spread_deg": 148.4,
     "min_required_angular_separation_deg": 12.0
   },
   "track_continuity_and_provenance": {
     "total_physical_tracks_mapped": 52,
-    "total_associated_observations": 3579,
-    "coverage_pct": 75.0
+    "total_associated_observations": 4421,
+    "coverage_pct": 80.77
   }
 }

@@ -404,10 +404,10 @@ def generate_ablation_markdown_report(ablation_results: Dict[str, Any], output_p
         "",
         "## 2. Dual Evaluation Standards",
         "",
-        "### View A: Matched Image-Eligible Population (N = 11)",
-        "Evaluates multimodal visual reasoning across all instances that possess verified visual crop context:",
+        f"### View A: Matched Image-Eligible Population (N = {eligible_inst})",
+        "Evaluates multimodal visual reasoning across all instances that possess verified visual crop context (now including all 3 classes: IMMOVABLE, MOVABLE, MOBILE):",
         "",
-        "| Policy / Condition | Balanced Accuracy | Macro-F1 | IMMOVABLE Recall | MOVABLE Recall | MOBILE Recall | Abstention Rate | VLM Query Rate | Queries Invoked | Mean E2E Latency |",
+        "| Policy / Condition | Balanced Accuracy | Macro-F1 | IMMOVABLE Recall | MOVABLE Recall | MOBILE Recall | Abstention Rate | VLM Query Rate | Queries Invoked | Projected E2E Latency* |",
         "|---|:---:|:---:|:---:|:---:|:---:|:---:|:---:|:---:|:---:|",
     ]
 
@@ -418,7 +418,7 @@ def generate_ablation_markdown_report(ablation_results: Dict[str, Any], output_p
         ("R2: Non-Estimator-Aware Selective", exp["r2_non_estimator_aware"]["view_a_metrics"]),
         ("R3: Estimator-Aware Selective", exp["r3_estimator_aware_selective"]["view_a_metrics"]),
         ("R4: All-Eligible VLM Reference", exp["r4_all_eligible_vlm"]["view_a_metrics"]),
-        ("Random Query Baseline (k=4)", exp["random_query_baseline"]["view_a_metrics"]),
+        (f"Random Query Baseline (k={exp['random_query_baseline'].get('query_budget', 4)})", exp["random_query_baseline"]["view_a_metrics"]),
         ("Oracle Upper Bound (Non-deployable)", exp["oracle_baseline"]["view_a_metrics"]),
     ]
     for label, m in view_a_exp:
@@ -437,10 +437,13 @@ def generate_ablation_markdown_report(ablation_results: Dict[str, Any], output_p
 
     lines.extend([
         "",
-        "### View B: Full End-to-End System Population (N = 15)",
+        "> [!NOTE]",
+        "> **Latency Contract & Scientific Provenance**: To preserve rigorous scientific standards, latency is reported as projected benchmark model execution time based on verified M3 model calls (~21.0s/query). This evaluation is executed via deterministic cached prediction replay (measured replay time < 1 ms/query); cached latency is never presented as new live inference time.",
+        "",
+        f"### View B: Full End-to-End System Population (N = {total_inst})",
         "Evaluates complete system deployability including missing-image instances and safe abstentions:",
         "",
-        "| Policy / Condition | Balanced Accuracy | Macro-F1 | IMMOVABLE Recall | MOVABLE Recall | MOBILE Recall | Abstention Rate | VLM Query Rate | Queries Invoked | Mean E2E Latency |",
+        "| Policy / Condition | Balanced Accuracy | Macro-F1 | IMMOVABLE Recall | MOVABLE Recall | MOBILE Recall | Abstention Rate | VLM Query Rate | Queries Invoked | Projected E2E Latency* |",
         "|---|:---:|:---:|:---:|:---:|:---:|:---:|:---:|:---:|:---:|",
     ])
 
@@ -523,10 +526,25 @@ def generate_ablation_markdown_report(ablation_results: Dict[str, Any], output_p
         "",
         "## 5. Key Research Findings",
         "",
-        "1. **Curing the Standalone VLM Mobility Bias**: Zero-shot VLM prompting (R4) incorrectly predicts `MOVABLE` for architectural fixtures (`door`, `ceiling fan`) due to linguistic associations with dynamic motion ('open/close', 'rotate/spin'). Selective routing (R3) resolves architectural structures cheaply via geometry/prior, achieving higher accuracy than All-VLM.",
-        "2. **Computational Query Reduction**: Estimator-aware routing (R3) avoids 63.6% of expensive VLM calls on image-eligible instances (4 queries vs 11 queries in R4), reducing mean latency from 15.40 s to 5.60 s.",
-        "3. **Estimator-Relevance Gating**: Background clutter and unreferenced observations with zero estimator influence ($I_{\\text{estimator}} = 0$) avoid query escalation, preserving VLM compute for landmarks that directly impact SLAM trajectory optimization.",
-        "4. **Semantic Prior Breakdown on Contextual Counterexamples**: While R0 achieves 85.2% on prototype furniture, it drops to 50.0% on contextual edge cases (rolling whiteboards, VESA-mounted monitors, carried backpacks, and out-of-vocabulary classes). Selective contextual reasoning achieves 90.0% on these cases.",
+    ])
+
+    r2_a_eff = exp["r2_non_estimator_aware"]["view_a_metrics"]["efficiency"]
+    r3_a_eff = exp["r3_estimator_aware_selective"]["view_a_metrics"]["efficiency"]
+    r4_a_eff = exp["r4_all_eligible_vlm"]["view_a_metrics"]["efficiency"]
+    q_avoided = r4_a_eff["vlm_queries_invoked"] - r3_a_eff["vlm_queries_invoked"]
+    pct_avoided = (1.0 - r3_a_eff["vlm_queries_invoked"] / max(1, r4_a_eff["vlm_queries_invoked"])) * 100.0
+    lat_r4 = r4_a_eff['end_to_end_latency_s']['mean']
+    lat_r3 = r3_a_eff['end_to_end_latency_s']['mean']
+
+    r2_b_q = exp["r2_non_estimator_aware"]["view_b_metrics"]["quality"]
+    r3_b_q = exp["r3_estimator_aware_selective"]["view_b_metrics"]["quality"]
+
+    lines.extend([
+        f"1. **Curing Standalone VLM Linguistic Mobility Bias**: Standalone zero-shot prompting (R4) misclassifies architectural fixtures (`door`, `ceiling fan`) as `MOVABLE` due to linguistic co-occurrence with motion in pre-training data. Selective routing (R3) resolves architectural structures cheaply via geometry and priors, improving balanced accuracy over R4 on View A.",
+        f"2. **Computational Query Reduction**: Estimator-aware routing (R3) avoids {pct_avoided:.1f}% of expensive VLM calls on image-eligible instances ({r3_a_eff['vlm_queries_invoked']} queries vs {r4_a_eff['vlm_queries_invoked']} queries in R4), reducing mean projected latency from {lat_r4:.2f} s to {lat_r3:.2f} s.",
+        f"3. **R2 vs R3 Empirical Finding**: On the evaluated benchmark populations, R2 (non-estimator-aware) and R3 (estimator-aware) achieve identical classification accuracy (Balanced Accuracy: {r3_b_q['balanced_accuracy']*100:.1f}%, Macro-F1: {r3_b_q['macro_f1']*100:.1f}%). The empirical evidence demonstrates that estimator awareness acts as a compute gate avoiding VLM escalation on clutter with zero estimator relevance ($I_{{\\text{{estimator}}}} = 0$), rather than improving classification decision quality on this dataset.",
+        f"4. **Estimator-Relevance Gating**: Unreferenced background clutter observations avoid expensive forward passes under R3, reserving VLM compute strictly for observations with non-zero SLAM landmark relevance.",
+        f"5. **Contextual Counterexample Failure of Naive Priors**: While R0 achieves high accuracy on canonical indoor furniture, it drops to {ce_data.get('r0_naive_accuracy', 0.0)*100:.1f}% on edge cases (rolling whiteboards, VESA-mounted monitors, carried backpacks). The deterministic physical-support rule baseline achieves {ce_data.get('deterministic_support_rule_accuracy', 0.0)*100:.1f}%, demonstrating the necessity of contextual reasoning.",
         "",
         "---",
         "",

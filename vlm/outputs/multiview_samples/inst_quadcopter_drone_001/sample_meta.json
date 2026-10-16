@@ -1,0 +1,57 @@
+{
+  "object_instance_id": "inst_quadcopter_drone_001",
+  "semantic_class": "robot",
+  "movability_gt": "MOBILE",
+  "current_motion_gt": "STATIC",
+  "displacement_gt": 0.0,
+  "total_views": 2,
+  "angular_diversity_verified": true,
+  "views": [
+    {
+      "view_index": 0,
+      "frame_index": 2115,
+      "timestamp": 1791788727.9871,
+      "viewing_angle_deg": 193.24,
+      "camera_pose": [
+        4.0629,
+        -0.3999,
+        -1.0021,
+        -0.1059,
+        -0.9284,
+        -0.0289,
+        0.355
+      ],
+      "sharpness_score": 832.58,
+      "crop_path": "inst_quadcopter_drone_001/crop_view_0.jpg",
+      "scene_path": "inst_quadcopter_drone_001/scene_view_0.jpg"
+    },
+    {
+      "view_index": 1,
+      "frame_index": 1115,
+      "timestamp": 1791797710.397,
+      "viewing_angle_deg": 341.66,
+      "camera_pose": [
+        0.606,
+        -0.3383,
+        2.0641,
+        -0.0813,
+        0.679,
+        -0.0118,
+        0.7295
+      ],
+      "sharpness_score": 2164.46,
+      "crop_path": "inst_quadcopter_drone_001/crop_view_1.jpg",
+      "scene_path": "inst_quadcopter_drone_001/scene_view_1.jpg"
+    }
+  ],
+  "conditions": {
+    "one_view": [
+      "inst_quadcopter_drone_001/crop_view_0.jpg"
+    ],
+    "two_views": [
+      "inst_quadcopter_drone_001/crop_view_0.jpg",
+      "inst_quadcopter_drone_001/crop_view_1.jpg"
+    ],
+    "three_views": []
+  }
+}

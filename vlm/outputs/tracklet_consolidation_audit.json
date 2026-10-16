@@ -15,15 +15,15 @@
   "cluster_consolidation": {
     "session_1": {
       "raw_clusters_count": 102,
-      "consolidated_clusters_count": 93,
-      "clusters_merged_count": 9,
-      "reduction_ratio_pct": 8.82
+      "consolidated_clusters_count": 102,
+      "clusters_merged_count": 0,
+      "reduction_ratio_pct": 0.0
     },
     "session_2": {
       "raw_clusters_count": 166,
-      "consolidated_clusters_count": 146,
-      "clusters_merged_count": 20,
-      "reduction_ratio_pct": 12.05
+      "consolidated_clusters_count": 164,
+      "clusters_merged_count": 2,
+      "reduction_ratio_pct": 1.2
     }
   },
   "association_comparison": {
@@ -67,11 +67,21 @@
         "static_recall_pct": 23.08,
         "recovered_instances_count": 7,
         "total_instances_count": 30
+      },
+      "proposed_uncertainty_adaptive": {
+        "matched_pairs_count": 40,
+        "annotated_eval_pairs": 12,
+        "true_positive_matches": 7,
+        "false_merges": 5,
+        "candidate_precision_pct": 58.33,
+        "static_recall_pct": 23.08,
+        "recovered_instances_count": 7,
+        "total_instances_count": 30
       }
     },
     "after_consolidation": {
       "baseline_1_nearest_centroid": {
-        "matched_pairs_count": 46,
+        "matched_pairs_count": 48,
         "annotated_eval_pairs": 12,
         "true_positive_matches": 7,
         "false_merges": 5,
@@ -81,7 +91,7 @@
         "total_instances_count": 30
       },
       "baseline_2_hungarian_gated": {
-        "matched_pairs_count": 41,
+        "matched_pairs_count": 43,
         "annotated_eval_pairs": 12,
         "true_positive_matches": 7,
         "false_merges": 5,
@@ -91,7 +101,17 @@
         "total_instances_count": 30
       },
       "proposed_uncertainty_symmetric": {
-        "matched_pairs_count": 37,
+        "matched_pairs_count": 33,
+        "annotated_eval_pairs": 11,
+        "true_positive_matches": 7,
+        "false_merges": 4,
+        "candidate_precision_pct": 63.64,
+        "static_recall_pct": 23.08,
+        "recovered_instances_count": 7,
+        "total_instances_count": 30
+      },
+      "proposed_relocation_aware": {
+        "matched_pairs_count": 41,
         "annotated_eval_pairs": 12,
         "true_positive_matches": 7,
         "false_merges": 5,
@@ -100,8 +120,8 @@
         "recovered_instances_count": 7,
         "total_instances_count": 30
       },
-      "proposed_relocation_aware": {
-        "matched_pairs_count": 43,
+      "proposed_uncertainty_adaptive": {
+        "matched_pairs_count": 41,
         "annotated_eval_pairs": 12,
         "true_positive_matches": 7,
         "false_merges": 5,

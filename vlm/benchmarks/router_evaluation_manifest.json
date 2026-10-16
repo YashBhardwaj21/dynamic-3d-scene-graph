@@ -38,9 +38,9 @@
       "observed_motion_gt": "STATIC",
       "expected_decision": "RESOLVE_CHEAP",
       "expected_reason": "CANONICAL_IMMOVABLE_ARCHITECTURAL_PRIOR",
-      "has_images": false,
-      "views_count": 0,
-      "crops_dir": null
+      "has_images": true,
+      "views_count": 1,
+      "crops_dir": "vlm/outputs/multiview_samples/inst_whiteboard_001"
     },
     {
       "entity_id": "inst_human_operator_001",
@@ -51,9 +51,9 @@
       "observed_motion_gt": "DYNAMIC",
       "expected_decision": "RESOLVE_CHEAP",
       "expected_reason": "CANONICAL_MOBILE_AGENT_PRIOR",
-      "has_images": false,
-      "views_count": 0,
-      "crops_dir": null
+      "has_images": true,
+      "views_count": 3,
+      "crops_dir": "vlm/outputs/multiview_samples/inst_human_operator_001"
     },
     {
       "entity_id": "inst_rc_car_robot_001",
@@ -64,9 +64,9 @@
       "observed_motion_gt": "DYNAMIC",
       "expected_decision": "RESOLVE_CHEAP",
       "expected_reason": "CANONICAL_MOBILE_AGENT_PRIOR",
-      "has_images": false,
-      "views_count": 0,
-      "crops_dir": null
+      "has_images": true,
+      "views_count": 1,
+      "crops_dir": "vlm/outputs/multiview_samples/inst_rc_car_robot_001"
     },
     {
       "entity_id": "inst_quadcopter_drone_001",
@@ -77,9 +77,9 @@
       "observed_motion_gt": "DYNAMIC",
       "expected_decision": "RESOLVE_CHEAP",
       "expected_reason": "CANONICAL_MOBILE_AGENT_PRIOR",
-      "has_images": false,
-      "views_count": 0,
-      "crops_dir": null
+      "has_images": true,
+      "views_count": 2,
+      "crops_dir": "vlm/outputs/multiview_samples/inst_quadcopter_drone_001"
     },
     {
       "entity_id": "inst_desk_001",

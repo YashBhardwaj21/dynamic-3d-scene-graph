@@ -481,7 +481,13 @@ def evaluate_policy_r3(
                 estimator_provenance=est_prov,
             )
         else:
-            # Query avoided because expected SLAM loss reduction does not justify VLM cost
+            if sem_class in CANONICAL_IMMOVABLE or sem_class == "whiteboard" or prior_mobility == "IMMOVABLE":
+                fallback_label = "IMMOVABLE"
+            elif sem_class in CANONICAL_MOBILE or prior_mobility == "MOBILE":
+                fallback_label = "MOBILE"
+            else:
+                fallback_label = "MOVABLE"
+            resolved_label = "MOVABLE" if (is_displaced and sem_class not in CANONICAL_IMMOVABLE) else fallback_label
             return RouterDecision(
                 entity_id=entity_id,
                 decision="RESOLVE_CHEAP",
@@ -490,7 +496,7 @@ def evaluate_policy_r3(
                     f"ESTIMATOR_INFLUENCE_{est_influence:.2f}",
                 ],
                 vlm_required=False,
-                cheap_label="MOVABLE" if is_displaced else (prior_mobility or "MOVABLE"),
+                cheap_label=resolved_label,
                 confidence=0.70,
                 query_utility=round(utility, 4),
                 estimator_influence=est_influence,

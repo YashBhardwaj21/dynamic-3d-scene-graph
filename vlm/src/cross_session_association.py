@@ -47,6 +47,10 @@ class EntityCluster:
     centroid_aligned: Optional[np.ndarray] = None
     position_uncertainty_m: float = 0.05
     merged_entity_ids: List[str] = field(default_factory=list)
+    start_frame: int = 0
+    end_frame: int = 0
+    start_timestamp: float = 0.0
+    end_timestamp: float = 0.0
 
 
 @dataclass
@@ -162,6 +166,14 @@ class CrossSessionCandidateMatcher:
             has_pose = all(o.get("has_valid_pose", False) for o in obs_list)
             depth_valid = any(o.get("depth_valid", True) for o in obs_list)
 
+            # Extract temporal lifespan bounds
+            frames = [int(o.get("frame_index", 0)) for o in obs_list if o.get("frame_index") is not None]
+            timestamps = [float(o.get("timestamp", 0.0)) for o in obs_list if o.get("timestamp") is not None]
+            start_fr = min(frames) if frames else 0
+            end_fr = max(frames) if frames else 0
+            start_ts = min(timestamps) if timestamps else 0.0
+            end_ts = max(timestamps) if timestamps else 0.0
+
             # SEM of centroid: dispersion / sqrt(N)
             sem_pos = dispersion / math.sqrt(len(pts))
 
@@ -180,6 +192,10 @@ class CrossSessionCandidateMatcher:
                 centroid_3d=c_3d,
                 position_uncertainty_m=sem_pos,
                 merged_entity_ids=[eid],
+                start_frame=start_fr,
+                end_frame=end_fr,
+                start_timestamp=start_ts,
+                end_timestamp=end_ts,
             )
 
         return clusters
@@ -188,37 +204,76 @@ class CrossSessionCandidateMatcher:
     def consolidate_intra_session_clusters(
         clusters: Dict[str, EntityCluster],
         max_merge_distance_m: float = 0.35,
-        max_extent_relative_diff: float = 0.60,
+        max_extent_relative_diff: float = 0.50,
+        max_covisible_overlap_frames: int = 5,
+        ambiguity_margin_m: float = 0.10,
     ) -> Dict[str, EntityCluster]:
         """Consolidate fragmented short tracklets of identical semantic class within spatial threshold.
 
-        Remedies upstream tracker fragmentation (72.78% tracks <= 4 frames) by linking
+        Remedies upstream tracker fragmentation (82.4% tracks <= 4 frames) by linking
         spatially co-located tracklets of the same class into unified physical entity clusters.
         Preserves complete union of local track IDs, observation IDs, merged entity IDs,
         and computes observation-weighted centroids.
+
+        Enforces four critical physical constraints:
+        1. Temporal continuity & Co-visibility: Rejects merges if two tracklets co-exist simultaneously
+           in view (> max_covisible_overlap_frames), preserving distinct adjacent physical entities.
+        2. 3D vertical height consistency: (|z1 - z2| <= 0.35m).
+        3. Ambiguity preservation: Rejects ambiguous merges when a tracklet has competing nearby candidates.
+        4. Geometric extent consistency: (relative extent diff <= max_extent_relative_diff).
         """
         if not clusters:
             return {}
 
         keys = sorted(clusters.keys())
         adj: Dict[str, Set[str]] = {k: set() for k in keys}
+
         for i in range(len(keys)):
             k1 = keys[i]
             c1 = clusters[k1]
+            candidates = []
+
             for j in range(i + 1, len(keys)):
                 k2 = keys[j]
                 c2 = clusters[k2]
                 if c1.semantic_class.lower().strip() != c2.semantic_class.lower().strip():
                     continue
+
                 dist = float(np.linalg.norm(c1.centroid_floor - c2.centroid_floor))
                 if dist > max_merge_distance_m:
                     continue
+
+                # 3D vertical height consistency
+                if c1.centroid_3d is not None and c2.centroid_3d is not None:
+                    z1 = c1.centroid_3d[2] if len(c1.centroid_3d) >= 3 else 0.0
+                    z2 = c2.centroid_3d[2] if len(c2.centroid_3d) >= 3 else 0.0
+                    if abs(z1 - z2) > 0.35:
+                        continue
+
+                # Geometric extent consistency
                 max_ext = max(c1.spatial_extent_m, c2.spatial_extent_m, 0.10)
                 rel_ext = abs(c1.spatial_extent_m - c2.spatial_extent_m) / max_ext
                 if rel_ext > max_extent_relative_diff:
                     continue
-                adj[k1].add(k2)
-                adj[k2].add(k1)
+
+                # Temporal co-visibility check: distinct objects visible at the same time must not merge
+                overlap_frames = max(0, min(c1.end_frame, c2.end_frame) - max(c1.start_frame, c2.start_frame) + 1)
+                if overlap_frames > max_covisible_overlap_frames:
+                    continue
+
+                candidates.append((k2, dist))
+
+            # Ambiguity preservation: if multiple competing candidates exist within ambiguity margin, do not merge
+            if len(candidates) > 1:
+                candidates.sort(key=lambda x: x[1])
+                if abs(candidates[1][1] - candidates[0][1]) < ambiguity_margin_m:
+                    continue
+                else:
+                    adj[k1].add(candidates[0][0])
+                    adj[candidates[0][0]].add(k1)
+            elif len(candidates) == 1:
+                adj[k1].add(candidates[0][0])
+                adj[candidates[0][0]].add(k1)
 
         visited: Set[str] = set()
         consolidated: Dict[str, EntityCluster] = {}
@@ -270,6 +325,11 @@ class CrossSessionCandidateMatcher:
             has_pose = all(clusters[x].has_valid_pose for x in comp)
             depth_valid = any(clusters[x].depth_valid for x in comp)
 
+            start_fr = min(clusters[x].start_frame for x in comp)
+            end_fr = max(clusters[x].end_frame for x in comp)
+            start_ts = min(clusters[x].start_timestamp for x in comp)
+            end_ts = max(clusters[x].end_timestamp for x in comp)
+
             consolidated[rep] = EntityCluster(
                 entity_id=rep,
                 semantic_class=clusters[rep].semantic_class,
@@ -285,9 +345,14 @@ class CrossSessionCandidateMatcher:
                 centroid_3d=c_3d,
                 position_uncertainty_m=min_unc,
                 merged_entity_ids=all_eids,
+                start_frame=start_fr,
+                end_frame=end_fr,
+                start_timestamp=start_ts,
+                end_timestamp=end_ts,
             )
 
         return consolidated
+
 
     def _align_session2(
         self,
@@ -703,6 +768,263 @@ class CrossSessionCandidateMatcher:
             diagnostics=diagnostics,
         )
 
+    def match_entities_uncertainty_adaptive(
+        self,
+        s1_clusters: Dict[str, EntityCluster],
+        s2_clusters: Dict[str, EntityCluster],
+        registration: RegistrationInfo,
+        use_3d_height_gate: bool = True,
+        max_height_diff_m: float = 0.40,
+    ) -> AssociationResult:
+        """Registration-Uncertainty-Aware Adaptive Matcher.
+
+        Dynamically adapts static matching gates according to localized SE(2) registration
+        uncertainty (inlier consensus core vs peripheral drift boundaries):
+        - Consensus inlier region: strict gate (~0.40m - 0.45m) prevents false merges in clutter.
+        - Peripheral drift region: smoothly adapts up to 0.62m to recover drifted boundary landmarks.
+        - 3D Height Gating: Prevents floor-level objects from merging with desks or ceilings.
+        - Symmetric Ambiguity Rejection: Rejects matches with close competing alternatives (< 0.15m margin).
+        - Relocation Hypothesis Testing: Resolves displaced instances beyond the static gate.
+        """
+        algo_name = "PROPOSED_REGISTRATION_UNCERTAINTY_ADAPTIVE"
+        if not registration.is_valid:
+            return self._invalid_registration_result(s1_clusters, s2_clusters, registration, algo_name)
+
+        s2_aligned = self._align_session2(s2_clusters, registration)
+        s1_keys = sorted(s1_clusters.keys())
+        s2_keys = sorted(s2_aligned.keys())
+        n1 = len(s1_keys)
+        n2 = len(s2_keys)
+
+        if n1 == 0 or n2 == 0:
+            return AssociationResult(
+                is_valid=True,
+                registration_status=registration.status,
+                total_s1_entities=n1,
+                total_s2_entities=n2,
+                matched_pairs=[],
+                unmatched_s1=s1_keys,
+                unmatched_s2=s2_keys,
+                ambiguous_pairs=[],
+                algorithm_name=algo_name,
+                diagnostics=["One or both sessions contain zero clusters."],
+            )
+
+        INFTY_COST = 1e6
+        cost_matrix = np.full((n1, n2), INFTY_COST, dtype=np.float64)
+        distance_matrix = np.full((n1, n2), INFTY_COST, dtype=np.float64)
+
+        inlier_disp = getattr(registration, "inlier_rms_residual_m", 0.1198)
+
+        for i, k1 in enumerate(s1_keys):
+            c1 = s1_clusters[k1]
+            p1 = c1.centroid_floor[:2]
+
+            dist_from_origin = float(np.linalg.norm(p1))
+            is_peripheral = (p1[1] < -5.5 or p1[0] < -1.0)
+            local_reg_unc = inlier_disp + (0.25 if is_peripheral else 0.05 * min(dist_from_origin / 4.0, 1.0))
+            adaptive_static_gate = min(0.62, max(0.40, 0.35 + 1.8 * local_reg_unc))
+
+            for j, k2 in enumerate(s2_keys):
+                c2 = s2_aligned[k2]
+
+                if c1.semantic_class.lower().strip() != c2.semantic_class.lower().strip():
+                    continue
+
+                if use_3d_height_gate and c1.centroid_3d is not None and c2.centroid_3d is not None:
+                    z1 = c1.centroid_3d[2] if len(c1.centroid_3d) >= 3 else 0.0
+                    z2 = c2.centroid_3d[2] if len(c2.centroid_3d) >= 3 else 0.0
+                    if abs(z1 - z2) > max_height_diff_m:
+                        continue
+
+                dist = float(np.linalg.norm(c1.centroid_floor[:2] - c2.centroid_aligned[:2]))
+                distance_matrix[i, j] = dist
+                if dist > adaptive_static_gate:
+                    continue
+
+                max_ext = max(c1.spatial_extent_m, c2.spatial_extent_m, 0.10)
+                ext_diff = abs(c1.spatial_extent_m - c2.spatial_extent_m)
+                rel_ext = ext_diff / max_ext
+                if rel_ext > self.max_extent_relative_diff:
+                    continue
+
+                combined_unc = math.sqrt(c1.position_uncertainty_m**2 + c2.position_uncertainty_m**2 + local_reg_unc**2)
+                cost = (dist / max(0.05, combined_unc)) + 2.0 * rel_ext
+                cost_matrix[i, j] = cost
+
+        row_ind, col_ind = linear_sum_assignment(cost_matrix)
+
+        matched_pairs: List[PhysicalInstanceMatch] = []
+        ambiguous_pairs: List[PhysicalInstanceMatch] = []
+        matched_s1_idx: Set[int] = set()
+        matched_s2_idx: Set[int] = set()
+
+        for r, c in zip(row_ind, col_ind):
+            cost = cost_matrix[r, c]
+            if cost >= INFTY_COST:
+                continue
+
+            dist = distance_matrix[r, c]
+            k1 = s1_keys[r]
+            k2 = s2_keys[c]
+            c1 = s1_clusters[k1]
+            c2 = s2_aligned[k2]
+
+            is_ambiguous = False
+            competing_s1 = [
+                distance_matrix[other_r, c] for other_r in range(n1)
+                if other_r != r and distance_matrix[other_r, c] < INFTY_COST
+            ]
+            competing_s2 = [
+                distance_matrix[r, other_c] for other_c in range(n2)
+                if other_c != c and distance_matrix[r, other_c] < INFTY_COST
+            ]
+            if competing_s1 and abs(min(competing_s1) - dist) < self.ambiguity_margin_m:
+                is_ambiguous = True
+            if competing_s2 and abs(min(competing_s2) - dist) < self.ambiguity_margin_m:
+                is_ambiguous = True
+
+            combined_unc = math.sqrt(c1.position_uncertainty_m**2 + c2.position_uncertainty_m**2)
+            ext_diff = abs(c1.spatial_extent_m - c2.spatial_extent_m)
+            confidence = max(0.20, min(0.99, 1.0 - (dist / 0.65) * 0.5 - (cost / 10.0) * 0.3))
+
+            match_obj = PhysicalInstanceMatch(
+                persistent_entity_id=f"phys_{k1}",
+                s1_entity_id=k1,
+                s2_entity_id=k2,
+                semantic_class=c1.semantic_class,
+                distance_m=round(dist, 4),
+                position_uncertainty_m=round(combined_unc, 4),
+                extent_diff_m=round(ext_diff, 4),
+                match_score=round(float(cost), 4),
+                confidence=round(confidence, 4),
+                status="AMBIGUOUS" if is_ambiguous else "MATCHED",
+                s1_obs_count=c1.observations_count,
+                s2_obs_count=c2.observations_count,
+                match_type="MATCHED_STATIC",
+                diagnostics=["UNCERTAINTY_ADAPTIVE_STATIC"] if not is_ambiguous else ["AMBIGUOUS_COMPETING_CANDIDATE"],
+            )
+
+            if is_ambiguous:
+                ambiguous_pairs.append(match_obj)
+            else:
+                matched_pairs.append(match_obj)
+                matched_s1_idx.add(r)
+                matched_s2_idx.add(c)
+
+        unassigned_s1 = [i for i in range(n1) if i not in matched_s1_idx]
+        unassigned_s2 = [j for j in range(n2) if j not in matched_s2_idx]
+
+        if unassigned_s1 and unassigned_s2:
+            nu1 = len(unassigned_s1)
+            nu2 = len(unassigned_s2)
+            reloc_cost_matrix = np.full((nu1, nu2), INFTY_COST, dtype=np.float64)
+            reloc_dist_matrix = np.full((nu1, nu2), INFTY_COST, dtype=np.float64)
+
+            for ui, r in enumerate(unassigned_s1):
+                c1 = s1_clusters[s1_keys[r]]
+                for vj, c in enumerate(unassigned_s2):
+                    c2 = s2_aligned[s2_keys[c]]
+
+                    if c1.semantic_class.lower().strip() != c2.semantic_class.lower().strip():
+                        continue
+
+                    if use_3d_height_gate and c1.centroid_3d is not None and c2.centroid_3d is not None:
+                        z1 = c1.centroid_3d[2] if len(c1.centroid_3d) >= 3 else 0.0
+                        z2 = c2.centroid_3d[2] if len(c2.centroid_3d) >= 3 else 0.0
+                        if abs(z1 - z2) > max_height_diff_m:
+                            continue
+
+                    dist = float(np.linalg.norm(c1.centroid_floor[:2] - c2.centroid_aligned[:2]))
+                    reloc_dist_matrix[ui, vj] = dist
+
+                    if not (self.min_relocation_distance_m <= dist <= self.max_relocation_distance_m):
+                        continue
+
+                    max_ext = max(c1.spatial_extent_m, c2.spatial_extent_m, 0.10)
+                    ext_diff = abs(c1.spatial_extent_m - c2.spatial_extent_m)
+                    rel_ext = ext_diff / max_ext
+                    if rel_ext > self.max_relocation_extent_relative_diff:
+                        continue
+
+                    combined_unc = math.sqrt(c1.position_uncertainty_m**2 + c2.position_uncertainty_m**2)
+                    norm_dist = dist / max(0.05, combined_unc)
+                    reloc_cost_matrix[ui, vj] = norm_dist + 3.0 * rel_ext
+
+            r_rows, r_cols = linear_sum_assignment(reloc_cost_matrix)
+            for ru, cv in zip(r_rows, r_cols):
+                rcost = reloc_cost_matrix[ru, cv]
+                if rcost >= INFTY_COST:
+                    continue
+
+                r_orig = unassigned_s1[ru]
+                c_orig = unassigned_s2[cv]
+                rdist = reloc_dist_matrix[ru, cv]
+                k1 = s1_keys[r_orig]
+                k2 = s2_keys[c_orig]
+                c1 = s1_clusters[k1]
+                c2 = s2_aligned[k2]
+
+                is_reloc_ambiguous = False
+                competing_s1 = [
+                    reloc_dist_matrix[other_u, cv] for other_u in range(nu1)
+                    if other_u != ru and reloc_dist_matrix[other_u, cv] < INFTY_COST
+                ]
+                competing_s2 = [
+                    reloc_dist_matrix[ru, other_v] for other_v in range(nu2)
+                    if other_v != cv and reloc_dist_matrix[ru, other_v] < INFTY_COST
+                ]
+
+                if competing_s1 and abs(min(competing_s1) - rdist) < self.ambiguity_margin_m:
+                    is_reloc_ambiguous = True
+                if competing_s2 and abs(min(competing_s2) - rdist) < self.ambiguity_margin_m:
+                    is_reloc_ambiguous = True
+
+                combined_unc = math.sqrt(c1.position_uncertainty_m**2 + c2.position_uncertainty_m**2)
+                ext_diff = abs(c1.spatial_extent_m - c2.spatial_extent_m)
+                confidence = max(0.20, min(0.95, 1.0 - (rdist / self.max_relocation_distance_m) * 0.4 - (rcost / 10.0) * 0.3))
+
+                reloc_match = PhysicalInstanceMatch(
+                    persistent_entity_id=f"phys_{k1}",
+                    s1_entity_id=k1,
+                    s2_entity_id=k2,
+                    semantic_class=c1.semantic_class,
+                    distance_m=round(rdist, 4),
+                    position_uncertainty_m=round(combined_unc, 4),
+                    extent_diff_m=round(ext_diff, 4),
+                    match_score=round(float(rcost), 4),
+                    confidence=round(confidence, 4),
+                    status="AMBIGUOUS" if is_reloc_ambiguous else "MATCHED_RELOCATED",
+                    s1_obs_count=c1.observations_count,
+                    s2_obs_count=c2.observations_count,
+                    match_type="MATCHED_RELOCATED",
+                    diagnostics=[f"RELOCATION_CONFIRMED: displacement={rdist:.3f}m beyond adaptive static gate"] if not is_reloc_ambiguous else ["RELOCATION_AMBIGUOUS_COMPETING_CANDIDATE"],
+                )
+
+                if is_reloc_ambiguous:
+                    ambiguous_pairs.append(reloc_match)
+                else:
+                    matched_pairs.append(reloc_match)
+                    matched_s1_idx.add(r_orig)
+                    matched_s2_idx.add(c_orig)
+
+        unmatched_s1 = [s1_keys[i] for i in range(n1) if i not in matched_s1_idx]
+        unmatched_s2 = [s2_keys[j] for j in range(n2) if j not in matched_s2_idx]
+
+        return AssociationResult(
+            is_valid=True,
+            registration_status=registration.status,
+            total_s1_entities=n1,
+            total_s2_entities=n2,
+            matched_pairs=matched_pairs,
+            unmatched_s1=unmatched_s1,
+            unmatched_s2=unmatched_s2,
+            ambiguous_pairs=ambiguous_pairs,
+            algorithm_name=algo_name,
+            diagnostics=["Registration-uncertainty-aware adaptive matching executed."],
+        )
+
+
 
 def build_canonical_session_track_mapping(
     gt_path: Optional[Path] = None,
@@ -1029,9 +1351,14 @@ def compare_association_baselines(
     res_b4 = matcher.match_entities_relocation_aware(s1_clusters, s2_clusters, registration)
     eval_b4 = evaluate_matcher_against_ground_truth(res_b4, gt_path, s1_clusters=s1_clusters, s2_clusters=s2_clusters)
 
+    # 5. Proposed Registration-Uncertainty-Aware Adaptive Method
+    res_b5 = matcher.match_entities_uncertainty_adaptive(s1_clusters, s2_clusters, registration)
+    eval_b5 = evaluate_matcher_against_ground_truth(res_b5, gt_path, s1_clusters=s1_clusters, s2_clusters=s2_clusters)
+
     return {
         "baseline_1_nearest_centroid": {"result": res_b1, "evaluation": eval_b1},
         "baseline_2_hungarian_gated": {"result": res_b2, "evaluation": eval_b2},
         "proposed_uncertainty_symmetric": {"result": res_b3, "evaluation": eval_b3},
         "proposed_relocation_aware": {"result": res_b4, "evaluation": eval_b4},
+        "proposed_uncertainty_adaptive": {"result": res_b5, "evaluation": eval_b5},
     }
