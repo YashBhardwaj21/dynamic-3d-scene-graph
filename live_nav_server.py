@@ -49,10 +49,18 @@ class NavigationCoordinator:
     """Thread-safe coordinator managing live telemetry, D455 visual odometry,
     motor actuation, and web visualizer state."""
 
-    def __init__(self, dry_run: bool = False, cam_upright: bool = False):
+    def __init__(
+        self,
+        dry_run: bool = False,
+        cam_upright: bool = False,
+        motors_inverted: bool = False,
+        flip_gyro: bool = False,
+    ):
         self.lock = threading.Lock()
         self.dry_run = dry_run
         self.cam_upright = cam_upright
+        self.motors_inverted = motors_inverted
+        self.flip_gyro = flip_gyro
 
         # Load planner & entities
         self.planner = FastAStarPlanner(FUSED_DIR)
@@ -84,7 +92,11 @@ class NavigationCoordinator:
         self.map_png_bytes = self._generate_map_png()
 
         # Initialize hardware
-        self.driver = MotorDriver(cam_inverted=not cam_upright)
+        self.driver = MotorDriver(
+            cam_inverted=not cam_upright,
+            motors_inverted=motors_inverted,
+            flip_gyro=flip_gyro,
+        )
         self.active_nav_thread: Optional[threading.Thread] = None
 
         # Start camera frame background loop
@@ -93,54 +105,104 @@ class NavigationCoordinator:
         self.cam_thread.start()
 
     def _generate_map_png(self) -> bytes:
-        """Render high-contrast, clean 2D occupancy map with semantic entity bounding boxes
-        matching master_10_observations_tour_dashboard.png in North-Up orientation.
-        """
-        # planner.grid has Row 0 at South (Y_min); flip vertically so Row 0 is North (Y_max / top of image)
-        grid = np.flipud(self.planner.grid)
-        h, w = grid.shape
-        rgb = np.ones((h, w, 3), dtype=np.uint8) * 248
-        rgb[grid == 205] = [238, 242, 246]  # soft light gray unknown
-        rgb[grid == 254] = [255, 255, 255]  # clean white free space
-        rgb[grid == 0] = [60, 70, 85]        # dark slate obstacles
+        """Render high-definition, clean dark-mode 2D facility map with curated primary landmarks,
+        soft floor grid lines, and crisp typography."""
+        raw_grid = np.flipud(self.planner.grid)
+        h, w = raw_grid.shape
 
-        # Overlay all confirmed semantic entities (Desks, Chairs, Boxes) with labels
-        for eid, ent in self.sem_entities.items():
-            cf = ent.get("centroid_floor")
-            dim = ent.get("dimensions", [0.6, 0.6, 0.6])
-            cls = ent.get("class_name", "")
-            if not cf:
+        # 2x High-Definition Upscale for razor-sharp rendering on modern displays
+        scale = 2
+        h2, w2 = h * scale, w * scale
+
+        # Base modern dark palette:
+        # Unknown space: Deep Obsidian Void #0B0F19 (11, 15, 25)
+        rgb = np.full((h2, w2, 3), (15, 23, 42), dtype=np.uint8)
+
+        # Free space: Clean Dark Slate #1E293B (30, 41, 59)
+        free_mask = cv2.resize((raw_grid == 254).astype(np.uint8), (w2, h2), interpolation=cv2.INTER_NEAREST)
+        rgb[free_mask == 1] = [30, 41, 59]
+
+        # Obstacles / Walls: Crisp Architectural Slate #64748B (100, 116, 139)
+        obs_mask = cv2.resize((raw_grid == 0).astype(np.uint8), (w2, h2), interpolation=cv2.INTER_NEAREST)
+        rgb[obs_mask == 1] = [100, 116, 139]
+
+        res = self.planner.res
+        ox = self.planner.ox
+        oy = self.planner.oy
+
+        # Draw soft floor grid lines every 1.0 metre
+        for gx in range(int(math.floor(ox)), int(math.ceil(ox + w * res)) + 1):
+            px = int(round((gx - ox) / res * scale))
+            if 0 <= px < w2:
+                cv2.line(rgb, (px, 0), (px, h2), (38, 50, 70), 1, cv2.LINE_AA)
+
+        for gy in range(int(math.floor(oy)), int(math.ceil(oy + h * res)) + 1):
+            py = int(round(h2 - (gy - oy) / res * scale))
+            if 0 <= py < h2:
+                cv2.line(rgb, (0, py), (w2, py), (38, 50, 70), 1, cv2.LINE_AA)
+
+        # Draw Origin Crosshair [0, 0]
+        orig_px = int(round((0.0 - ox) / res * scale))
+        orig_py = int(round(h2 - (0.0 - oy) / res * scale))
+        if 0 <= orig_px < w2 and 0 <= orig_py < h2:
+            cv2.drawMarker(rgb, (orig_px, orig_py), (148, 163, 184), cv2.MARKER_CROSS, 16, 1, cv2.LINE_AA)
+            cv2.putText(rgb, "ORIGIN (0,0)", (orig_px + 8, orig_py + 4),
+                        cv2.FONT_HERSHEY_SIMPLEX, 0.38, (148, 163, 184), 1, cv2.LINE_AA)
+
+        # Curated Primary Navigation Landmarks ONLY (decluttered, no overlapping raw clusters!)
+        CURATED_LANDMARKS = [
+            ("desk_001", "Desk 001", (56, 189, 248), (14, 116, 144)),
+            ("chair_002", "Chair 002", (251, 191, 36), (180, 83, 9)),
+            ("chair_003", "Chair 003", (251, 191, 36), (180, 83, 9)),
+            ("box_001", "Box 001", (168, 85, 247), (107, 33, 168)),
+            ("chair_005", "Chair 005", (251, 191, 36), (180, 83, 9)),
+            ("desk_005", "Desk 005", (56, 189, 248), (14, 116, 144)),
+            ("desk_018", "Desk 018", (56, 189, 248), (14, 116, 144)),
+            ("desk_024", "Desk 024", (56, 189, 248), (14, 116, 144)),
+        ]
+
+        for tid, label, border_color, fill_color in CURATED_LANDMARKS:
+            tinfo = TARGET_DATABASE.get(tid)
+            if not tinfo:
                 continue
-            ew, el = float(dim[0]), float(dim[1])
-            x0, x1 = cf[0] - ew / 2.0, cf[0] + ew / 2.0
-            y0, y1 = cf[1] - el / 2.0, cf[1] + el / 2.0
+            cx, cy = tinfo["center"]
+            app_x, app_y, app_yaw = tinfo["approach"]
 
-            # Convert to display pixel coordinates where row 0 is North (top)
-            px0 = int(round((x0 - self.planner.ox) / self.planner.res))
-            px1 = int(round((x1 - self.planner.ox) / self.planner.res))
-            py0 = int(round(h - (y1 - self.planner.oy) / self.planner.res))
-            py1 = int(round(h - (y0 - self.planner.oy) / self.planner.res))
+            c_px = int(round((cx - ox) / res * scale))
+            c_py = int(round(h2 - (cy - oy) / res * scale))
 
-            px0, px1 = max(0, min(w - 1, px0)), max(0, min(w - 1, px1))
-            py0, py1 = max(0, min(h - 1, py0)), max(0, min(h - 1, py1))
+            card_w = int(round(0.70 / res * scale))
+            card_h = int(round(0.55 / res * scale))
+            x0 = max(2, c_px - card_w // 2)
+            y0 = max(2, c_py - card_h // 2)
+            x1 = min(w2 - 3, x0 + card_w)
+            y1 = min(h2 - 3, y0 + card_h)
 
-            if px1 > px0 and py1 > py0:
-                is_tour_target = eid in ("desk_001", "chair_002", "chair_003", "storage box_001", "chair_005", "desk_005", "desk_018", "desk_017", "desk_023", "desk_024")
-                fill_color = [219, 234, 254] if "desk" in cls else ([254, 243, 199] if "chair" in cls else [241, 245, 249])
-                border_color = (37, 99, 235) if "desk" in cls else ((217, 119, 6) if "chair" in cls else (148, 163, 184))
-                
-                # Blend translucent fill
-                sub = rgb[py0:py1, px0:px1]
-                cv2.rectangle(rgb, (px0, py0), (px1, py1), fill_color, -1)
-                rgb[py0:py1, px0:px1] = cv2.addWeighted(rgb[py0:py1, px0:px1], 0.55, sub, 0.45, 0)
-                cv2.rectangle(rgb, (px0, py0), (px1, py1), border_color, 1)
+            if x1 > x0 and y1 > y0:
+                sub = rgb[y0:y1, x0:x1]
+                cv2.rectangle(rgb, (x0, y0), (x1, y1), fill_color, -1)
+                rgb[y0:y1, x0:x1] = cv2.addWeighted(rgb[y0:y1, x0:x1], 0.60, sub, 0.40, 0)
+                cv2.rectangle(rgb, (x0, y0), (x1, y1), border_color, 2, cv2.LINE_AA)
 
-                if is_tour_target:
-                    cv2.putText(rgb, eid, (px0 + 2, max(py0 + 8, 10)),
-                                cv2.FONT_HERSHEY_SIMPLEX, 0.26, (15, 23, 42), 1, cv2.LINE_AA)
+                # Approach standoff green target dot
+                ap_px = int(round((app_x - ox) / res * scale))
+                ap_py = int(round(h2 - (app_y - oy) / res * scale))
+                if 0 <= ap_px < w2 and 0 <= ap_py < h2:
+                    cv2.circle(rgb, (ap_px, ap_py), 3, (16, 185, 129), -1, cv2.LINE_AA)
 
-        # Draw subtle border
-        cv2.rectangle(rgb, (0, 0), (w - 1, h - 1), (100, 116, 139), 1)
+                # Crisp dark pill background behind text for 100% legibility
+                (tw, th), _ = cv2.getTextSize(label, cv2.FONT_HERSHEY_SIMPLEX, 0.40, 1)
+                pill_x0 = max(2, c_px - tw // 2 - 4)
+                pill_y0 = max(2, y0 - th - 6)
+                pill_x1 = min(w2 - 2, pill_x0 + tw + 8)
+                pill_y1 = min(h2 - 2, pill_y0 + th + 6)
+                cv2.rectangle(rgb, (pill_x0, pill_y0), (pill_x1, pill_y1), (15, 23, 42), -1)
+                cv2.rectangle(rgb, (pill_x0, pill_y0), (pill_x1, pill_y1), border_color, 1, cv2.LINE_AA)
+                cv2.putText(rgb, label, (pill_x0 + 4, pill_y1 - 4),
+                            cv2.FONT_HERSHEY_SIMPLEX, 0.40, (255, 255, 255), 1, cv2.LINE_AA)
+
+        # Outer clean border
+        cv2.rectangle(rgb, (0, 0), (w2 - 1, h2 - 1), (71, 85, 105), 1)
         ok, buf = cv2.imencode(".png", rgb)
         return buf.tobytes() if ok else b""
 
@@ -149,17 +211,18 @@ class NavigationCoordinator:
         while self.running:
             try:
                 if self.driver.pipe:
-                    if self.status == "IDLE":
-                        _, _, depth = self.driver.read_motion_and_depth()
-                        with self.lock:
-                            self.depth_ahead = depth
-                    else:
-                        with self.lock:
+                    cur_yaw, depth = self.driver.read_sensors()
+                    with self.lock:
+                        self.depth_ahead = depth
+                        if self.status in ("IDLE", "ARRIVED", "STOPPED"):
+                            # Real-time hardware gyro yaw tracking even when stationary
+                            self.pose[2] = cur_yaw
+                        else:
                             lp = self.driver.live_pose
                             if lp is not None:
                                 self.pose = list(lp)
                             self.depth_ahead = self.driver.last_depth
-                time.sleep(0.04)
+                time.sleep(0.03)
             except Exception:
                 time.sleep(0.1)
 
@@ -210,6 +273,16 @@ class NavigationCoordinator:
     def get_telemetry_json(self) -> dict:
         """Return live telemetry snapshot for Web UI."""
         with self.lock:
+            active_wps = getattr(self.driver, "active_waypoints", None)
+            if active_wps and len(active_wps) > 0 and self.status not in ("IDLE", "ARRIVED"):
+                wps_out = [[round(p[0], 3), round(p[1], 3)] for p in active_wps]
+            else:
+                wps_out = [[round(p[0], 3), round(p[1], 3)] for p in self.waypoints]
+
+            rem_dist = getattr(self.driver, "remaining_dist_m", self.remaining_dist)
+            if self.status in ("IDLE", "ARRIVED"):
+                rem_dist = 0.0
+
             return {
                 "pose": {
                     "x": round(self.pose[0], 3),
@@ -226,8 +299,8 @@ class NavigationCoordinator:
                     "y": round(self.target_pose[1], 3),
                     "yaw_deg": round(math.degrees(self.target_pose[2]), 1),
                 },
-                "waypoints": [[round(p[0], 3), round(p[1], 3)] for p in self.waypoints],
-                "remaining_dist_m": round(self.remaining_dist, 2),
+                "waypoints": wps_out,
+                "remaining_dist_m": round(rem_dist, 2),
                 "depth_ahead_m": round(self.depth_ahead, 2) if self.depth_ahead is not None else None,
                 "tour_active": self.tour_active,
                 "tour_step": self.tour_step,
@@ -338,6 +411,61 @@ class NavigationCoordinator:
         save_state(0.0, 0.0, 0.0, "origin")
         return True, "Robot pose reset to Origin."
 
+    def set_start_pose(self, x: float, y: float, yaw_rad: float = 0.0, name: str = "custom"):
+        """Manually position robot at known landmark or coordinate."""
+        self.emergency_stop_flag = True
+        self.driver.stop()
+        with self.lock:
+            self.pose = [x, y, yaw_rad]
+            self.driver.set_yaw_rad(yaw_rad)
+            self.target_id = name
+            self.target_desc = f"Positioned at {name}"
+            self.waypoints = []
+            self.remaining_dist = 0.0
+            self.status = "IDLE"
+            self.status_detail = f"Pose set to ({x:.2f}m, {y:.2f}m, {math.degrees(yaw_rad):.1f}°)"
+        save_state(x, y, yaw_rad, name)
+        return True, f"Pose set to {name} ({x:.2f}m, {y:.2f}m)"
+
+    def get_full_tour_plan(self) -> dict:
+        """Pre-compute collision-free A* waypoints connecting all 10 stations."""
+        cur = (0.0, 0.0)
+        legs = []
+        all_wps = []
+        total_dist = 0.0
+
+        for idx, (tid, desc) in enumerate(TOUR_SEQUENCE, 1):
+            tinfo = TARGET_DATABASE.get(tid, {})
+            app = tinfo.get("approach", (0.0, 0.0, 0.0))
+            tgt = (app[0], app[1])
+            wps = self.planner.plan(cur, tgt)
+            wps = self.planner.smooth_path(wps)
+            leg_dist = sum(
+                math.hypot(wps[k+1][0] - wps[k][0], wps[k+1][1] - wps[k][1])
+                for k in range(len(wps) - 1)
+            )
+            total_dist += leg_dist
+            legs.append({
+                "step": idx,
+                "id": tid,
+                "desc": desc,
+                "approach": [round(app[0], 2), round(app[1], 2), round(math.degrees(app[2]), 1)],
+                "waypoints": [[round(p[0], 2), round(p[1], 2)] for p in wps],
+                "dist_m": round(leg_dist, 2),
+            })
+            if not all_wps:
+                all_wps.extend([[round(p[0], 2), round(p[1], 2)] for p in wps])
+            else:
+                all_wps.extend([[round(p[0], 2), round(p[1], 2)] for p in wps[1:]])
+            cur = tgt
+
+        return {
+            "total_dist_m": round(total_dist, 2),
+            "legs": legs,
+            "all_waypoints": all_wps,
+            "station_count": len(TOUR_SEQUENCE),
+        }
+
     def _execute_single_mission(self, tid: str, tinfo: dict):
         """Worker thread executing single target approach."""
         with self.lock:
@@ -376,9 +504,15 @@ class NavigationCoordinator:
             )
             with self.lock:
                 self.pose = list(confirmed_pose)
-                self.status = "ARRIVED"
-                self.status_detail = f"Arrived at {tid} ({tinfo.get('desc', '')})"
-                self.remaining_dist = 0.0
+                dist_to_goal = math.hypot(confirmed_pose[0] - target_x, confirmed_pose[1] - target_y)
+                if dist_to_goal <= 0.45:
+                    self.status = "ARRIVED"
+                    self.status_detail = f"Arrived at {tid} ({tinfo.get('desc', '')})"
+                    self.remaining_dist = 0.0
+                else:
+                    self.status = "OBSTACLE_STOP"
+                    self.status_detail = f"Halted: Obstacle detected ({dist_to_goal:.2f}m from {tid})"
+                    self.remaining_dist = dist_to_goal
         except Exception as e:
             with self.lock:
                 self.status = "ERROR"
@@ -761,8 +895,17 @@ INDEX_HTML = """<!DOCTYPE html>
       <div class="telemetry-card">
         <div class="telemetry-title">Mission Operations</div>
         <button class="btn btn-success" onclick="startTour()">▶ Start 10-Station Tour</button>
+        <button id="btn-toggle-tour" class="btn btn-primary" onclick="toggleTourRoute()">🗺️ Hide Full Tour Route</button>
         <button class="btn btn-secondary" onclick="resetOrigin()">↺ Reset Origin (0,0)</button>
         <button class="btn btn-danger" onclick="emergencyStop()">🛑 EMERGENCY STOP</button>
+
+        <div class="telemetry-title" style="margin-top: 14px;">Quick Start Pose (Clear Corridors)</div>
+        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 6px; margin-bottom: 8px;">
+          <button class="btn btn-secondary" style="font-size: 0.76rem; padding: 6px;" onclick="setPose(0, 0, 0, 'origin')">🚪 Hallway (0,0)</button>
+          <button class="btn btn-secondary" style="font-size: 0.76rem; padding: 6px;" onclick="setPose(2.0, -1.25, -90, 'desk_001')">🖥️ Desk 1 Front</button>
+          <button class="btn btn-secondary" style="font-size: 0.76rem; padding: 6px;" onclick="setPose(0.61, -3.22, -76.8, 'chair_005')">🪑 South Area</button>
+          <button class="btn btn-secondary" style="font-size: 0.76rem; padding: 6px;" onclick="setPose(-1.36, -3.02, 180, 'desk_018')">🔬 West Bench</button>
+        </div>
 
         <div class="telemetry-title" style="margin-top: 14px;">Direct Landmark Navigation</div>
         <div class="target-grid">
@@ -796,14 +939,42 @@ INDEX_HTML = """<!DOCTYPE html>
     };
 
     let latestTelemetry = null;
+    let fullTourPlan = null;
+    let showTourRoute = true;
 
-    // Load map metadata
+    // Load map metadata & full 10-station multi-goal tour plan
     fetch('/api/map_info')
       .then(r => r.json())
       .then(data => {
         mapMeta = data;
         mapImage.onload = () => drawMap();
       });
+
+    fetch('/api/full_tour')
+      .then(r => r.json())
+      .then(data => {
+        fullTourPlan = data;
+        drawMap();
+      })
+      .catch(e => console.log('Tour plan load:', e));
+
+    function toggleTourRoute() {
+      showTourRoute = !showTourRoute;
+      const btn = document.getElementById('btn-toggle-tour');
+      if (btn) btn.innerText = showTourRoute ? '🗺️ Hide Full Tour Route' : '🗺️ Show Full Tour Route';
+      drawMap();
+    }
+
+    function setPose(x, y, yawDeg, name) {
+      showToast(`Setting robot start pose to ${name} (${x.toFixed(2)}, ${y.toFixed(2)})...`, 'info');
+      fetch(`/api/set_pose?x=${x}&y=${y}&yaw=${yawDeg}&name=${encodeURIComponent(name)}`)
+        .then(r => r.json())
+        .then(d => {
+          showToast(d.message, d.success ? 'success' : 'error');
+          pollTelemetry();
+        })
+        .catch(err => showToast(`Pose error: ${err}`, 'error'));
+    }
 
     function worldToPixel(wx, wy) {
       const px = (wx - mapMeta.ox) / mapMeta.res;
@@ -828,13 +999,51 @@ INDEX_HTML = """<!DOCTYPE html>
       ctx.translate(offsetX, offsetY);
       ctx.scale(scale, scale);
 
-      // Draw base occupancy map
-      ctx.drawImage(mapImage, 0, 0);
+      // Draw base occupancy map (smooth high-DPI scaling)
+      ctx.drawImage(mapImage, 0, 0, mapMeta.w, mapMeta.h);
 
-      // Draw waypoints path
+      // 1. Draw Full 10-Station Multi-Goal Facility Tour Plan (Dashed Emerald Line)
+      if (showTourRoute && fullTourPlan && fullTourPlan.all_waypoints) {
+        ctx.save();
+        ctx.setLineDash([7 / scale, 4 / scale]);
+        ctx.strokeStyle = '#10B981';
+        ctx.lineWidth = 2.2 / scale;
+        ctx.lineJoin = 'round';
+        ctx.beginPath();
+        fullTourPlan.all_waypoints.forEach((wp, idx) => {
+          const [px, py] = worldToPixel(wp[0], wp[1]);
+          if (idx === 0) ctx.moveTo(px, py);
+          else ctx.lineTo(px, py);
+        });
+        ctx.stroke();
+        ctx.restore();
+
+        // Station Number Badges (① through ⑩)
+        if (fullTourPlan.legs) {
+          fullTourPlan.legs.forEach(leg => {
+            const [sx, sy] = worldToPixel(leg.approach[0], leg.approach[1]);
+            const isCur = latestTelemetry && latestTelemetry.tour_active && latestTelemetry.tour_step === leg.step;
+            ctx.fillStyle = isCur ? '#F59E0B' : '#059669';
+            ctx.strokeStyle = '#FFFFFF';
+            ctx.lineWidth = 1.4 / scale;
+            ctx.beginPath();
+            ctx.arc(sx, sy, 0.16 / mapMeta.res, 0, Math.PI * 2);
+            ctx.fill();
+            ctx.stroke();
+
+            ctx.fillStyle = '#FFFFFF';
+            ctx.font = `bold ${Math.max(8, 10 / scale)}px sans-serif`;
+            ctx.textAlign = 'center';
+            ctx.textBaseline = 'middle';
+            ctx.fillText(leg.step, sx, sy);
+          });
+        }
+      }
+
+      // 2. Draw Active Leg Waypoints Path (Bright Cyan Solid)
       if (latestTelemetry && latestTelemetry.waypoints && latestTelemetry.waypoints.length > 1) {
         ctx.strokeStyle = '#0284C7';
-        ctx.lineWidth = 3.5 / scale;
+        ctx.lineWidth = 3.6 / scale;
         ctx.lineJoin = 'round';
         ctx.beginPath();
         latestTelemetry.waypoints.forEach((wp, idx) => {
@@ -845,7 +1054,7 @@ INDEX_HTML = """<!DOCTYPE html>
         ctx.stroke();
       }
 
-      // Draw Target Approach Halo
+      // 3. Draw Target Approach Halo
       if (latestTelemetry && latestTelemetry.target && latestTelemetry.target.id !== 'origin') {
         const [tx, ty] = worldToPixel(latestTelemetry.target.x, latestTelemetry.target.y);
         ctx.fillStyle = 'rgba(239, 68, 68, 0.4)';
@@ -861,7 +1070,7 @@ INDEX_HTML = """<!DOCTYPE html>
         ctx.fillText(latestTelemetry.target.id, tx + 6, ty - 6);
       }
 
-      // Draw Robot Avatar (Pulsing Circle + Direction Arrow)
+      // 4. Draw Robot Avatar (Pulsing Circle + Direction Arrow)
       if (latestTelemetry && latestTelemetry.pose) {
         const [rx, ry] = worldToPixel(latestTelemetry.pose.x, latestTelemetry.pose.y);
         const yaw = latestTelemetry.pose.yaw_rad;
@@ -1112,6 +1321,28 @@ class WebRequestHandler(BaseHTTPRequestHandler):
             self.end_headers()
             self.wfile.write(json.dumps({"success": ok, "message": msg}).encode("utf-8"))
 
+        elif url.path == "/api/full_tour":
+            plan = self.coordinator.get_full_tour_plan()
+            self.send_response(HTTPStatus.OK)
+            self.send_header("Content-Type", "application/json")
+            self.end_headers()
+            self.wfile.write(json.dumps(plan).encode("utf-8"))
+
+        elif url.path == "/api/set_pose":
+            qs = parse_qs(url.query)
+            try:
+                x = float(qs.get("x", [0.0])[0])
+                y = float(qs.get("y", [0.0])[0])
+                yaw_deg = float(qs.get("yaw", [0.0])[0])
+                name = qs.get("name", ["custom"])[0]
+                ok, msg = self.coordinator.set_start_pose(x, y, math.radians(yaw_deg), name)
+            except Exception as e:
+                ok, msg = False, str(e)
+            self.send_response(HTTPStatus.OK)
+            self.send_header("Content-Type", "application/json")
+            self.end_headers()
+            self.wfile.write(json.dumps({"success": ok, "message": msg}).encode("utf-8"))
+
         else:
             self.send_error(HTTPStatus.NOT_FOUND)
 
@@ -1120,13 +1351,23 @@ def main():
     parser = argparse.ArgumentParser(description="Live Web Visualizer & Real-Time Navigation Server")
     parser.add_argument("--port", type=int, default=8080, help="Web server port (default: 8080)")
     parser.add_argument("--cam-upright", action="store_true", help="Camera is mounted upright")
+    parser.add_argument("--flip-gyro", action="store_true", help="Manually flip/invert hardware gyro yaw rate polarity")
+    parser.add_argument("--invert-motors", action="store_true", help="Invert motor directions if hardware is wired in reverse (default: False)")
+    parser.add_argument("--normal-motors", action="store_true", help="Legacy flag: ensure normal motor wiring")
     parser.add_argument("--dry-run", action="store_true", help="Run without physical motor actuation")
     args = parser.parse_args()
+
+    motors_inv = bool(args.invert_motors and not args.normal_motors)
 
     print("=" * 72)
     print("AUTONOMOUS D455 REAL-TIME NAVIGATION SERVER & LIVE WEB VISUALIZER")
     print("=" * 72)
-    coordinator = NavigationCoordinator(dry_run=args.dry_run, cam_upright=args.cam_upright)
+    coordinator = NavigationCoordinator(
+        dry_run=args.dry_run,
+        cam_upright=args.cam_upright,
+        motors_inverted=motors_inv,
+        flip_gyro=args.flip_gyro,
+    )
     WebRequestHandler.coordinator = coordinator
     ThreadingHTTPServer.allow_reuse_address = True
     server = ThreadingHTTPServer(("0.0.0.0", args.port), WebRequestHandler)
@@ -1141,6 +1382,14 @@ def main():
         print("\n[STOPPING SERVER] Halting motors and closing web visualizer...")
     finally:
         coordinator.running = False
+        coordinator.emergency_stop_flag = True
+        coordinator.driver.stop()
+        if coordinator.active_nav_thread and coordinator.active_nav_thread.is_alive():
+            try:
+                coordinator.active_nav_thread.join(timeout=1.0)
+            except Exception:
+                pass
+        time.sleep(0.1)
         coordinator.driver.cleanup()
         server.server_close()
         print("[SHUTDOWN] Server cleanly terminated.")
