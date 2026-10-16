@@ -41,6 +41,8 @@ def run_stage5_pipeline(
     # Locate inputs
     if obs_jsonl_path is None:
         cand = [
+            repo_root / "vlm" / "data" / "observations" / "object_observations.jsonl",
+            repo_root / "vlm" / "data" / "semantic_mapping_my_desk_recording_01" / "object_observations.jsonl",
             repo_root / "vlm" / "outputs" / "object_observations.jsonl",
             repo_root / "outputs" / "semantic_mapping_my_desk_recording_01" / "object_observations.jsonl",
         ]
@@ -51,6 +53,8 @@ def run_stage5_pipeline(
 
     if mappoints_ply_path is None:
         cand_ply = [
+            repo_root / "vlm" / "data" / "semantic_mapping_my_desk_recording_01" / "trajectory" / "MapPoints.ply",
+            repo_root / "vlm" / "data" / "semantic_mapping_my_desk_recording_02" / "trajectory" / "MapPoints.ply",
             repo_root / "outputs" / "semantic_mapping_my_desk_recording_01" / "trajectory" / "MapPoints.ply",
             repo_root / "outputs" / "semantic_mapping_my_desk_recording_02" / "trajectory" / "MapPoints.ply",
         ]

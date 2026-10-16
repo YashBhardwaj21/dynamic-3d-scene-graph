@@ -1,6 +1,6 @@
 {
   "total_nodes": 194,
-  "timestamp": 1792124005.3568432,
+  "timestamp": 1792179989.5951552,
   "nodes": {
     "entity_s1_backpack_001": {
       "entity_id": "entity_s1_backpack_001",
@@ -31,7 +31,7 @@
       "total_observations_count": 2,
       "relocation_evaluable": true,
       "measured_displacement_m": 0.0,
-      "displacement_uncertainty_m": 0.1274570852546542,
+      "displacement_uncertainty_m": 0.04157132613342917,
       "pose_history": [],
       "first_seen": 100.0,
       "last_seen": 200.0,
@@ -292,7 +292,7 @@
       "total_observations_count": 2,
       "relocation_evaluable": true,
       "measured_displacement_m": 0.4481,
-      "displacement_uncertainty_m": 0.11985367701729004,
+      "displacement_uncertainty_m": 0.0024395183950936144,
       "pose_history": [
         {
           "centroid_world": [
@@ -347,7 +347,7 @@
       "total_observations_count": 2,
       "relocation_evaluable": true,
       "measured_displacement_m": 0.0,
-      "displacement_uncertainty_m": 0.12680098205716014,
+      "displacement_uncertainty_m": 0.03175214566204253,
       "pose_history": [],
       "first_seen": 100.0,
       "last_seen": 200.0,
@@ -386,7 +386,7 @@
       "total_observations_count": 3,
       "relocation_evaluable": true,
       "measured_displacement_m": 0.0,
-      "displacement_uncertainty_m": 0.14375205983250075,
+      "displacement_uncertainty_m": 0.05782504098465429,
       "pose_history": [],
       "first_seen": 100.0,
       "last_seen": 200.0,
@@ -425,7 +425,7 @@
       "total_observations_count": 2,
       "relocation_evaluable": true,
       "measured_displacement_m": 0.0,
-      "displacement_uncertainty_m": 0.12086744284373696,
+      "displacement_uncertainty_m": 0.005399023996386606,
       "pose_history": [],
       "first_seen": 100.0,
       "last_seen": 200.0,
@@ -464,7 +464,7 @@
       "total_observations_count": 2,
       "relocation_evaluable": true,
       "measured_displacement_m": 0.2649,
-      "displacement_uncertainty_m": 0.12043824096819863,
+      "displacement_uncertainty_m": 0.0062836084376194055,
       "pose_history": [
         {
           "centroid_world": [
@@ -556,7 +556,7 @@
       "total_observations_count": 2,
       "relocation_evaluable": true,
       "measured_displacement_m": 0.0,
-      "displacement_uncertainty_m": 0.12025555703908157,
+      "displacement_uncertainty_m": 0.008056319017879097,
       "pose_history": [],
       "first_seen": 100.0,
       "last_seen": 200.0,
@@ -595,7 +595,7 @@
       "total_observations_count": 2,
       "relocation_evaluable": true,
       "measured_displacement_m": 0.0,
-      "displacement_uncertainty_m": 0.1204870189497745,
+      "displacement_uncertainty_m": 0.007653573121882387,
       "pose_history": [],
       "first_seen": 100.0,
       "last_seen": 200.0,
@@ -634,7 +634,7 @@
       "total_observations_count": 2,
       "relocation_evaluable": true,
       "measured_displacement_m": 0.0,
-      "displacement_uncertainty_m": 0.12217234074836639,
+      "displacement_uncertainty_m": 0.01657327747540359,
       "pose_history": [],
       "first_seen": 100.0,
       "last_seen": 200.0,
@@ -710,7 +710,7 @@
       "total_observations_count": 2,
       "relocation_evaluable": true,
       "measured_displacement_m": 0.0,
-      "displacement_uncertainty_m": 0.12069610157018827,
+      "displacement_uncertainty_m": 0.009770513010311547,
       "pose_history": [],
       "first_seen": 100.0,
       "last_seen": 200.0,
@@ -861,7 +861,7 @@
       "total_observations_count": 2,
       "relocation_evaluable": true,
       "measured_displacement_m": 0.0,
-      "displacement_uncertainty_m": 0.12114990959295935,
+      "displacement_uncertainty_m": 0.006450023048183099,
       "pose_history": [],
       "first_seen": 100.0,
       "last_seen": 200.0,
@@ -900,7 +900,7 @@
       "total_observations_count": 2,
       "relocation_evaluable": true,
       "measured_displacement_m": 0.0,
-      "displacement_uncertainty_m": 0.15177936293837063,
+      "displacement_uncertainty_m": 0.03454135578082612,
       "pose_history": [],
       "first_seen": 100.0,
       "last_seen": 200.0,
@@ -1013,7 +1013,7 @@
       "total_observations_count": 2,
       "relocation_evaluable": true,
       "measured_displacement_m": 0.0,
-      "displacement_uncertainty_m": 0.12220436075252726,
+      "displacement_uncertainty_m": 0.023073026176334676,
       "pose_history": [],
       "first_seen": 100.0,
       "last_seen": 200.0,
@@ -1052,7 +1052,7 @@
       "total_observations_count": 2,
       "relocation_evaluable": true,
       "measured_displacement_m": 0.0,
-      "displacement_uncertainty_m": 0.12075114697167626,
+      "displacement_uncertainty_m": 0.006702417315875104,
       "pose_history": [],
       "first_seen": 100.0,
       "last_seen": 200.0,
@@ -1128,7 +1128,7 @@
       "total_observations_count": 2,
       "relocation_evaluable": true,
       "measured_displacement_m": 0.0,
-      "displacement_uncertainty_m": 0.12069368324283829,
+      "displacement_uncertainty_m": 0.011743739023678482,
       "pose_history": [],
       "first_seen": 100.0,
       "last_seen": 200.0,
@@ -1167,7 +1167,7 @@
       "total_observations_count": 2,
       "relocation_evaluable": true,
       "measured_displacement_m": 0.0,
-      "displacement_uncertainty_m": 0.1834480003434384,
+      "displacement_uncertainty_m": 0.09654323071495247,
       "pose_history": [],
       "first_seen": 100.0,
       "last_seen": 200.0,
@@ -1281,7 +1281,7 @@
       "total_observations_count": 2,
       "relocation_evaluable": true,
       "measured_displacement_m": 0.0,
-      "displacement_uncertainty_m": 0.12194113958927187,
+      "displacement_uncertainty_m": 0.010422079793889379,
       "pose_history": [],
       "first_seen": 100.0,
       "last_seen": 200.0,
@@ -1505,7 +1505,7 @@
       "total_observations_count": 2,
       "relocation_evaluable": true,
       "measured_displacement_m": 0.0,
-      "displacement_uncertainty_m": 0.12430046128206589,
+      "displacement_uncertainty_m": 0.007755849434622238,
       "pose_history": [],
       "first_seen": 100.0,
       "last_seen": 200.0,
@@ -1544,7 +1544,7 @@
       "total_observations_count": 2,
       "relocation_evaluable": true,
       "measured_displacement_m": 0.0,
-      "displacement_uncertainty_m": 0.12333543549624117,
+      "displacement_uncertainty_m": 0.016916557075033825,
       "pose_history": [],
       "first_seen": 100.0,
       "last_seen": 200.0,
@@ -1583,7 +1583,7 @@
       "total_observations_count": 2,
       "relocation_evaluable": true,
       "measured_displacement_m": 0.0,
-      "displacement_uncertainty_m": 0.12523779156547,
+      "displacement_uncertainty_m": 0.03264025475312973,
       "pose_history": [],
       "first_seen": 100.0,
       "last_seen": 200.0,
@@ -1622,7 +1622,7 @@
       "total_observations_count": 2,
       "relocation_evaluable": true,
       "measured_displacement_m": 0.0,
-      "displacement_uncertainty_m": 0.11990885560338652,
+      "displacement_uncertainty_m": 0.0024584446989255404,
       "pose_history": [],
       "first_seen": 100.0,
       "last_seen": 200.0,
@@ -1661,7 +1661,7 @@
       "total_observations_count": 2,
       "relocation_evaluable": true,
       "measured_displacement_m": 0.4108,
-      "displacement_uncertainty_m": 0.12550031703671083,
+      "displacement_uncertainty_m": 0.022078923971503916,
       "pose_history": [
         {
           "centroid_world": [
@@ -1716,7 +1716,7 @@
       "total_observations_count": 2,
       "relocation_evaluable": true,
       "measured_displacement_m": 0.0,
-      "displacement_uncertainty_m": 0.13532673143591284,
+      "displacement_uncertainty_m": 0.03890451106178752,
       "pose_history": [],
       "first_seen": 100.0,
       "last_seen": 200.0,
@@ -1755,7 +1755,7 @@
       "total_observations_count": 2,
       "relocation_evaluable": true,
       "measured_displacement_m": 0.0,
-      "displacement_uncertainty_m": 0.12061918269493306,
+      "displacement_uncertainty_m": 0.01353871934466616,
       "pose_history": [],
       "first_seen": 100.0,
       "last_seen": 200.0,
@@ -1794,7 +1794,7 @@
       "total_observations_count": 3,
       "relocation_evaluable": true,
       "measured_displacement_m": 0.4033,
-      "displacement_uncertainty_m": 0.13732065727370546,
+      "displacement_uncertainty_m": 0.037177965672979756,
       "pose_history": [
         {
           "centroid_world": [
@@ -1849,7 +1849,7 @@
       "total_observations_count": 2,
       "relocation_evaluable": true,
       "measured_displacement_m": 0.3981,
-      "displacement_uncertainty_m": 0.1517023415993117,
+      "displacement_uncertainty_m": 0.07786112924119626,
       "pose_history": [
         {
           "centroid_world": [
@@ -1904,7 +1904,7 @@
       "total_observations_count": 2,
       "relocation_evaluable": true,
       "measured_displacement_m": 0.2868,
-      "displacement_uncertainty_m": 0.12195841010113112,
+      "displacement_uncertainty_m": 0.01778967531001779,
       "pose_history": [
         {
           "centroid_world": [
@@ -1960,7 +1960,7 @@
       "total_observations_count": 3,
       "relocation_evaluable": true,
       "measured_displacement_m": 0.0,
-      "displacement_uncertainty_m": 0.14032544699964644,
+      "displacement_uncertainty_m": 0.05041671349860086,
       "pose_history": [],
       "first_seen": 100.0,
       "last_seen": 200.0,
@@ -1999,7 +1999,7 @@
       "total_observations_count": 2,
       "relocation_evaluable": true,
       "measured_displacement_m": 0.0,
-      "displacement_uncertainty_m": 0.1211388120247521,
+      "displacement_uncertainty_m": 0.012988107051825107,
       "pose_history": [],
       "first_seen": 100.0,
       "last_seen": 200.0,
@@ -2038,7 +2038,7 @@
       "total_observations_count": 2,
       "relocation_evaluable": true,
       "measured_displacement_m": 0.0,
-      "displacement_uncertainty_m": 0.1207325371837472,
+      "displacement_uncertainty_m": 0.011271628903080103,
       "pose_history": [],
       "first_seen": 100.0,
       "last_seen": 200.0,
@@ -2189,7 +2189,7 @@
       "total_observations_count": 3,
       "relocation_evaluable": true,
       "measured_displacement_m": 0.0,
-      "displacement_uncertainty_m": 0.12222496484492967,
+      "displacement_uncertainty_m": 0.019831793523995545,
       "pose_history": [],
       "first_seen": 100.0,
       "last_seen": 200.0,
@@ -2229,7 +2229,7 @@
       "total_observations_count": 3,
       "relocation_evaluable": true,
       "measured_displacement_m": 0.0,
-      "displacement_uncertainty_m": 0.12219272993974148,
+      "displacement_uncertainty_m": 0.013364678365423314,
       "pose_history": [],
       "first_seen": 100.0,
       "last_seen": 200.0,
@@ -2342,7 +2342,7 @@
       "total_observations_count": 2,
       "relocation_evaluable": true,
       "measured_displacement_m": 0.3846,
-      "displacement_uncertainty_m": 0.12067263657220635,
+      "displacement_uncertainty_m": 0.011639272605658488,
       "pose_history": [
         {
           "centroid_world": [
@@ -2880,7 +2880,7 @@
       "total_observations_count": 2,
       "relocation_evaluable": true,
       "measured_displacement_m": 0.0,
-      "displacement_uncertainty_m": 0.1275714640160913,
+      "displacement_uncertainty_m": 0.04138881862973714,
       "pose_history": [],
       "first_seen": 100.0,
       "last_seen": 200.0,
@@ -2993,7 +2993,7 @@
       "total_observations_count": 2,
       "relocation_evaluable": true,
       "measured_displacement_m": 0.3531,
-      "displacement_uncertainty_m": 0.12584573367567867,
+      "displacement_uncertainty_m": 0.03781613553072637,
       "pose_history": [
         {
           "centroid_world": [
@@ -3085,7 +3085,7 @@
       "total_observations_count": 2,
       "relocation_evaluable": true,
       "measured_displacement_m": 0.0,
-      "displacement_uncertainty_m": 0.12463352716175408,
+      "displacement_uncertainty_m": 0.017980876324862918,
       "pose_history": [],
       "first_seen": 100.0,
       "last_seen": 200.0,
@@ -3235,7 +3235,7 @@
       "total_observations_count": 2,
       "relocation_evaluable": true,
       "measured_displacement_m": 0.2802,
-      "displacement_uncertainty_m": 0.1309748108074953,
+      "displacement_uncertainty_m": 0.05188288947342885,
       "pose_history": [
         {
           "centroid_world": [
@@ -3401,7 +3401,7 @@
       "total_observations_count": 2,
       "relocation_evaluable": true,
       "measured_displacement_m": 0.2531,
-      "displacement_uncertainty_m": 0.13366685901793887,
+      "displacement_uncertainty_m": 0.021941350168053726,
       "pose_history": [
         {
           "centroid_world": [
@@ -3641,7 +3641,7 @@
       "total_observations_count": 2,
       "relocation_evaluable": true,
       "measured_displacement_m": 0.4229,
-      "displacement_uncertainty_m": 0.14101130054658373,
+      "displacement_uncertainty_m": 0.02971457524900602,
       "pose_history": [
         {
           "centroid_world": [
@@ -3769,7 +3769,7 @@
       "total_observations_count": 2,
       "relocation_evaluable": true,
       "measured_displacement_m": 0.0,
-      "displacement_uncertainty_m": 0.15180128149162642,
+      "displacement_uncertainty_m": 0.042532472888370816,
       "pose_history": [],
       "first_seen": 100.0,
       "last_seen": 200.0,
@@ -3808,7 +3808,7 @@
       "total_observations_count": 2,
       "relocation_evaluable": true,
       "measured_displacement_m": 0.0,
-      "displacement_uncertainty_m": 0.12191050930968728,
+      "displacement_uncertainty_m": 0.007820247780824102,
       "pose_history": [],
       "first_seen": 100.0,
       "last_seen": 200.0,
@@ -3884,7 +3884,7 @@
       "total_observations_count": 3,
       "relocation_evaluable": true,
       "measured_displacement_m": 0.0,
-      "displacement_uncertainty_m": 0.12024714694716004,
+      "displacement_uncertainty_m": 0.0037480388892394867,
       "pose_history": [],
       "first_seen": 100.0,
       "last_seen": 200.0,
@@ -3960,7 +3960,7 @@
       "total_observations_count": 2,
       "relocation_evaluable": true,
       "measured_displacement_m": 0.0,
-      "displacement_uncertainty_m": 0.11990024084876827,
+      "displacement_uncertainty_m": 0.00203787672185531,
       "pose_history": [],
       "first_seen": 100.0,
       "last_seen": 200.0,
@@ -4060,7 +4060,7 @@
       "coordinate_frame": "reference_frame",
       "semantic_confidence": 0.9,
       "geometric_confidence": 0.85,
-      "evidence_provenance": "MEASURED_CLUSTER_UNMATCHED",
+      "evidence_provenance": "MEASURED_CLUSTER_S2",
       "source_sessions": [
         "semantic_mapping_my_desk_recording_02"
       ],
@@ -4097,7 +4097,7 @@
       "coordinate_frame": "reference_frame",
       "semantic_confidence": 0.9,
       "geometric_confidence": 0.85,
-      "evidence_provenance": "MEASURED_CLUSTER_UNMATCHED",
+      "evidence_provenance": "MEASURED_CLUSTER_S2",
       "source_sessions": [
         "semantic_mapping_my_desk_recording_02"
       ],
@@ -4134,7 +4134,7 @@
       "coordinate_frame": "reference_frame",
       "semantic_confidence": 0.9,
       "geometric_confidence": 0.85,
-      "evidence_provenance": "MEASURED_CLUSTER_UNMATCHED",
+      "evidence_provenance": "MEASURED_CLUSTER_S2",
       "source_sessions": [
         "semantic_mapping_my_desk_recording_02"
       ],
@@ -4171,7 +4171,7 @@
       "coordinate_frame": "reference_frame",
       "semantic_confidence": 0.9,
       "geometric_confidence": 0.85,
-      "evidence_provenance": "MEASURED_CLUSTER_UNMATCHED",
+      "evidence_provenance": "MEASURED_CLUSTER_S2",
       "source_sessions": [
         "semantic_mapping_my_desk_recording_02"
       ],
@@ -4208,7 +4208,7 @@
       "coordinate_frame": "reference_frame",
       "semantic_confidence": 0.9,
       "geometric_confidence": 0.85,
-      "evidence_provenance": "MEASURED_CLUSTER_UNMATCHED",
+      "evidence_provenance": "MEASURED_CLUSTER_S2",
       "source_sessions": [
         "semantic_mapping_my_desk_recording_02"
       ],
@@ -4245,7 +4245,7 @@
       "coordinate_frame": "reference_frame",
       "semantic_confidence": 0.9,
       "geometric_confidence": 0.85,
-      "evidence_provenance": "MEASURED_CLUSTER_UNMATCHED",
+      "evidence_provenance": "MEASURED_CLUSTER_S2",
       "source_sessions": [
         "semantic_mapping_my_desk_recording_02"
       ],
@@ -4282,7 +4282,7 @@
       "coordinate_frame": "reference_frame",
       "semantic_confidence": 0.9,
       "geometric_confidence": 0.85,
-      "evidence_provenance": "MEASURED_CLUSTER_UNMATCHED",
+      "evidence_provenance": "MEASURED_CLUSTER_S2",
       "source_sessions": [
         "semantic_mapping_my_desk_recording_02"
       ],
@@ -4319,7 +4319,7 @@
       "coordinate_frame": "reference_frame",
       "semantic_confidence": 0.9,
       "geometric_confidence": 0.85,
-      "evidence_provenance": "MEASURED_CLUSTER_UNMATCHED",
+      "evidence_provenance": "MEASURED_CLUSTER_S2",
       "source_sessions": [
         "semantic_mapping_my_desk_recording_02"
       ],
@@ -4356,7 +4356,7 @@
       "coordinate_frame": "reference_frame",
       "semantic_confidence": 0.9,
       "geometric_confidence": 0.85,
-      "evidence_provenance": "MEASURED_CLUSTER_UNMATCHED",
+      "evidence_provenance": "MEASURED_CLUSTER_S2",
       "source_sessions": [
         "semantic_mapping_my_desk_recording_02"
       ],
@@ -4393,7 +4393,7 @@
       "coordinate_frame": "reference_frame",
       "semantic_confidence": 0.9,
       "geometric_confidence": 0.85,
-      "evidence_provenance": "MEASURED_CLUSTER_UNMATCHED",
+      "evidence_provenance": "MEASURED_CLUSTER_S2",
       "source_sessions": [
         "semantic_mapping_my_desk_recording_02"
       ],
@@ -4430,7 +4430,7 @@
       "coordinate_frame": "reference_frame",
       "semantic_confidence": 0.9,
       "geometric_confidence": 0.85,
-      "evidence_provenance": "MEASURED_CLUSTER_UNMATCHED",
+      "evidence_provenance": "MEASURED_CLUSTER_S2",
       "source_sessions": [
         "semantic_mapping_my_desk_recording_02"
       ],
@@ -4467,7 +4467,7 @@
       "coordinate_frame": "reference_frame",
       "semantic_confidence": 0.9,
       "geometric_confidence": 0.85,
-      "evidence_provenance": "MEASURED_CLUSTER_UNMATCHED",
+      "evidence_provenance": "MEASURED_CLUSTER_S2",
       "source_sessions": [
         "semantic_mapping_my_desk_recording_02"
       ],
@@ -4504,7 +4504,7 @@
       "coordinate_frame": "reference_frame",
       "semantic_confidence": 0.9,
       "geometric_confidence": 0.85,
-      "evidence_provenance": "MEASURED_CLUSTER_UNMATCHED",
+      "evidence_provenance": "MEASURED_CLUSTER_S2",
       "source_sessions": [
         "semantic_mapping_my_desk_recording_02"
       ],
@@ -4541,7 +4541,7 @@
       "coordinate_frame": "reference_frame",
       "semantic_confidence": 0.9,
       "geometric_confidence": 0.85,
-      "evidence_provenance": "MEASURED_CLUSTER_UNMATCHED",
+      "evidence_provenance": "MEASURED_CLUSTER_S2",
       "source_sessions": [
         "semantic_mapping_my_desk_recording_02"
       ],
@@ -4578,7 +4578,7 @@
       "coordinate_frame": "reference_frame",
       "semantic_confidence": 0.9,
       "geometric_confidence": 0.85,
-      "evidence_provenance": "MEASURED_CLUSTER_UNMATCHED",
+      "evidence_provenance": "MEASURED_CLUSTER_S2",
       "source_sessions": [
         "semantic_mapping_my_desk_recording_02"
       ],
@@ -4615,7 +4615,7 @@
       "coordinate_frame": "reference_frame",
       "semantic_confidence": 0.9,
       "geometric_confidence": 0.85,
-      "evidence_provenance": "MEASURED_CLUSTER_UNMATCHED",
+      "evidence_provenance": "MEASURED_CLUSTER_S2",
       "source_sessions": [
         "semantic_mapping_my_desk_recording_02"
       ],
@@ -4652,7 +4652,7 @@
       "coordinate_frame": "reference_frame",
       "semantic_confidence": 0.9,
       "geometric_confidence": 0.85,
-      "evidence_provenance": "MEASURED_CLUSTER_UNMATCHED",
+      "evidence_provenance": "MEASURED_CLUSTER_S2",
       "source_sessions": [
         "semantic_mapping_my_desk_recording_02"
       ],
@@ -4689,7 +4689,7 @@
       "coordinate_frame": "reference_frame",
       "semantic_confidence": 0.9,
       "geometric_confidence": 0.85,
-      "evidence_provenance": "MEASURED_CLUSTER_UNMATCHED",
+      "evidence_provenance": "MEASURED_CLUSTER_S2",
       "source_sessions": [
         "semantic_mapping_my_desk_recording_02"
       ],
@@ -4726,7 +4726,7 @@
       "coordinate_frame": "reference_frame",
       "semantic_confidence": 0.9,
       "geometric_confidence": 0.85,
-      "evidence_provenance": "MEASURED_CLUSTER_UNMATCHED",
+      "evidence_provenance": "MEASURED_CLUSTER_S2",
       "source_sessions": [
         "semantic_mapping_my_desk_recording_02"
       ],
@@ -4763,7 +4763,7 @@
       "coordinate_frame": "reference_frame",
       "semantic_confidence": 0.9,
       "geometric_confidence": 0.85,
-      "evidence_provenance": "MEASURED_CLUSTER_UNMATCHED",
+      "evidence_provenance": "MEASURED_CLUSTER_S2",
       "source_sessions": [
         "semantic_mapping_my_desk_recording_02"
       ],
@@ -4800,7 +4800,7 @@
       "coordinate_frame": "reference_frame",
       "semantic_confidence": 0.9,
       "geometric_confidence": 0.85,
-      "evidence_provenance": "MEASURED_CLUSTER_UNMATCHED",
+      "evidence_provenance": "MEASURED_CLUSTER_S2",
       "source_sessions": [
         "semantic_mapping_my_desk_recording_02"
       ],
@@ -4837,7 +4837,7 @@
       "coordinate_frame": "reference_frame",
       "semantic_confidence": 0.9,
       "geometric_confidence": 0.85,
-      "evidence_provenance": "MEASURED_CLUSTER_UNMATCHED",
+      "evidence_provenance": "MEASURED_CLUSTER_S2",
       "source_sessions": [
         "semantic_mapping_my_desk_recording_02"
       ],
@@ -4874,7 +4874,7 @@
       "coordinate_frame": "reference_frame",
       "semantic_confidence": 0.9,
       "geometric_confidence": 0.85,
-      "evidence_provenance": "MEASURED_CLUSTER_UNMATCHED",
+      "evidence_provenance": "MEASURED_CLUSTER_S2",
       "source_sessions": [
         "semantic_mapping_my_desk_recording_02"
       ],
@@ -4911,7 +4911,7 @@
       "coordinate_frame": "reference_frame",
       "semantic_confidence": 0.9,
       "geometric_confidence": 0.85,
-      "evidence_provenance": "MEASURED_CLUSTER_UNMATCHED",
+      "evidence_provenance": "MEASURED_CLUSTER_S2",
       "source_sessions": [
         "semantic_mapping_my_desk_recording_02"
       ],
@@ -4948,7 +4948,7 @@
       "coordinate_frame": "reference_frame",
       "semantic_confidence": 0.9,
       "geometric_confidence": 0.85,
-      "evidence_provenance": "MEASURED_CLUSTER_UNMATCHED",
+      "evidence_provenance": "MEASURED_CLUSTER_S2",
       "source_sessions": [
         "semantic_mapping_my_desk_recording_02"
       ],
@@ -4985,7 +4985,7 @@
       "coordinate_frame": "reference_frame",
       "semantic_confidence": 0.9,
       "geometric_confidence": 0.85,
-      "evidence_provenance": "MEASURED_CLUSTER_UNMATCHED",
+      "evidence_provenance": "MEASURED_CLUSTER_S2",
       "source_sessions": [
         "semantic_mapping_my_desk_recording_02"
       ],
@@ -5022,7 +5022,7 @@
       "coordinate_frame": "reference_frame",
       "semantic_confidence": 0.9,
       "geometric_confidence": 0.85,
-      "evidence_provenance": "MEASURED_CLUSTER_UNMATCHED",
+      "evidence_provenance": "MEASURED_CLUSTER_S2",
       "source_sessions": [
         "semantic_mapping_my_desk_recording_02"
       ],
@@ -5059,7 +5059,7 @@
       "coordinate_frame": "reference_frame",
       "semantic_confidence": 0.9,
       "geometric_confidence": 0.85,
-      "evidence_provenance": "MEASURED_CLUSTER_UNMATCHED",
+      "evidence_provenance": "MEASURED_CLUSTER_S2",
       "source_sessions": [
         "semantic_mapping_my_desk_recording_02"
       ],
@@ -5096,7 +5096,7 @@
       "coordinate_frame": "reference_frame",
       "semantic_confidence": 0.9,
       "geometric_confidence": 0.85,
-      "evidence_provenance": "MEASURED_CLUSTER_UNMATCHED",
+      "evidence_provenance": "MEASURED_CLUSTER_S2",
       "source_sessions": [
         "semantic_mapping_my_desk_recording_02"
       ],
@@ -5133,7 +5133,7 @@
       "coordinate_frame": "reference_frame",
       "semantic_confidence": 0.9,
       "geometric_confidence": 0.85,
-      "evidence_provenance": "MEASURED_CLUSTER_UNMATCHED",
+      "evidence_provenance": "MEASURED_CLUSTER_S2",
       "source_sessions": [
         "semantic_mapping_my_desk_recording_02"
       ],
@@ -5170,7 +5170,7 @@
       "coordinate_frame": "reference_frame",
       "semantic_confidence": 0.9,
       "geometric_confidence": 0.85,
-      "evidence_provenance": "MEASURED_CLUSTER_UNMATCHED",
+      "evidence_provenance": "MEASURED_CLUSTER_S2",
       "source_sessions": [
         "semantic_mapping_my_desk_recording_02"
       ],
@@ -5207,7 +5207,7 @@
       "coordinate_frame": "reference_frame",
       "semantic_confidence": 0.9,
       "geometric_confidence": 0.85,
-      "evidence_provenance": "MEASURED_CLUSTER_UNMATCHED",
+      "evidence_provenance": "MEASURED_CLUSTER_S2",
       "source_sessions": [
         "semantic_mapping_my_desk_recording_02"
       ],
@@ -5244,7 +5244,7 @@
       "coordinate_frame": "reference_frame",
       "semantic_confidence": 0.9,
       "geometric_confidence": 0.85,
-      "evidence_provenance": "MEASURED_CLUSTER_UNMATCHED",
+      "evidence_provenance": "MEASURED_CLUSTER_S2",
       "source_sessions": [
         "semantic_mapping_my_desk_recording_02"
       ],
@@ -5281,7 +5281,7 @@
       "coordinate_frame": "reference_frame",
       "semantic_confidence": 0.9,
       "geometric_confidence": 0.85,
-      "evidence_provenance": "MEASURED_CLUSTER_UNMATCHED",
+      "evidence_provenance": "MEASURED_CLUSTER_S2",
       "source_sessions": [
         "semantic_mapping_my_desk_recording_02"
       ],
@@ -5318,7 +5318,7 @@
       "coordinate_frame": "reference_frame",
       "semantic_confidence": 0.9,
       "geometric_confidence": 0.85,
-      "evidence_provenance": "MEASURED_CLUSTER_UNMATCHED",
+      "evidence_provenance": "MEASURED_CLUSTER_S2",
       "source_sessions": [
         "semantic_mapping_my_desk_recording_02"
       ],
@@ -5355,7 +5355,7 @@
       "coordinate_frame": "reference_frame",
       "semantic_confidence": 0.9,
       "geometric_confidence": 0.85,
-      "evidence_provenance": "MEASURED_CLUSTER_UNMATCHED",
+      "evidence_provenance": "MEASURED_CLUSTER_S2",
       "source_sessions": [
         "semantic_mapping_my_desk_recording_02"
       ],
@@ -5392,7 +5392,7 @@
       "coordinate_frame": "reference_frame",
       "semantic_confidence": 0.9,
       "geometric_confidence": 0.85,
-      "evidence_provenance": "MEASURED_CLUSTER_UNMATCHED",
+      "evidence_provenance": "MEASURED_CLUSTER_S2",
       "source_sessions": [
         "semantic_mapping_my_desk_recording_02"
       ],
@@ -5429,7 +5429,7 @@
       "coordinate_frame": "reference_frame",
       "semantic_confidence": 0.9,
       "geometric_confidence": 0.85,
-      "evidence_provenance": "MEASURED_CLUSTER_UNMATCHED",
+      "evidence_provenance": "MEASURED_CLUSTER_S2",
       "source_sessions": [
         "semantic_mapping_my_desk_recording_02"
       ],
@@ -5466,7 +5466,7 @@
       "coordinate_frame": "reference_frame",
       "semantic_confidence": 0.9,
       "geometric_confidence": 0.85,
-      "evidence_provenance": "MEASURED_CLUSTER_UNMATCHED",
+      "evidence_provenance": "MEASURED_CLUSTER_S2",
       "source_sessions": [
         "semantic_mapping_my_desk_recording_02"
       ],
@@ -5503,7 +5503,7 @@
       "coordinate_frame": "reference_frame",
       "semantic_confidence": 0.9,
       "geometric_confidence": 0.85,
-      "evidence_provenance": "MEASURED_CLUSTER_UNMATCHED",
+      "evidence_provenance": "MEASURED_CLUSTER_S2",
       "source_sessions": [
         "semantic_mapping_my_desk_recording_02"
       ],
@@ -5540,7 +5540,7 @@
       "coordinate_frame": "reference_frame",
       "semantic_confidence": 0.9,
       "geometric_confidence": 0.85,
-      "evidence_provenance": "MEASURED_CLUSTER_UNMATCHED",
+      "evidence_provenance": "MEASURED_CLUSTER_S2",
       "source_sessions": [
         "semantic_mapping_my_desk_recording_02"
       ],
@@ -5577,7 +5577,7 @@
       "coordinate_frame": "reference_frame",
       "semantic_confidence": 0.9,
       "geometric_confidence": 0.85,
-      "evidence_provenance": "MEASURED_CLUSTER_UNMATCHED",
+      "evidence_provenance": "MEASURED_CLUSTER_S2",
       "source_sessions": [
         "semantic_mapping_my_desk_recording_02"
       ],
@@ -5614,7 +5614,7 @@
       "coordinate_frame": "reference_frame",
       "semantic_confidence": 0.9,
       "geometric_confidence": 0.85,
-      "evidence_provenance": "MEASURED_CLUSTER_UNMATCHED",
+      "evidence_provenance": "MEASURED_CLUSTER_S2",
       "source_sessions": [
         "semantic_mapping_my_desk_recording_02"
       ],
@@ -5651,7 +5651,7 @@
       "coordinate_frame": "reference_frame",
       "semantic_confidence": 0.9,
       "geometric_confidence": 0.85,
-      "evidence_provenance": "MEASURED_CLUSTER_UNMATCHED",
+      "evidence_provenance": "MEASURED_CLUSTER_S2",
       "source_sessions": [
         "semantic_mapping_my_desk_recording_02"
       ],
@@ -5688,7 +5688,7 @@
       "coordinate_frame": "reference_frame",
       "semantic_confidence": 0.9,
       "geometric_confidence": 0.85,
-      "evidence_provenance": "MEASURED_CLUSTER_UNMATCHED",
+      "evidence_provenance": "MEASURED_CLUSTER_S2",
       "source_sessions": [
         "semantic_mapping_my_desk_recording_02"
       ],
@@ -5725,7 +5725,7 @@
       "coordinate_frame": "reference_frame",
       "semantic_confidence": 0.9,
       "geometric_confidence": 0.85,
-      "evidence_provenance": "MEASURED_CLUSTER_UNMATCHED",
+      "evidence_provenance": "MEASURED_CLUSTER_S2",
       "source_sessions": [
         "semantic_mapping_my_desk_recording_02"
       ],
@@ -5762,7 +5762,7 @@
       "coordinate_frame": "reference_frame",
       "semantic_confidence": 0.9,
       "geometric_confidence": 0.85,
-      "evidence_provenance": "MEASURED_CLUSTER_UNMATCHED",
+      "evidence_provenance": "MEASURED_CLUSTER_S2",
       "source_sessions": [
         "semantic_mapping_my_desk_recording_02"
       ],
@@ -5799,7 +5799,7 @@
       "coordinate_frame": "reference_frame",
       "semantic_confidence": 0.9,
       "geometric_confidence": 0.85,
-      "evidence_provenance": "MEASURED_CLUSTER_UNMATCHED",
+      "evidence_provenance": "MEASURED_CLUSTER_S2",
       "source_sessions": [
         "semantic_mapping_my_desk_recording_02"
       ],
@@ -5836,7 +5836,7 @@
       "coordinate_frame": "reference_frame",
       "semantic_confidence": 0.9,
       "geometric_confidence": 0.85,
-      "evidence_provenance": "MEASURED_CLUSTER_UNMATCHED",
+      "evidence_provenance": "MEASURED_CLUSTER_S2",
       "source_sessions": [
         "semantic_mapping_my_desk_recording_02"
       ],
@@ -5873,7 +5873,7 @@
       "coordinate_frame": "reference_frame",
       "semantic_confidence": 0.9,
       "geometric_confidence": 0.85,
-      "evidence_provenance": "MEASURED_CLUSTER_UNMATCHED",
+      "evidence_provenance": "MEASURED_CLUSTER_S2",
       "source_sessions": [
         "semantic_mapping_my_desk_recording_02"
       ],
@@ -5910,7 +5910,7 @@
       "coordinate_frame": "reference_frame",
       "semantic_confidence": 0.9,
       "geometric_confidence": 0.85,
-      "evidence_provenance": "MEASURED_CLUSTER_UNMATCHED",
+      "evidence_provenance": "MEASURED_CLUSTER_S2",
       "source_sessions": [
         "semantic_mapping_my_desk_recording_02"
       ],
@@ -5947,7 +5947,7 @@
       "coordinate_frame": "reference_frame",
       "semantic_confidence": 0.9,
       "geometric_confidence": 0.85,
-      "evidence_provenance": "MEASURED_CLUSTER_UNMATCHED",
+      "evidence_provenance": "MEASURED_CLUSTER_S2",
       "source_sessions": [
         "semantic_mapping_my_desk_recording_02"
       ],
@@ -5984,7 +5984,7 @@
       "coordinate_frame": "reference_frame",
       "semantic_confidence": 0.9,
       "geometric_confidence": 0.85,
-      "evidence_provenance": "MEASURED_CLUSTER_UNMATCHED",
+      "evidence_provenance": "MEASURED_CLUSTER_S2",
       "source_sessions": [
         "semantic_mapping_my_desk_recording_02"
       ],
@@ -6021,7 +6021,7 @@
       "coordinate_frame": "reference_frame",
       "semantic_confidence": 0.9,
       "geometric_confidence": 0.85,
-      "evidence_provenance": "MEASURED_CLUSTER_UNMATCHED",
+      "evidence_provenance": "MEASURED_CLUSTER_S2",
       "source_sessions": [
         "semantic_mapping_my_desk_recording_02"
       ],
@@ -6058,7 +6058,7 @@
       "coordinate_frame": "reference_frame",
       "semantic_confidence": 0.9,
       "geometric_confidence": 0.85,
-      "evidence_provenance": "MEASURED_CLUSTER_UNMATCHED",
+      "evidence_provenance": "MEASURED_CLUSTER_S2",
       "source_sessions": [
         "semantic_mapping_my_desk_recording_02"
       ],
@@ -6095,7 +6095,7 @@
       "coordinate_frame": "reference_frame",
       "semantic_confidence": 0.9,
       "geometric_confidence": 0.85,
-      "evidence_provenance": "MEASURED_CLUSTER_UNMATCHED",
+      "evidence_provenance": "MEASURED_CLUSTER_S2",
       "source_sessions": [
         "semantic_mapping_my_desk_recording_02"
       ],
@@ -6132,7 +6132,7 @@
       "coordinate_frame": "reference_frame",
       "semantic_confidence": 0.9,
       "geometric_confidence": 0.85,
-      "evidence_provenance": "MEASURED_CLUSTER_UNMATCHED",
+      "evidence_provenance": "MEASURED_CLUSTER_S2",
       "source_sessions": [
         "semantic_mapping_my_desk_recording_02"
       ],
@@ -6169,7 +6169,7 @@
       "coordinate_frame": "reference_frame",
       "semantic_confidence": 0.9,
       "geometric_confidence": 0.85,
-      "evidence_provenance": "MEASURED_CLUSTER_UNMATCHED",
+      "evidence_provenance": "MEASURED_CLUSTER_S2",
       "source_sessions": [
         "semantic_mapping_my_desk_recording_02"
       ],
@@ -6206,7 +6206,7 @@
       "coordinate_frame": "reference_frame",
       "semantic_confidence": 0.9,
       "geometric_confidence": 0.85,
-      "evidence_provenance": "MEASURED_CLUSTER_UNMATCHED",
+      "evidence_provenance": "MEASURED_CLUSTER_S2",
       "source_sessions": [
         "semantic_mapping_my_desk_recording_02"
       ],
@@ -6243,7 +6243,7 @@
       "coordinate_frame": "reference_frame",
       "semantic_confidence": 0.9,
       "geometric_confidence": 0.85,
-      "evidence_provenance": "MEASURED_CLUSTER_UNMATCHED",
+      "evidence_provenance": "MEASURED_CLUSTER_S2",
       "source_sessions": [
         "semantic_mapping_my_desk_recording_02"
       ],
@@ -6280,7 +6280,7 @@
       "coordinate_frame": "reference_frame",
       "semantic_confidence": 0.9,
       "geometric_confidence": 0.85,
-      "evidence_provenance": "MEASURED_CLUSTER_UNMATCHED",
+      "evidence_provenance": "MEASURED_CLUSTER_S2",
       "source_sessions": [
         "semantic_mapping_my_desk_recording_02"
       ],
@@ -6317,7 +6317,7 @@
       "coordinate_frame": "reference_frame",
       "semantic_confidence": 0.9,
       "geometric_confidence": 0.85,
-      "evidence_provenance": "MEASURED_CLUSTER_UNMATCHED",
+      "evidence_provenance": "MEASURED_CLUSTER_S2",
       "source_sessions": [
         "semantic_mapping_my_desk_recording_02"
       ],
@@ -6354,7 +6354,7 @@
       "coordinate_frame": "reference_frame",
       "semantic_confidence": 0.9,
       "geometric_confidence": 0.85,
-      "evidence_provenance": "MEASURED_CLUSTER_UNMATCHED",
+      "evidence_provenance": "MEASURED_CLUSTER_S2",
       "source_sessions": [
         "semantic_mapping_my_desk_recording_02"
       ],
@@ -6391,7 +6391,7 @@
       "coordinate_frame": "reference_frame",
       "semantic_confidence": 0.9,
       "geometric_confidence": 0.85,
-      "evidence_provenance": "MEASURED_CLUSTER_UNMATCHED",
+      "evidence_provenance": "MEASURED_CLUSTER_S2",
       "source_sessions": [
         "semantic_mapping_my_desk_recording_02"
       ],
@@ -6428,7 +6428,7 @@
       "coordinate_frame": "reference_frame",
       "semantic_confidence": 0.9,
       "geometric_confidence": 0.85,
-      "evidence_provenance": "MEASURED_CLUSTER_UNMATCHED",
+      "evidence_provenance": "MEASURED_CLUSTER_S2",
       "source_sessions": [
         "semantic_mapping_my_desk_recording_02"
       ],
@@ -6465,7 +6465,7 @@
       "coordinate_frame": "reference_frame",
       "semantic_confidence": 0.9,
       "geometric_confidence": 0.85,
-      "evidence_provenance": "MEASURED_CLUSTER_UNMATCHED",
+      "evidence_provenance": "MEASURED_CLUSTER_S2",
       "source_sessions": [
         "semantic_mapping_my_desk_recording_02"
       ],
@@ -6502,7 +6502,7 @@
       "coordinate_frame": "reference_frame",
       "semantic_confidence": 0.9,
       "geometric_confidence": 0.85,
-      "evidence_provenance": "MEASURED_CLUSTER_UNMATCHED",
+      "evidence_provenance": "MEASURED_CLUSTER_S2",
       "source_sessions": [
         "semantic_mapping_my_desk_recording_02"
       ],
@@ -6539,7 +6539,7 @@
       "coordinate_frame": "reference_frame",
       "semantic_confidence": 0.9,
       "geometric_confidence": 0.85,
-      "evidence_provenance": "MEASURED_CLUSTER_UNMATCHED",
+      "evidence_provenance": "MEASURED_CLUSTER_S2",
       "source_sessions": [
         "semantic_mapping_my_desk_recording_02"
       ],
@@ -6576,7 +6576,7 @@
       "coordinate_frame": "reference_frame",
       "semantic_confidence": 0.9,
       "geometric_confidence": 0.85,
-      "evidence_provenance": "MEASURED_CLUSTER_UNMATCHED",
+      "evidence_provenance": "MEASURED_CLUSTER_S2",
       "source_sessions": [
         "semantic_mapping_my_desk_recording_02"
       ],
@@ -6613,7 +6613,7 @@
       "coordinate_frame": "reference_frame",
       "semantic_confidence": 0.9,
       "geometric_confidence": 0.85,
-      "evidence_provenance": "MEASURED_CLUSTER_UNMATCHED",
+      "evidence_provenance": "MEASURED_CLUSTER_S2",
       "source_sessions": [
         "semantic_mapping_my_desk_recording_02"
       ],
@@ -6650,7 +6650,7 @@
       "coordinate_frame": "reference_frame",
       "semantic_confidence": 0.9,
       "geometric_confidence": 0.85,
-      "evidence_provenance": "MEASURED_CLUSTER_UNMATCHED",
+      "evidence_provenance": "MEASURED_CLUSTER_S2",
       "source_sessions": [
         "semantic_mapping_my_desk_recording_02"
       ],
@@ -6687,7 +6687,7 @@
       "coordinate_frame": "reference_frame",
       "semantic_confidence": 0.9,
       "geometric_confidence": 0.85,
-      "evidence_provenance": "MEASURED_CLUSTER_UNMATCHED",
+      "evidence_provenance": "MEASURED_CLUSTER_S2",
       "source_sessions": [
         "semantic_mapping_my_desk_recording_02"
       ],
@@ -6724,7 +6724,7 @@
       "coordinate_frame": "reference_frame",
       "semantic_confidence": 0.9,
       "geometric_confidence": 0.85,
-      "evidence_provenance": "MEASURED_CLUSTER_UNMATCHED",
+      "evidence_provenance": "MEASURED_CLUSTER_S2",
       "source_sessions": [
         "semantic_mapping_my_desk_recording_02"
       ],
@@ -6761,7 +6761,7 @@
       "coordinate_frame": "reference_frame",
       "semantic_confidence": 0.9,
       "geometric_confidence": 0.85,
-      "evidence_provenance": "MEASURED_CLUSTER_UNMATCHED",
+      "evidence_provenance": "MEASURED_CLUSTER_S2",
       "source_sessions": [
         "semantic_mapping_my_desk_recording_02"
       ],
@@ -6798,7 +6798,7 @@
       "coordinate_frame": "reference_frame",
       "semantic_confidence": 0.9,
       "geometric_confidence": 0.85,
-      "evidence_provenance": "MEASURED_CLUSTER_UNMATCHED",
+      "evidence_provenance": "MEASURED_CLUSTER_S2",
       "source_sessions": [
         "semantic_mapping_my_desk_recording_02"
       ],
@@ -6835,7 +6835,7 @@
       "coordinate_frame": "reference_frame",
       "semantic_confidence": 0.9,
       "geometric_confidence": 0.85,
-      "evidence_provenance": "MEASURED_CLUSTER_UNMATCHED",
+      "evidence_provenance": "MEASURED_CLUSTER_S2",
       "source_sessions": [
         "semantic_mapping_my_desk_recording_02"
       ],
@@ -6872,7 +6872,7 @@
       "coordinate_frame": "reference_frame",
       "semantic_confidence": 0.9,
       "geometric_confidence": 0.85,
-      "evidence_provenance": "MEASURED_CLUSTER_UNMATCHED",
+      "evidence_provenance": "MEASURED_CLUSTER_S2",
       "source_sessions": [
         "semantic_mapping_my_desk_recording_02"
       ],
@@ -6909,7 +6909,7 @@
       "coordinate_frame": "reference_frame",
       "semantic_confidence": 0.9,
       "geometric_confidence": 0.85,
-      "evidence_provenance": "MEASURED_CLUSTER_UNMATCHED",
+      "evidence_provenance": "MEASURED_CLUSTER_S2",
       "source_sessions": [
         "semantic_mapping_my_desk_recording_02"
       ],
@@ -6946,7 +6946,7 @@
       "coordinate_frame": "reference_frame",
       "semantic_confidence": 0.9,
       "geometric_confidence": 0.85,
-      "evidence_provenance": "MEASURED_CLUSTER_UNMATCHED",
+      "evidence_provenance": "MEASURED_CLUSTER_S2",
       "source_sessions": [
         "semantic_mapping_my_desk_recording_02"
       ],
@@ -6983,7 +6983,7 @@
       "coordinate_frame": "reference_frame",
       "semantic_confidence": 0.9,
       "geometric_confidence": 0.85,
-      "evidence_provenance": "MEASURED_CLUSTER_UNMATCHED",
+      "evidence_provenance": "MEASURED_CLUSTER_S2",
       "source_sessions": [
         "semantic_mapping_my_desk_recording_02"
       ],
@@ -7020,7 +7020,7 @@
       "coordinate_frame": "reference_frame",
       "semantic_confidence": 0.99,
       "geometric_confidence": 0.85,
-      "evidence_provenance": "MEASURED_CLUSTER_UNMATCHED",
+      "evidence_provenance": "MEASURED_CLUSTER_S2",
       "source_sessions": [
         "semantic_mapping_my_desk_recording_02"
       ],
@@ -7076,7 +7076,7 @@
       "coordinate_frame": "reference_frame",
       "semantic_confidence": 0.9,
       "geometric_confidence": 0.85,
-      "evidence_provenance": "MEASURED_CLUSTER_UNMATCHED",
+      "evidence_provenance": "MEASURED_CLUSTER_S2",
       "source_sessions": [
         "semantic_mapping_my_desk_recording_02"
       ],
@@ -7113,7 +7113,7 @@
       "coordinate_frame": "reference_frame",
       "semantic_confidence": 0.9,
       "geometric_confidence": 0.85,
-      "evidence_provenance": "MEASURED_CLUSTER_UNMATCHED",
+      "evidence_provenance": "MEASURED_CLUSTER_S2",
       "source_sessions": [
         "semantic_mapping_my_desk_recording_02"
       ],
@@ -7150,7 +7150,7 @@
       "coordinate_frame": "reference_frame",
       "semantic_confidence": 0.9,
       "geometric_confidence": 0.85,
-      "evidence_provenance": "MEASURED_CLUSTER_UNMATCHED",
+      "evidence_provenance": "MEASURED_CLUSTER_S2",
       "source_sessions": [
         "semantic_mapping_my_desk_recording_02"
       ],
@@ -7187,7 +7187,7 @@
       "coordinate_frame": "reference_frame",
       "semantic_confidence": 0.9,
       "geometric_confidence": 0.85,
-      "evidence_provenance": "MEASURED_CLUSTER_UNMATCHED",
+      "evidence_provenance": "MEASURED_CLUSTER_S2",
       "source_sessions": [
         "semantic_mapping_my_desk_recording_02"
       ],
@@ -7224,7 +7224,7 @@
       "coordinate_frame": "reference_frame",
       "semantic_confidence": 0.9,
       "geometric_confidence": 0.85,
-      "evidence_provenance": "MEASURED_CLUSTER_UNMATCHED",
+      "evidence_provenance": "MEASURED_CLUSTER_S2",
       "source_sessions": [
         "semantic_mapping_my_desk_recording_02"
       ],
@@ -7261,7 +7261,7 @@
       "coordinate_frame": "reference_frame",
       "semantic_confidence": 0.9,
       "geometric_confidence": 0.85,
-      "evidence_provenance": "MEASURED_CLUSTER_UNMATCHED",
+      "evidence_provenance": "MEASURED_CLUSTER_S2",
       "source_sessions": [
         "semantic_mapping_my_desk_recording_02"
       ],
@@ -7298,7 +7298,7 @@
       "coordinate_frame": "reference_frame",
       "semantic_confidence": 0.9,
       "geometric_confidence": 0.85,
-      "evidence_provenance": "MEASURED_CLUSTER_UNMATCHED",
+      "evidence_provenance": "MEASURED_CLUSTER_S2",
       "source_sessions": [
         "semantic_mapping_my_desk_recording_02"
       ],
@@ -7335,7 +7335,7 @@
       "coordinate_frame": "reference_frame",
       "semantic_confidence": 0.9,
       "geometric_confidence": 0.85,
-      "evidence_provenance": "MEASURED_CLUSTER_UNMATCHED",
+      "evidence_provenance": "MEASURED_CLUSTER_S2",
       "source_sessions": [
         "semantic_mapping_my_desk_recording_02"
       ],
@@ -7372,7 +7372,7 @@
       "coordinate_frame": "reference_frame",
       "semantic_confidence": 0.9,
       "geometric_confidence": 0.85,
-      "evidence_provenance": "MEASURED_CLUSTER_UNMATCHED",
+      "evidence_provenance": "MEASURED_CLUSTER_S2",
       "source_sessions": [
         "semantic_mapping_my_desk_recording_02"
       ],
@@ -7409,7 +7409,7 @@
       "coordinate_frame": "reference_frame",
       "semantic_confidence": 0.9,
       "geometric_confidence": 0.85,
-      "evidence_provenance": "MEASURED_CLUSTER_UNMATCHED",
+      "evidence_provenance": "MEASURED_CLUSTER_S2",
       "source_sessions": [
         "semantic_mapping_my_desk_recording_02"
       ],
@@ -7446,7 +7446,7 @@
       "coordinate_frame": "reference_frame",
       "semantic_confidence": 0.9,
       "geometric_confidence": 0.85,
-      "evidence_provenance": "MEASURED_CLUSTER_UNMATCHED",
+      "evidence_provenance": "MEASURED_CLUSTER_S2",
       "source_sessions": [
         "semantic_mapping_my_desk_recording_02"
       ],

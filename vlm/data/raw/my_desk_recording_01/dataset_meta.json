@@ -1,0 +1,29 @@
+{
+  "sequence_name": "my_desk_recording_01",
+  "recorded_at": "20261012_123352",
+  "duration_seconds": 261.41,
+  "total_frames": 5397,
+  "average_fps": 20.65,
+  "resolution": [
+    640,
+    480
+  ],
+  "intrinsics": {
+    "width": 640,
+    "height": 480,
+    "fx": 383.9205627441406,
+    "fy": 383.4780578613281,
+    "cx": 320.2670593261719,
+    "cy": 244.56988525390625,
+    "distortion_model": "distortion.inverse_brown_conrady",
+    "coeffs": [
+      -0.05704856291413307,
+      0.0713643953204155,
+      2.773671440081671e-05,
+      0.0007969007710926235,
+      -0.023237327113747597
+    ],
+    "depth_scale": 999.999952502551,
+    "depth_unit_meters": 0.0010000000474974513
+  }
+}

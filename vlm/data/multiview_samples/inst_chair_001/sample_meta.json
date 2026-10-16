@@ -1,0 +1,57 @@
+{
+  "object_instance_id": "inst_chair_001",
+  "semantic_class": "chair",
+  "movability_gt": "MOVABLE",
+  "current_motion_gt": "STATIC",
+  "displacement_gt": 0.0,
+  "total_views": 2,
+  "angular_diversity_verified": true,
+  "views": [
+    {
+      "view_index": 0,
+      "frame_index": 3290,
+      "timestamp": 1791788791.014,
+      "viewing_angle_deg": 310.93,
+      "camera_pose": [
+        1.0292,
+        0.1305,
+        1.2493,
+        -0.1371,
+        0.5935,
+        0.0121,
+        0.7929
+      ],
+      "sharpness_score": 694.05,
+      "crop_path": "inst_chair_001/crop_view_0.jpg",
+      "scene_path": "inst_chair_001/scene_view_0.jpg"
+    },
+    {
+      "view_index": 1,
+      "frame_index": 5205,
+      "timestamp": 1791797891.5079,
+      "viewing_angle_deg": 324.28,
+      "camera_pose": [
+        0.1005,
+        -0.2517,
+        0.1964,
+        -0.1798,
+        -0.1414,
+        -0.1961,
+        0.9535
+      ],
+      "sharpness_score": 735.89,
+      "crop_path": "inst_chair_001/crop_view_1.jpg",
+      "scene_path": "inst_chair_001/scene_view_1.jpg"
+    }
+  ],
+  "conditions": {
+    "one_view": [
+      "inst_chair_001/crop_view_0.jpg"
+    ],
+    "two_views": [
+      "inst_chair_001/crop_view_0.jpg",
+      "inst_chair_001/crop_view_1.jpg"
+    ],
+    "three_views": []
+  }
+}

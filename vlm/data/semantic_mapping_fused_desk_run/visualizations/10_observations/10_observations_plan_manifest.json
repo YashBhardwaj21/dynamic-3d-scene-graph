@@ -1,0 +1,202 @@
+[
+  {
+    "step": 1,
+    "target_id": "desk_001",
+    "desc": "Primary Workstation Desk",
+    "start_pose": [
+      0.0,
+      0.0,
+      0.0
+    ],
+    "target_pose": [
+      1.42,
+      -1.33,
+      -0.7504915783575618
+    ],
+    "path_distance_m": 1.96,
+    "waypoints_count": 3,
+    "planning_latency_ms": 0.68,
+    "card_image": "outputs\\semantic_mapping_fused_desk_run\\visualizations\\10_observations\\obs_01_desk_001_mission_card.png",
+    "dest_image": "outputs\\semantic_mapping_fused_desk_run\\visualizations\\10_observations\\obs_01_desk_001_view.png"
+  },
+  {
+    "step": 2,
+    "target_id": "chair_002",
+    "desc": "Conference Side Chair",
+    "start_pose": [
+      1.42,
+      -1.33,
+      -0.7504915783575618
+    ],
+    "target_pose": [
+      1.77,
+      -1.03,
+      -1.5847589608108512
+    ],
+    "path_distance_m": 0.47,
+    "waypoints_count": 3,
+    "planning_latency_ms": 0.13,
+    "card_image": "outputs\\semantic_mapping_fused_desk_run\\visualizations\\10_observations\\obs_02_chair_002_mission_card.png",
+    "dest_image": "outputs\\semantic_mapping_fused_desk_run\\visualizations\\10_observations\\obs_02_chair_002_view.png"
+  },
+  {
+    "step": 3,
+    "target_id": "chair_003",
+    "desc": "Central Meeting Chair",
+    "start_pose": [
+      1.77,
+      -1.03,
+      -1.5847589608108512
+    ],
+    "target_pose": [
+      1.13,
+      -2.2,
+      -1.5707963267948966
+    ],
+    "path_distance_m": 1.42,
+    "waypoints_count": 5,
+    "planning_latency_ms": 1.55,
+    "card_image": "outputs\\semantic_mapping_fused_desk_run\\visualizations\\10_observations\\obs_03_chair_003_mission_card.png",
+    "dest_image": "outputs\\semantic_mapping_fused_desk_run\\visualizations\\10_observations\\obs_03_chair_003_view.png"
+  },
+  {
+    "step": 4,
+    "target_id": "storage box_001",
+    "desc": "East Storage Box",
+    "start_pose": [
+      1.13,
+      -2.2,
+      -1.5707963267948966
+    ],
+    "target_pose": [
+      1.65,
+      -2.2,
+      -1.5707963267948966
+    ],
+    "path_distance_m": 0.37,
+    "waypoints_count": 3,
+    "planning_latency_ms": 0.5,
+    "card_image": "outputs\\semantic_mapping_fused_desk_run\\visualizations\\10_observations\\obs_04_storage box_001_mission_card.png",
+    "dest_image": "outputs\\semantic_mapping_fused_desk_run\\visualizations\\10_observations\\obs_04_storage box_001_view.png"
+  },
+  {
+    "step": 5,
+    "target_id": "chair_005",
+    "desc": "South Meeting Chair",
+    "start_pose": [
+      1.65,
+      -2.2,
+      -1.5707963267948966
+    ],
+    "target_pose": [
+      0.66,
+      -3.2,
+      -1.5707963267948966
+    ],
+    "path_distance_m": 1.38,
+    "waypoints_count": 12,
+    "planning_latency_ms": 0.74,
+    "card_image": "outputs\\semantic_mapping_fused_desk_run\\visualizations\\10_observations\\obs_05_chair_005_mission_card.png",
+    "dest_image": "outputs\\semantic_mapping_fused_desk_run\\visualizations\\10_observations\\obs_05_chair_005_view.png"
+  },
+  {
+    "step": 6,
+    "target_id": "desk_005",
+    "desc": "South Laboratory Bench",
+    "start_pose": [
+      0.66,
+      -3.2,
+      -1.5707963267948966
+    ],
+    "target_pose": [
+      -0.14,
+      -5.0,
+      -1.5707963267948966
+    ],
+    "path_distance_m": 2.13,
+    "waypoints_count": 9,
+    "planning_latency_ms": 2.69,
+    "card_image": "outputs\\semantic_mapping_fused_desk_run\\visualizations\\10_observations\\obs_06_desk_005_mission_card.png",
+    "dest_image": "outputs\\semantic_mapping_fused_desk_run\\visualizations\\10_observations\\obs_06_desk_005_view.png"
+  },
+  {
+    "step": 7,
+    "target_id": "desk_018",
+    "desc": "West Workstation Bench",
+    "start_pose": [
+      -0.14,
+      -5.0,
+      -1.5707963267948966
+    ],
+    "target_pose": [
+      -1.36,
+      -3.02,
+      3.141592653589793
+    ],
+    "path_distance_m": 2.47,
+    "waypoints_count": 13,
+    "planning_latency_ms": 2.79,
+    "card_image": "outputs\\semantic_mapping_fused_desk_run\\visualizations\\10_observations\\obs_07_desk_018_mission_card.png",
+    "dest_image": "outputs\\semantic_mapping_fused_desk_run\\visualizations\\10_observations\\obs_07_desk_018_view.png"
+  },
+  {
+    "step": 8,
+    "target_id": "desk_017",
+    "desc": "Northwest Center Bench",
+    "start_pose": [
+      -1.36,
+      -3.02,
+      3.141592653589793
+    ],
+    "target_pose": [
+      -1.1,
+      -1.53,
+      3.141592653589793
+    ],
+    "path_distance_m": 1.62,
+    "waypoints_count": 4,
+    "planning_latency_ms": 0.96,
+    "card_image": "outputs\\semantic_mapping_fused_desk_run\\visualizations\\10_observations\\obs_08_desk_017_mission_card.png",
+    "dest_image": "outputs\\semantic_mapping_fused_desk_run\\visualizations\\10_observations\\obs_08_desk_017_view.png"
+  },
+  {
+    "step": 9,
+    "target_id": "desk_023",
+    "desc": "West Corridor Workstation",
+    "start_pose": [
+      -1.1,
+      -1.53,
+      3.141592653589793
+    ],
+    "target_pose": [
+      -0.45,
+      -1.11,
+      3.141592653589793
+    ],
+    "path_distance_m": 0.82,
+    "waypoints_count": 3,
+    "planning_latency_ms": 0.43,
+    "card_image": "outputs\\semantic_mapping_fused_desk_run\\visualizations\\10_observations\\obs_09_desk_023_mission_card.png",
+    "dest_image": "outputs\\semantic_mapping_fused_desk_run\\visualizations\\10_observations\\obs_09_desk_023_view.png"
+  },
+  {
+    "step": 10,
+    "target_id": "desk_024",
+    "desc": "North Corridor Desk",
+    "start_pose": [
+      -0.45,
+      -1.11,
+      3.141592653589793
+    ],
+    "target_pose": [
+      -0.1,
+      -0.28,
+      3.141592653589793
+    ],
+    "path_distance_m": 0.99,
+    "waypoints_count": 6,
+    "planning_latency_ms": 0.57,
+    "card_image": "outputs\\semantic_mapping_fused_desk_run\\visualizations\\10_observations\\obs_10_desk_024_mission_card.png",
+    "dest_image": "outputs\\semantic_mapping_fused_desk_run\\visualizations\\10_observations\\obs_10_desk_024_view.png"
+  }
+]

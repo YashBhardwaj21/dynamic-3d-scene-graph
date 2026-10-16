@@ -3,7 +3,7 @@
 ## 1. Executive Summary & Objective
 Stage 6 establishes an **estimator-aware selective evidence router** that decides when to trust inexpensive SLAM evidence and when to invoke an expensive Vision-Language Model (VLM).
 
-**Evaluation Timestamp:** `2026-10-16 04:05:51 UTC`  
+**Evaluation Timestamp:** `2026-10-16 19:46:01 UTC`  
 **Benchmark Populations:** `View B Total: 15 instances` | `View A Matched Image-Eligible: 15 instances`  
 **VLM Model:** `Qwen2.5-VL-3B-Instruct (GGUF Q4_K_M)`  
 

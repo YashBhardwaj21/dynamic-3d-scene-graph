@@ -1,7 +1,7 @@
 {
   "metadata": {
     "title": "Phase 6 Controlled VLM Ablation Study",
-    "timestamp": 1792095207.9823377,
+    "timestamp": 1792179971.6777968,
     "model": "Qwen2.5-VL-3B-Instruct (GGUF Q4_K_M)",
     "total_image_eligible_instances": 39
   },

@@ -3,7 +3,7 @@
 ## 1. Executive Summary & Objective
 This report establishes rigorous, controlled ablations evaluating Vision-Language Model (VLM) inference performance across prompt formulations, view counts, and input representations under strictly matched physical-instance populations.
 
-**Evaluation Timestamp:** `2026-10-15 20:13:27 UTC`  
+**Evaluation Timestamp:** `2026-10-16 19:46:11 UTC`  
 **VLM Model:** `Qwen2.5-VL-3B-Instruct (GGUF Q4_K_M)`  
 **Image-Eligible Population:** `39 physical instances` with verified multi-view crops  
 

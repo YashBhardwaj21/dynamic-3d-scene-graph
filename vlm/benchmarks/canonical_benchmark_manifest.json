@@ -2846,36 +2846,63 @@
       ],
       "visual_evidence": {
         "has_images": true,
-        "views_count": 3,
+        "views_count": 2,
         "crops_dir": "vlm/outputs/multiview_samples/inst_human_operator_001",
         "images": [
           {
-            "filename": "crop_view_0.jpg",
             "relative_path": "vlm/outputs/multiview_samples/inst_human_operator_001/crop_view_0.jpg",
+            "filename": "crop_view_0.jpg",
+            "sha256": "4a3e76901571111e37e0eed986e320c5ed07745acab2d8db03c2bb25a67edba6",
+            "size_bytes": 8015,
             "image_type": "crop"
           },
           {
-            "filename": "crop_view_1.jpg",
             "relative_path": "vlm/outputs/multiview_samples/inst_human_operator_001/crop_view_1.jpg",
+            "filename": "crop_view_1.jpg",
+            "sha256": "a0ced439bef0797c139ba3218479a52661ade388e350ece4e83f107222c885be",
+            "size_bytes": 2305,
             "image_type": "crop"
           },
           {
-            "filename": "crop_view_2.jpg",
             "relative_path": "vlm/outputs/multiview_samples/inst_human_operator_001/crop_view_2.jpg",
+            "filename": "crop_view_2.jpg",
+            "sha256": "91829045da066c3a9a59bbf0fba50fde0181a85f19f31ef7d6c915928dd0cd6f",
+            "size_bytes": 1114,
             "image_type": "crop"
+          },
+          {
+            "relative_path": "vlm/outputs/multiview_samples/inst_human_operator_001/scene_view_0.jpg",
+            "filename": "scene_view_0.jpg",
+            "sha256": "b36458879497c0f0b3c1f15efbd4f4afacac75436b6fd5bfcc42492980418d3c",
+            "size_bytes": 73466,
+            "image_type": "scene"
+          },
+          {
+            "relative_path": "vlm/outputs/multiview_samples/inst_human_operator_001/scene_view_1.jpg",
+            "filename": "scene_view_1.jpg",
+            "sha256": "a35eca317106cd5c62ff927ded2d96a0341ef83d04b243a652f254ed6b093397",
+            "size_bytes": 60979,
+            "image_type": "scene"
+          },
+          {
+            "relative_path": "vlm/outputs/multiview_samples/inst_human_operator_001/scene_view_2.jpg",
+            "filename": "scene_view_2.jpg",
+            "sha256": "5d7096cb6371be1852176622c9ecb74125b73d7e9d2a22c87b26b372b1da55d1",
+            "size_bytes": 89227,
+            "image_type": "scene"
           }
         ]
       },
       "evaluation_memberships": {
         "pop_52_ground_truth": true,
-        "pop_39_image_eligible": false,
+        "pop_39_image_eligible": true,
         "pop_15_balanced_router": true,
         "pop_28_held_out_furniture": false
       },
       "task_eligibility": {
-        "matched_image_eligible_view_a": false,
+        "matched_image_eligible_view_a": true,
         "end_to_end_system_view_b": true,
-        "has_genuine_baseline_vlm_record": false,
+        "has_genuine_baseline_vlm_record": true,
         "downstream_slam_eligible": true
       },
       "provenance": {
@@ -3324,27 +3351,45 @@
         "crops_dir": "vlm/outputs/multiview_samples/inst_quadcopter_drone_001",
         "images": [
           {
-            "filename": "crop_view_0.jpg",
             "relative_path": "vlm/outputs/multiview_samples/inst_quadcopter_drone_001/crop_view_0.jpg",
+            "filename": "crop_view_0.jpg",
+            "sha256": "a55328dfaa8b288bd99eb6dac497cd8f8a5b9ab917b37c2555c02f1ea1405e71",
+            "size_bytes": 4468,
             "image_type": "crop"
           },
           {
-            "filename": "crop_view_1.jpg",
             "relative_path": "vlm/outputs/multiview_samples/inst_quadcopter_drone_001/crop_view_1.jpg",
+            "filename": "crop_view_1.jpg",
+            "sha256": "cf042acbc6bcd6403507fe9ecad6428f92234dabf06b28b9d9a662ed91e4bc44",
+            "size_bytes": 2449,
             "image_type": "crop"
+          },
+          {
+            "relative_path": "vlm/outputs/multiview_samples/inst_quadcopter_drone_001/scene_view_0.jpg",
+            "filename": "scene_view_0.jpg",
+            "sha256": "90a7cd0f8eaccc8936a82b070240288f8f715f02d8d25bcf3468906e8a98940d",
+            "size_bytes": 64771,
+            "image_type": "scene"
+          },
+          {
+            "relative_path": "vlm/outputs/multiview_samples/inst_quadcopter_drone_001/scene_view_1.jpg",
+            "filename": "scene_view_1.jpg",
+            "sha256": "4aa2c4271db54e72f3d59aa0fe1c8e6295abdcb136c25efd4590e76aba996844",
+            "size_bytes": 80314,
+            "image_type": "scene"
           }
         ]
       },
       "evaluation_memberships": {
         "pop_52_ground_truth": true,
-        "pop_39_image_eligible": false,
+        "pop_39_image_eligible": true,
         "pop_15_balanced_router": true,
         "pop_28_held_out_furniture": false
       },
       "task_eligibility": {
-        "matched_image_eligible_view_a": false,
+        "matched_image_eligible_view_a": true,
         "end_to_end_system_view_b": true,
-        "has_genuine_baseline_vlm_record": false,
+        "has_genuine_baseline_vlm_record": true,
         "downstream_slam_eligible": true
       },
       "provenance": {
@@ -3373,22 +3418,31 @@
         "crops_dir": "vlm/outputs/multiview_samples/inst_rc_car_robot_001",
         "images": [
           {
-            "filename": "crop_view_0.jpg",
             "relative_path": "vlm/outputs/multiview_samples/inst_rc_car_robot_001/crop_view_0.jpg",
+            "filename": "crop_view_0.jpg",
+            "sha256": "35a1cf8390b5bea30e42c915d6addc4de17c7d60b08ec3cf818a69f1bd020a27",
+            "size_bytes": 7511,
             "image_type": "crop"
+          },
+          {
+            "relative_path": "vlm/outputs/multiview_samples/inst_rc_car_robot_001/scene_view_0.jpg",
+            "filename": "scene_view_0.jpg",
+            "sha256": "c4c619754431df64dac8ceef5625e134d3e95ca25aea3a765ceb90279da41eff",
+            "size_bytes": 62923,
+            "image_type": "scene"
           }
         ]
       },
       "evaluation_memberships": {
         "pop_52_ground_truth": true,
-        "pop_39_image_eligible": false,
+        "pop_39_image_eligible": true,
         "pop_15_balanced_router": true,
         "pop_28_held_out_furniture": false
       },
       "task_eligibility": {
-        "matched_image_eligible_view_a": false,
+        "matched_image_eligible_view_a": true,
         "end_to_end_system_view_b": true,
-        "has_genuine_baseline_vlm_record": false,
+        "has_genuine_baseline_vlm_record": true,
         "downstream_slam_eligible": true
       },
       "provenance": {
@@ -3728,22 +3782,31 @@
         "crops_dir": "vlm/outputs/multiview_samples/inst_whiteboard_001",
         "images": [
           {
-            "filename": "crop_view_0.jpg",
             "relative_path": "vlm/outputs/multiview_samples/inst_whiteboard_001/crop_view_0.jpg",
+            "filename": "crop_view_0.jpg",
+            "sha256": "a1996a650534d3ace317601a2b6d7a7f1534f8978885f7b3c92c4258ffeaf7ca",
+            "size_bytes": 2514,
             "image_type": "crop"
+          },
+          {
+            "relative_path": "vlm/outputs/multiview_samples/inst_whiteboard_001/scene_view_0.jpg",
+            "filename": "scene_view_0.jpg",
+            "sha256": "e7835e3f3088a7cd2a5c9959ac6a3b7bfb17dce7040b9b0892c14fafde697347",
+            "size_bytes": 105510,
+            "image_type": "scene"
           }
         ]
       },
       "evaluation_memberships": {
         "pop_52_ground_truth": false,
-        "pop_39_image_eligible": false,
+        "pop_39_image_eligible": true,
         "pop_15_balanced_router": true,
         "pop_28_held_out_furniture": false
       },
       "task_eligibility": {
-        "matched_image_eligible_view_a": false,
+        "matched_image_eligible_view_a": true,
         "end_to_end_system_view_b": true,
-        "has_genuine_baseline_vlm_record": false,
+        "has_genuine_baseline_vlm_record": true,
         "downstream_slam_eligible": false
       },
       "provenance": {

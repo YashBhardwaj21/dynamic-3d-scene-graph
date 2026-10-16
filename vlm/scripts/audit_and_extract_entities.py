@@ -95,8 +95,14 @@ def analyze_recording(seq_name: str, map_dir: Path):
     return clusters, parsed
 
 if __name__ == "__main__":
-    r1 = Path("outputs/semantic_mapping_desk_run_20261009_161552")
-    r2 = Path("outputs/semantic_mapping_d455_rgbd_20261010_123443")
+    def resolve_mapping_path(name: str) -> Path:
+        p_vlm = Path("vlm/data") / name
+        if p_vlm.exists():
+            return p_vlm
+        return Path("outputs") / name
+
+    r1 = resolve_mapping_path("semantic_mapping_desk_run_20261009_161552")
+    r2 = resolve_mapping_path("semantic_mapping_d455_rgbd_20261010_123443")
     
     c1, p1 = analyze_recording("desk_run_20261009_161552", r1)
     c2, p2 = analyze_recording("d455_rgbd_20261010_123443", r2)

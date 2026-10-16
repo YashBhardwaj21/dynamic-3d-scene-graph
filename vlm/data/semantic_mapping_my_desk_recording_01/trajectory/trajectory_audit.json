@@ -1,0 +1,47 @@
+{
+  "is_valid": true,
+  "status": "VALID",
+  "source_file": "/mnt/c/Users/Yash Bhardwaj/Desktop/perception/outputs/semantic_mapping_my_desk_recording_01/trajectory/CameraTrajectory.txt",
+  "file_sha256": "ecce4057d951694711db91cb07c02acd53a24a7758acd995dc2f22cd24d54e3d",
+  "generated_in_current_run": true,
+  "total_poses_in_trajectory": 5108,
+  "atlas_path": null,
+  "atlas_verified": false,
+  "total_recording_frames": 5108,
+  "unique_matched_frames": 5108,
+  "coverage_percentage": 100.0,
+  "unmatched_frames_count": 0,
+  "gaps_count": 31,
+  "max_gap_s": 5.936,
+  "temporal_overlap_s": 257.04,
+  "temporal_overlap_pct": 100.0,
+  "mean_dt_ms": 0.0,
+  "rejection_reason": null,
+  "audit_summary": {
+    "status": "VALID",
+    "provenance": {
+      "source_path": "/mnt/c/Users/Yash Bhardwaj/Desktop/perception/outputs/semantic_mapping_my_desk_recording_01/trajectory/CameraTrajectory.txt",
+      "sha256": "ecce4057d951694711db91cb07c02acd53a24a7758acd995dc2f22cd24d54e3d",
+      "generated_in_current_run": true
+    },
+    "coverage": {
+      "total_frames": 5108,
+      "unique_matched_frames": 5108,
+      "coverage_pct": 100.0,
+      "unmatched_frames": 0,
+      "mean_timestamp_skew_ms": 0.0,
+      "gaps_count_gt_500ms": 31,
+      "max_gap_duration_s": 5.936
+    },
+    "temporal": {
+      "trajectory_duration_s": 257.04,
+      "recording_duration_s": 257.04,
+      "overlap_duration_s": 257.04,
+      "overlap_pct": 100.0
+    },
+    "atlas": {
+      "path": null,
+      "verified_loadable": false
+    }
+  }
+}

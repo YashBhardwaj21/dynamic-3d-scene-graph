@@ -1,0 +1,57 @@
+{
+  "object_instance_id": "inst_desk_003",
+  "semantic_class": "desk",
+  "movability_gt": "MOVABLE",
+  "current_motion_gt": "STATIC",
+  "displacement_gt": 0.0,
+  "total_views": 2,
+  "angular_diversity_verified": true,
+  "views": [
+    {
+      "view_index": 0,
+      "frame_index": 620,
+      "timestamp": 1791788664.8935,
+      "viewing_angle_deg": 310.4,
+      "camera_pose": [
+        1.0383,
+        0.1056,
+        1.7237,
+        -0.0501,
+        0.4759,
+        -0.0193,
+        0.8779
+      ],
+      "sharpness_score": 759.14,
+      "crop_path": "inst_desk_003/crop_view_0.jpg",
+      "scene_path": "inst_desk_003/scene_view_0.jpg"
+    },
+    {
+      "view_index": 1,
+      "frame_index": 300,
+      "timestamp": 1791797675.0156,
+      "viewing_angle_deg": 323.48,
+      "camera_pose": [
+        0.1652,
+        -0.3625,
+        0.6471,
+        -0.1448,
+        0.3088,
+        -0.0547,
+        0.9384
+      ],
+      "sharpness_score": 846.26,
+      "crop_path": "inst_desk_003/crop_view_1.jpg",
+      "scene_path": "inst_desk_003/scene_view_1.jpg"
+    }
+  ],
+  "conditions": {
+    "one_view": [
+      "inst_desk_003/crop_view_0.jpg"
+    ],
+    "two_views": [
+      "inst_desk_003/crop_view_0.jpg",
+      "inst_desk_003/crop_view_1.jpg"
+    ],
+    "three_views": []
+  }
+}

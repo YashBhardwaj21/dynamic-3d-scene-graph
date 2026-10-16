@@ -1,0 +1,470 @@
+{
+  "sequence_name": "my_desk_recording_01",
+  "coordinate_frame": "floor_map (ROS REP-103)",
+  "total_input_frames": 5108,
+  "selected_frames": 1022,
+  "processed_frames_with_pose": 1022,
+  "input_frame_coverage_pct": 20.01,
+  "pose_coverage_pct": 100.0,
+  "raw_detections_count": 3764,
+  "valid_3d_observations_count": 2934,
+  "rejected_depth_count": 830,
+  "confirmed_entities_count": 41,
+  "unconfirmed_candidates_count": 97,
+  "floor_plane": {
+    "frame_id": "floor_map",
+    "parent_frame_id": "slam_world",
+    "coordinate_convention": "ROS REP-103: X=Forward, Y=Left, Z=Height (Z=0 on floor plane)",
+    "upward_normal": [
+      -0.0528,
+      -0.991,
+      0.1232
+    ],
+    "plane_distance_d": 0.4,
+    "inlier_count": 23079,
+    "total_candidate_points": 34823,
+    "inlier_percentage": 66.28,
+    "residual_mean_m": 0.0092,
+    "residual_std_m": 0.0081,
+    "camera_start_height_above_floor_m": 0.4,
+    "T_floor_world": [
+      [
+        0.006548,
+        0.123003,
+        0.992385,
+        -0.0
+      ],
+      [
+        -0.998586,
+        0.05316,
+        0.0,
+        0.0
+      ],
+      [
+        -0.052756,
+        -0.990981,
+        0.123177,
+        0.400036
+      ],
+      [
+        0.0,
+        0.0,
+        0.0,
+        1.0
+      ]
+    ],
+    "T_world_floor": [
+      [
+        0.006548,
+        -0.998586,
+        -0.052756,
+        0.021104
+      ],
+      [
+        0.123003,
+        0.05316,
+        -0.990981,
+        0.396428
+      ],
+      [
+        0.992385,
+        -0.0,
+        0.123177,
+        -0.049275
+      ],
+      [
+        0.0,
+        0.0,
+        0.0,
+        1.0
+      ]
+    ]
+  },
+  "occupancy_grid_stats": {
+    "total_cells": 62400,
+    "free_cells": 9668,
+    "occupied_cells": 13225,
+    "unknown_cells": 39507,
+    "free_pct": 15.49,
+    "occupied_pct": 21.19,
+    "unknown_pct": 63.31,
+    "inflated_occupied_cells": 28303,
+    "inflated_occupied_pct": 45.36,
+    "inflated_free_cells": 1097,
+    "inflated_free_pct": 1.76,
+    "resolution_m": 0.05,
+    "width_m": 13.0,
+    "height_m": 12.0
+  },
+  "multi_view_consistency_audit": [
+    {
+      "entity_id": "desk_001",
+      "class_name": "desk",
+      "observation_count": 37,
+      "frame_span": 5010,
+      "mean_centroid_deviation_m": 0.2454,
+      "max_centroid_deviation_m": 0.6927,
+      "converged_under_tolerance": true
+    },
+    {
+      "entity_id": "desk_004",
+      "class_name": "desk",
+      "observation_count": 30,
+      "frame_span": 4525,
+      "mean_centroid_deviation_m": 0.1206,
+      "max_centroid_deviation_m": 0.3265,
+      "converged_under_tolerance": true
+    },
+    {
+      "entity_id": "desk_003",
+      "class_name": "desk",
+      "observation_count": 28,
+      "frame_span": 2780,
+      "mean_centroid_deviation_m": 0.1952,
+      "max_centroid_deviation_m": 0.6366,
+      "converged_under_tolerance": true
+    },
+    {
+      "entity_id": "chair_002",
+      "class_name": "chair",
+      "observation_count": 91,
+      "frame_span": 2755,
+      "mean_centroid_deviation_m": 0.2844,
+      "max_centroid_deviation_m": 0.5664,
+      "converged_under_tolerance": false
+    },
+    {
+      "entity_id": "chair_003",
+      "class_name": "chair",
+      "observation_count": 182,
+      "frame_span": 3050,
+      "mean_centroid_deviation_m": 0.3666,
+      "max_centroid_deviation_m": 0.5528,
+      "converged_under_tolerance": false
+    },
+    {
+      "entity_id": "chair_004",
+      "class_name": "chair",
+      "observation_count": 53,
+      "frame_span": 2815,
+      "mean_centroid_deviation_m": 0.4175,
+      "max_centroid_deviation_m": 0.5743,
+      "converged_under_tolerance": false
+    },
+    {
+      "entity_id": "chair_005",
+      "class_name": "chair",
+      "observation_count": 212,
+      "frame_span": 3155,
+      "mean_centroid_deviation_m": 0.3787,
+      "max_centroid_deviation_m": 0.697,
+      "converged_under_tolerance": false
+    },
+    {
+      "entity_id": "storage box_001",
+      "class_name": "storage box",
+      "observation_count": 18,
+      "frame_span": 2685,
+      "mean_centroid_deviation_m": 0.299,
+      "max_centroid_deviation_m": 0.3684,
+      "converged_under_tolerance": false
+    },
+    {
+      "entity_id": "chair_008",
+      "class_name": "chair",
+      "observation_count": 87,
+      "frame_span": 3225,
+      "mean_centroid_deviation_m": 0.3471,
+      "max_centroid_deviation_m": 0.7423,
+      "converged_under_tolerance": false
+    },
+    {
+      "entity_id": "chair_007",
+      "class_name": "chair",
+      "observation_count": 159,
+      "frame_span": 3230,
+      "mean_centroid_deviation_m": 0.2966,
+      "max_centroid_deviation_m": 0.6455,
+      "converged_under_tolerance": false
+    },
+    {
+      "entity_id": "chair_009",
+      "class_name": "chair",
+      "observation_count": 133,
+      "frame_span": 2855,
+      "mean_centroid_deviation_m": 0.2063,
+      "max_centroid_deviation_m": 0.5175,
+      "converged_under_tolerance": true
+    },
+    {
+      "entity_id": "desk_005",
+      "class_name": "desk",
+      "observation_count": 79,
+      "frame_span": 2805,
+      "mean_centroid_deviation_m": 0.0839,
+      "max_centroid_deviation_m": 0.2351,
+      "converged_under_tolerance": true
+    },
+    {
+      "entity_id": "chair_011",
+      "class_name": "chair",
+      "observation_count": 109,
+      "frame_span": 2655,
+      "mean_centroid_deviation_m": 0.187,
+      "max_centroid_deviation_m": 0.4319,
+      "converged_under_tolerance": true
+    },
+    {
+      "entity_id": "desk_008",
+      "class_name": "desk",
+      "observation_count": 31,
+      "frame_span": 2535,
+      "mean_centroid_deviation_m": 0.242,
+      "max_centroid_deviation_m": 0.4879,
+      "converged_under_tolerance": true
+    },
+    {
+      "entity_id": "computer monitor_001",
+      "class_name": "computer monitor",
+      "observation_count": 11,
+      "frame_span": 2485,
+      "mean_centroid_deviation_m": 0.0365,
+      "max_centroid_deviation_m": 0.1378,
+      "converged_under_tolerance": true
+    },
+    {
+      "entity_id": "desk_012",
+      "class_name": "desk",
+      "observation_count": 12,
+      "frame_span": 2310,
+      "mean_centroid_deviation_m": 0.2544,
+      "max_centroid_deviation_m": 0.5603,
+      "converged_under_tolerance": false
+    },
+    {
+      "entity_id": "desk_014",
+      "class_name": "desk",
+      "observation_count": 121,
+      "frame_span": 2535,
+      "mean_centroid_deviation_m": 0.2369,
+      "max_centroid_deviation_m": 0.7235,
+      "converged_under_tolerance": true
+    },
+    {
+      "entity_id": "chair_017",
+      "class_name": "chair",
+      "observation_count": 120,
+      "frame_span": 2600,
+      "mean_centroid_deviation_m": 0.5189,
+      "max_centroid_deviation_m": 0.6661,
+      "converged_under_tolerance": false
+    },
+    {
+      "entity_id": "desk_016",
+      "class_name": "desk",
+      "observation_count": 30,
+      "frame_span": 2545,
+      "mean_centroid_deviation_m": 0.3698,
+      "max_centroid_deviation_m": 1.1612,
+      "converged_under_tolerance": false
+    },
+    {
+      "entity_id": "desk_018",
+      "class_name": "desk",
+      "observation_count": 89,
+      "frame_span": 2470,
+      "mean_centroid_deviation_m": 0.2476,
+      "max_centroid_deviation_m": 0.6208,
+      "converged_under_tolerance": true
+    },
+    {
+      "entity_id": "desk_017",
+      "class_name": "desk",
+      "observation_count": 91,
+      "frame_span": 2555,
+      "mean_centroid_deviation_m": 0.3414,
+      "max_centroid_deviation_m": 0.5724,
+      "converged_under_tolerance": false
+    },
+    {
+      "entity_id": "backpack_002",
+      "class_name": "backpack",
+      "observation_count": 72,
+      "frame_span": 2580,
+      "mean_centroid_deviation_m": 0.0678,
+      "max_centroid_deviation_m": 0.2659,
+      "converged_under_tolerance": true
+    },
+    {
+      "entity_id": "backpack_003",
+      "class_name": "backpack",
+      "observation_count": 242,
+      "frame_span": 2790,
+      "mean_centroid_deviation_m": 0.0817,
+      "max_centroid_deviation_m": 0.2287,
+      "converged_under_tolerance": true
+    },
+    {
+      "entity_id": "chair_027",
+      "class_name": "chair",
+      "observation_count": 122,
+      "frame_span": 2850,
+      "mean_centroid_deviation_m": 0.2474,
+      "max_centroid_deviation_m": 0.5687,
+      "converged_under_tolerance": true
+    },
+    {
+      "entity_id": "chair_021",
+      "class_name": "chair",
+      "observation_count": 12,
+      "frame_span": 215,
+      "mean_centroid_deviation_m": 0.3217,
+      "max_centroid_deviation_m": 0.6751,
+      "converged_under_tolerance": false
+    },
+    {
+      "entity_id": "desk_023",
+      "class_name": "desk",
+      "observation_count": 16,
+      "frame_span": 2015,
+      "mean_centroid_deviation_m": 0.2041,
+      "max_centroid_deviation_m": 0.2414,
+      "converged_under_tolerance": true
+    },
+    {
+      "entity_id": "storage box_007",
+      "class_name": "storage box",
+      "observation_count": 11,
+      "frame_span": 480,
+      "mean_centroid_deviation_m": 0.0687,
+      "max_centroid_deviation_m": 0.1474,
+      "converged_under_tolerance": true
+    },
+    {
+      "entity_id": "storage box_004",
+      "class_name": "storage box",
+      "observation_count": 11,
+      "frame_span": 2270,
+      "mean_centroid_deviation_m": 0.0897,
+      "max_centroid_deviation_m": 0.1239,
+      "converged_under_tolerance": true
+    },
+    {
+      "entity_id": "pedestal fan_003",
+      "class_name": "pedestal fan",
+      "observation_count": 8,
+      "frame_span": 180,
+      "mean_centroid_deviation_m": 0.1081,
+      "max_centroid_deviation_m": 0.158,
+      "converged_under_tolerance": true
+    },
+    {
+      "entity_id": "chair_032",
+      "class_name": "chair",
+      "observation_count": 21,
+      "frame_span": 155,
+      "mean_centroid_deviation_m": 0.4346,
+      "max_centroid_deviation_m": 0.6529,
+      "converged_under_tolerance": false
+    },
+    {
+      "entity_id": "chair_030",
+      "class_name": "chair",
+      "observation_count": 71,
+      "frame_span": 2530,
+      "mean_centroid_deviation_m": 0.1191,
+      "max_centroid_deviation_m": 1.138,
+      "converged_under_tolerance": true
+    },
+    {
+      "entity_id": "desk_024",
+      "class_name": "desk",
+      "observation_count": 28,
+      "frame_span": 2220,
+      "mean_centroid_deviation_m": 0.1653,
+      "max_centroid_deviation_m": 0.242,
+      "converged_under_tolerance": true
+    },
+    {
+      "entity_id": "chair_001",
+      "class_name": "chair",
+      "observation_count": 12,
+      "frame_span": 3250,
+      "mean_centroid_deviation_m": 0.2476,
+      "max_centroid_deviation_m": 0.5249,
+      "converged_under_tolerance": true
+    },
+    {
+      "entity_id": "desk_025",
+      "class_name": "desk",
+      "observation_count": 8,
+      "frame_span": 70,
+      "mean_centroid_deviation_m": 0.0702,
+      "max_centroid_deviation_m": 0.164,
+      "converged_under_tolerance": true
+    },
+    {
+      "entity_id": "chair_035",
+      "class_name": "chair",
+      "observation_count": 11,
+      "frame_span": 55,
+      "mean_centroid_deviation_m": 0.1091,
+      "max_centroid_deviation_m": 0.1738,
+      "converged_under_tolerance": true
+    },
+    {
+      "entity_id": "chair_018",
+      "class_name": "chair",
+      "observation_count": 20,
+      "frame_span": 2235,
+      "mean_centroid_deviation_m": 0.1606,
+      "max_centroid_deviation_m": 0.3801,
+      "converged_under_tolerance": true
+    },
+    {
+      "entity_id": "chair_019",
+      "class_name": "chair",
+      "observation_count": 46,
+      "frame_span": 2470,
+      "mean_centroid_deviation_m": 0.288,
+      "max_centroid_deviation_m": 0.4545,
+      "converged_under_tolerance": false
+    },
+    {
+      "entity_id": "laptop_006",
+      "class_name": "laptop",
+      "observation_count": 9,
+      "frame_span": 2280,
+      "mean_centroid_deviation_m": 0.2808,
+      "max_centroid_deviation_m": 0.6076,
+      "converged_under_tolerance": false
+    },
+    {
+      "entity_id": "chair_038",
+      "class_name": "chair",
+      "observation_count": 35,
+      "frame_span": 220,
+      "mean_centroid_deviation_m": 0.2272,
+      "max_centroid_deviation_m": 0.3859,
+      "converged_under_tolerance": true
+    },
+    {
+      "entity_id": "ceiling fan_010",
+      "class_name": "ceiling fan",
+      "observation_count": 10,
+      "frame_span": 45,
+      "mean_centroid_deviation_m": 0.1102,
+      "max_centroid_deviation_m": 0.3129,
+      "converged_under_tolerance": true
+    },
+    {
+      "entity_id": "desk_031",
+      "class_name": "desk",
+      "observation_count": 9,
+      "frame_span": 460,
+      "mean_centroid_deviation_m": 0.147,
+      "max_centroid_deviation_m": 0.2174,
+      "converged_under_tolerance": true
+    }
+  ]
+}

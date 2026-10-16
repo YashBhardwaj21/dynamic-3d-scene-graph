@@ -33,8 +33,12 @@ def main():
 
     for seq_name, seq_data in benchmark["sequences"].items():
         print(f"\nHarvesting multi-view crops for: {seq_name}")
-        seq_raw_dir = Path(f"data/raw/{seq_name}")
-        mapping_dir = Path(f"outputs/semantic_mapping_{seq_name}")
+        seq_raw_dir = Path(f"vlm/data/raw/{seq_name}")
+        if not seq_raw_dir.exists():
+            seq_raw_dir = Path(f"data/raw/{seq_name}")
+        mapping_dir = Path(f"vlm/data/semantic_mapping_{seq_name}")
+        if not mapping_dir.exists():
+            mapping_dir = Path(f"outputs/semantic_mapping_{seq_name}")
 
         objs = seq_data["objects"]
         harvested_objs = harvester.harvest_for_sequence(

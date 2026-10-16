@@ -254,7 +254,9 @@ class GeometricEvidenceExtractor:
             "semantic_mapping_my_desk_recording_02",
         ]
         for sname in cand_sessions:
-            s_dir = repo_root / "outputs" / sname
+            s_dir = repo_root / "vlm" / "data" / sname
+            if not s_dir.exists():
+                s_dir = repo_root / "outputs" / sname
             if not s_dir.exists():
                 continue
 

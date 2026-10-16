@@ -1,0 +1,27 @@
+{
+  "status": "PASS",
+  "dataset_dir": "/mnt/c/Users/Yash Bhardwaj/Desktop/perception/data/raw/my_desk_recording_01",
+  "sequence_name": "my_desk_recording_01",
+  "counts": {
+    "rgb_frames": 5207,
+    "depth_frames": 5271,
+    "associated_pairs": 5108,
+    "sampled_frames_checked": 343
+  },
+  "timing": {
+    "duration_s": 257.04,
+    "fps_estimate": 19.87,
+    "skew_ms_median": 12.318,
+    "skew_ms_p95": 21.034,
+    "skew_ms_max": 46.254
+  },
+  "quality": {
+    "decode_failures": 0,
+    "type_shape_failures": 0,
+    "mean_valid_depth_fraction": 0.7489,
+    "depth_scale_m_per_unit": 0.0010000000474974513,
+    "calibration_source": "camera_intrinsics.json (flat_json)"
+  },
+  "errors": [],
+  "warnings": []
+}

@@ -1,0 +1,57 @@
+{
+  "object_instance_id": "inst_human_operator_001",
+  "semantic_class": "person",
+  "movability_gt": "MOBILE",
+  "current_motion_gt": "MOVING",
+  "displacement_gt": 3.45,
+  "total_views": 2,
+  "angular_diversity_verified": true,
+  "views": [
+    {
+      "view_index": 0,
+      "frame_index": 1555,
+      "timestamp": 1791797729.3384,
+      "viewing_angle_deg": 276.49,
+      "camera_pose": [
+        1.2312,
+        -0.3156,
+        1.8096,
+        -0.0861,
+        0.8053,
+        0.0116,
+        0.5864
+      ],
+      "sharpness_score": 1074.69,
+      "crop_path": "inst_human_operator_001/crop_view_0.jpg",
+      "scene_path": "inst_human_operator_001/scene_view_0.jpg"
+    },
+    {
+      "view_index": 1,
+      "frame_index": 3005,
+      "timestamp": 1791797791.6652,
+      "viewing_angle_deg": 201.83,
+      "camera_pose": [
+        4.4199,
+        -0.5905,
+        1.1702,
+        -0.0607,
+        -0.9658,
+        -0.1775,
+        0.1788
+      ],
+      "sharpness_score": 1975.0,
+      "crop_path": "inst_human_operator_001/crop_view_1.jpg",
+      "scene_path": "inst_human_operator_001/scene_view_1.jpg"
+    }
+  ],
+  "conditions": {
+    "one_view": [
+      "inst_human_operator_001/crop_view_0.jpg"
+    ],
+    "two_views": [
+      "inst_human_operator_001/crop_view_0.jpg",
+      "inst_human_operator_001/crop_view_1.jpg"
+    ],
+    "three_views": []
+  }
+}

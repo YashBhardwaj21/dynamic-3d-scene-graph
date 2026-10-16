@@ -12,12 +12,27 @@ Following the foundational methodology of **Rüdt et al.** (*Towards Dynamic 3D 
 2. **Current Motion (`current_motion_gt`)**: Observed spatial displacement (`STATIC`, `DISPLACED`, `DYNAMIC`).
 3. **Downstream Landmark Reliability (`slam_invalidated`)**: Whether prior geometric observations remain valid metric constraints or must be culled to protect SLAM trajectory optimization.
 
+## 1.1 Dedicated Research Branch (`research-vlm`)
+
+This branch (`research-vlm`) is a dedicated, self-contained research branch created from `main` to preserve the complete VLM implementation, all benchmarks, all ablation pipelines, and all required data inputs.
+
+- **Base commit**: `57445dc`
+- **Self-contained data directory**: `vlm/data/` (751 verified files, 166.88 MB)
+- **Zero untracked path dependencies**: Fallback resolution enables execution directly from a clean checkout.
+
 ---
 
 ## 2. Directory Architecture
 
 ```
 vlm/
+├── requirements.txt                # Python package dependencies for VLM subsystem
+├── data/                           # Self-contained runtime data package (see vlm/data/README.md)
+│   ├── vlm_data_manifest.json      # SHA-256 cryptographic manifest for all 751 files
+│   ├── raw/                        # Trajectory logs, timestamps, and intrinsics (sessions 01 & 02)
+│   ├── semantic_mapping_*/         # Pre-extracted semantic maps, MapPoints.ply, detections
+│   ├── multiview_samples/          # 39 physical object instances (crops, context, metadata)
+│   └── observations/               # Unified 7,956-observation multi-session cache
 ├── benchmarks/                     # Authoritative ground-truth datasets & manifests
 │   ├── canonical_benchmark_manifest.json  # Comprehensive catalog of 53 entities with SHA-256 hashes
 │   ├── router_evaluation_manifest.json    # Balanced 15-instance router development manifest
@@ -58,7 +73,7 @@ vlm/
 │   ├── stage5_adapter.py           # Multi-session evidence extraction and uncertainty propagation
 │   ├── contextual_scene_graph_fusion.py # Persistent scene graph nodes and landmark invalidation
 │   └── cross_session_association.py     # SE(2) registered multi-session matching baselines
-└── tests/                          # 113 unit and regression tests (100% passing)
+└── tests/                          # 121 unit and regression tests (100% passing)
 ```
 
 ---
@@ -86,24 +101,27 @@ vlm/
 
 ## 5. Quickstart & Reproduction Commands
 
-To run the complete reproducible evaluation suite:
+To set up the environment and run the complete reproducible evaluation suite:
 
 ```bash
-# 1. Run all unit and regression tests (113 tests)
-py -3 -m pytest vlm/tests -q
+# 0. Install Python dependencies
+pip install -r vlm/requirements.txt
+
+# 1. Run all unit and regression tests (121 tests, 100% passing)
+python -m pytest vlm/tests/ -q
 
 # 2. Build the cryptographic benchmark manifest
-py -3 vlm/scripts/generate_canonical_manifest.py
+python vlm/scripts/generate_canonical_manifest.py
 
 # 3. Run Stage 6 decoupled router policy ablations (R0-R4)
-py -3 vlm/scripts/run_stage6_ablation.py
+python vlm/scripts/run_stage6_ablation.py
 
 # 4. Run Phase 6 prompt, view-count, and input representation ablations
-py -3 vlm/scripts/run_vlm_controlled_ablations.py
+python vlm/scripts/run_vlm_controlled_ablations.py
 
 # 5. Run the complete multi-session pipeline orchestrator (7,956 records -> 195 scene graph nodes)
-py -3 vlm/scripts/run_full_experiment.py
+python vlm/scripts/run_full_experiment.py
 
 # 6. Evaluate downstream SLAM landmark reliability and trajectory error
-py -3 vlm/scripts/evaluate_downstream_slam_effects.py
+python vlm/scripts/evaluate_downstream_slam_effects.py
 ```
