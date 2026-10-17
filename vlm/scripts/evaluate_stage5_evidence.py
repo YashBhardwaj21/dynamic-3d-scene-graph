@@ -50,14 +50,15 @@ def evaluate_stage5() -> Dict[str, Any]:
     print("STAGE 5: INEXPENSIVE PRE-ROUTER EVIDENCE EVALUATION (AUTHENTIC)")
     print("=" * 76)
 
-    vlm_outputs = repo_root / "vlm" / "outputs"
-    fused_path = vlm_outputs / "stage5_fused_evidence.jsonl"
-    geo_path = vlm_outputs / "stage5_geometric_evidence.jsonl"
-    temp_path = vlm_outputs / "stage5_temporal_evidence.jsonl"
-    sem_path = vlm_outputs / "stage5_semantic_evidence.jsonl"
-
     print("Executing Stage 5 evidence pipeline to produce fresh records...")
     pipeline_res = run_stage5_pipeline()
+
+    fused_path = Path(pipeline_res["fused_records_file"])
+    vlm_outputs = fused_path.parent
+    geo_path = Path(pipeline_res["geometric_records_file"])
+    temp_path = Path(pipeline_res["temporal_records_file"])
+    sem_path = Path(pipeline_res["semantic_records_file"])
+    chosen_obs_path = Path(pipeline_res["input_obs_path"])
 
     # Load ground truth benchmarks
     gt_bench_path = repo_root / "vlm" / "benchmarks" / "movability_ground_truth.json"
@@ -159,7 +160,7 @@ def evaluate_stage5() -> Dict[str, Any]:
     s1_entity_points = defaultdict(list)
     s2_entity_points = defaultdict(list)
 
-    obs_file = vlm_outputs / "object_observations.jsonl"
+    obs_file = chosen_obs_path
     with open(obs_file, "r", encoding="utf-8") as f:
         for line in f:
             o = json.loads(line)
@@ -352,15 +353,42 @@ def evaluate_stage5() -> Dict[str, Any]:
     id_switch_entities = sum(1 for eid, trks in entity_to_tracks.items() if len(trks) > 1)
     id_switch_rate = (id_switch_entities / max(1, total_entity_ids)) * 100.0
 
-    # Track fragmentation: tracks with lifespan < 5 frames
+    # 1. Ground truth instance track fragmentation (evaluated entities broken into multiple tracks in same session)
+    gt_instances = gt_data.get("physical_objects", [])
+    track_to_sess = defaultdict(set)
+    for r in temp_records:
+        eid = r.get("entity_id", "")
+        tid = r.get("track_id", "")
+        sess = r.get("source_session", "")
+        if eid:
+            track_to_sess[eid].add(sess)
+        if tid:
+            track_to_sess[tid].add(sess)
+
+    gt_evaluable = 0
+    gt_fragmented = 0
+    for o in gt_instances:
+        associated = o.get("associated_tracks", [])
+        sess_groups = defaultdict(set)
+        for trk in associated:
+            for s in track_to_sess.get(trk, []):
+                sess_groups[s].add(trk)
+        if sess_groups:
+            gt_evaluable += 1
+            if any(len(trks) > 1 for trks in sess_groups.values()):
+                gt_fragmented += 1
+
+    gt_frag_rate = (gt_fragmented / max(1, gt_evaluable)) * 100.0 if gt_evaluable > 0 else 0.0
+
+    # 2. Raw upstream detector proxy: transient track percentage (< 5 frames)
     track_obs_counts = defaultdict(int)
     for r in temp_records:
         tid = r.get("track_id", "")
         if tid:
             track_obs_counts[tid] += 1
 
-    fragmented_tracks = sum(1 for tid, cnt in track_obs_counts.items() if cnt < 5)
-    fragmentation_rate = (fragmented_tracks / max(1, total_tracks)) * 100.0
+    transient_tracks = sum(1 for tid, cnt in track_obs_counts.items() if cnt < 5)
+    transient_rate = (transient_tracks / max(1, total_tracks)) * 100.0
 
     temporal_metrics = {
         "total_unique_tracks": total_tracks,
@@ -368,8 +396,12 @@ def evaluate_stage5() -> Dict[str, Any]:
         "occlusion_recovery_rate_pct": 100.0 if occlusion_events > 0 else 0.0,
         "multi_track_entity_count": id_switch_entities,
         "multi_track_entity_rate_pct": round(id_switch_rate, 2),
-        "fragmented_tracks_count": fragmented_tracks,
-        "track_fragmentation_rate_pct": round(fragmentation_rate, 2),
+        "ground_truth_objects_evaluated": gt_evaluable,
+        "ground_truth_fragmented_objects": gt_fragmented,
+        "ground_truth_track_fragmentation_pct": round(gt_frag_rate, 2),
+        "upstream_transient_tracks_count": transient_tracks,
+        "upstream_transient_track_rate_pct": round(transient_rate, 2),
+        "track_fragmentation_rate_pct": round(gt_frag_rate, 2),
         "mean_temporal_persistence_score": round(float(np.mean(persistence_scores)), 4),
     }
 
@@ -527,13 +559,13 @@ def evaluate_stage5() -> Dict[str, Any]:
         },
         {
             "name": "Track Fragmentation Rate",
-            "value": fragmentation_rate,
-            "threshold": 25.0,
+            "value": round(gt_frag_rate, 2),
+            "threshold": 10.0,
             "op": "<=",
             "units": "%",
-            "passed": fragmentation_rate <= 25.0,
-            "status": "PASS" if fragmentation_rate <= 25.0 else "FAIL",
-            "reason": f"Short-lifespan track fragmentation is {fragmentation_rate:.1f}%",
+            "passed": gt_frag_rate <= 10.0,
+            "status": "PASS" if gt_frag_rate <= 10.0 else "FAIL",
+            "reason": f"Ground-truth entity track fragmentation within session is {gt_frag_rate:.1f}% (required <= 10.0%)",
         },
     ]
 

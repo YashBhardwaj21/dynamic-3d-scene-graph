@@ -1,10 +1,4 @@
-# ==============================================================================
-# Perception & Navigation .gitignore
-# ==============================================================================
-
-# ------------------------------------------------------------------------------
 # 1. Heavy Datasets, Raw Captures & Streaming Media
-# ------------------------------------------------------------------------------
 rgbd_dataset_freiburg1_desk/
 data/raw/
 data/processed/
@@ -23,9 +17,7 @@ archive/
 *.tar.gz
 *.gz
 
-# ------------------------------------------------------------------------------
 # 2. Point Clouds & Heavy 3D Geometry
-# ------------------------------------------------------------------------------
 *.ply
 *.pcd
 *.las
@@ -34,9 +26,7 @@ outputs/**/world_objects.ply
 outputs/**/objects/*.ply
 outputs/**/trajectory/
 
-# ------------------------------------------------------------------------------
 # 3. Heavy Streaming Records, Trajectory Dumps & Detection Logs
-# ------------------------------------------------------------------------------
 *.jsonl
 outputs/**/*.jsonl
 vlm/outputs/*.jsonl
@@ -44,10 +34,9 @@ outputs/**/CameraTrajectory.txt
 outputs/**/KeyFrameTrajectory.txt
 outputs/**/associations*.txt
 outputs/**/associations.txt
+vlm/tests/_test_run_tmp/
 
-# ------------------------------------------------------------------------------
 # 4. Neural Network Model Weights, Checkpoints & TorchScript
-# ------------------------------------------------------------------------------
 models/
 *.pt
 *.pth

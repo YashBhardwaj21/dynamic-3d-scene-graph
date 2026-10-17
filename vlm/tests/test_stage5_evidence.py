@@ -89,8 +89,10 @@ def test_known_3d_to_2d_camera_projection():
     p_offset = np.array([[0.5, 0.2, 2.0]], dtype=np.float64)
     pix_off, val_off, _ = project_points_to_camera(p_offset, cam_pose)
     assert val_off[0] is True or val_off[0] == 1
-    assert math.isclose(pix_off[0, 0], 416.10424, abs_tol=1e-2)
-    assert math.isclose(pix_off[0, 1], 282.96237, abs_tol=1e-2)
+    expected_u = FX * (0.5 / 2.0) + CX
+    expected_v = FY * (0.2 / 2.0) + CY
+    assert math.isclose(pix_off[0, 0], expected_u, abs_tol=1e-2)
+    assert math.isclose(pix_off[0, 1], expected_v, abs_tol=1e-2)
 
 
 def test_points_behind_camera_filtered():
@@ -135,12 +137,13 @@ def test_point_to_bbox_distances_inside_vs_outside():
 def test_geometric_missing_pose_or_floor_transform():
     """Verify that missing pose or floor transform sets explicit missing provenance."""
     extractor = GeometricEvidenceExtractor()
-    extractor.has_floor_transform = False  # Simulate unverified floor transform
 
-    sample_obs = {
-        "obs_id": "test_missing_tf",
+    # Case 1: Valid session but missing camera pose
+    sample_obs_s1 = {
+        "obs_id": "test_missing_pose",
         "frame_index": 10,
         "timestamp": 1.0,
+        "source_session": "semantic_mapping_my_desk_recording_01",
         "global_entity_id": "desk_001",
         "local_track_id": "trk_001",
         "centroid_camera": [0.0, 0.0, 2.0],
@@ -150,12 +153,19 @@ def test_geometric_missing_pose_or_floor_transform():
         "bbox_xyxy": [100.0, 100.0, 200.0, 200.0],
     }
 
-    rec = extractor.extract_observation_geometry(sample_obs)
-    assert rec.depth_valid is True
-    assert rec.point_to_bbox_valid is False
-    assert rec.point_to_bbox_provenance in ["MISSING_FLOOR_TRANSFORM", "MISSING_CAMERA_POSE"]
-    assert rec.feature_reprojection_residual_valid is False
-    assert rec.feature_reprojection_provenance == "UNAVAILABLE_NO_KEYPOINT_CORRESPONDENCES"
+    rec1 = extractor.extract_observation_geometry(sample_obs_s1)
+    assert rec1.depth_valid is True
+    assert rec1.point_to_bbox_valid is False
+    assert rec1.point_to_bbox_provenance in ["MISSING_FLOOR_TRANSFORM", "MISSING_CAMERA_POSE"]
+    assert rec1.feature_reprojection_residual_valid is False
+    assert rec1.feature_reprojection_provenance == "UNAVAILABLE_NO_KEYPOINT_CORRESPONDENCES"
+
+    # Case 2: Unknown session must produce MISSING_SESSION_CONFIG (zero cross-session fallback)
+    sample_obs_unknown = dict(sample_obs_s1)
+    sample_obs_unknown["source_session"] = "unknown_session_xyz"
+    rec2 = extractor.extract_observation_geometry(sample_obs_unknown)
+    assert rec2.point_to_bbox_provenance == "MISSING_SESSION_CONFIG"
+    assert rec2.provenance == "MISSING_SESSION_CONFIG"
 
 
 def test_temporal_missing_centroid_honest_handling():

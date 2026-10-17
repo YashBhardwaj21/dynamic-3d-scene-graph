@@ -91,7 +91,8 @@ def run_full_experiment(
 
     # 1. Resolve & Validate Paths
     if obs_path is None:
-        obs_path = repo_root / "vlm" / "outputs" / "object_observations.jsonl"
+        canonical_p = repo_root / "vlm" / "data" / "observations" / "object_observations.jsonl"
+        obs_path = canonical_p if canonical_p.exists() else repo_root / "vlm" / "outputs" / "object_observations.jsonl"
     if reg_path is None:
         reg_path = repo_root / "vlm" / "outputs" / "stage5_registration_audit.json"
     if annotations_path is None:
@@ -136,10 +137,10 @@ def run_full_experiment(
     # 3. Evidence Generation & Record Alignment Check
     print("\n--- [Stage 1: Evidence Pipeline Execution & Alignment Check] ---")
     pipeline_res = run_stage5_pipeline(obs_jsonl_path=obs_path)
-    geo_path = repo_root / "vlm" / "outputs" / "stage5_geometric_evidence.jsonl"
-    temp_path = repo_root / "vlm" / "outputs" / "stage5_temporal_evidence.jsonl"
-    sem_path = repo_root / "vlm" / "outputs" / "stage5_semantic_evidence.jsonl"
-    fused_path = repo_root / "vlm" / "outputs" / "stage5_fused_evidence.jsonl"
+    geo_path = Path(pipeline_res["geometric_records_file"])
+    temp_path = Path(pipeline_res["temporal_records_file"])
+    sem_path = Path(pipeline_res["semantic_records_file"])
+    fused_path = Path(pipeline_res["fused_records_file"])
 
     observations: List[Dict[str, Any]] = []
     with open(obs_path, "r", encoding="utf-8") as f:

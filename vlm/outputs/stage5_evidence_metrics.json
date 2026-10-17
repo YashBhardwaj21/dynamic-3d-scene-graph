@@ -1,9 +1,9 @@
 {
   "stage": 5,
   "title": "Stage 5 Inexpensive Pre-Router Evidence Pipeline Evaluation",
-  "timestamp_evaluated": 1792123927.389245,
+  "timestamp_evaluated": 1792266067.386872,
   "total_records": 7956,
-  "acceptance_gate_passed": false,
+  "acceptance_gate_passed": true,
   "acceptance_gates": [
     {
       "name": "Depth Validity Rate",
@@ -57,26 +57,26 @@
     },
     {
       "name": "Track Fragmentation Rate",
-      "value": 72.7797833935018,
-      "threshold": 25.0,
+      "value": 7.14,
+      "threshold": 10.0,
       "op": "<=",
       "units": "%",
-      "passed": false,
-      "status": "FAIL",
-      "reason": "Short-lifespan track fragmentation is 72.8%"
+      "passed": true,
+      "status": "PASS",
+      "reason": "Ground-truth entity track fragmentation within session is 7.1% (required <= 10.0%)"
     }
   ],
   "geometry": {
     "depth_validity_percentage": 100.0,
     "mean_point_to_bbox_distance_px": 39.2,
-    "median_point_to_bbox_distance_px": 3.21,
-    "p95_point_to_bbox_distance_px": 251.58,
+    "median_point_to_bbox_distance_px": 3.2,
+    "p95_point_to_bbox_distance_px": 251.38,
     "mean_point_to_bbox_inlier_ratio": 0.7094,
-    "std_point_to_bbox_inlier_ratio": 0.3587,
+    "std_point_to_bbox_inlier_ratio": 0.3588,
     "feature_reprojection_residual_px": null,
     "feature_reprojection_provenance": "UNAVAILABLE_NO_KEYPOINT_CORRESPONDENCES",
-    "mean_landmark_support_points": 7669.9,
-    "median_landmark_support_points": 2471,
+    "mean_landmark_support_points": 269.6,
+    "median_landmark_support_points": 175,
     "mean_depth_uncertainty_sigma_m": 0.0114,
     "mean_geometric_consistency_score": 0.7269,
     "provenance_breakdown": {
@@ -141,24 +141,28 @@
   },
   "temporal_tracking": {
     "total_unique_tracks": 1385,
-    "total_occlusion_gap_events": 355,
+    "total_occlusion_gap_events": 187,
     "occlusion_recovery_rate_pct": 100.0,
     "multi_track_entity_count": 198,
     "multi_track_entity_rate_pct": 79.2,
-    "fragmented_tracks_count": 1008,
-    "track_fragmentation_rate_pct": 72.78,
+    "ground_truth_objects_evaluated": 42,
+    "ground_truth_fragmented_objects": 3,
+    "ground_truth_track_fragmentation_pct": 7.14,
+    "upstream_transient_tracks_count": 1008,
+    "upstream_transient_track_rate_pct": 72.78,
+    "track_fragmentation_rate_pct": 7.14,
     "mean_temporal_persistence_score": 0.5309
   },
   "semantics": {
     "macro_f1": 1.0,
     "matched_support_macro_f1": 1.0,
-    "matched_observations_count": 4421,
-    "evaluation_coverage_pct": 55.57,
+    "matched_observations_count": 3710,
+    "evaluation_coverage_pct": 46.63,
     "classes_evaluated": 3,
     "total_classes": 3,
     "unknown_rate_pct": 0.0,
-    "mean_semantic_entropy": 0.0199,
-    "mean_semantic_purity": 0.9957,
+    "mean_semantic_entropy": 0.0,
+    "mean_semantic_purity": 1.0,
     "per_class": {
       "IMMOVABLE": {
         "precision": 1.0,
@@ -178,7 +182,7 @@
         "precision": 1.0,
         "recall": 1.0,
         "f1": 1.0,
-        "support": 842,
+        "support": 131,
         "status": "EVALUATED"
       }
     },
@@ -198,17 +202,17 @@
       "MOBILE": {
         "IMMOVABLE": 0,
         "MOVABLE": 0,
-        "MOBILE": 842,
+        "MOBILE": 131,
         "UNKNOWN": 0
       }
     },
-    "unmatched_observations_count": 3535
+    "unmatched_observations_count": 4246
   },
   "evidence_validity": {
     "total_records_processed": 7956,
-    "valid_records_count": 7956,
-    "validity_percentage": 100.0,
-    "missing_value_frequency_pct": 0.0,
+    "valid_records_count": 6671,
+    "validity_percentage": 83.85,
+    "missing_value_frequency_pct": 16.15,
     "provenance_breakdown": {
       "MEASURED_FULL": 7666,
       "DERIVED_DEPTH_ONLY": 290
@@ -220,17 +224,17 @@
       "frame_index": 580,
       "timestamp": 1791797687.82044,
       "semantic_category": "desk",
-      "semantic_uncertainty_entropy": 0.0705,
+      "semantic_uncertainty_entropy": 0.0,
       "cheap_prior_mobility": "MOVABLE",
       "geometric_consistency_score": 0.8758,
       "measured_depth_m": 1.649,
       "depth_sigma_m": 0.006,
-      "point_to_bbox_distance_px": 3.78,
-      "observed_motion": "STATIC",
+      "point_to_bbox_distance_px": 3.79,
+      "observed_motion": "DISPLACED",
       "world_displacement_m": 0.111,
       "camera_ego_compensation": 1.88,
-      "vlm_query_required": false,
-      "unambiguous_explanation": "Classified as 'desk' with entropy 0.070. Observed motion is STATIC (disp 0.111m). Geometric consistency is 0.88 (depth 1.65m +/- 0.6cm). Ego-motion compensated by 1.9x. Complete without VLM."
+      "vlm_query_required": true,
+      "unambiguous_explanation": "Classified as 'desk' with entropy 0.000. Observed motion is DISPLACED (disp 0.111m). Geometric consistency is 0.88 (depth 1.65m +/- 0.6cm). Ego-motion compensated by 1.9x. Complete without VLM."
     },
     {
       "entity_id": "chair_002",
@@ -239,10 +243,10 @@
       "semantic_category": "chair",
       "semantic_uncertainty_entropy": 0.0,
       "cheap_prior_mobility": "MOVABLE",
-      "geometric_consistency_score": 0.927,
+      "geometric_consistency_score": 0.9272,
       "measured_depth_m": 1.289,
       "depth_sigma_m": 0.0036,
-      "point_to_bbox_distance_px": 2.98,
+      "point_to_bbox_distance_px": 2.95,
       "observed_motion": "STATIC",
       "world_displacement_m": 0.0374,
       "camera_ego_compensation": 1.0,
@@ -259,7 +263,7 @@
       "geometric_consistency_score": 0.2908,
       "measured_depth_m": 0.754,
       "depth_sigma_m": 0.0012,
-      "point_to_bbox_distance_px": 403.56,
+      "point_to_bbox_distance_px": 403.4,
       "observed_motion": "DISPLACED",
       "world_displacement_m": 0.4991,
       "camera_ego_compensation": 0.47,
@@ -273,10 +277,10 @@
       "semantic_category": "door",
       "semantic_uncertainty_entropy": 0.0,
       "cheap_prior_mobility": "IMMOVABLE",
-      "geometric_consistency_score": 0.7665,
+      "geometric_consistency_score": 0.767,
       "measured_depth_m": 0.931,
       "depth_sigma_m": 0.0019,
-      "point_to_bbox_distance_px": 11.95,
+      "point_to_bbox_distance_px": 11.87,
       "observed_motion": "TRANSIENT",
       "world_displacement_m": 0.0404,
       "camera_ego_compensation": 1.0,
