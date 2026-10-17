@@ -346,9 +346,9 @@ def test_canonical_mapping_single_session_and_multi_track_support():
     """Verify single-session objects and multiple track IDs per physical instance."""
     mapping, _ = build_canonical_session_track_mapping()
 
-    # Single-session object (quadcopter drone only in recording 02; chair_004 only in recording 01)
-    assert ("semantic_mapping_my_desk_recording_02", "quadcopter drone_001") in mapping
-    assert ("semantic_mapping_my_desk_recording_01", "quadcopter drone_001") not in mapping
+    # Single-session object (quadcopter drone only in recording 01; chair_004 only in recording 01)
+    assert ("semantic_mapping_my_desk_recording_01", "quadcopter drone_001") in mapping
+    assert ("semantic_mapping_my_desk_recording_02", "quadcopter drone_001") not in mapping
     assert ("semantic_mapping_my_desk_recording_01", "chair_004") in mapping
     assert ("semantic_mapping_my_desk_recording_02", "chair_004") not in mapping
 

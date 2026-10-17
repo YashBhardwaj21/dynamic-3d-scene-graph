@@ -101,7 +101,7 @@
       "semantic_class": "robot",
       "presence": "PRESENT_BOTH",
       "motion": "MOVING",
-      "true_displacement_m": 4.912,
+      "true_displacement_m": 0.996,
       "annotation_status": "VERIFIED"
     },
     {
@@ -111,7 +111,7 @@
       "semantic_class": "robot",
       "presence": "PRESENT_BOTH",
       "motion": "MOVING",
-      "true_displacement_m": 4.912,
+      "true_displacement_m": 0.996,
       "annotation_status": "VERIFIED"
     },
     {
@@ -435,11 +435,11 @@
       "annotation_status": "VERIFIED"
     },
     {
-      "source_session": "semantic_mapping_my_desk_recording_02",
+      "source_session": "semantic_mapping_my_desk_recording_01",
       "local_track_id": "quadcopter drone_001",
       "physical_instance_id": "inst_quadcopter_drone_001",
       "semantic_class": "robot",
-      "presence": "PRESENT_S2_ONLY",
+      "presence": "PRESENT_S1_ONLY",
       "motion": "STATIC",
       "true_displacement_m": 0.0,
       "annotation_status": "VERIFIED"

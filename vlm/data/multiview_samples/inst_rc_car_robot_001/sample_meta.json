@@ -3,33 +3,16 @@
   "semantic_class": "robot",
   "movability_gt": "MOBILE",
   "current_motion_gt": "MOVING",
-  "displacement_gt": 4.912,
-  "total_views": 1,
+  "displacement_gt": 0.996,
+  "visual_suitability": "UNSUITABLE_FOR_VISUAL_EVAL",
+  "evaluation_eligible": false,
+  "exclusion_reason": "HEAVY_DESK_OCCLUSION_AND_CLUTTER",
+  "total_views": 0,
   "angular_diversity_verified": false,
-  "views": [
-    {
-      "view_index": 0,
-      "frame_index": 3400,
-      "timestamp": 1791797809.3726,
-      "viewing_angle_deg": 171.75,
-      "camera_pose": [
-        4.2248,
-        -0.6126,
-        0.608,
-        -0.0704,
-        -0.9743,
-        -0.1902,
-        0.0982
-      ],
-      "sharpness_score": 1296.87,
-      "crop_path": "inst_rc_car_robot_001/crop_view_0.jpg",
-      "scene_path": "inst_rc_car_robot_001/scene_view_0.jpg"
-    }
-  ],
+  "view_diversity_valid": false,
+  "views": [],
   "conditions": {
-    "one_view": [
-      "inst_rc_car_robot_001/crop_view_0.jpg"
-    ],
+    "one_view": [],
     "two_views": [],
     "three_views": []
   }

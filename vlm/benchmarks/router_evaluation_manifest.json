@@ -44,7 +44,7 @@
     },
     {
       "entity_id": "inst_human_operator_001",
-      "s1_obs_id": "person_005",
+      "s1_obs_id": "person_003",
       "s2_obs_id": "person_006",
       "semantic_class": "person",
       "contextual_movability_gt": "MOBILE",
@@ -52,7 +52,7 @@
       "expected_decision": "RESOLVE_CHEAP",
       "expected_reason": "CANONICAL_MOBILE_AGENT_PRIOR",
       "has_images": true,
-      "views_count": 3,
+      "views_count": 1,
       "crops_dir": "vlm/outputs/multiview_samples/inst_human_operator_001"
     },
     {
@@ -64,9 +64,9 @@
       "observed_motion_gt": "DYNAMIC",
       "expected_decision": "RESOLVE_CHEAP",
       "expected_reason": "CANONICAL_MOBILE_AGENT_PRIOR",
-      "has_images": true,
-      "views_count": 1,
-      "crops_dir": "vlm/outputs/multiview_samples/inst_rc_car_robot_001"
+      "has_images": false,
+      "views_count": 0,
+      "crops_dir": null
     },
     {
       "entity_id": "inst_quadcopter_drone_001",
@@ -74,11 +74,11 @@
       "s2_obs_id": null,
       "semantic_class": "robot",
       "contextual_movability_gt": "MOBILE",
-      "observed_motion_gt": "DYNAMIC",
+      "observed_motion_gt": "STATIC",
       "expected_decision": "RESOLVE_CHEAP",
       "expected_reason": "CANONICAL_MOBILE_AGENT_PRIOR",
       "has_images": true,
-      "views_count": 2,
+      "views_count": 1,
       "crops_dir": "vlm/outputs/multiview_samples/inst_quadcopter_drone_001"
     },
     {

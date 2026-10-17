@@ -13,12 +13,12 @@
       }
     },
     "pop_39_image_eligible": {
-      "count": 43,
+      "count": 42,
       "description": "All 39 physical instances with verified harvested multi-view crops and scenes",
       "categories": {
         "IMMOVABLE": 3,
         "MOVABLE": 37,
-        "MOBILE": 3
+        "MOBILE": 2
       }
     },
     "pop_15_balanced_router": {
@@ -80,13 +80,6 @@
             "image_type": "crop"
           },
           {
-            "relative_path": "vlm/outputs/multiview_samples/inst_backpack_001/crop_view_2.jpg",
-            "filename": "crop_view_2.jpg",
-            "sha256": "35aff3298b6fd309f2cb74b5ee728386bd0792959230015d5f409adf94ce0cfd",
-            "size_bytes": 1656,
-            "image_type": "crop"
-          },
-          {
             "relative_path": "vlm/outputs/multiview_samples/inst_backpack_001/scene_view_0.jpg",
             "filename": "scene_view_0.jpg",
             "sha256": "a5940596077364915b5f173f7e62d7933dba16497eff586ce14a5c765a6e495e",
@@ -98,13 +91,6 @@
             "filename": "scene_view_1.jpg",
             "sha256": "b88d8d06ef4901248ce04e33a3f1679f5cbf9102c8e0b49ab7cf7da0045c4fd4",
             "size_bytes": 65337,
-            "image_type": "scene"
-          },
-          {
-            "relative_path": "vlm/outputs/multiview_samples/inst_backpack_001/scene_view_2.jpg",
-            "filename": "scene_view_2.jpg",
-            "sha256": "863840b14b51d536c98b8ad271d5b51e3c2fd377a74628acfaadcadd5434843d",
-            "size_bytes": 66730,
             "image_type": "scene"
           }
         ]
@@ -159,13 +145,6 @@
             "image_type": "crop"
           },
           {
-            "relative_path": "vlm/outputs/multiview_samples/inst_backpack_002/crop_view_2.jpg",
-            "filename": "crop_view_2.jpg",
-            "sha256": "ec2ae2dd0f1c421750b40a710af3668745832386cffc06c5e811b45bd1259214",
-            "size_bytes": 3252,
-            "image_type": "crop"
-          },
-          {
             "relative_path": "vlm/outputs/multiview_samples/inst_backpack_002/scene_view_0.jpg",
             "filename": "scene_view_0.jpg",
             "sha256": "82113ea1406f28056b8488071caa3010a00ade0247f5af203c90b5391f35d932",
@@ -177,13 +156,6 @@
             "filename": "scene_view_1.jpg",
             "sha256": "553a90543da9f5eb142a985d795ea96b03e8e2cb3ae040f435c2c5fce9de5bb3",
             "size_bytes": 57758,
-            "image_type": "scene"
-          },
-          {
-            "relative_path": "vlm/outputs/multiview_samples/inst_backpack_002/scene_view_2.jpg",
-            "filename": "scene_view_2.jpg",
-            "sha256": "86a2ba88749c8a64ae01c7ee3d6d8930439988e3673abd1695578e8c90e523d5",
-            "size_bytes": 60945,
             "image_type": "scene"
           }
         ]
@@ -232,38 +204,10 @@
             "image_type": "crop"
           },
           {
-            "relative_path": "vlm/outputs/multiview_samples/inst_ceiling_fan_001/crop_view_1.jpg",
-            "filename": "crop_view_1.jpg",
-            "sha256": "320e76f747a8dcd069630afbf2752a88e135bf8de273f37c55566b2bc4d26cf9",
-            "size_bytes": 2134,
-            "image_type": "crop"
-          },
-          {
-            "relative_path": "vlm/outputs/multiview_samples/inst_ceiling_fan_001/crop_view_2.jpg",
-            "filename": "crop_view_2.jpg",
-            "sha256": "843374e13aa8ed71dd7a7826e4eba7745f1f202363dc50da0acac47cc1aa3a31",
-            "size_bytes": 2213,
-            "image_type": "crop"
-          },
-          {
             "relative_path": "vlm/outputs/multiview_samples/inst_ceiling_fan_001/scene_view_0.jpg",
             "filename": "scene_view_0.jpg",
             "sha256": "3637c75c13b20b4b0794b563a4fa4de7ebb30954bdaf3f710724cd4fa4ca814b",
             "size_bytes": 56503,
-            "image_type": "scene"
-          },
-          {
-            "relative_path": "vlm/outputs/multiview_samples/inst_ceiling_fan_001/scene_view_1.jpg",
-            "filename": "scene_view_1.jpg",
-            "sha256": "bfc523a73734493fcb90c44021df885b6426c257d7bd6428bb58092d59571c15",
-            "size_bytes": 57356,
-            "image_type": "scene"
-          },
-          {
-            "relative_path": "vlm/outputs/multiview_samples/inst_ceiling_fan_001/scene_view_2.jpg",
-            "filename": "scene_view_2.jpg",
-            "sha256": "867c262399d302b58739134c824569f12ab8637584dad86628cd0aa5d4ea5239",
-            "size_bytes": 57092,
             "image_type": "scene"
           }
         ]
@@ -320,13 +264,6 @@
             "image_type": "crop"
           },
           {
-            "relative_path": "vlm/outputs/multiview_samples/inst_chair_001/crop_view_2.jpg",
-            "filename": "crop_view_2.jpg",
-            "sha256": "90d60f18e1d85066a21be7152ff4d679d920ef421bd8ec19135cd360b24773a6",
-            "size_bytes": 3517,
-            "image_type": "crop"
-          },
-          {
             "relative_path": "vlm/outputs/multiview_samples/inst_chair_001/scene_view_0.jpg",
             "filename": "scene_view_0.jpg",
             "sha256": "c627c1dc38ac0d11796b225080af4e7dc79aec478f43faa7ade2d89f6afae49d",
@@ -338,13 +275,6 @@
             "filename": "scene_view_1.jpg",
             "sha256": "19f767223d959ec75d6ddc8fbd9aab5e644117736c10a0370ce70cf3675462f3",
             "size_bytes": 51900,
-            "image_type": "scene"
-          },
-          {
-            "relative_path": "vlm/outputs/multiview_samples/inst_chair_001/scene_view_2.jpg",
-            "filename": "scene_view_2.jpg",
-            "sha256": "4f4ec1c8d79a2f5e19e5b935df0247ed3c99af50ce7f1b672a8c053cfa93eb10",
-            "size_bytes": 48832,
             "image_type": "scene"
           }
         ]
@@ -547,43 +477,29 @@
           {
             "relative_path": "vlm/outputs/multiview_samples/inst_chair_004/crop_view_0.jpg",
             "filename": "crop_view_0.jpg",
-            "sha256": "e5349fe3f438e4776ad8924c6b673111bc7b477affcaa4985e47beaa70237b47",
-            "size_bytes": 28010,
+            "sha256": "dcdeeed780a79cebc98e903bb88a3f74e9a8e37733193d36971c532724a45227",
+            "size_bytes": 3853,
             "image_type": "crop"
           },
           {
             "relative_path": "vlm/outputs/multiview_samples/inst_chair_004/crop_view_1.jpg",
             "filename": "crop_view_1.jpg",
-            "sha256": "f63429d59f2ddd369cc6dd7a1ea565a3d9c609f95f7e89959a9cca63896481c8",
-            "size_bytes": 14775,
-            "image_type": "crop"
-          },
-          {
-            "relative_path": "vlm/outputs/multiview_samples/inst_chair_004/crop_view_2.jpg",
-            "filename": "crop_view_2.jpg",
-            "sha256": "64513207b788c4be8817d21589efb854ea14667b5750d96070d70c94d6f391fc",
-            "size_bytes": 31875,
+            "sha256": "7a07207292f9c17c5d0a5a06c4132cb8aac1f653a8c87a7a089625d5394929fb",
+            "size_bytes": 36013,
             "image_type": "crop"
           },
           {
             "relative_path": "vlm/outputs/multiview_samples/inst_chair_004/scene_view_0.jpg",
             "filename": "scene_view_0.jpg",
-            "sha256": "9debad57cf2ef29d74e53aa7edc86eaeecdecec9e09119c308a3d572d996ba29",
-            "size_bytes": 80711,
+            "sha256": "03cbe1368a478d9d20d44b5986102ce92d9ce243937823576134c5d696d43e05",
+            "size_bytes": 58743,
             "image_type": "scene"
           },
           {
             "relative_path": "vlm/outputs/multiview_samples/inst_chair_004/scene_view_1.jpg",
             "filename": "scene_view_1.jpg",
-            "sha256": "a56492f37475b678b9ad5f0fd1d89d3c8f3ab1b401d6f03fb840c455191d9d77",
-            "size_bytes": 71717,
-            "image_type": "scene"
-          },
-          {
-            "relative_path": "vlm/outputs/multiview_samples/inst_chair_004/scene_view_2.jpg",
-            "filename": "scene_view_2.jpg",
-            "sha256": "7676254b437e2446cadff685ea496956c9a35939500c7e1760d0eb5af54ba022",
-            "size_bytes": 67179,
+            "sha256": "7cf7de1dfb58ba79d5f8de46100ab0cde1f3e18a68623212915b736029a11f81",
+            "size_bytes": 63668,
             "image_type": "scene"
           }
         ]
@@ -707,8 +623,8 @@
           {
             "relative_path": "vlm/outputs/multiview_samples/inst_chair_007/crop_view_0.jpg",
             "filename": "crop_view_0.jpg",
-            "sha256": "9e3fc9bd240c3195f6760ee8274b8a9f9d8c7a71eeff5bb4b26d367c52fd015b",
-            "size_bytes": 26423,
+            "sha256": "726d45cb11572e55d09c9756cae77a3ec609c24c6fa7ca1eeacd758986777178",
+            "size_bytes": 28803,
             "image_type": "crop"
           },
           {
@@ -728,8 +644,8 @@
           {
             "relative_path": "vlm/outputs/multiview_samples/inst_chair_007/scene_view_0.jpg",
             "filename": "scene_view_0.jpg",
-            "sha256": "d7f37179da414326b506478cfa882d0fae2ab81d331cae5d82f411abcf346ea2",
-            "size_bytes": 67959,
+            "sha256": "8185090acfd9176ba6a3192a2172c9849878e3c862b071ad3a2dd5b610216028",
+            "size_bytes": 68300,
             "image_type": "scene"
           },
           {
@@ -798,13 +714,6 @@
             "image_type": "crop"
           },
           {
-            "relative_path": "vlm/outputs/multiview_samples/inst_chair_008/crop_view_2.jpg",
-            "filename": "crop_view_2.jpg",
-            "sha256": "0d06e48303a14f26b0609fccfad3b08d1b18c1f18004f447f0e7d499b6a92274",
-            "size_bytes": 3678,
-            "image_type": "crop"
-          },
-          {
             "relative_path": "vlm/outputs/multiview_samples/inst_chair_008/scene_view_0.jpg",
             "filename": "scene_view_0.jpg",
             "sha256": "db1a21932572bd45b73b049f9fd66c890403543c4f8b76272ca01bf4ff3a019a",
@@ -816,13 +725,6 @@
             "filename": "scene_view_1.jpg",
             "sha256": "11e0e9f9128308231d84db8d2f0f9d6209787673d58d267ff839d244c8ffb6ef",
             "size_bytes": 53162,
-            "image_type": "scene"
-          },
-          {
-            "relative_path": "vlm/outputs/multiview_samples/inst_chair_008/scene_view_2.jpg",
-            "filename": "scene_view_2.jpg",
-            "sha256": "73e33310a16cc606529447b61872466089d58d6fd2aa51873ac2c84375b12969",
-            "size_bytes": 57987,
             "image_type": "scene"
           }
         ]
@@ -870,38 +772,10 @@
             "image_type": "crop"
           },
           {
-            "relative_path": "vlm/outputs/multiview_samples/inst_chair_009/crop_view_1.jpg",
-            "filename": "crop_view_1.jpg",
-            "sha256": "57ca56e25a8284495a7fa60b1ce3e200f7bc2968843b61c8e51af835f128d57a",
-            "size_bytes": 4431,
-            "image_type": "crop"
-          },
-          {
-            "relative_path": "vlm/outputs/multiview_samples/inst_chair_009/crop_view_2.jpg",
-            "filename": "crop_view_2.jpg",
-            "sha256": "d719f7b0ebf7276185366d8074e748e9bf624932afc0ed9c57cb0d7e30f7421a",
-            "size_bytes": 4483,
-            "image_type": "crop"
-          },
-          {
             "relative_path": "vlm/outputs/multiview_samples/inst_chair_009/scene_view_0.jpg",
             "filename": "scene_view_0.jpg",
             "sha256": "7b71c7129a2ae8a164792fb5163961f20e100dfb61ab561d24b07e360bf0daf4",
             "size_bytes": 58654,
-            "image_type": "scene"
-          },
-          {
-            "relative_path": "vlm/outputs/multiview_samples/inst_chair_009/scene_view_1.jpg",
-            "filename": "scene_view_1.jpg",
-            "sha256": "dcd7ab54047ed092db5bda091d47c621769de64b43a19896b63df32a5c3cc034",
-            "size_bytes": 62193,
-            "image_type": "scene"
-          },
-          {
-            "relative_path": "vlm/outputs/multiview_samples/inst_chair_009/scene_view_2.jpg",
-            "filename": "scene_view_2.jpg",
-            "sha256": "efa8dd2ce3992889e1d6c2276ab658963c9aec38431971b867e6489387afcaa1",
-            "size_bytes": 63342,
             "image_type": "scene"
           }
         ]
@@ -951,38 +825,10 @@
             "image_type": "crop"
           },
           {
-            "relative_path": "vlm/outputs/multiview_samples/inst_chair_011/crop_view_1.jpg",
-            "filename": "crop_view_1.jpg",
-            "sha256": "2cd8f43d9bb1843409563d00fb9ef42dfc742647ccc884bc2e6552a9197daed3",
-            "size_bytes": 1282,
-            "image_type": "crop"
-          },
-          {
-            "relative_path": "vlm/outputs/multiview_samples/inst_chair_011/crop_view_2.jpg",
-            "filename": "crop_view_2.jpg",
-            "sha256": "d0dbe6fcd2280ad5818e9ccefd9e9103ece2013ebbc1fb6d343949b92818825b",
-            "size_bytes": 1192,
-            "image_type": "crop"
-          },
-          {
             "relative_path": "vlm/outputs/multiview_samples/inst_chair_011/scene_view_0.jpg",
             "filename": "scene_view_0.jpg",
             "sha256": "dc0f282e130d770a5aa9547775a443963f4740af701662b2c00071897a2457f5",
             "size_bytes": 82541,
-            "image_type": "scene"
-          },
-          {
-            "relative_path": "vlm/outputs/multiview_samples/inst_chair_011/scene_view_1.jpg",
-            "filename": "scene_view_1.jpg",
-            "sha256": "70964198ca0821289a17579ca424caad5499eb07a34e3c74d4ab67bdae4c90e5",
-            "size_bytes": 70002,
-            "image_type": "scene"
-          },
-          {
-            "relative_path": "vlm/outputs/multiview_samples/inst_chair_011/scene_view_2.jpg",
-            "filename": "scene_view_2.jpg",
-            "sha256": "1aee43b580ffce7c0b59143e4760212bea083740c97419e1b265768787a7af74",
-            "size_bytes": 71527,
             "image_type": "scene"
           }
         ]
@@ -1030,38 +876,10 @@
             "image_type": "crop"
           },
           {
-            "relative_path": "vlm/outputs/multiview_samples/inst_chair_017/crop_view_1.jpg",
-            "filename": "crop_view_1.jpg",
-            "sha256": "08f45f5343e6be7088c0bdf10962911f3f5a1300c1766fe7199eca78bc77a08e",
-            "size_bytes": 9919,
-            "image_type": "crop"
-          },
-          {
-            "relative_path": "vlm/outputs/multiview_samples/inst_chair_017/crop_view_2.jpg",
-            "filename": "crop_view_2.jpg",
-            "sha256": "aebd52937baeec435776c04a938fabfc69ac04b2bd66918b0a4969b089449c21",
-            "size_bytes": 7989,
-            "image_type": "crop"
-          },
-          {
             "relative_path": "vlm/outputs/multiview_samples/inst_chair_017/scene_view_0.jpg",
             "filename": "scene_view_0.jpg",
             "sha256": "ff7d9954a0eb72005f9dc7085185eaecdb1511c2bf898061b796b23c4ba3d9be",
             "size_bytes": 60980,
-            "image_type": "scene"
-          },
-          {
-            "relative_path": "vlm/outputs/multiview_samples/inst_chair_017/scene_view_1.jpg",
-            "filename": "scene_view_1.jpg",
-            "sha256": "aad80b4515309a84e9d4010dc1619f0e46092ab6f4d751fea3f3a554c638d240",
-            "size_bytes": 59661,
-            "image_type": "scene"
-          },
-          {
-            "relative_path": "vlm/outputs/multiview_samples/inst_chair_017/scene_view_2.jpg",
-            "filename": "scene_view_2.jpg",
-            "sha256": "3b881b8288ae668009a5b175a2897b8e59fa5da6a9e66c12f7336213dc948536",
-            "size_bytes": 63623,
             "image_type": "scene"
           }
         ]
@@ -1118,13 +936,6 @@
             "image_type": "crop"
           },
           {
-            "relative_path": "vlm/outputs/multiview_samples/inst_chair_018/crop_view_2.jpg",
-            "filename": "crop_view_2.jpg",
-            "sha256": "5ff27c4d25ad6b4bdcdbdccb12d9ccfc9f4152228af8445cb2501e189dd4a4ba",
-            "size_bytes": 2331,
-            "image_type": "crop"
-          },
-          {
             "relative_path": "vlm/outputs/multiview_samples/inst_chair_018/scene_view_0.jpg",
             "filename": "scene_view_0.jpg",
             "sha256": "d3e37c7dba1e7eb3e934661350cf64c3b3d8ae15114c11c2e5361026d572609d",
@@ -1136,13 +947,6 @@
             "filename": "scene_view_1.jpg",
             "sha256": "555d1fdc1af1e105925f2b88a10cbb613afab6f923b60f5738600fbe186096ec",
             "size_bytes": 58578,
-            "image_type": "scene"
-          },
-          {
-            "relative_path": "vlm/outputs/multiview_samples/inst_chair_018/scene_view_2.jpg",
-            "filename": "scene_view_2.jpg",
-            "sha256": "b3ab7b1e8a088b33b47bb608ceacf9489b75fccb0dc9c9c7c0222e6b1303dfe3",
-            "size_bytes": 65361,
             "image_type": "scene"
           }
         ]
@@ -1190,38 +994,10 @@
             "image_type": "crop"
           },
           {
-            "relative_path": "vlm/outputs/multiview_samples/inst_chair_019/crop_view_1.jpg",
-            "filename": "crop_view_1.jpg",
-            "sha256": "eddc7f23f11977f0ec835e4c60d68c2a8482b0902ea72e0212d69b4d15b10751",
-            "size_bytes": 35282,
-            "image_type": "crop"
-          },
-          {
-            "relative_path": "vlm/outputs/multiview_samples/inst_chair_019/crop_view_2.jpg",
-            "filename": "crop_view_2.jpg",
-            "sha256": "a58664a9bda011ffa099e498df8cbe158df578aafbe521a323751423f1be6c30",
-            "size_bytes": 19021,
-            "image_type": "crop"
-          },
-          {
             "relative_path": "vlm/outputs/multiview_samples/inst_chair_019/scene_view_0.jpg",
             "filename": "scene_view_0.jpg",
             "sha256": "9d9edac59b4f4d2491283f65b067e6fdb36854e7ce3afadfc6e3c974c29664d8",
             "size_bytes": 65531,
-            "image_type": "scene"
-          },
-          {
-            "relative_path": "vlm/outputs/multiview_samples/inst_chair_019/scene_view_1.jpg",
-            "filename": "scene_view_1.jpg",
-            "sha256": "d49063621bda125eb80066117ac53c844c70964f10af2de8706359dd5c5f6578",
-            "size_bytes": 68128,
-            "image_type": "scene"
-          },
-          {
-            "relative_path": "vlm/outputs/multiview_samples/inst_chair_019/scene_view_2.jpg",
-            "filename": "scene_view_2.jpg",
-            "sha256": "99f624363f1a9e086123597b980910ba22a5caa03d093ef3576e3d1aa47ffc22",
-            "size_bytes": 63921,
             "image_type": "scene"
           }
         ]
@@ -1276,13 +1052,6 @@
             "image_type": "crop"
           },
           {
-            "relative_path": "vlm/outputs/multiview_samples/inst_chair_021/crop_view_2.jpg",
-            "filename": "crop_view_2.jpg",
-            "sha256": "96591efcef5a8142b5b6a1bfbb206a55ff7856d2a3f86f6966dad38bce1e8811",
-            "size_bytes": 5889,
-            "image_type": "crop"
-          },
-          {
             "relative_path": "vlm/outputs/multiview_samples/inst_chair_021/scene_view_0.jpg",
             "filename": "scene_view_0.jpg",
             "sha256": "127eb809ebea19e9aa412870831854083aed20cfd3816aba3a154ab05752a28f",
@@ -1294,13 +1063,6 @@
             "filename": "scene_view_1.jpg",
             "sha256": "a8866b278005449f1b5d4e087584e760f997a425616a1d8269cc25de677a5f88",
             "size_bytes": 64700,
-            "image_type": "scene"
-          },
-          {
-            "relative_path": "vlm/outputs/multiview_samples/inst_chair_021/scene_view_2.jpg",
-            "filename": "scene_view_2.jpg",
-            "sha256": "8695ab5163f7c5a9ecd8fb586649651ff58124a6398a2cf7221a81739e94ed25",
-            "size_bytes": 70746,
             "image_type": "scene"
           }
         ]
@@ -1434,13 +1196,6 @@
             "image_type": "crop"
           },
           {
-            "relative_path": "vlm/outputs/multiview_samples/inst_chair_030/crop_view_2.jpg",
-            "filename": "crop_view_2.jpg",
-            "sha256": "b6057062fa7e133fa51a2b3b0f97a25ae2234174f828b5fb25588abf0bf9f204",
-            "size_bytes": 14384,
-            "image_type": "crop"
-          },
-          {
             "relative_path": "vlm/outputs/multiview_samples/inst_chair_030/scene_view_0.jpg",
             "filename": "scene_view_0.jpg",
             "sha256": "8c6fb51ff4edf26078a4b52c13497409860b25c6d624dd383367dad1a4077d9b",
@@ -1452,13 +1207,6 @@
             "filename": "scene_view_1.jpg",
             "sha256": "6071194f21830b08c42531816824033d91a14c78fa222cd1191b4af9b8cf6342",
             "size_bytes": 64611,
-            "image_type": "scene"
-          },
-          {
-            "relative_path": "vlm/outputs/multiview_samples/inst_chair_030/scene_view_2.jpg",
-            "filename": "scene_view_2.jpg",
-            "sha256": "b928d4baef42143227cccc920eae891a671714bf52094087524a06787136ff82",
-            "size_bytes": 56356,
             "image_type": "scene"
           }
         ]
@@ -1515,13 +1263,6 @@
             "image_type": "crop"
           },
           {
-            "relative_path": "vlm/outputs/multiview_samples/inst_chair_032/crop_view_2.jpg",
-            "filename": "crop_view_2.jpg",
-            "sha256": "130579d5cf588a86f1d20abf1a899d9408363f03480d9b73f4fca94cf7b571fd",
-            "size_bytes": 1882,
-            "image_type": "crop"
-          },
-          {
             "relative_path": "vlm/outputs/multiview_samples/inst_chair_032/scene_view_0.jpg",
             "filename": "scene_view_0.jpg",
             "sha256": "b5deef695a3f6dbf752098e9799a42b8ce579b5b3746fcf479ebb0f6d0d6c62c",
@@ -1533,13 +1274,6 @@
             "filename": "scene_view_1.jpg",
             "sha256": "1906dea4a759cbc825803f3aa2fca90045237a49199049ddee60d4e62b358f06",
             "size_bytes": 63803,
-            "image_type": "scene"
-          },
-          {
-            "relative_path": "vlm/outputs/multiview_samples/inst_chair_032/scene_view_2.jpg",
-            "filename": "scene_view_2.jpg",
-            "sha256": "8f1616c0a45a3dbf81a7202077dabc7b5b8a40b25eae2e4b993d7a56c1cb99fa",
-            "size_bytes": 62726,
             "image_type": "scene"
           }
         ]
@@ -1587,38 +1321,10 @@
             "image_type": "crop"
           },
           {
-            "relative_path": "vlm/outputs/multiview_samples/inst_chair_035/crop_view_1.jpg",
-            "filename": "crop_view_1.jpg",
-            "sha256": "4fa359c7e3fc8f7d6cedeb0217aa45189244ccef874cfc9ffa2cb6887091cf8e",
-            "size_bytes": 23504,
-            "image_type": "crop"
-          },
-          {
-            "relative_path": "vlm/outputs/multiview_samples/inst_chair_035/crop_view_2.jpg",
-            "filename": "crop_view_2.jpg",
-            "sha256": "677c81da7db386e32d4cf0e9b8ae160a1ea883bd1d0147ee04a77d9672bb0e85",
-            "size_bytes": 20256,
-            "image_type": "crop"
-          },
-          {
             "relative_path": "vlm/outputs/multiview_samples/inst_chair_035/scene_view_0.jpg",
             "filename": "scene_view_0.jpg",
             "sha256": "43f9293d727bff0ddf7ee8c3fd15714e9e0cb756801aa6d8695688dbd239aced",
             "size_bytes": 57226,
-            "image_type": "scene"
-          },
-          {
-            "relative_path": "vlm/outputs/multiview_samples/inst_chair_035/scene_view_1.jpg",
-            "filename": "scene_view_1.jpg",
-            "sha256": "345e5486f1d6381c8874dbc38fcec36a1fb4f5c904d6ee6d37d8a5fbbc34c602",
-            "size_bytes": 55717,
-            "image_type": "scene"
-          },
-          {
-            "relative_path": "vlm/outputs/multiview_samples/inst_chair_035/scene_view_2.jpg",
-            "filename": "scene_view_2.jpg",
-            "sha256": "0b216511976f688698ea06f7a7e8d589dcc23ffaa8688777e043cf45a174c3ed",
-            "size_bytes": 55734,
             "image_type": "scene"
           }
         ]
@@ -1663,8 +1369,8 @@
           {
             "relative_path": "vlm/outputs/multiview_samples/inst_desk_001/crop_view_0.jpg",
             "filename": "crop_view_0.jpg",
-            "sha256": "c4e5ec62b8b4e58fb36b6d42c876678d1d0481d289c017c2f75f46de5360646d",
-            "size_bytes": 1670,
+            "sha256": "2be7fe7f0e1e2cff71cbdef4b00201f882950e8b3aee086936b1dd147a0b1ec8",
+            "size_bytes": 13401,
             "image_type": "crop"
           },
           {
@@ -1684,8 +1390,8 @@
           {
             "relative_path": "vlm/outputs/multiview_samples/inst_desk_001/scene_view_0.jpg",
             "filename": "scene_view_0.jpg",
-            "sha256": "f1ec6431b80d86ec53ad6e04f2befa5a76f6cef18e48261280bb4678972567b8",
-            "size_bytes": 55336,
+            "sha256": "e7324d918dfb6f4eb5c386325c8d13e1ac0f4ab7467a4855d2c1cd8d71a82ac1",
+            "size_bytes": 61237,
             "image_type": "scene"
           },
           {
@@ -1756,13 +1462,6 @@
             "image_type": "crop"
           },
           {
-            "relative_path": "vlm/outputs/multiview_samples/inst_desk_003/crop_view_2.jpg",
-            "filename": "crop_view_2.jpg",
-            "sha256": "ab3db38a0ae8959921fb20a4642ba9430b9381c76c48257ddee4e6b4a3cb93cb",
-            "size_bytes": 4567,
-            "image_type": "crop"
-          },
-          {
             "relative_path": "vlm/outputs/multiview_samples/inst_desk_003/scene_view_0.jpg",
             "filename": "scene_view_0.jpg",
             "sha256": "d3a69aae093179b7acd2fee69dbfd00f482bbd4cd1ceaeaeb6ef46221ba76d9e",
@@ -1774,13 +1473,6 @@
             "filename": "scene_view_1.jpg",
             "sha256": "660f1040f1b5b26a17a7e7b2f0cd9c17762780d28533abe095a242a4ab34b842",
             "size_bytes": 62690,
-            "image_type": "scene"
-          },
-          {
-            "relative_path": "vlm/outputs/multiview_samples/inst_desk_003/scene_view_2.jpg",
-            "filename": "scene_view_2.jpg",
-            "sha256": "f1460f3198494d4f4c9a32bb0bf94471383db438273710cb834201b241b6c721",
-            "size_bytes": 57051,
             "image_type": "scene"
           }
         ]
@@ -1830,38 +1522,10 @@
             "image_type": "crop"
           },
           {
-            "relative_path": "vlm/outputs/multiview_samples/inst_desk_005/crop_view_1.jpg",
-            "filename": "crop_view_1.jpg",
-            "sha256": "71559f5cc14d1d9add23da1c738ee69ed0f552531f5a979fb2e1eede6950a2d7",
-            "size_bytes": 12715,
-            "image_type": "crop"
-          },
-          {
-            "relative_path": "vlm/outputs/multiview_samples/inst_desk_005/crop_view_2.jpg",
-            "filename": "crop_view_2.jpg",
-            "sha256": "68cddeec44f05ba3da7590768926439e67efe9b5aaa152da313a993ce462e1c1",
-            "size_bytes": 9660,
-            "image_type": "crop"
-          },
-          {
             "relative_path": "vlm/outputs/multiview_samples/inst_desk_005/scene_view_0.jpg",
             "filename": "scene_view_0.jpg",
             "sha256": "3691cd8487ef7512d1cb1dce50f4991b697f10fa63c735f2bb00f4940241042c",
             "size_bytes": 59976,
-            "image_type": "scene"
-          },
-          {
-            "relative_path": "vlm/outputs/multiview_samples/inst_desk_005/scene_view_1.jpg",
-            "filename": "scene_view_1.jpg",
-            "sha256": "dbc7822ced672804c777f89f98d3f674e7681d8dd6005f197c3ff2a01a289770",
-            "size_bytes": 64094,
-            "image_type": "scene"
-          },
-          {
-            "relative_path": "vlm/outputs/multiview_samples/inst_desk_005/scene_view_2.jpg",
-            "filename": "scene_view_2.jpg",
-            "sha256": "faf363be96285e3ce2485a82440408a7e7853639ce72a7b0416730e95cf36d10",
-            "size_bytes": 52188,
             "image_type": "scene"
           }
         ]
@@ -1947,38 +1611,10 @@
             "image_type": "crop"
           },
           {
-            "relative_path": "vlm/outputs/multiview_samples/inst_desk_008/crop_view_1.jpg",
-            "filename": "crop_view_1.jpg",
-            "sha256": "a9ef98b0d3ac67b2b096111e41eb0156e2b9b3eff7b7c2bd435ef2667839b158",
-            "size_bytes": 5056,
-            "image_type": "crop"
-          },
-          {
-            "relative_path": "vlm/outputs/multiview_samples/inst_desk_008/crop_view_2.jpg",
-            "filename": "crop_view_2.jpg",
-            "sha256": "5480723260a4a180d849be05e5faa1f7c31cbf4342c1259e25c5458f1de14b64",
-            "size_bytes": 4769,
-            "image_type": "crop"
-          },
-          {
             "relative_path": "vlm/outputs/multiview_samples/inst_desk_008/scene_view_0.jpg",
             "filename": "scene_view_0.jpg",
             "sha256": "ba4567b8b25df1125b025699ef89b3f09f21cf901404ec40a2f9a8b75e6a9cbe",
             "size_bytes": 60206,
-            "image_type": "scene"
-          },
-          {
-            "relative_path": "vlm/outputs/multiview_samples/inst_desk_008/scene_view_1.jpg",
-            "filename": "scene_view_1.jpg",
-            "sha256": "ade4387386107ca070324bb27e8378e9a4c551d636e61e9f8c0b845fa6bde779",
-            "size_bytes": 59530,
-            "image_type": "scene"
-          },
-          {
-            "relative_path": "vlm/outputs/multiview_samples/inst_desk_008/scene_view_2.jpg",
-            "filename": "scene_view_2.jpg",
-            "sha256": "cfa23f431a409c001e38e7eed74fb6d3371896900fda5ab77364a1db4760f787",
-            "size_bytes": 60457,
             "image_type": "scene"
           }
         ]
@@ -2064,38 +1700,10 @@
             "image_type": "crop"
           },
           {
-            "relative_path": "vlm/outputs/multiview_samples/inst_desk_012/crop_view_1.jpg",
-            "filename": "crop_view_1.jpg",
-            "sha256": "5d68d4d5433cdd6320b8a350ced7b0d15b535a64857a7c26abb0e896e14811b8",
-            "size_bytes": 2098,
-            "image_type": "crop"
-          },
-          {
-            "relative_path": "vlm/outputs/multiview_samples/inst_desk_012/crop_view_2.jpg",
-            "filename": "crop_view_2.jpg",
-            "sha256": "8814d7c829d123e569733390c330095a63b959147f03e1d1374715e9884e8666",
-            "size_bytes": 3612,
-            "image_type": "crop"
-          },
-          {
             "relative_path": "vlm/outputs/multiview_samples/inst_desk_012/scene_view_0.jpg",
             "filename": "scene_view_0.jpg",
             "sha256": "522290fcb82661de85355c8ceadc86d8330be2af8fd321b902a5f1fd0438a205",
             "size_bytes": 62768,
-            "image_type": "scene"
-          },
-          {
-            "relative_path": "vlm/outputs/multiview_samples/inst_desk_012/scene_view_1.jpg",
-            "filename": "scene_view_1.jpg",
-            "sha256": "7d270da3e9fe1e75158a3e198abff0ae4543826db9766cb310185b374ce6e56a",
-            "size_bytes": 60322,
-            "image_type": "scene"
-          },
-          {
-            "relative_path": "vlm/outputs/multiview_samples/inst_desk_012/scene_view_2.jpg",
-            "filename": "scene_view_2.jpg",
-            "sha256": "c30ae33ab0535d21fcac619d02c3ca13a1c607bd51da77bfb3eb0108ce1968c6",
-            "size_bytes": 64418,
             "image_type": "scene"
           }
         ]
@@ -2145,38 +1753,10 @@
             "image_type": "crop"
           },
           {
-            "relative_path": "vlm/outputs/multiview_samples/inst_desk_016/crop_view_1.jpg",
-            "filename": "crop_view_1.jpg",
-            "sha256": "7733f8f66be752671d79a2ae5cb64b4328417d5e6ae4cec730242e630a9aa6e2",
-            "size_bytes": 5467,
-            "image_type": "crop"
-          },
-          {
-            "relative_path": "vlm/outputs/multiview_samples/inst_desk_016/crop_view_2.jpg",
-            "filename": "crop_view_2.jpg",
-            "sha256": "0422f2536331b366198008fb117c09279f6da3cd818ba3584fe73daf8ff65c41",
-            "size_bytes": 1489,
-            "image_type": "crop"
-          },
-          {
             "relative_path": "vlm/outputs/multiview_samples/inst_desk_016/scene_view_0.jpg",
             "filename": "scene_view_0.jpg",
             "sha256": "8b502028bb7e424b283f43560f7c73a780c0ae05ee07642aa2762f5c5b2acb36",
             "size_bytes": 60148,
-            "image_type": "scene"
-          },
-          {
-            "relative_path": "vlm/outputs/multiview_samples/inst_desk_016/scene_view_1.jpg",
-            "filename": "scene_view_1.jpg",
-            "sha256": "f584f7efc6995f6ff413ba633dfa4191b17557e7f674f7b6d525f721c3298264",
-            "size_bytes": 59766,
-            "image_type": "scene"
-          },
-          {
-            "relative_path": "vlm/outputs/multiview_samples/inst_desk_016/scene_view_2.jpg",
-            "filename": "scene_view_2.jpg",
-            "sha256": "28bdd62b0723740f2be32a03afd48f582540d5053d84bb1a6694e06bcb3607f3",
-            "size_bytes": 56702,
             "image_type": "scene"
           }
         ]
@@ -2233,13 +1813,6 @@
             "image_type": "crop"
           },
           {
-            "relative_path": "vlm/outputs/multiview_samples/inst_desk_017/crop_view_2.jpg",
-            "filename": "crop_view_2.jpg",
-            "sha256": "2d970bc2780e5265801af12c14e6ee03d10d2c28900d0de58b903854bd8de685",
-            "size_bytes": 1430,
-            "image_type": "crop"
-          },
-          {
             "relative_path": "vlm/outputs/multiview_samples/inst_desk_017/scene_view_0.jpg",
             "filename": "scene_view_0.jpg",
             "sha256": "aecf15747dff56d977ba1246fced5d0f575e8a65a121b859b2b08bdf20af5285",
@@ -2251,13 +1824,6 @@
             "filename": "scene_view_1.jpg",
             "sha256": "64ae27f54c4a0aec9979c44594996420582e6e3b6425cda36dc2c3ea2deab812",
             "size_bytes": 66368,
-            "image_type": "scene"
-          },
-          {
-            "relative_path": "vlm/outputs/multiview_samples/inst_desk_017/scene_view_2.jpg",
-            "filename": "scene_view_2.jpg",
-            "sha256": "fda8bf73d8acaf0f34525ad83bcaec086c9910ea180dff7a12f6959310cc8dcb",
-            "size_bytes": 64345,
             "image_type": "scene"
           }
         ]
@@ -2302,43 +1868,15 @@
           {
             "relative_path": "vlm/outputs/multiview_samples/inst_desk_018/crop_view_0.jpg",
             "filename": "crop_view_0.jpg",
-            "sha256": "bef6b4a3290c3483ec4d855a3476ae36a90317f18542d7b7259b14ffe5d2fd27",
-            "size_bytes": 991,
-            "image_type": "crop"
-          },
-          {
-            "relative_path": "vlm/outputs/multiview_samples/inst_desk_018/crop_view_1.jpg",
-            "filename": "crop_view_1.jpg",
-            "sha256": "f403ac421822a3071c6ada90b1f5c4352bf641d1ccb2d47793e9c5e29463049e",
-            "size_bytes": 1330,
-            "image_type": "crop"
-          },
-          {
-            "relative_path": "vlm/outputs/multiview_samples/inst_desk_018/crop_view_2.jpg",
-            "filename": "crop_view_2.jpg",
-            "sha256": "b01e4eaf47dcb919b8ca1cce658e55d94e6f711986108cdad199030e63fafe5f",
-            "size_bytes": 5429,
+            "sha256": "21ce5f04e7bb747f05a7a7fdb3487027bd02ae5e4b846fd88c60721ca87cbcf2",
+            "size_bytes": 20286,
             "image_type": "crop"
           },
           {
             "relative_path": "vlm/outputs/multiview_samples/inst_desk_018/scene_view_0.jpg",
             "filename": "scene_view_0.jpg",
-            "sha256": "730a46b67931a645581448fa21ddaca094e8f55f2165196b706a0f45164635b6",
-            "size_bytes": 61114,
-            "image_type": "scene"
-          },
-          {
-            "relative_path": "vlm/outputs/multiview_samples/inst_desk_018/scene_view_1.jpg",
-            "filename": "scene_view_1.jpg",
-            "sha256": "b7b3b30a1c89c058892e3981aa84572258cdb3a16d04e8a33319b41259f3ee84",
-            "size_bytes": 61035,
-            "image_type": "scene"
-          },
-          {
-            "relative_path": "vlm/outputs/multiview_samples/inst_desk_018/scene_view_2.jpg",
-            "filename": "scene_view_2.jpg",
-            "sha256": "e8118845f36561c0b8236da3fd94518bb961ca452517b8b464afcf7449d34a39",
-            "size_bytes": 59898,
+            "sha256": "442fd6e2ecd277f92f7e44439f89c7ac481053ba5dc6605456e748eab317ee8a",
+            "size_bytes": 58522,
             "image_type": "scene"
           }
         ]
@@ -2388,38 +1926,10 @@
             "image_type": "crop"
           },
           {
-            "relative_path": "vlm/outputs/multiview_samples/inst_desk_023/crop_view_1.jpg",
-            "filename": "crop_view_1.jpg",
-            "sha256": "0f58a062c2b4cd57635081c0549877da9c684fc8f6362d5ebeee31e324948ee3",
-            "size_bytes": 23171,
-            "image_type": "crop"
-          },
-          {
-            "relative_path": "vlm/outputs/multiview_samples/inst_desk_023/crop_view_2.jpg",
-            "filename": "crop_view_2.jpg",
-            "sha256": "7d700ad696f9ec0a9ba0669e301ba2e870ea758b13bae4b0da16bb64ff5be046",
-            "size_bytes": 18293,
-            "image_type": "crop"
-          },
-          {
             "relative_path": "vlm/outputs/multiview_samples/inst_desk_023/scene_view_0.jpg",
             "filename": "scene_view_0.jpg",
             "sha256": "d1ed8262e884bfdceae9aa010aceab9f96593ae0ce907152f8b3fc742cebbcca",
             "size_bytes": 62052,
-            "image_type": "scene"
-          },
-          {
-            "relative_path": "vlm/outputs/multiview_samples/inst_desk_023/scene_view_1.jpg",
-            "filename": "scene_view_1.jpg",
-            "sha256": "5de9edd449e0862c3fef90243b44b5120bd7eded51aebd4f621b73b7a5ef0701",
-            "size_bytes": 60411,
-            "image_type": "scene"
-          },
-          {
-            "relative_path": "vlm/outputs/multiview_samples/inst_desk_023/scene_view_2.jpg",
-            "filename": "scene_view_2.jpg",
-            "sha256": "d498417f72bab8ebb68cc354b4a8b93cf9e05c302b59cf1de73211813731e934",
-            "size_bytes": 62373,
             "image_type": "scene"
           }
         ]
@@ -2550,38 +2060,10 @@
             "image_type": "crop"
           },
           {
-            "relative_path": "vlm/outputs/multiview_samples/inst_desk_025/crop_view_1.jpg",
-            "filename": "crop_view_1.jpg",
-            "sha256": "e5121fbd242ca63cea44bcc820acdb36e2bb3fc7da3668bb794b1bc9077fb093",
-            "size_bytes": 3426,
-            "image_type": "crop"
-          },
-          {
-            "relative_path": "vlm/outputs/multiview_samples/inst_desk_025/crop_view_2.jpg",
-            "filename": "crop_view_2.jpg",
-            "sha256": "d01ff8b9bcef54aae5984c12c54ce7cabf5c9c0abf07f073297bc2be732e7c5b",
-            "size_bytes": 3230,
-            "image_type": "crop"
-          },
-          {
             "relative_path": "vlm/outputs/multiview_samples/inst_desk_025/scene_view_0.jpg",
             "filename": "scene_view_0.jpg",
             "sha256": "df96d4134d9193ef56cd586f7dd053f0393541bd99b65fc887674f29c2b0ff34",
             "size_bytes": 49570,
-            "image_type": "scene"
-          },
-          {
-            "relative_path": "vlm/outputs/multiview_samples/inst_desk_025/scene_view_1.jpg",
-            "filename": "scene_view_1.jpg",
-            "sha256": "482406755121933729329209675e16a67c8e7a040a0c04944e354049ba1c4d7b",
-            "size_bytes": 47889,
-            "image_type": "scene"
-          },
-          {
-            "relative_path": "vlm/outputs/multiview_samples/inst_desk_025/scene_view_2.jpg",
-            "filename": "scene_view_2.jpg",
-            "sha256": "2239eb55ab55f397f8095e6eb020e6c6b35ce6ca83e20661596cadbeee7afc61",
-            "size_bytes": 46394,
             "image_type": "scene"
           }
         ]
@@ -2638,13 +2120,6 @@
             "image_type": "crop"
           },
           {
-            "relative_path": "vlm/outputs/multiview_samples/inst_desk_031/crop_view_2.jpg",
-            "filename": "crop_view_2.jpg",
-            "sha256": "af6bda0eb5ef98c35003ca6643da1b88c8e438704aae7611a0ff5b5e1caeac7a",
-            "size_bytes": 2174,
-            "image_type": "crop"
-          },
-          {
             "relative_path": "vlm/outputs/multiview_samples/inst_desk_031/scene_view_0.jpg",
             "filename": "scene_view_0.jpg",
             "sha256": "bd80a663f3242fdd1beb4644a6174f1a3be55d8102614317c3866f63d88389ea",
@@ -2656,13 +2131,6 @@
             "filename": "scene_view_1.jpg",
             "sha256": "c9220e5eb833469176f53521f8564739d333484136e314c8c060ac193b6a5ced",
             "size_bytes": 65903,
-            "image_type": "scene"
-          },
-          {
-            "relative_path": "vlm/outputs/multiview_samples/inst_desk_031/scene_view_2.jpg",
-            "filename": "scene_view_2.jpg",
-            "sha256": "ec10ae3bf626473bc1d6299d7149c5268a6feb022797e73a7e8088da5e0cf5ba",
-            "size_bytes": 56353,
             "image_type": "scene"
           }
         ]
@@ -2711,38 +2179,10 @@
             "image_type": "crop"
           },
           {
-            "relative_path": "vlm/outputs/multiview_samples/inst_door_001/crop_view_1.jpg",
-            "filename": "crop_view_1.jpg",
-            "sha256": "7fae9d47182f776ef0f9c19f53788544aeec48975d4a977069b733c74c13645e",
-            "size_bytes": 11510,
-            "image_type": "crop"
-          },
-          {
-            "relative_path": "vlm/outputs/multiview_samples/inst_door_001/crop_view_2.jpg",
-            "filename": "crop_view_2.jpg",
-            "sha256": "1420fbd621b21cb961661a988bc38a26110613105b389ae579b868726fddacf7",
-            "size_bytes": 28705,
-            "image_type": "crop"
-          },
-          {
             "relative_path": "vlm/outputs/multiview_samples/inst_door_001/scene_view_0.jpg",
             "filename": "scene_view_0.jpg",
             "sha256": "61c3cb33efac2bcc8d8a2920755eb7b550ea44240056b7fe592c25ecd987d026",
             "size_bytes": 50458,
-            "image_type": "scene"
-          },
-          {
-            "relative_path": "vlm/outputs/multiview_samples/inst_door_001/scene_view_1.jpg",
-            "filename": "scene_view_1.jpg",
-            "sha256": "714aca466ec61b9b9796add6bfb778b327a0f42e1311d9abdd6c0a93c1c43766",
-            "size_bytes": 49361,
-            "image_type": "scene"
-          },
-          {
-            "relative_path": "vlm/outputs/multiview_samples/inst_door_001/scene_view_2.jpg",
-            "filename": "scene_view_2.jpg",
-            "sha256": "97f4ccb0acb7c34e1ce91eb9b35ac82b3da7f0c3d95dc543a4b9bb934b066a32",
-            "size_bytes": 48923,
             "image_type": "scene"
           }
         ]
@@ -2805,90 +2245,32 @@
       "semantic_class": "person",
       "contextual_movability_gt": "MOBILE",
       "current_motion_gt": "MOVING",
-      "physical_displacement_m_gt": 3.45,
+      "physical_displacement_m_gt": 1.2,
       "slam_invalidated_gt": true,
       "associated_tracks": [
-        "person_operator",
-        "person_001",
-        "person_002",
         "person_003",
-        "person_004",
-        "person_005",
-        "person_006",
-        "person_007",
-        "person_008",
-        "person_009",
-        "person_010",
-        "person_011",
-        "person_012",
-        "person_013",
-        "person_014",
-        "person_015",
-        "person_016",
-        "person_017",
-        "person_018",
-        "person_019",
-        "person_020",
-        "person_021",
-        "person_022",
-        "person_023",
-        "person_024",
-        "person_025",
-        "person_026",
-        "person_027",
-        "person_028",
-        "person_029",
-        "person_030",
-        "person_031"
+        "person_006"
       ],
       "sessions_observed": [
         "semantic_mapping_my_desk_recording_02"
       ],
       "visual_evidence": {
         "has_images": true,
-        "views_count": 2,
+        "views_count": 1,
         "crops_dir": "vlm/outputs/multiview_samples/inst_human_operator_001",
         "images": [
           {
             "relative_path": "vlm/outputs/multiview_samples/inst_human_operator_001/crop_view_0.jpg",
             "filename": "crop_view_0.jpg",
-            "sha256": "4a3e76901571111e37e0eed986e320c5ed07745acab2d8db03c2bb25a67edba6",
-            "size_bytes": 8015,
-            "image_type": "crop"
-          },
-          {
-            "relative_path": "vlm/outputs/multiview_samples/inst_human_operator_001/crop_view_1.jpg",
-            "filename": "crop_view_1.jpg",
-            "sha256": "a0ced439bef0797c139ba3218479a52661ade388e350ece4e83f107222c885be",
-            "size_bytes": 2305,
-            "image_type": "crop"
-          },
-          {
-            "relative_path": "vlm/outputs/multiview_samples/inst_human_operator_001/crop_view_2.jpg",
-            "filename": "crop_view_2.jpg",
-            "sha256": "91829045da066c3a9a59bbf0fba50fde0181a85f19f31ef7d6c915928dd0cd6f",
-            "size_bytes": 1114,
+            "sha256": "51a597a95b3d470e5dac32b71b67000eaa1a12a5637603a6e2839f8aae4baa54",
+            "size_bytes": 9433,
             "image_type": "crop"
           },
           {
             "relative_path": "vlm/outputs/multiview_samples/inst_human_operator_001/scene_view_0.jpg",
             "filename": "scene_view_0.jpg",
-            "sha256": "b36458879497c0f0b3c1f15efbd4f4afacac75436b6fd5bfcc42492980418d3c",
-            "size_bytes": 73466,
-            "image_type": "scene"
-          },
-          {
-            "relative_path": "vlm/outputs/multiview_samples/inst_human_operator_001/scene_view_1.jpg",
-            "filename": "scene_view_1.jpg",
-            "sha256": "a35eca317106cd5c62ff927ded2d96a0341ef83d04b243a652f254ed6b093397",
-            "size_bytes": 60979,
-            "image_type": "scene"
-          },
-          {
-            "relative_path": "vlm/outputs/multiview_samples/inst_human_operator_001/scene_view_2.jpg",
-            "filename": "scene_view_2.jpg",
-            "sha256": "5d7096cb6371be1852176622c9ecb74125b73d7e9d2a22c87b26b372b1da55d1",
-            "size_bytes": 89227,
+            "sha256": "8ed70968e7825d8eb83afe8e1cdfb72c44fadd6cc2bcd722e7d232ead3034111",
+            "size_bytes": 73143,
             "image_type": "scene"
           }
         ]
@@ -2907,7 +2289,7 @@
       },
       "provenance": {
         "annotator_adjudication": "ADJUDICATED_CONSENSUS",
-        "verification_method": "Human operator executing controlled physical object relocations in laboratory."
+        "verification_method": "Human operator conducting physical relocations in laboratory aisle (confirmed tracks: person_003, person_006; background seated occupants quarantined to prevent identity conflation)."
       }
     },
     {
@@ -2981,13 +2363,6 @@
             "image_type": "crop"
           },
           {
-            "relative_path": "vlm/outputs/multiview_samples/inst_laptop_001/crop_view_2.jpg",
-            "filename": "crop_view_2.jpg",
-            "sha256": "31514e7743864d37b4d5da8d7f5236e1615b8ed8cc16f5ef4baba0e32734916f",
-            "size_bytes": 1403,
-            "image_type": "crop"
-          },
-          {
             "relative_path": "vlm/outputs/multiview_samples/inst_laptop_001/scene_view_0.jpg",
             "filename": "scene_view_0.jpg",
             "sha256": "6ef442178b8389671ba5aad3f61b1ef5aa328cd7086131290065592c56dd8b39",
@@ -2999,13 +2374,6 @@
             "filename": "scene_view_1.jpg",
             "sha256": "51f77a45257f94c10902183d2fb3b6f289627431b1ff2b4def246cacc76f566b",
             "size_bytes": 56511,
-            "image_type": "scene"
-          },
-          {
-            "relative_path": "vlm/outputs/multiview_samples/inst_laptop_001/scene_view_2.jpg",
-            "filename": "scene_view_2.jpg",
-            "sha256": "68197f5200a6078ab96340a9ddb8e42e3c6140bf0f0c947d0285660d5876d38a",
-            "size_bytes": 60361,
             "image_type": "scene"
           }
         ]
@@ -3170,13 +2538,6 @@
             "image_type": "crop"
           },
           {
-            "relative_path": "vlm/outputs/multiview_samples/inst_monitor_001/crop_view_2.jpg",
-            "filename": "crop_view_2.jpg",
-            "sha256": "f5a8faf1c7dbcd4bc7e76d02e4686215818fe749dd8f717e87f746f35ba65774",
-            "size_bytes": 2052,
-            "image_type": "crop"
-          },
-          {
             "relative_path": "vlm/outputs/multiview_samples/inst_monitor_001/scene_view_0.jpg",
             "filename": "scene_view_0.jpg",
             "sha256": "3fb5d2654996919f2e897867f65e7e3ced3e6c2abcb0fe8a3622c09942875baf",
@@ -3188,13 +2549,6 @@
             "filename": "scene_view_1.jpg",
             "sha256": "ebb697ec7162d09f478a1e5db50ad17cc7c0527f9ebc938be3d7190158db3cbf",
             "size_bytes": 60723,
-            "image_type": "scene"
-          },
-          {
-            "relative_path": "vlm/outputs/multiview_samples/inst_monitor_001/scene_view_2.jpg",
-            "filename": "scene_view_2.jpg",
-            "sha256": "9977389ea15f788937f62b168db9a214f9ce372628cb6ac779e5919296bc504a",
-            "size_bytes": 61139,
             "image_type": "scene"
           }
         ]
@@ -3278,38 +2632,10 @@
             "image_type": "crop"
           },
           {
-            "relative_path": "vlm/outputs/multiview_samples/inst_pedestal_fan_001/crop_view_1.jpg",
-            "filename": "crop_view_1.jpg",
-            "sha256": "5c753d8ba3fc9ae84cdaae1a45b16fc7a79e7b14c2b8542a67a2f66dc21a729a",
-            "size_bytes": 8308,
-            "image_type": "crop"
-          },
-          {
-            "relative_path": "vlm/outputs/multiview_samples/inst_pedestal_fan_001/crop_view_2.jpg",
-            "filename": "crop_view_2.jpg",
-            "sha256": "c816bc453bf99547cb65e2b863c4c11a73ff966fd7086ba9a4aa7365e04c289f",
-            "size_bytes": 8585,
-            "image_type": "crop"
-          },
-          {
             "relative_path": "vlm/outputs/multiview_samples/inst_pedestal_fan_001/scene_view_0.jpg",
             "filename": "scene_view_0.jpg",
             "sha256": "889954148e0c05827eb5805d28009dde9cf6e776fe7e5c7e4ea9b2b768fc6c68",
             "size_bytes": 62429,
-            "image_type": "scene"
-          },
-          {
-            "relative_path": "vlm/outputs/multiview_samples/inst_pedestal_fan_001/scene_view_1.jpg",
-            "filename": "scene_view_1.jpg",
-            "sha256": "0a9a54ce8d8724cddc41254e0c01f714d66a953dfd8c7f408184e80af088c783",
-            "size_bytes": 64492,
-            "image_type": "scene"
-          },
-          {
-            "relative_path": "vlm/outputs/multiview_samples/inst_pedestal_fan_001/scene_view_2.jpg",
-            "filename": "scene_view_2.jpg",
-            "sha256": "e6a12fb499786b11388e537b67801dd75a7891de8b68413368ce8e2fa146a826",
-            "size_bytes": 64888,
             "image_type": "scene"
           }
         ]
@@ -3339,15 +2665,14 @@
       "physical_displacement_m_gt": 0.0,
       "slam_invalidated_gt": false,
       "associated_tracks": [
-        "quadcopter drone_001_s2",
         "quadcopter drone_001"
       ],
       "sessions_observed": [
-        "semantic_mapping_my_desk_recording_02"
+        "semantic_mapping_my_desk_recording_01"
       ],
       "visual_evidence": {
         "has_images": true,
-        "views_count": 2,
+        "views_count": 1,
         "crops_dir": "vlm/outputs/multiview_samples/inst_quadcopter_drone_001",
         "images": [
           {
@@ -3358,24 +2683,10 @@
             "image_type": "crop"
           },
           {
-            "relative_path": "vlm/outputs/multiview_samples/inst_quadcopter_drone_001/crop_view_1.jpg",
-            "filename": "crop_view_1.jpg",
-            "sha256": "cf042acbc6bcd6403507fe9ecad6428f92234dabf06b28b9d9a662ed91e4bc44",
-            "size_bytes": 2449,
-            "image_type": "crop"
-          },
-          {
             "relative_path": "vlm/outputs/multiview_samples/inst_quadcopter_drone_001/scene_view_0.jpg",
             "filename": "scene_view_0.jpg",
             "sha256": "90a7cd0f8eaccc8936a82b070240288f8f715f02d8d25bcf3468906e8a98940d",
             "size_bytes": 64771,
-            "image_type": "scene"
-          },
-          {
-            "relative_path": "vlm/outputs/multiview_samples/inst_quadcopter_drone_001/scene_view_1.jpg",
-            "filename": "scene_view_1.jpg",
-            "sha256": "4aa2c4271db54e72f3d59aa0fe1c8e6295abdcb136c25efd4590e76aba996844",
-            "size_bytes": 80314,
             "image_type": "scene"
           }
         ]
@@ -3394,7 +2705,7 @@
       },
       "provenance": {
         "annotator_adjudication": "ADJUDICATED_CONSENSUS",
-        "verification_method": "Unmanned aerial vehicle resting on laboratory test stand; intrinsic propulsion capability."
+        "verification_method": "Unmanned aerial vehicle resting on laboratory test stand on desk inst_desk_018 in Session 01; intrinsic propulsion capability."
       }
     },
     {
@@ -3402,7 +2713,7 @@
       "semantic_class": "robot",
       "contextual_movability_gt": "MOBILE",
       "current_motion_gt": "MOVING",
-      "physical_displacement_m_gt": 4.912,
+      "physical_displacement_m_gt": 0.996,
       "slam_invalidated_gt": true,
       "associated_tracks": [
         "robot_platform_base",
@@ -3413,41 +2724,26 @@
         "semantic_mapping_my_desk_recording_02"
       ],
       "visual_evidence": {
-        "has_images": true,
-        "views_count": 1,
-        "crops_dir": "vlm/outputs/multiview_samples/inst_rc_car_robot_001",
-        "images": [
-          {
-            "relative_path": "vlm/outputs/multiview_samples/inst_rc_car_robot_001/crop_view_0.jpg",
-            "filename": "crop_view_0.jpg",
-            "sha256": "35a1cf8390b5bea30e42c915d6addc4de17c7d60b08ec3cf818a69f1bd020a27",
-            "size_bytes": 7511,
-            "image_type": "crop"
-          },
-          {
-            "relative_path": "vlm/outputs/multiview_samples/inst_rc_car_robot_001/scene_view_0.jpg",
-            "filename": "scene_view_0.jpg",
-            "sha256": "c4c619754431df64dac8ceef5625e134d3e95ca25aea3a765ceb90279da41eff",
-            "size_bytes": 62923,
-            "image_type": "scene"
-          }
-        ]
+        "has_images": false,
+        "views_count": 0,
+        "crops_dir": null,
+        "images": []
       },
       "evaluation_memberships": {
         "pop_52_ground_truth": true,
-        "pop_39_image_eligible": true,
+        "pop_39_image_eligible": false,
         "pop_15_balanced_router": true,
         "pop_28_held_out_furniture": false
       },
       "task_eligibility": {
-        "matched_image_eligible_view_a": true,
+        "matched_image_eligible_view_a": false,
         "end_to_end_system_view_b": true,
         "has_genuine_baseline_vlm_record": true,
         "downstream_slam_eligible": true
       },
       "provenance": {
         "annotator_adjudication": "ADJUDICATED_CONSENSUS",
-        "verification_method": "Autonomous 4-motor differential-drive RC car traversing multi-session navigation trajectory."
+        "verification_method": "Autonomous 4-motor differential-drive RC car traversing multi-session navigation trajectory between desk aisles (displacement measured from S1 obs_4120_03 [-2.70, -3.22] to S2 obs_3400_06 [-2.01, -3.94]; visual crops marked unsuitable due to heavy occlusion)."
       }
     },
     {
@@ -3467,7 +2763,7 @@
       ],
       "visual_evidence": {
         "has_images": true,
-        "views_count": 3,
+        "views_count": 2,
         "crops_dir": "vlm/outputs/multiview_samples/inst_storage_box_001",
         "images": [
           {
@@ -3485,13 +2781,6 @@
             "image_type": "crop"
           },
           {
-            "relative_path": "vlm/outputs/multiview_samples/inst_storage_box_001/crop_view_2.jpg",
-            "filename": "crop_view_2.jpg",
-            "sha256": "b2f4e24203d44adf26a0b0e744378b5dc9a6710cc68e9118faaa4d2c6a4e4718",
-            "size_bytes": 972,
-            "image_type": "crop"
-          },
-          {
             "relative_path": "vlm/outputs/multiview_samples/inst_storage_box_001/scene_view_0.jpg",
             "filename": "scene_view_0.jpg",
             "sha256": "ca7b12e6ff0a562dbc377b500ee2e0f58a4fbdce64925d5bbd22a998f7ac5b59",
@@ -3503,13 +2792,6 @@
             "filename": "scene_view_1.jpg",
             "sha256": "ad52310442947f2dc8452146d8476bf7845eab6bc6592ab41a8cb7cddee394f1",
             "size_bytes": 59748,
-            "image_type": "scene"
-          },
-          {
-            "relative_path": "vlm/outputs/multiview_samples/inst_storage_box_001/scene_view_2.jpg",
-            "filename": "scene_view_2.jpg",
-            "sha256": "799178b0d8df142c01597e5bbc34420926c31417a5e8d943ea88ef3b2c8c85f7",
-            "size_bytes": 67539,
             "image_type": "scene"
           }
         ]
@@ -3566,13 +2848,6 @@
             "image_type": "crop"
           },
           {
-            "relative_path": "vlm/outputs/multiview_samples/inst_storage_box_004/crop_view_2.jpg",
-            "filename": "crop_view_2.jpg",
-            "sha256": "2bab4dced9d113d8d9317943ca7445f850a894250980400786d1e62f138af8f1",
-            "size_bytes": 4421,
-            "image_type": "crop"
-          },
-          {
             "relative_path": "vlm/outputs/multiview_samples/inst_storage_box_004/scene_view_0.jpg",
             "filename": "scene_view_0.jpg",
             "sha256": "9d71fd0396cfabc8c9316dff3b2e6f97a536976ce6ebe8615ab0d0019c594c2c",
@@ -3584,13 +2859,6 @@
             "filename": "scene_view_1.jpg",
             "sha256": "96ab0e4eea6a428021592eb3f67cb66834e5adbd82dc475e6af4816208617a4d",
             "size_bytes": 69705,
-            "image_type": "scene"
-          },
-          {
-            "relative_path": "vlm/outputs/multiview_samples/inst_storage_box_004/scene_view_2.jpg",
-            "filename": "scene_view_2.jpg",
-            "sha256": "b90d013a7b8c8278cfd44e187b41f98f787249f54339fa0a7b4102c307900c7c",
-            "size_bytes": 64526,
             "image_type": "scene"
           }
         ]
@@ -3647,13 +2915,6 @@
             "image_type": "crop"
           },
           {
-            "relative_path": "vlm/outputs/multiview_samples/inst_storage_box_007/crop_view_2.jpg",
-            "filename": "crop_view_2.jpg",
-            "sha256": "fe137bccc2845738276c46fe4f10634b7901fce0a87c6c9282e6b6eed24ab3a5",
-            "size_bytes": 1941,
-            "image_type": "crop"
-          },
-          {
             "relative_path": "vlm/outputs/multiview_samples/inst_storage_box_007/scene_view_0.jpg",
             "filename": "scene_view_0.jpg",
             "sha256": "bd3db9bdd3283f4a064a3a3773155e6ca8f15e64ee3c65c5c01c86d89f5bdabe",
@@ -3665,13 +2926,6 @@
             "filename": "scene_view_1.jpg",
             "sha256": "e308fc0a792073b1348e59390920b8c1c4f3bfffc3943954b0a328eafd8148d9",
             "size_bytes": 56802,
-            "image_type": "scene"
-          },
-          {
-            "relative_path": "vlm/outputs/multiview_samples/inst_storage_box_007/scene_view_2.jpg",
-            "filename": "scene_view_2.jpg",
-            "sha256": "0384952dc5bf06a2f7fe52f579d457f10b30a8824ae211c106a1579d70019900",
-            "size_bytes": 72902,
             "image_type": "scene"
           }
         ]

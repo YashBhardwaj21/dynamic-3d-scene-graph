@@ -69,16 +69,16 @@ def build_canonical_manifest(repo_root: Path) -> Dict[str, Any]:
 
         # Check visual assets
         inst_mv_dir = mv_dir / eid
-        has_images = inst_mv_dir.exists() and inst_mv_dir.is_dir()
+        dir_exists = inst_mv_dir.exists() and inst_mv_dir.is_dir()
         image_records = []
         views_count = 0
 
-        if has_images:
+        if dir_exists:
             meta_file = inst_mv_dir / "sample_meta.json"
             if meta_file.exists():
                 with open(meta_file, "r", encoding="utf-8") as mf:
                     sm = json.load(mf)
-                    views_count = sm.get("total_views", 1)
+                    views_count = sm.get("total_views", 0)
 
             # Discover all jpg crops and scenes
             for img_p in sorted(inst_mv_dir.glob("*.jpg")):
@@ -91,8 +91,13 @@ def build_canonical_manifest(repo_root: Path) -> Dict[str, Any]:
                     "size_bytes": img_p.stat().st_size,
                     "image_type": "crop" if "crop" in img_p.name else "scene",
                 })
-            if views_count == 0 and image_records:
-                views_count = sum(1 for r in image_records if r["image_type"] == "crop")
+            crops_count = sum(1 for r in image_records if r["image_type"] == "crop")
+            if views_count == 0 and crops_count > 0:
+                views_count = crops_count
+            elif crops_count == 0:
+                views_count = 0
+
+        has_images = len(image_records) > 0 and views_count > 0
 
         # Split flags
         in_m15 = eid in m15_objects

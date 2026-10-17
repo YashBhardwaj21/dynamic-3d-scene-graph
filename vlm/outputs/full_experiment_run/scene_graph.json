@@ -1,6 +1,6 @@
 {
   "total_nodes": 195,
-  "timestamp": 1792179989.5951552,
+  "timestamp": 1792239960.82865,
   "nodes": {
     "entity_s1_backpack_001": {
       "entity_id": "entity_s1_backpack_001",
@@ -3748,8 +3748,8 @@
       "vlm_inference_executed": false,
       "vlm_reason_codes": []
     },
-    "entity_s1_quadcopter drone_001": {
-      "entity_id": "entity_s1_quadcopter drone_001",
+    "inst_quadcopter_drone_001": {
+      "entity_id": "inst_quadcopter_drone_001",
       "semantic_class": "quadcopter drone",
       "contextual_movability": "MOBILE",
       "observed_motion": "STATIC",
@@ -7269,8 +7269,8 @@
       "vlm_inference_executed": false,
       "vlm_reason_codes": []
     },
-    "inst_quadcopter_drone_001": {
-      "entity_id": "inst_quadcopter_drone_001",
+    "entity_s2_quadcopter drone_001": {
+      "entity_id": "entity_s2_quadcopter drone_001",
       "semantic_class": "quadcopter drone",
       "contextual_movability": "MOBILE",
       "observed_motion": "STATIC",

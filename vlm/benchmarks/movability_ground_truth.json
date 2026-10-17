@@ -181,16 +181,16 @@
       "semantic_class": "robot",
       "movability_gt": "MOBILE",
       "current_motion_gt": "MOVING",
-      "displacement_gt": 4.912,
+      "displacement_gt": 0.996,
       "scene_event": "AGENT_DISPATCH",
-      "verification_method": "Autonomous 4-motor differential-drive RC car traversing multi-session navigation trajectory.",
+      "verification_method": "Autonomous 4-motor differential-drive RC car traversing multi-session navigation trajectory between desk aisles (displacement measured from S1 obs_4120_03 [-2.70, -3.22] to S2 obs_3400_06 [-2.01, -3.94]; visual crops marked unsuitable due to heavy occlusion).",
       "associated_tracks": [
         "robot_platform_base",
         "robot_001"
       ],
       "centroid_floor_m": [
-        0.0,
-        0.0,
+        -2.7,
+        -3.22,
         0.12
       ],
       "dimensions_m": [
@@ -209,47 +209,17 @@
       "semantic_class": "person",
       "movability_gt": "MOBILE",
       "current_motion_gt": "MOVING",
-      "displacement_gt": 3.45,
+      "displacement_gt": 1.2,
       "scene_event": "AGENT_DISPATCH",
-      "verification_method": "Human operator executing controlled physical object relocations in laboratory.",
+      "verification_method": "Human operator conducting physical relocations in laboratory aisle (confirmed tracks: person_003, person_006; background seated occupants quarantined to prevent identity conflation).",
       "associated_tracks": [
-        "person_operator",
-        "person_001",
-        "person_002",
         "person_003",
-        "person_004",
-        "person_005",
-        "person_006",
-        "person_007",
-        "person_008",
-        "person_009",
-        "person_010",
-        "person_011",
-        "person_012",
-        "person_013",
-        "person_014",
-        "person_015",
-        "person_016",
-        "person_017",
-        "person_018",
-        "person_019",
-        "person_020",
-        "person_021",
-        "person_022",
-        "person_023",
-        "person_024",
-        "person_025",
-        "person_026",
-        "person_027",
-        "person_028",
-        "person_029",
-        "person_030",
-        "person_031"
+        "person_006"
       ],
       "centroid_floor_m": [
-        1.4,
-        -1.8,
-        0.95
+        -2.52,
+        -3.82,
+        0.93
       ],
       "dimensions_m": [
         0.55,
@@ -268,15 +238,14 @@
       "current_motion_gt": "STATIC",
       "displacement_gt": 0.0,
       "scene_event": "STATIC_BASELINE",
-      "verification_method": "Unmanned aerial vehicle resting on laboratory test stand; intrinsic propulsion capability.",
+      "verification_method": "Unmanned aerial vehicle resting on laboratory test stand on desk inst_desk_018 in Session 01; intrinsic propulsion capability.",
       "associated_tracks": [
-        "quadcopter drone_001_s2",
         "quadcopter drone_001"
       ],
       "centroid_floor_m": [
-        2.15,
-        -0.85,
-        0.78
+        -2.69,
+        -3.3,
+        0.89
       ],
       "dimensions_m": [
         0.42,
@@ -284,7 +253,7 @@
         0.2
       ],
       "sessions_observed": [
-        "semantic_mapping_my_desk_recording_02"
+        "semantic_mapping_my_desk_recording_01"
       ],
       "slam_invalidated": false
     },

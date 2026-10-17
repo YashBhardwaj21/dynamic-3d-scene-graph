@@ -1,8 +1,8 @@
 {
   "version": "2.0.0",
   "description": "Ground-truth mapping of all 78 front-end causal tracks to true physical object instances",
-  "total_tracks": 78,
-  "total_physical_instances_covered": 77,
+  "total_tracks": 84,
+  "total_physical_instances_covered": 80,
   "track_to_instance": {
     "ceiling fan_010": "inst_ceiling_fan_001",
     "chair_002": "inst_chair_002",
@@ -79,8 +79,14 @@
     "laptop_071": "inst_laptop_071",
     "laptop_074": "inst_laptop_074",
     "laptop_075": "inst_laptop_075",
-    "quadcopter drone_049": "inst_quadcopter_drone_049",
+    "quadcopter drone_001": "inst_quadcopter_drone_001",
+    "quadcopter drone_049": "fp_monitor_drone_wallpaper_049",
     "storage box_055": "inst_storage_box_055",
-    "storage box_077": "inst_storage_box_077"
+    "storage box_077": "inst_storage_box_077",
+    "person_003": "inst_human_operator_001",
+    "person_006": "inst_human_operator_001",
+    "person_008": "quarantined_person_seated_008",
+    "robot_platform_base": "inst_rc_car_robot_001",
+    "robot_001": "inst_rc_car_robot_001"
   }
 }
