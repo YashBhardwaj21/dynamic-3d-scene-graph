@@ -44,7 +44,7 @@ def minimal_environment(tmp_path):
             "anchors": [
                 {"anchor_id": "a1", "c1": [1.0, 2.0, 0.0], "c2": [0.0, 0.0, 0.0]},
                 {"anchor_id": "a2", "c1": [0.0, 3.0, 0.0], "c2": [1.0, 1.0, 0.0]},
-                {"anchor_id": "a3", "c1": [2.0, 1.0, 0.0], "c2": [-1.0, -1.0, 0.0]},
+                {"anchor_id": "a3", "c1": [2.0, 3.0, 0.0], "c2": [1.0, -1.0, 0.0]},
             ],
         }
     }
@@ -429,3 +429,183 @@ def test_uncertainty_propagation_formula():
     expected_sigma = math.sqrt(sem1**2 + sem2**2 + reg_sem**2)
     # sqrt(0.0004 + 0.0025 + 0.0036) = sqrt(0.0065) = 0.0806225...
     assert expected_sigma == pytest.approx(0.08062, abs=1e-4)
+
+
+# ==============================================================================
+# Strict Registration Validation Edge Case Tests
+# ==============================================================================
+
+def test_registration_reversed_session_direction(tmp_path):
+    """Reversed session direction or unexpected session names fail validation."""
+    p = tmp_path / "reg_reversed.json"
+    with open(p, "w") as f:
+        json.dump({
+            "registration": {
+                "reference_session": "semantic_mapping_my_desk_recording_02",
+                "aligned_session": "semantic_mapping_my_desk_recording_01",
+                "rotation_deg": 0.0,
+                "translation_m": [0.0, 0.0],
+                "anchors": [
+                    {"c1": [0.0, 0.0], "c2": [0.0, 0.0]},
+                    {"c1": [1.0, 0.0], "c2": [1.0, 0.0]},
+                    {"c1": [0.0, 1.0], "c2": [0.0, 1.0]},
+                ],
+            }
+        }, f)
+    reg = load_registration_audit(
+        p,
+        expected_ref_session="semantic_mapping_my_desk_recording_01",
+        expected_align_session="semantic_mapping_my_desk_recording_02",
+    )
+    assert not reg.is_valid
+    assert reg.status == "SESSION_DIRECTION_INVALID"
+
+
+def test_registration_fewer_than_three_anchors(tmp_path):
+    """Fewer than 3 anchors is strictly rejected."""
+    p = tmp_path / "reg_two_anchors.json"
+    with open(p, "w") as f:
+        json.dump({
+            "registration": {
+                "reference_session": "s1",
+                "aligned_session": "s2",
+                "rotation_deg": 0.0,
+                "translation_m": [0.0, 0.0],
+                "anchors": [
+                    {"c1": [0.0, 0.0], "c2": [0.0, 0.0]},
+                    {"c1": [1.0, 0.0], "c2": [1.0, 0.0]},
+                ],
+            }
+        }, f)
+    reg = load_registration_audit(p)
+    assert not reg.is_valid
+    assert reg.status == "INSUFFICIENT_ANCHOR_CORRESPONDENCES"
+
+
+def test_registration_collinear_anchors(tmp_path):
+    """Anchors that lie on a 1D straight line fail rank/geometry check."""
+    p = tmp_path / "reg_collinear.json"
+    with open(p, "w") as f:
+        json.dump({
+            "registration": {
+                "reference_session": "s1",
+                "aligned_session": "s2",
+                "rotation_deg": 0.0,
+                "translation_m": [0.0, 0.0],
+                "anchors": [
+                    {"c1": [1.0, 1.0], "c2": [1.0, 1.0]},
+                    {"c1": [2.0, 2.0], "c2": [2.0, 2.0]},
+                    {"c1": [3.0, 3.0], "c2": [3.0, 3.0]},
+                ],
+            }
+        }, f)
+    reg = load_registration_audit(p)
+    assert not reg.is_valid
+    assert reg.status == "DEGENERATE_ANCHOR_GEOMETRY"
+
+
+def test_registration_duplicate_anchors(tmp_path):
+    """Duplicate / coincident anchor positions fail validation."""
+    p = tmp_path / "reg_dup.json"
+    with open(p, "w") as f:
+        json.dump({
+            "registration": {
+                "reference_session": "s1",
+                "aligned_session": "s2",
+                "rotation_deg": 0.0,
+                "translation_m": [0.0, 0.0],
+                "anchors": [
+                    {"c1": [1.0, 1.0], "c2": [1.0, 1.0]},
+                    {"c1": [1.0, 1.0], "c2": [1.0, 1.0]},
+                    {"c1": [2.0, 3.0], "c2": [2.0, 3.0]},
+                ],
+            }
+        }, f)
+    reg = load_registration_audit(p)
+    assert not reg.is_valid
+    assert reg.status == "DEGENERATE_ANCHOR_GEOMETRY"
+
+
+def test_registration_nan_inf_rejected(tmp_path):
+    """NaN / Inf values in translation or rotation are rejected."""
+    p = tmp_path / "reg_nan.json"
+    with open(p, "w") as f:
+        f.write('{"registration": {"reference_session": "s1", "aligned_session": "s2", "rotation_deg": NaN, "translation_m": [0.0, 0.0]}}')
+    # NaN in standard JSON parses to float("nan") with standard python json
+    reg = load_registration_audit(p)
+    assert not reg.is_valid
+    assert reg.status in ["REGISTRATION_FILE_MALFORMED", "MALFORMED_TRANSFORM_PARAMETERS"]
+
+
+def test_registration_stored_residual_mismatch(tmp_path):
+    """Stored residual differing from recomputed residual beyond 0.02m fails closed."""
+    p = tmp_path / "reg_mismatch.json"
+    with open(p, "w") as f:
+        json.dump({
+            "registration": {
+                "reference_session": "s1",
+                "aligned_session": "s2",
+                "rotation_deg": 0.0,
+                "translation_m": [0.0, 0.0],
+                "anchors": [
+                    {"c1": [0.0, 0.0], "c2": [0.0, 0.0], "residual_m": 0.00},
+                    {"c1": [1.0, 0.0], "c2": [1.0, 0.0], "residual_m": 0.00},
+                    {"c1": [0.0, 1.0], "c2": [0.0, 1.0], "residual_m": 0.25},  # Stored claims 0.25m, actual is 0.00m
+                ],
+            }
+        }, f)
+    reg = load_registration_audit(p)
+    assert not reg.is_valid
+    assert reg.status == "STORED_RESIDUAL_DISCREPANCY"
+
+
+def test_registration_inconsistent_counts(tmp_path):
+    """Inconsistent inlier + outlier count != total anchors fails validation."""
+    p = tmp_path / "reg_counts.json"
+    with open(p, "w") as f:
+        json.dump({
+            "registration": {
+                "reference_session": "s1",
+                "aligned_session": "s2",
+                "rotation_deg": 0.0,
+                "translation_m": [0.0, 0.0],
+                "anchors": [
+                    {"c1": [0.0, 0.0], "c2": [0.0, 0.0]},
+                    {"c1": [1.0, 0.0], "c2": [1.0, 0.0]},
+                    {"c1": [0.0, 1.0], "c2": [0.0, 1.0]},
+                ],
+            },
+            "residuals": {
+                "inlier_count": 5,  # 5 + 2 = 7 != 3 total anchors!
+                "outlier_count": 2,
+            }
+        }, f)
+    reg = load_registration_audit(p)
+    assert not reg.is_valid
+    assert reg.status == "INCONSISTENT_INLIER_COUNTS"
+
+
+def test_registration_no_hardcoded_defaults_on_missing_optional_blocks(tmp_path):
+    """Missing residuals block does NOT populate fake 0.1198 or 7 constants."""
+    p = tmp_path / "reg_no_blocks.json"
+    with open(p, "w") as f:
+        json.dump({
+            "registration": {
+                "reference_session": "s1",
+                "aligned_session": "s2",
+                "rotation_deg": 0.0,
+                "translation_m": [0.0, 0.0],
+                "anchors": [
+                    {"c1": [0.0, 0.0], "c2": [0.0, 0.0]},
+                    {"c1": [1.0, 0.0], "c2": [1.0, 0.0]},
+                    {"c1": [0.0, 1.0], "c2": [0.0, 1.0]},
+                ],
+            }
+        }, f)
+    reg = load_registration_audit(p)
+    assert reg.is_valid
+    # Inliers recomputed from actual residuals (all 0.0 <= 0.20m), not hardcoded 7 or 0.1198
+    assert reg.robust_inlier_count == 3
+    assert reg.robust_outlier_count == 0
+    assert reg.post_refit_strict_inlier_rms_residual_m == pytest.approx(0.0, abs=1e-5)
+

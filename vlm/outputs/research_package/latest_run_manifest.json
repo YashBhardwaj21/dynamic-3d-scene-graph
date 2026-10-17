@@ -1,17 +1,17 @@
 {
   "manifest_version": "1.0.0",
-  "timestamp": 1792127102.6184952,
-  "git_commit": "4129e2efd7bbd390daaead8c95b797a67539bfcc",
+  "timestamp": 1792272811.689845,
+  "git_commit": "edd743a228f555c695952f35777f9f13f9f5e58e",
   "git_status_clean": false,
   "environment": {
-    "python_version": "3.13.7 (tags/v3.13.7:bcee1c3, Aug 14 2025, 14:15:11) [MSC v.1944 64 bit (AMD64)]",
+    "python_version": "3.12.14 (main, Aug 25 2026, 14:01:42) [MSC v.1944 64 bit (AMD64)]",
     "platform": "win32"
   },
   "inputs": {
     "observations": {
       "path": "vlm\\outputs\\object_observations.jsonl",
-      "sha256": "8f6bed9551e57c6320868512e4c29697d2942b1e4ee537d7071aa21238dfab2e",
-      "size_bytes": 6477341
+      "sha256": "c5943c5a10cf0888f3dde0c89c33a28f58b6998acccf0ad38a0e347de9733f91",
+      "size_bytes": 6723977
     },
     "registration": {
       "path": "vlm\\outputs\\stage5_registration_audit.json",
@@ -20,18 +20,18 @@
     },
     "identity_gt": {
       "path": "vlm\\benchmarks\\cross_session_identity_annotations.json",
-      "sha256": "3a88a30261de3c19fcb1d020add2b0b34bc800bed881342297efdaddf22c0c23",
+      "sha256": "f2deaeb9faf20becf4f71780c14d222f660bb9b3b63ff1fb50c82429600472be",
       "size_bytes": 39673
     },
     "manifest_15": {
       "path": "vlm\\benchmarks\\router_evaluation_manifest.json",
-      "sha256": "b3d18685bb9c8cbf499fe3b02387c75f5c37ccc42e79a08b2e3c44daad103cb0",
-      "size_bytes": 7647
+      "sha256": "2531eb9e3fc4c423c18e84a68584822c99b1b130d09f761bdaafb7c86bde6e04",
+      "size_bytes": 7598
     },
     "manifest_53": {
       "path": "vlm\\benchmarks\\canonical_benchmark_manifest.json",
-      "sha256": "81f09e0c04070c748d2e9b0c392f1113539fe1f3089f05bd5590a7035ca66359",
-      "size_bytes": 148866
+      "sha256": "57d92791717ba2863a77cd2d48ac70224de8560c4ca4f92e922d54044e796abc",
+      "size_bytes": 118295
     },
     "relocation_gt": {
       "path": "vlm\\benchmarks\\controlled_scene_events.json",
@@ -42,18 +42,18 @@
   "outputs": {
     "stage5_metrics": {
       "path": "vlm\\outputs\\stage5_evidence_metrics.json",
-      "sha256": "3850ce3e96a37e08b7634b18f9461555a4ffc1ad018a313dddde7f37eb88a1ef",
-      "size_bytes": 9544
+      "sha256": "322d51bafcb69820de2b680c93edfb66ebbc15d2fbc73570f702c56659c2b71b",
+      "size_bytes": 10185
     },
     "tracklet_audit": {
       "path": "vlm\\outputs\\tracklet_consolidation_audit.json",
-      "sha256": "fbf024e68c2e5ce971b3e16a61f35fa7228fb4c6ccd6753682c7f00baef7f30c",
+      "sha256": "ccffe99259e2e6293a7720766daf240f58c3dfb8a3b1976ee50cb087e1257111",
       "size_bytes": 4521
     },
     "router_ablation": {
       "path": "vlm\\outputs\\stage6\\router_ablation_results.json",
-      "sha256": "70d6dcc3c8c298e598538d4cc71f3deeb917c4ae675a8902560d4583d7349f9a",
-      "size_bytes": 362490
+      "sha256": "85d9cca5bcf235584310f52a0368beea58d50de18a252e5dd5bc33e425c0c70b",
+      "size_bytes": 362493
     },
     "downstream_effects": {
       "path": "vlm\\outputs\\downstream_slam_effects.json",

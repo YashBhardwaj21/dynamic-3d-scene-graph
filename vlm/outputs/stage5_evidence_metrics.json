@@ -1,7 +1,7 @@
 {
   "stage": 5,
   "title": "Stage 5 Inexpensive Pre-Router Evidence Pipeline Evaluation",
-  "timestamp_evaluated": 1792266067.386872,
+  "timestamp_evaluated": 1792272456.4348965,
   "total_records": 7956,
   "acceptance_gate_passed": true,
   "acceptance_gates": [
@@ -90,7 +90,10 @@
     "max_displacement_error_m": 0.1769,
     "mean_relative_displacement_error_pct": 22.28,
     "false_motion_rate_pct": 0.0,
+    "static_stability_pass_rate_pct": 100.0,
     "static_stability_accuracy_pct": 100.0,
+    "static_structures_evaluated_count": 5,
+    "static_structures_falsely_moving_count": 0,
     "controlled_evaluations": [
       {
         "target": "chair_002 (caster chair relocation)",
@@ -142,7 +145,8 @@
   "temporal_tracking": {
     "total_unique_tracks": 1385,
     "total_occlusion_gap_events": 187,
-    "occlusion_recovery_rate_pct": 100.0,
+    "occlusion_recovery_rate_pct": null,
+    "occlusion_recovery_status": "NOT_EVALUABLE_NO_GT_REID",
     "multi_track_entity_count": 198,
     "multi_track_entity_rate_pct": 79.2,
     "ground_truth_objects_evaluated": 42,
@@ -157,7 +161,9 @@
     "macro_f1": 1.0,
     "matched_support_macro_f1": 1.0,
     "matched_observations_count": 3710,
+    "total_observations_count": 7956,
     "evaluation_coverage_pct": 46.63,
+    "evaluable_coverage_ratio": "3710/7956",
     "classes_evaluated": 3,
     "total_classes": 3,
     "unknown_rate_pct": 0.0,
@@ -206,7 +212,9 @@
         "UNKNOWN": 0
       }
     },
-    "unmatched_observations_count": 4246
+    "unmatched_observations_count": 4246,
+    "evidence_type": "fixed_semantic_class_mobility_prior_baseline",
+    "evaluation_scope": "Matched ground-truth taxonomy support only"
   },
   "evidence_validity": {
     "total_records_processed": 7956,

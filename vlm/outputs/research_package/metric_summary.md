@@ -8,7 +8,7 @@
 | Front-End Tracking | Track Fragmentation Ratio | 82.44% | Diagnostic | CONSTRAINED | tracklet_consolidation_audit.json |
 | Front-End Tracking | Cross-Session Instance Recall | 23.08% (7/30) | Diagnostic | CONSTRAINED | tracklet_consolidation_audit.json |
 | Semantics | Matched-Support Macro-F1 | 100.0% | >= 90.0% | PASSED | stage5_evidence_metrics.json |
-| Semantics | Observation Coverage Rate | 55.57% | Reported | CONSTRAINED | stage5_evidence_metrics.json |
+| Semantics | Observation Coverage Rate | 46.63% | Reported | CONSTRAINED | stage5_evidence_metrics.json |
 | Selective Router | R3 View A Balanced Accuracy | 100.0% | >= 80.0% | PASSED | router_ablation_results.json |
 | Selective Router | VLM Compute Reduction | 80.0% | >= 50.0% | PASSED | router_ablation_results.json |
 | Downstream SLAM | Correct Landmark Retention | 91.11% | >= 90.0% | PASSED | downstream_slam_effects.json |

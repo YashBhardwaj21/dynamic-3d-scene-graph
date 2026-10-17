@@ -1,12 +1,12 @@
 {
   "manifest_version": "1.0.0",
   "title": "Dynamic 3D Scene Graph Research Package Index",
-  "timestamp": 1792127102.6185112,
+  "timestamp": 1792272811.689845,
   "input_inventory": {
     "observations": {
       "path": "vlm\\outputs\\object_observations.jsonl",
-      "sha256": "8f6bed9551e57c6320868512e4c29697d2942b1e4ee537d7071aa21238dfab2e",
-      "size_bytes": 6477341
+      "sha256": "c5943c5a10cf0888f3dde0c89c33a28f58b6998acccf0ad38a0e347de9733f91",
+      "size_bytes": 6723977
     },
     "registration": {
       "path": "vlm\\outputs\\stage5_registration_audit.json",
@@ -15,18 +15,18 @@
     },
     "identity_gt": {
       "path": "vlm\\benchmarks\\cross_session_identity_annotations.json",
-      "sha256": "3a88a30261de3c19fcb1d020add2b0b34bc800bed881342297efdaddf22c0c23",
+      "sha256": "f2deaeb9faf20becf4f71780c14d222f660bb9b3b63ff1fb50c82429600472be",
       "size_bytes": 39673
     },
     "manifest_15": {
       "path": "vlm\\benchmarks\\router_evaluation_manifest.json",
-      "sha256": "b3d18685bb9c8cbf499fe3b02387c75f5c37ccc42e79a08b2e3c44daad103cb0",
-      "size_bytes": 7647
+      "sha256": "2531eb9e3fc4c423c18e84a68584822c99b1b130d09f761bdaafb7c86bde6e04",
+      "size_bytes": 7598
     },
     "manifest_53": {
       "path": "vlm\\benchmarks\\canonical_benchmark_manifest.json",
-      "sha256": "81f09e0c04070c748d2e9b0c392f1113539fe1f3089f05bd5590a7035ca66359",
-      "size_bytes": 148866
+      "sha256": "57d92791717ba2863a77cd2d48ac70224de8560c4ca4f92e922d54044e796abc",
+      "size_bytes": 118295
     },
     "relocation_gt": {
       "path": "vlm\\benchmarks\\controlled_scene_events.json",

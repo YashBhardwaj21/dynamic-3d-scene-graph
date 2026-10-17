@@ -29,10 +29,11 @@ from vlm.src.cross_session_association import (
     compare_association_baselines,
 )
 from vlm.src.stage5_adapter import load_registration_audit
+from vlm.src.stage5_pipeline import resolve_observations_input
 
 
 def run_comprehensive_association_audit() -> Dict[str, Any]:
-    obs_path = repo_root / "vlm" / "outputs" / "object_observations.jsonl"
+    obs_path, _, _ = resolve_observations_input(None, repo_root=repo_root)
     gt_path = repo_root / "vlm" / "benchmarks" / "movability_ground_truth.json"
     sem_path = repo_root / "vlm" / "outputs" / "stage5_semantic_evidence.jsonl"
     audit_md_path = repo_root / "vlm" / "outputs" / "semantic_association_audit.md"
@@ -86,11 +87,7 @@ def run_comprehensive_association_audit() -> Dict[str, Any]:
                 sem_records.append(json.loads(line))
 
     total_obs = len(observations)
-    if len(observations) != len(sem_records):
-        raise ValueError(
-            f"Record count mismatch: observations ({len(observations)}) vs semantic evidence ({len(sem_records)}). "
-            "Failing closed to prevent silent zip truncation."
-        )
+    sem_by_obs_id = {s.get("observation_id"): s for s in sem_records if s.get("observation_id")}
     matched_count = 0
     unmatched_count = 0
     matched_by_session = defaultdict(int)
@@ -113,7 +110,9 @@ def run_comprehensive_association_audit() -> Dict[str, Any]:
     # Short track accounting (< 5 frames) keyed on (session, track_id)
     track_lifespans: Dict[Tuple[str, str], int] = defaultdict(int)
 
-    for obs, sem in zip(observations, sem_records):
+    for obs in observations:
+        obs_id = obs.get("observation_id")
+        sem = sem_by_obs_id.get(obs_id, {})
         eid = obs.get("global_entity_id", "")
         tid = obs.get("local_track_id", "")
         sess = obs.get("source_session", "unknown")

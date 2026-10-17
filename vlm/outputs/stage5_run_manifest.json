@@ -1,9 +1,9 @@
 {
-  "run_id": "stage5_run_1792266183_ced8d907",
-  "timestamp_utc": "2026-10-17T19:43:12Z",
+  "run_id": "stage5_run_1792272448_694c3ced",
+  "timestamp_utc": "2026-10-17T21:27:35Z",
   "input_obs_path": "C:\\Users\\Yash Bhardwaj\\Desktop\\perception\\vlm\\data\\observations\\object_observations.jsonl",
   "input_obs_sha256": "8f6bed9551e57c6320868512e4c29697d2942b1e4ee537d7071aa21238dfab2e",
-  "input_resolution_reason": "EXPLICIT_USER_OVERRIDE",
+  "input_resolution_reason": "CANONICAL_DEFAULT",
   "total_lines_read": 7956,
   "total_non_empty_lines": 7956,
   "accepted_count": 7956,
@@ -50,5 +50,5 @@
       "calibration_provenance": "MEASURED_AUTHENTIC_JSON"
     }
   },
-  "elapsed_seconds": 8.24
+  "elapsed_seconds": 6.66
 }

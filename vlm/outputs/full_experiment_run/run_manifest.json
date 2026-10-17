@@ -1,8 +1,8 @@
 {
   "experiment_name": "dynamic_3d_scene_graph_full_pipeline",
-  "timestamp": 1792266193.0887835,
-  "execution_duration_seconds": 9.48,
-  "git_commit": "d248ea4e733313ad48cbd8dd4b2b6390d008819b",
+  "timestamp": 1792272770.8583975,
+  "execution_duration_seconds": 7.14,
+  "git_commit": "edd743a228f555c695952f35777f9f13f9f5e58e",
   "input_artifacts": {
     "observations_file": "C:\\Users\\Yash Bhardwaj\\Desktop\\perception\\vlm\\data\\observations\\object_observations.jsonl",
     "observations_sha256": "8f6bed9551e57c6320868512e4c29697d2942b1e4ee537d7071aa21238dfab2e",
@@ -20,23 +20,23 @@
     ],
     "robust_inlier_count": 7,
     "total_anchors": 10,
-    "inlier_rms_residual_m": 0.1198,
+    "inlier_rms_residual_m": 0.11977433343924097,
     "anchor_rms_residual_m": 0.3086670200691885
   },
   "association_summary": {
-    "candidate_precision_pct": 58.33,
+    "candidate_precision_pct": 53.85,
     "static_instance_recall_pct": 23.08,
     "relocated_instance_recall_pct": 25.0,
     "all_instance_recall_pct": 23.33,
-    "instance_f1_pct": 30.43,
-    "false_merge_rate_pct": 41.67,
+    "instance_f1_pct": 29.17,
+    "false_merge_rate_pct": 46.15,
     "false_split_rate_pct": 76.67
   },
   "scene_graph_fusion_summary": {
-    "total_nodes": 195,
-    "stationary_fused_entities": 29,
-    "relocated_fused_entities": 12,
-    "invalidated_slam_landmarks": 29,
+    "total_nodes": 180,
+    "stationary_fused_entities": 30,
+    "relocated_fused_entities": 11,
+    "invalidated_slam_landmarks": 38,
     "nodes_preserving_pose_history": 15
   },
   "output_artifacts": {

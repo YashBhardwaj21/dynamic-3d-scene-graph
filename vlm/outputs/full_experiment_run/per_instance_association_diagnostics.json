@@ -4,10 +4,10 @@
     "motion_state": "STATIC",
     "s1_track_id": "backpack_002",
     "s2_track_id": "backpack_001",
-    "outcome": "UNMATCHED_GATE",
+    "outcome": "FALSE_MERGE",
     "is_correct": false,
     "distance_m": null,
-    "rejection_reason": "Displacement exceeds gate threshold or no candidate cluster survived feature gating."
+    "rejection_reason": "S1 track backpack_002 falsely merged with inst_handbag_001 (handbag_002)"
   },
   {
     "physical_instance_id": "inst_ceiling_fan_001",

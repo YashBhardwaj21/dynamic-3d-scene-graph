@@ -102,6 +102,8 @@ def run_full_experiment(
 
     out_dir = Path(out_dir)
     out_dir.mkdir(parents=True, exist_ok=True)
+    evidence_out_dir = out_dir / "stage5_evidence"
+    evidence_out_dir.mkdir(parents=True, exist_ok=True)
 
     for required_file, name in [
         (obs_path, "Observations JSONL"),
@@ -136,7 +138,7 @@ def run_full_experiment(
 
     # 3. Evidence Generation & Record Alignment Check
     print("\n--- [Stage 1: Evidence Pipeline Execution & Alignment Check] ---")
-    pipeline_res = run_stage5_pipeline(obs_jsonl_path=obs_path)
+    pipeline_res = run_stage5_pipeline(obs_jsonl_path=obs_path, output_dir=evidence_out_dir)
     geo_path = Path(pipeline_res["geometric_records_file"])
     temp_path = Path(pipeline_res["temporal_records_file"])
     sem_path = Path(pipeline_res["semantic_records_file"])
@@ -212,26 +214,33 @@ def run_full_experiment(
         """Construct decoupled persistent 3D scene graph under a specific routing policy."""
         fusion = ContextualSceneGraphFusion()
 
+        # Build fast observation lookup index for real timestamps and observation IDs
+        obs_by_id = {o.get("observation_id"): o for o in observations if o.get("observation_id")}
+
         # Step 1: Initialize S1 clusters
         for t1, c1 in s1_clusters.items():
-            entity_id = canonical_map.get((s1_session, t1))
-            if entity_id is None:
+            entity_id = f"phys_{t1}"
+            gt_inst = canonical_map.get((s1_session, t1))
+            if gt_inst is None:
                 for alias in getattr(c1, "merged_entity_ids", []):
                     cand = canonical_map.get((s1_session, alias))
                     if cand is not None:
-                        entity_id = cand
+                        gt_inst = cand
                         break
-            if entity_id is None:
-                entity_id = f"entity_s1_{t1}"
+
+            first_obs_id = c1.observation_ids[0] if c1.observation_ids else f"obs_cluster_{t1}"
+            first_obs = obs_by_id.get(first_obs_id, {})
+            t_stamp = float(first_obs.get("timestamp", 100.0 if "01" in s1_session else 200.0))
+            depth_valid = bool(getattr(c1, "depth_valid_ratio", 1.0) >= 0.50)
 
             obs_meta = {
-                "timestamp": 100.0,
+                "timestamp": t_stamp,
                 "source_session": s1_session,
-                "obs_id": f"obs_cluster_{t1}",
+                "obs_id": first_obs_id,
                 "local_track_id": t1,
                 "centroid": c1.centroid_floor.tolist() if len(c1.centroid_floor) == 3 else [c1.centroid_floor[0], c1.centroid_floor[1], 0.0],
                 "spatial_extent_m": c1.spatial_extent_m,
-                "depth_valid": True,
+                "depth_valid": depth_valid,
                 "coordinate_frame": "floor_map",
             }
 
@@ -243,8 +252,9 @@ def run_full_experiment(
                 "observed_motion": "STATIC",
                 "evidence_provenance": "MEASURED_CLUSTER",
                 "relocation_evaluable": False,
+                "gt_instance_id": gt_inst,
             }
-            fusion.update_or_create_node(
+            node = fusion.update_or_create_node(
                 entity_id=entity_id,
                 semantic_class=c1.semantic_class,
                 routed_result=routed,
@@ -257,21 +267,26 @@ def run_full_experiment(
 
         for t2, c2 in s2_clusters.items():
             matched_m = next((m for m in active_pairs if m.s2_entity_id == t2), None)
-            if matched_m is not None:
-                t1 = matched_m.s1_entity_id
-                entity_id = canonical_map.get((s1_session, t1))
-                if entity_id is None and t1 in s1_clusters:
-                    for alias in getattr(s1_clusters[t1], "merged_entity_ids", []):
-                        cand = canonical_map.get((s1_session, alias))
-                        if cand is not None:
-                            entity_id = cand
-                            break
-                if entity_id is None:
-                    entity_id = f"entity_s1_{t1}"
+            first_obs_id = c2.observation_ids[0] if c2.observation_ids else f"obs_cluster_{t2}"
+            first_obs = obs_by_id.get(first_obs_id, {})
+            t_stamp = float(first_obs.get("timestamp", 200.0 if "02" in s2_session else 100.0))
+            depth_valid = bool(getattr(c2, "depth_valid_ratio", 1.0) >= 0.50)
 
+            gt_inst_s2 = canonical_map.get((s2_session, t2))
+            if gt_inst_s2 is None:
+                for alias in getattr(c2, "merged_entity_ids", []):
+                    cand = canonical_map.get((s2_session, alias))
+                    if cand is not None:
+                        gt_inst_s2 = cand
+                        break
+
+            if matched_m is not None:
+                entity_id = matched_m.persistent_entity_id
+                t1 = matched_m.s1_entity_id
                 dist = matched_m.distance_m
                 c1 = s1_clusters[t1]
-                sigma_disp = math.sqrt(c1.position_uncertainty_m**2 + c2.position_uncertainty_m**2 + reg_info.inlier_rms_residual_m**2)
+                inlier_sigma = reg_info.inlier_rms_residual_m if reg_info.inlier_rms_residual_m is not None else reg_info.anchor_rms_residual_m
+                sigma_disp = math.sqrt(c1.position_uncertainty_m**2 + c2.position_uncertainty_m**2 + inlier_sigma**2)
 
                 # Relocation gating policy (strictly data-driven without ground-truth leakage)
                 if policy_key == "R0":
@@ -301,13 +316,13 @@ def run_full_experiment(
                 aligned_centroid_3d = [float(c2_aligned_2d[0]), float(c2_aligned_2d[1]), z_coord]
 
                 obs_meta = {
-                    "timestamp": 200.0,
+                    "timestamp": t_stamp,
                     "source_session": s2_session,
-                    "obs_id": f"obs_cluster_{t2}",
+                    "obs_id": first_obs_id,
                     "local_track_id": t2,
                     "centroid": aligned_centroid_3d,
                     "spatial_extent_m": c2.spatial_extent_m,
-                    "depth_valid": True,
+                    "depth_valid": depth_valid,
                     "coordinate_frame": "reference_frame",
                     "is_relocation_event": is_reloc,
                 }
@@ -320,8 +335,9 @@ def run_full_experiment(
                     "displacement_uncertainty_m": c2.position_uncertainty_m,
                     "evidence_provenance": "MEASURED_CLUSTER_ALIGNED",
                     "relocation_evaluable": True,
+                    "gt_instance_id": gt_inst_s2,
                 }
-                fusion.update_or_create_node(
+                node = fusion.update_or_create_node(
                     entity_id=entity_id,
                     semantic_class=c2.semantic_class,
                     routed_result=routed,
@@ -329,15 +345,7 @@ def run_full_experiment(
                 )
             else:
                 # Unmatched S2 entity
-                entity_id = canonical_map.get((s2_session, t2))
-                if entity_id is None:
-                    for alias in getattr(c2, "merged_entity_ids", []):
-                        cand = canonical_map.get((s2_session, alias))
-                        if cand is not None:
-                            entity_id = cand
-                            break
-                if entity_id is None:
-                    entity_id = f"entity_s2_{t2}"
+                entity_id = f"phys_{t2}"
 
                 c2_floor_2d = c2.centroid_floor[:2]
                 c2_aligned_2d = reg_info.R_12 @ c2_floor_2d + reg_info.translation_m
@@ -346,13 +354,13 @@ def run_full_experiment(
 
                 is_reloc_unmatched = False
                 obs_meta = {
-                    "timestamp": 200.0,
+                    "timestamp": t_stamp,
                     "source_session": s2_session,
-                    "obs_id": f"obs_cluster_{t2}",
+                    "obs_id": first_obs_id,
                     "local_track_id": t2,
                     "centroid": aligned_centroid_3d,
                     "spatial_extent_m": c2.spatial_extent_m,
-                    "depth_valid": True,
+                    "depth_valid": depth_valid,
                     "coordinate_frame": "reference_frame",
                     "is_relocation_event": is_reloc_unmatched,
                 }
@@ -363,8 +371,9 @@ def run_full_experiment(
                     "observed_motion": "DISPLACED" if is_reloc_unmatched else "STATIC",
                     "evidence_provenance": "MEASURED_CLUSTER_S2",
                     "relocation_evaluable": False,
+                    "gt_instance_id": gt_inst_s2,
                 }
-                fusion.update_or_create_node(
+                node = fusion.update_or_create_node(
                     entity_id=entity_id,
                     semantic_class=c2.semantic_class,
                     routed_result=routed,
@@ -378,26 +387,41 @@ def run_full_experiment(
                     c_events = json.load(f).get("events", [])
                 for ev in c_events:
                     target_id = ev.get("target_object_id")
-                    if ev.get("slam_invalidated", False) and target_id in fusion.nodes:
-                        node = fusion.nodes[target_id]
-                        node.slam_invalidated = True
-                        node.observed_motion = ObservedMotionState.DISPLACED
+                    if not ev.get("slam_invalidated", False) or not target_id:
+                        continue
+                    matched_node = None
+                    if target_id in fusion.nodes:
+                        matched_node = fusion.nodes[target_id]
+                    else:
+                        target_clean = target_id.replace("inst_", "")
+                        for n in fusion.nodes.values():
+                            is_target = (
+                                (target_clean and target_clean in n.entity_id) or
+                                any(target_clean in trk for trk in n.source_track_ids) or
+                                any(canonical_map.get((s, trk)) == target_id for s in n.source_sessions for trk in n.source_track_ids)
+                            )
+                            if is_target:
+                                matched_node = n
+                                break
+                    if matched_node is not None:
+                        matched_node.slam_invalidated = True
+                        matched_node.observed_motion = ObservedMotionState.DISPLACED
                         final_pos = ev.get("final_position_floor_m")
                         disp = ev.get("measured_displacement_m", 0.4)
-                        if len(node.pose_history) == 0 and node.centroid_world is not None:
-                            node.pose_history.append({
-                                "centroid_world": [round(float(x), 4) for x in node.centroid_world],
-                                "spatial_extent_m": round(float(node.spatial_extent_m), 4) if node.spatial_extent_m is not None else None,
-                                "first_seen": node.first_seen,
-                                "last_seen": node.last_seen,
-                                "valid_observations_count": node.valid_geometry_observations_count,
-                                "coordinate_frame": node.coordinate_frame,
+                        if len(matched_node.pose_history) == 0 and matched_node.centroid_world is not None:
+                            matched_node.pose_history.append({
+                                "centroid_world": [round(float(x), 4) for x in matched_node.centroid_world],
+                                "spatial_extent_m": round(float(matched_node.spatial_extent_m), 4) if matched_node.spatial_extent_m is not None else None,
+                                "first_seen": matched_node.first_seen,
+                                "last_seen": matched_node.last_seen,
+                                "valid_observations_count": matched_node.valid_geometry_observations_count,
+                                "coordinate_frame": matched_node.coordinate_frame,
                                 "relocation_displacement_m": round(float(disp), 4),
                                 "slam_invalidated": True,
                                 "landmark_status": "INVALIDATED_RELOCATED",
                             })
                             if final_pos is not None and len(final_pos) >= 3:
-                                node.centroid_world = np.array(final_pos[:3], dtype=np.float64)
+                                matched_node.centroid_world = np.array(final_pos[:3], dtype=np.float64)
 
         sg_dict = fusion.to_dict()
         stats = {

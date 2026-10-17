@@ -37,12 +37,13 @@ class EntityCluster:
     source_session: str
     centroid_floor: np.ndarray  # 2D [x, y] in session local floor frame
     centroid_std: float         # 1D dispersion metric in meters
-    spatial_extent_m: float     # Bounding dimension (diameter/width)
+    spatial_extent_m: Optional[float]     # Bounding dimension (diameter/width) or None if unavailable
     observations_count: int
     local_track_ids: List[str]
     observation_ids: List[str]
     has_valid_pose: bool = True
     depth_valid: bool = True
+    depth_valid_ratio: float = 1.0
     centroid_3d: Optional[np.ndarray] = None  # Measured 3D [x, y, z] centroid from observations
     centroid_aligned: Optional[np.ndarray] = None
     position_uncertainty_m: float = 0.05
@@ -51,6 +52,8 @@ class EntityCluster:
     end_frame: int = 0
     start_timestamp: float = 0.0
     end_timestamp: float = 0.0
+    semantic_conflict: bool = False
+    class_distribution: Dict[str, int] = field(default_factory=dict)
 
 
 @dataclass
@@ -124,51 +127,83 @@ class CrossSessionCandidateMatcher:
         observations: List[Dict[str, Any]],
         session_keyword: str,
         min_obs: int = 1,
+        session_alias_map: Optional[Dict[str, str]] = None,
     ) -> Dict[str, EntityCluster]:
         """Aggregate raw frame observations into robust entity clusters preserving measured 3D geometry."""
         grouped: Dict[str, List[Dict[str, Any]]] = {}
+        target_norm = session_keyword.strip()
+
         for o in observations:
-            sess = o.get("source_session", "")
-            if session_keyword not in sess:
+            raw_sess = str(o.get("source_session", "")).strip()
+            # Exact normalized session check with alias support; eliminate substring collisions
+            sess_matched = False
+            if raw_sess == target_norm:
+                sess_matched = True
+            elif session_alias_map and session_alias_map.get(raw_sess) == target_norm:
+                sess_matched = True
+            elif raw_sess.endswith(f"_{target_norm}") or raw_sess.endswith(target_norm) or raw_sess == target_norm:
+                sess_matched = True
+
+            if not sess_matched:
                 continue
+
             eid = o.get("global_entity_id", "")
             if not eid:
                 continue
             cf = o.get("centroid_floor")
-            if cf is not None and len(cf) >= 2 and all(x is not None for x in cf[:2]):
+            if cf is not None and len(cf) >= 2 and all(x is not None and math.isfinite(float(x)) for x in cf[:2]):
                 grouped.setdefault(eid, []).append(o)
 
         clusters: Dict[str, EntityCluster] = {}
-        for eid, obs_list in grouped.items():
+        for eid in sorted(grouped.keys()):
+            obs_list = grouped[eid]
             if len(obs_list) < min_obs:
                 continue
 
             pts = np.array([o["centroid_floor"][:2] for o in obs_list], dtype=np.float64)
             c = np.median(pts, axis=0)
 
-            # Preserve measured 3D height from real observations
-            pts_3d = np.array([o["centroid_floor"][:3] for o in obs_list if len(o.get("centroid_floor", [])) >= 3], dtype=np.float64)
-            c_3d = np.median(pts_3d, axis=0) if len(pts_3d) > 0 else np.array([c[0], c[1], 0.0], dtype=np.float64)
+            # Preserve measured 3D height from real observations - DO NOT fabricate z=0
+            pts_3d = np.array([
+                o["centroid_floor"][:3] for o in obs_list
+                if len(o.get("centroid_floor", [])) >= 3
+                and o["centroid_floor"][2] is not None
+                and math.isfinite(float(o["centroid_floor"][2]))
+            ], dtype=np.float64)
+            c_3d = np.median(pts_3d, axis=0) if len(pts_3d) > 0 else None
 
             dispersion = float(np.mean(np.std(pts, axis=0))) if len(pts) > 1 else 0.05
-            sem_class = obs_list[0].get("class_name") or obs_list[0].get("semantic_class", "object")
 
+            # Semantic consensus and conflict detection
+            class_counts: Dict[str, int] = defaultdict(int)
+            for o in obs_list:
+                cls_name = o.get("class_name") or o.get("semantic_class") or "object"
+                class_counts[cls_name] += 1
+            sem_class = max(class_counts.items(), key=lambda item: item[1])[0]
+            sem_conflict = (len(class_counts) > 1)
+
+            # Spatial extents - DO NOT substitute 0.50m when extents are missing
             extents = []
             for o in obs_list:
                 bmin = o.get("bbox_min_floor")
                 bmax = o.get("bbox_max_floor")
                 if bmin and bmax and len(bmin) >= 2 and len(bmax) >= 2:
-                    extents.append(float(np.linalg.norm(np.array(bmax[:2]) - np.array(bmin[:2]))))
-            avg_extent = float(np.mean(extents)) if extents else 0.50
+                    if all(math.isfinite(float(x)) for x in bmin[:2]) and all(math.isfinite(float(x)) for x in bmax[:2]):
+                        extents.append(float(np.linalg.norm(np.array(bmax[:2]) - np.array(bmin[:2]))))
+            avg_extent: Optional[float] = float(np.mean(extents)) if extents else None
 
-            track_ids = list(set(o.get("local_track_id") for o in obs_list if o.get("local_track_id")))
+            track_ids = sorted(set(o.get("local_track_id") for o in obs_list if o.get("local_track_id")))
             obs_ids = [o.get("obs_id") for o in obs_list if o.get("obs_id")]
-            has_pose = all(o.get("has_valid_pose", False) for o in obs_list)
-            depth_valid = any(o.get("depth_valid", True) for o in obs_list)
+            has_pose = all(bool(o.get("has_valid_pose", False)) for o in obs_list)
+
+            # Valid depth ratio: cluster has valid depth if at least 50% observations pass
+            depth_passes = sum(1 for o in obs_list if bool(o.get("depth_valid", True)))
+            depth_ratio = depth_passes / len(obs_list)
+            depth_valid = (depth_ratio >= 0.50)
 
             # Extract temporal lifespan bounds
-            frames = [int(o.get("frame_index", 0)) for o in obs_list if o.get("frame_index") is not None]
-            timestamps = [float(o.get("timestamp", 0.0)) for o in obs_list if o.get("timestamp") is not None]
+            frames = [int(o["frame_index"]) for o in obs_list if o.get("frame_index") is not None]
+            timestamps = [float(o["timestamp"]) for o in obs_list if o.get("timestamp") is not None]
             start_fr = min(frames) if frames else 0
             end_fr = max(frames) if frames else 0
             start_ts = min(timestamps) if timestamps else 0.0
@@ -189,6 +224,7 @@ class CrossSessionCandidateMatcher:
                 observation_ids=obs_ids,
                 has_valid_pose=has_pose,
                 depth_valid=depth_valid,
+                depth_valid_ratio=depth_ratio,
                 centroid_3d=c_3d,
                 position_uncertainty_m=sem_pos,
                 merged_entity_ids=[eid],
@@ -196,6 +232,8 @@ class CrossSessionCandidateMatcher:
                 end_frame=end_fr,
                 start_timestamp=start_ts,
                 end_timestamp=end_ts,
+                semantic_conflict=sem_conflict,
+                class_distribution=dict(class_counts),
             )
 
         return clusters
@@ -210,105 +248,124 @@ class CrossSessionCandidateMatcher:
     ) -> Dict[str, EntityCluster]:
         """Consolidate fragmented short tracklets of identical semantic class within spatial threshold.
 
-        Remedies upstream tracker fragmentation (82.4% tracks <= 4 frames) by linking
-        spatially co-located tracklets of the same class into unified physical entity clusters.
-        Preserves complete union of local track IDs, observation IDs, merged entity IDs,
-        and computes observation-weighted centroids.
-
-        Enforces four critical physical constraints:
-        1. Temporal continuity & Co-visibility: Rejects merges if two tracklets co-exist simultaneously
-           in view (> max_covisible_overlap_frames), preserving distinct adjacent physical entities.
-        2. 3D vertical height consistency: (|z1 - z2| <= 0.35m).
-        3. Ambiguity preservation: Rejects ambiguous merges when a tracklet has competing nearby candidates.
-        4. Geometric extent consistency: (relative extent diff <= max_extent_relative_diff).
+        Remedies upstream tracker fragmentation by linking spatially co-located tracklets
+        of the same class into unified physical entity clusters.
+        Enforces complete-link diameter constraint to prevent transitive chaining (A-B-C),
+        and calculates mathematically rigorous pooled uncertainty from intra-cluster dispersion
+        and inter-cluster disagreement.
         """
         if not clusters:
             return {}
 
         keys = sorted(clusters.keys())
-        adj: Dict[str, Set[str]] = {k: set() for k in keys}
 
-        for i in range(len(keys)):
-            k1 = keys[i]
+        # Pairwise compatibility check
+        def are_pair_compatible(k1: str, k2: str) -> bool:
             c1 = clusters[k1]
-            candidates = []
-
-            for j in range(i + 1, len(keys)):
-                k2 = keys[j]
-                c2 = clusters[k2]
-                if c1.semantic_class.lower().strip() != c2.semantic_class.lower().strip():
-                    continue
-
-                dist = float(np.linalg.norm(c1.centroid_floor - c2.centroid_floor))
-                if dist > max_merge_distance_m:
-                    continue
-
-                # 3D vertical height consistency
-                if c1.centroid_3d is not None and c2.centroid_3d is not None:
-                    z1 = c1.centroid_3d[2] if len(c1.centroid_3d) >= 3 else 0.0
-                    z2 = c2.centroid_3d[2] if len(c2.centroid_3d) >= 3 else 0.0
-                    if abs(z1 - z2) > 0.35:
-                        continue
-
-                # Geometric extent consistency
+            c2 = clusters[k2]
+            if c1.source_session != c2.source_session:
+                return False
+            if c1.semantic_class.lower().strip() != c2.semantic_class.lower().strip():
+                return False
+            dist = float(np.linalg.norm(c1.centroid_floor - c2.centroid_floor))
+            if dist > max_merge_distance_m:
+                return False
+            if c1.centroid_3d is not None and c2.centroid_3d is not None:
+                z1 = c1.centroid_3d[2] if len(c1.centroid_3d) >= 3 else None
+                z2 = c2.centroid_3d[2] if len(c2.centroid_3d) >= 3 else None
+                if z1 is not None and z2 is not None and abs(z1 - z2) > 0.35:
+                    return False
+            if c1.spatial_extent_m is not None and c2.spatial_extent_m is not None:
                 max_ext = max(c1.spatial_extent_m, c2.spatial_extent_m, 0.10)
                 rel_ext = abs(c1.spatial_extent_m - c2.spatial_extent_m) / max_ext
                 if rel_ext > max_extent_relative_diff:
-                    continue
+                    return False
+            overlap_frames = max(0, min(c1.end_frame, c2.end_frame) - max(c1.start_frame, c2.start_frame) + 1)
+            if overlap_frames > max_covisible_overlap_frames:
+                return False
+            return True
 
-                # Temporal co-visibility check: distinct objects visible at the same time must not merge
-                overlap_frames = max(0, min(c1.end_frame, c2.end_frame) - max(c1.start_frame, c2.start_frame) + 1)
-                if overlap_frames > max_covisible_overlap_frames:
-                    continue
+        # Build candidate links with ambiguity check
+        candidate_links: Dict[str, List[Tuple[str, float]]] = {k: [] for k in keys}
+        for i in range(len(keys)):
+            k1 = keys[i]
+            for j in range(i + 1, len(keys)):
+                k2 = keys[j]
+                if are_pair_compatible(k1, k2):
+                    dist = float(np.linalg.norm(clusters[k1].centroid_floor - clusters[k2].centroid_floor))
+                    candidate_links[k1].append((k2, dist))
+                    candidate_links[k2].append((k1, dist))
 
-                candidates.append((k2, dist))
+        # Filter ambiguous links: if a cluster has competing nearby candidates, do not link
+        safe_adj: Dict[str, Set[str]] = {k: set() for k in keys}
+        for k, cands in candidate_links.items():
+            if len(cands) == 1:
+                safe_adj[k].add(cands[0][0])
+            elif len(cands) > 1:
+                cands.sort(key=lambda x: x[1])
+                if abs(cands[1][1] - cands[0][1]) >= ambiguity_margin_m:
+                    safe_adj[k].add(cands[0][0])
 
-            # Ambiguity preservation: if multiple competing candidates exist within ambiguity margin, do not merge
-            if len(candidates) > 1:
-                candidates.sort(key=lambda x: x[1])
-                if abs(candidates[1][1] - candidates[0][1]) < ambiguity_margin_m:
-                    continue
-                else:
-                    adj[k1].add(candidates[0][0])
-                    adj[candidates[0][0]].add(k1)
-            elif len(candidates) == 1:
-                adj[k1].add(candidates[0][0])
-                adj[candidates[0][0]].add(k1)
+        # Symmetrize edges
+        valid_edges: Set[Tuple[str, str]] = set()
+        for k1, nbrs in safe_adj.items():
+            for k2 in nbrs:
+                if k1 in safe_adj.get(k2, set()):
+                    valid_edges.add((min(k1, k2), max(k1, k2)))
 
-        visited: Set[str] = set()
-        consolidated: Dict[str, EntityCluster] = {}
+        # Assemble components with strict complete-link / diameter constraint
+        assigned: Set[str] = set()
+        components: List[List[str]] = []
+
         for k in keys:
-            if k in visited:
+            if k in assigned:
                 continue
-            comp: List[str] = []
-            queue = [k]
-            visited.add(k)
-            while queue:
-                curr = queue.pop(0)
-                comp.append(curr)
-                for neighbor in sorted(adj[curr]):
-                    if neighbor not in visited:
-                        visited.add(neighbor)
-                        queue.append(neighbor)
+            comp = [k]
+            assigned.add(k)
 
+            # Greedily consider mutual neighbors
+            potential_members = [
+                other for other in keys
+                if other not in assigned and (min(k, other), max(k, other)) in valid_edges
+            ]
+            for cand in potential_members:
+                # Complete-link constraint: cand MUST satisfy pairwise compatibility with ALL existing members in comp
+                if all(are_pair_compatible(cand, m) and (min(cand, m), max(cand, m)) in valid_edges for m in comp):
+                    comp.append(cand)
+                    assigned.add(cand)
+
+            components.append(comp)
+
+        consolidated: Dict[str, EntityCluster] = {}
+        for comp in components:
             if len(comp) == 1:
-                c = copy.copy(clusters[comp[0]])
+                k = comp[0]
+                c = copy.copy(clusters[k])
                 if not c.merged_entity_ids:
                     c.merged_entity_ids = [c.entity_id]
-                consolidated[comp[0]] = c
+                consolidated[k] = c
                 continue
 
-            # Pick primary representative as the cluster with largest observation count
+            # Multi-cluster merged component: compute pooled statistics mathematically
             rep = max(comp, key=lambda x: (clusters[x].observations_count, -len(x)))
             total_obs = sum(clusters[x].observations_count for x in comp)
             all_trks = sorted(set(t for x in comp for t in clusters[x].local_track_ids))
             all_obs = sorted(set(o for x in comp for o in clusters[x].observation_ids))
             all_eids = sorted(set(e for x in comp for e in (clusters[x].merged_entity_ids or [x])))
 
-            # Observation-weighted floor centroid
+            # Observation-weighted centroid
             weights = np.array([clusters[x].observations_count for x in comp], dtype=np.float64)
             pts_floor = np.array([clusters[x].centroid_floor for x in comp], dtype=np.float64)
             c_floor = np.average(pts_floor, axis=0, weights=weights)
+
+            # Mathematical pooled variance: combining within-cluster variance and between-cluster spread
+            # V_total = sum(N_i * s_i^2 + N_i * ||c_i - c_floor||^2) / total_obs
+            v_within = sum(clusters[x].observations_count * (clusters[x].centroid_std ** 2) for x in comp)
+            v_between = sum(clusters[x].observations_count * float(np.sum((clusters[x].centroid_floor - c_floor) ** 2)) for x in comp)
+            sigma_pooled_sq = (v_within + v_between) / max(1.0, float(total_obs))
+            sigma_pooled = math.sqrt(max(0.0001, sigma_pooled_sq))
+            sem_pooled = sigma_pooled / math.sqrt(max(1.0, float(total_obs)))
+            pooled_uncertainty = max(0.02, float(sem_pooled))
 
             # 3D centroid if available
             valid_3d = [clusters[x] for x in comp if clusters[x].centroid_3d is not None]
@@ -319,9 +376,10 @@ class CrossSessionCandidateMatcher:
             else:
                 c_3d = None
 
-            max_ext = max(clusters[x].spatial_extent_m for x in comp)
-            max_disp = max(clusters[x].centroid_std for x in comp)
-            min_unc = min(clusters[x].position_uncertainty_m for x in comp)
+            # Summarize extents without defaults
+            valid_exts = [clusters[x].spatial_extent_m for x in comp if clusters[x].spatial_extent_m is not None]
+            merged_extent = float(np.mean(valid_exts)) if valid_exts else None
+
             has_pose = all(clusters[x].has_valid_pose for x in comp)
             depth_valid = any(clusters[x].depth_valid for x in comp)
 
@@ -335,15 +393,15 @@ class CrossSessionCandidateMatcher:
                 semantic_class=clusters[rep].semantic_class,
                 source_session=clusters[rep].source_session,
                 centroid_floor=c_floor,
-                centroid_std=max_disp,
-                spatial_extent_m=max_ext,
+                centroid_std=sigma_pooled,
+                spatial_extent_m=merged_extent,
                 observations_count=total_obs,
                 local_track_ids=all_trks,
                 observation_ids=all_obs,
                 has_valid_pose=has_pose,
                 depth_valid=depth_valid,
                 centroid_3d=c_3d,
-                position_uncertainty_m=min_unc,
+                position_uncertainty_m=pooled_uncertainty,
                 merged_entity_ids=all_eids,
                 start_frame=start_fr,
                 end_frame=end_fr,
@@ -360,9 +418,7 @@ class CrossSessionCandidateMatcher:
         registration: RegistrationInfo,
     ) -> Dict[str, EntityCluster]:
         """Align session 2 clusters into session 1 reference frame using empirical residual dispersion."""
-        reg_disp = getattr(registration, "inlier_rms_residual_m", 0.1198)
-        if reg_disp <= 0:
-            reg_disp = getattr(registration, "anchor_rms_residual_m", 0.3054)
+        reg_disp = getattr(registration, "inlier_rms_residual_m", None) or getattr(registration, "anchor_rms_residual_m", None) or 0.20
 
         s2_aligned: Dict[str, EntityCluster] = {}
         for eid2, c2 in s2_clusters.items():
@@ -425,6 +481,8 @@ class CrossSessionCandidateMatcher:
 
             if best_k2 is not None:
                 c2 = s2_aligned[best_k2]
+                has_extents = (c1.spatial_extent_m is not None and c2.spatial_extent_m is not None)
+                ext_diff = abs(c1.spatial_extent_m - c2.spatial_extent_m) if has_extents else 0.0
                 matched_pairs.append(PhysicalInstanceMatch(
                     persistent_entity_id=f"phys_{k1}",
                     s1_entity_id=k1,
@@ -432,7 +490,7 @@ class CrossSessionCandidateMatcher:
                     semantic_class=c1.semantic_class,
                     distance_m=round(best_dist, 4),
                     position_uncertainty_m=round(math.sqrt(c1.position_uncertainty_m**2 + c2.position_uncertainty_m**2), 4),
-                    extent_diff_m=round(abs(c1.spatial_extent_m - c2.spatial_extent_m), 4),
+                    extent_diff_m=round(ext_diff, 4) if has_extents else None,
                     match_score=round(best_dist, 4),
                     confidence=round(max(0.20, 1.0 - best_dist / self.max_static_distance_m), 4),
                     status="MATCHED",
@@ -562,11 +620,15 @@ class CrossSessionCandidateMatcher:
                     continue
 
                 # Gate C: Relative spatial extent change
-                max_ext = max(c1.spatial_extent_m, c2.spatial_extent_m, 0.10)
-                ext_diff = abs(c1.spatial_extent_m - c2.spatial_extent_m)
-                rel_ext = ext_diff / max_ext
-                if rel_ext > self.max_extent_relative_diff:
-                    continue
+                if c1.spatial_extent_m is not None and c2.spatial_extent_m is not None:
+                    max_ext = max(c1.spatial_extent_m, c2.spatial_extent_m, 0.10)
+                    ext_diff = abs(c1.spatial_extent_m - c2.spatial_extent_m)
+                    rel_ext = ext_diff / max_ext
+                    if rel_ext > self.max_extent_relative_diff:
+                        continue
+                else:
+                    ext_diff = 0.0
+                    rel_ext = 0.0
 
                 combined_unc = math.sqrt(c1.position_uncertainty_m**2 + c2.position_uncertainty_m**2)
                 norm_dist_cost = dist / max(0.05, combined_unc)
@@ -626,7 +688,8 @@ class CrossSessionCandidateMatcher:
                         )
 
             combined_unc = math.sqrt(c1.position_uncertainty_m**2 + c2.position_uncertainty_m**2)
-            ext_diff = abs(c1.spatial_extent_m - c2.spatial_extent_m)
+            has_extents = (c1.spatial_extent_m is not None and c2.spatial_extent_m is not None)
+            ext_diff = abs(c1.spatial_extent_m - c2.spatial_extent_m) if has_extents else 0.0
             confidence = max(0.20, min(0.99, 1.0 - (dist / self.max_static_distance_m) * 0.5 - (cost / 10.0) * 0.3))
 
             match_obj = PhysicalInstanceMatch(
@@ -636,7 +699,7 @@ class CrossSessionCandidateMatcher:
                 semantic_class=c1.semantic_class,
                 distance_m=round(dist, 4),
                 position_uncertainty_m=round(combined_unc, 4),
-                extent_diff_m=round(ext_diff, 4),
+                extent_diff_m=round(ext_diff, 4) if has_extents else None,
                 match_score=round(float(cost), 4),
                 confidence=round(confidence, 4),
                 status="AMBIGUOUS" if is_ambiguous else "MATCHED",
@@ -680,11 +743,15 @@ class CrossSessionCandidateMatcher:
                             continue
 
                         # Strict extent consistency: relocated physical objects maintain dimensions
-                        max_ext = max(c1.spatial_extent_m, c2.spatial_extent_m, 0.10)
-                        ext_diff = abs(c1.spatial_extent_m - c2.spatial_extent_m)
-                        rel_ext = ext_diff / max_ext
-                        if rel_ext > self.max_relocation_extent_relative_diff:
-                            continue
+                        if c1.spatial_extent_m is not None and c2.spatial_extent_m is not None:
+                            max_ext = max(c1.spatial_extent_m, c2.spatial_extent_m, 0.10)
+                            ext_diff = abs(c1.spatial_extent_m - c2.spatial_extent_m)
+                            rel_ext = ext_diff / max_ext
+                            if rel_ext > self.max_relocation_extent_relative_diff:
+                                continue
+                        else:
+                            ext_diff = 0.0
+                            rel_ext = 0.0
 
                         # Reject relocation hypotheses if local registration uncertainty is excessive (>0.40m)
                         if c2.position_uncertainty_m > 0.40:
@@ -725,7 +792,8 @@ class CrossSessionCandidateMatcher:
                         is_reloc_ambiguous = True
 
                     combined_unc = math.sqrt(c1.position_uncertainty_m**2 + c2.position_uncertainty_m**2)
-                    ext_diff = abs(c1.spatial_extent_m - c2.spatial_extent_m)
+                    has_extents = (c1.spatial_extent_m is not None and c2.spatial_extent_m is not None)
+                    ext_diff = abs(c1.spatial_extent_m - c2.spatial_extent_m) if has_extents else 0.0
                     confidence = max(0.20, min(0.95, 1.0 - (rdist / self.max_relocation_distance_m) * 0.4 - (rcost / 10.0) * 0.3))
 
                     reloc_match = PhysicalInstanceMatch(
@@ -735,7 +803,7 @@ class CrossSessionCandidateMatcher:
                         semantic_class=c1.semantic_class,
                         distance_m=round(rdist, 4),
                         position_uncertainty_m=round(combined_unc, 4),
-                        extent_diff_m=round(ext_diff, 4),
+                        extent_diff_m=round(ext_diff, 4) if has_extents else None,
                         match_score=round(float(rcost), 4),
                         confidence=round(confidence, 4),
                         status="AMBIGUOUS" if is_reloc_ambiguous else "MATCHED_RELOCATED",
@@ -814,16 +882,19 @@ class CrossSessionCandidateMatcher:
         cost_matrix = np.full((n1, n2), INFTY_COST, dtype=np.float64)
         distance_matrix = np.full((n1, n2), INFTY_COST, dtype=np.float64)
 
-        inlier_disp = getattr(registration, "inlier_rms_residual_m", 0.1198)
+        inlier_disp = getattr(registration, "inlier_rms_residual_m", None)
+        if inlier_disp is None:
+            inlier_disp = getattr(registration, "anchor_rms_residual_m", 0.12)
 
         for i, k1 in enumerate(s1_keys):
             c1 = s1_clusters[k1]
             p1 = c1.centroid_floor[:2]
 
             dist_from_origin = float(np.linalg.norm(p1))
-            is_peripheral = (p1[1] < -5.5 or p1[0] < -1.0)
-            local_reg_unc = inlier_disp + (0.25 if is_peripheral else 0.05 * min(dist_from_origin / 4.0, 1.0))
-            adaptive_static_gate = min(0.62, max(0.40, 0.35 + 1.8 * local_reg_unc))
+            # Smooth SE(2) lever-arm rotational uncertainty growth: error scales continuously with distance from reference origin
+            # Eliminates arbitrary coordinate quadrant heuristics (e.g. p1[1] < -5.5 or p1[0] < -1.0)
+            local_reg_unc = inlier_disp + 0.025 * dist_from_origin
+            adaptive_static_gate = min(0.62, max(0.40, 0.35 + 1.5 * local_reg_unc))
 
             for j, k2 in enumerate(s2_keys):
                 c2 = s2_aligned[k2]
@@ -842,11 +913,15 @@ class CrossSessionCandidateMatcher:
                 if dist > adaptive_static_gate:
                     continue
 
-                max_ext = max(c1.spatial_extent_m, c2.spatial_extent_m, 0.10)
-                ext_diff = abs(c1.spatial_extent_m - c2.spatial_extent_m)
-                rel_ext = ext_diff / max_ext
-                if rel_ext > self.max_extent_relative_diff:
-                    continue
+                if c1.spatial_extent_m is not None and c2.spatial_extent_m is not None:
+                    max_ext = max(c1.spatial_extent_m, c2.spatial_extent_m, 0.10)
+                    ext_diff = abs(c1.spatial_extent_m - c2.spatial_extent_m)
+                    rel_ext = ext_diff / max_ext
+                    if rel_ext > self.max_extent_relative_diff:
+                        continue
+                else:
+                    ext_diff = 0.0
+                    rel_ext = 0.0
 
                 combined_unc = math.sqrt(c1.position_uncertainty_m**2 + c2.position_uncertainty_m**2 + local_reg_unc**2)
                 cost = (dist / max(0.05, combined_unc)) + 2.0 * rel_ext
@@ -885,7 +960,8 @@ class CrossSessionCandidateMatcher:
                 is_ambiguous = True
 
             combined_unc = math.sqrt(c1.position_uncertainty_m**2 + c2.position_uncertainty_m**2)
-            ext_diff = abs(c1.spatial_extent_m - c2.spatial_extent_m)
+            has_extents = (c1.spatial_extent_m is not None and c2.spatial_extent_m is not None)
+            ext_diff = abs(c1.spatial_extent_m - c2.spatial_extent_m) if has_extents else 0.0
             confidence = max(0.20, min(0.99, 1.0 - (dist / 0.65) * 0.5 - (cost / 10.0) * 0.3))
 
             match_obj = PhysicalInstanceMatch(
@@ -895,7 +971,7 @@ class CrossSessionCandidateMatcher:
                 semantic_class=c1.semantic_class,
                 distance_m=round(dist, 4),
                 position_uncertainty_m=round(combined_unc, 4),
-                extent_diff_m=round(ext_diff, 4),
+                extent_diff_m=round(ext_diff, 4) if has_extents else None,
                 match_score=round(float(cost), 4),
                 confidence=round(confidence, 4),
                 status="AMBIGUOUS" if is_ambiguous else "MATCHED",
@@ -941,11 +1017,15 @@ class CrossSessionCandidateMatcher:
                     if not (self.min_relocation_distance_m <= dist <= self.max_relocation_distance_m):
                         continue
 
-                    max_ext = max(c1.spatial_extent_m, c2.spatial_extent_m, 0.10)
-                    ext_diff = abs(c1.spatial_extent_m - c2.spatial_extent_m)
-                    rel_ext = ext_diff / max_ext
-                    if rel_ext > self.max_relocation_extent_relative_diff:
-                        continue
+                    if c1.spatial_extent_m is not None and c2.spatial_extent_m is not None:
+                        max_ext = max(c1.spatial_extent_m, c2.spatial_extent_m, 0.10)
+                        ext_diff = abs(c1.spatial_extent_m - c2.spatial_extent_m)
+                        rel_ext = ext_diff / max_ext
+                        if rel_ext > self.max_relocation_extent_relative_diff:
+                            continue
+                    else:
+                        ext_diff = 0.0
+                        rel_ext = 0.0
 
                     combined_unc = math.sqrt(c1.position_uncertainty_m**2 + c2.position_uncertainty_m**2)
                     norm_dist = dist / max(0.05, combined_unc)
@@ -981,7 +1061,8 @@ class CrossSessionCandidateMatcher:
                     is_reloc_ambiguous = True
 
                 combined_unc = math.sqrt(c1.position_uncertainty_m**2 + c2.position_uncertainty_m**2)
-                ext_diff = abs(c1.spatial_extent_m - c2.spatial_extent_m)
+                has_extents = (c1.spatial_extent_m is not None and c2.spatial_extent_m is not None)
+                ext_diff = abs(c1.spatial_extent_m - c2.spatial_extent_m) if has_extents else 0.0
                 confidence = max(0.20, min(0.95, 1.0 - (rdist / self.max_relocation_distance_m) * 0.4 - (rcost / 10.0) * 0.3))
 
                 reloc_match = PhysicalInstanceMatch(
@@ -991,7 +1072,7 @@ class CrossSessionCandidateMatcher:
                     semantic_class=c1.semantic_class,
                     distance_m=round(rdist, 4),
                     position_uncertainty_m=round(combined_unc, 4),
-                    extent_diff_m=round(ext_diff, 4),
+                    extent_diff_m=round(ext_diff, 4) if has_extents else None,
                     match_score=round(float(rcost), 4),
                     confidence=round(confidence, 4),
                     status="AMBIGUOUS" if is_reloc_ambiguous else "MATCHED_RELOCATED",
@@ -1193,7 +1274,43 @@ def evaluate_matcher_against_ground_truth(
     recall_on_static = (len(recovered_static_instances) / n_static) * 100.0
     recall_on_relocated = (len(recovered_relocated_instances) / n_reloc) * 100.0
     recall_on_all = (len(recovered_instances) / n_all) * 100.0
-    false_split_rate = ((n_all - len(recovered_instances)) / n_all) * 100.0
+    instance_miss_rate = ((n_all - len(recovered_instances)) / n_all) * 100.0
+
+    # True False Split & False Merge Calculations:
+    # A true false split occurs when a single ground truth instance is split across >= 2 predicted persistent IDs.
+    gt_inst_to_pids: Dict[str, Set[str]] = defaultdict(set)
+    pid_to_gt_insts: Dict[str, Set[str]] = defaultdict(set)
+    for m in association_result.matched_pairs:
+        t1 = m.s1_entity_id
+        t2 = m.s2_entity_id
+        inst1 = canonical_map.get(("semantic_mapping_my_desk_recording_01", t1))
+        inst2 = canonical_map.get(("semantic_mapping_my_desk_recording_02", t2))
+        if inst1 is None and s1_clusters and t1 in s1_clusters:
+            for alias in getattr(s1_clusters[t1], "merged_entity_ids", []):
+                cand = canonical_map.get(("semantic_mapping_my_desk_recording_01", alias))
+                if cand is not None:
+                    inst1 = cand
+                    break
+        if inst2 is None and s2_clusters and t2 in s2_clusters:
+            for alias in getattr(s2_clusters[t2], "merged_entity_ids", []):
+                cand = canonical_map.get(("semantic_mapping_my_desk_recording_02", alias))
+                if cand is not None:
+                    inst2 = cand
+                    break
+        pred_pid = m.persistent_entity_id
+        if inst1:
+            gt_inst_to_pids[inst1].add(pred_pid)
+            pid_to_gt_insts[pred_pid].add(inst1)
+        if inst2:
+            gt_inst_to_pids[inst2].add(pred_pid)
+            pid_to_gt_insts[pred_pid].add(inst2)
+
+    true_split_instances = [inst for inst, pids in gt_inst_to_pids.items() if len(pids) > 1]
+    true_false_split_rate = (len(true_split_instances) / n_all) * 100.0
+
+    merged_pids = {pid: insts for pid, insts in pid_to_gt_insts.items() if len(insts) > 1}
+    true_merge_instances = {inst for insts in merged_pids.values() for inst in insts}
+    true_false_merge_rate = (len(true_merge_instances) / n_all) * 100.0
 
     # Instance-level precision: recovered instances vs predicted unique instances in annotated scope
     claimed_instances = set()
@@ -1286,6 +1403,8 @@ def evaluate_matcher_against_ground_truth(
                 "rejection_reason": reason,
             })
 
+    annotation_coverage = (total_annotated / max(1, len(association_result.matched_pairs))) * 100.0 if association_result.matched_pairs else 0.0
+
     return {
         "algorithm_name": association_result.algorithm_name,
         "total_matched_pairs": len(association_result.matched_pairs),
@@ -1293,7 +1412,12 @@ def evaluate_matcher_against_ground_truth(
         "true_positive_matches": true_positives,
         "false_merges": false_merges,
         "false_merge_rate_pct": round(false_merge_rate, 2),
-        "false_split_rate_pct": round(false_split_rate, 2),
+        "pair_level_false_merge_rate_pct": round(false_merge_rate, 2),
+        "instance_miss_rate_pct": round(instance_miss_rate, 2),
+        "false_split_rate_pct": round(instance_miss_rate, 2),  # Backward-compatible alias for instance_miss_rate_pct
+        "true_false_split_rate_pct": round(true_false_split_rate, 2),
+        "true_false_merge_rate_pct": round(true_false_merge_rate, 2),
+        "annotation_coverage_pct": round(annotation_coverage, 2),
         "unannotated_candidate_pairs_count": len(unannotated_matches),
         "total_multi_session_instances": len(all_multi_session_instances),
         "static_multi_session_instances": len(static_multi_session_instances),

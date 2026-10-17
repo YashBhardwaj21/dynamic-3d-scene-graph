@@ -42,21 +42,35 @@ class RegistrationInfo:
     anchor_count: int
     status: str
     diagnostics: List[str] = field(default_factory=list)
-    median_residual_m: float = 0.1325
-    robust_inlier_count: int = 7
-    robust_outlier_count: int = 3
-    inlier_rms_residual_m: float = 0.1198
+    median_residual_m: Optional[float] = None
+    robust_inlier_count: Optional[int] = None
+    robust_outlier_count: Optional[int] = None
+    consensus_inlier_count: Optional[int] = None
+    post_refit_strict_inlier_count: Optional[int] = None
+    inlier_rms_residual_m: Optional[float] = None
+    post_refit_strict_inlier_rms_residual_m: Optional[float] = None
     is_calibrated_covariance: bool = False
 
 
 RegistrationAudit = RegistrationInfo
 
 
-def load_registration_audit(audit_path: Optional[Path]) -> RegistrationInfo:
+def load_registration_audit(
+    audit_path: Optional[Path],
+    expected_ref_session: Optional[str] = None,
+    expected_align_session: Optional[str] = None,
+) -> RegistrationInfo:
     """Load and strictly validate the multi-session SE(2) registration audit.
 
-    Does NOT use hardcoded fallback transforms. If missing or malformed,
-    returns an invalid registration object with explicit diagnostic status.
+    Does NOT use hardcoded fallback transforms or fallback residual metrics.
+    Validates:
+      1. Schema structure and explicit non-reversed session identities.
+      2. Numeric finiteness (rejects NaN/Inf) and vector/matrix dimensions.
+      3. Derived 2D rotation matrix orthonormality and det(R) == +1.0 within tolerance.
+      4. Anchor correspondences spatial geometry (at least 3 non-collinear, non-duplicate anchors).
+      5. Recomputed residuals vs stored values within documented tolerance.
+      6. Separate tracking of RANSAC consensus inliers and strict post-refit threshold inliers.
+      7. Exact inlier/outlier consistency (inlier + outlier == total anchors).
     """
     if audit_path is None or not Path(audit_path).exists():
         return RegistrationInfo(
@@ -89,6 +103,20 @@ def load_registration_audit(audit_path: Optional[Path]) -> RegistrationInfo:
             diagnostics=[f"Failed to parse registration audit JSON: {str(e)}"],
         )
 
+    if not isinstance(data, dict):
+        return RegistrationInfo(
+            is_valid=False,
+            reference_session="",
+            aligned_session="",
+            rotation_deg=0.0,
+            translation_m=np.zeros(2),
+            R_12=np.eye(2),
+            anchor_rms_residual_m=0.0,
+            anchor_count=0,
+            status="REGISTRATION_FILE_MALFORMED",
+            diagnostics=["Registration audit root is not a JSON dictionary."],
+        )
+
     reg = data.get("registration")
     if not isinstance(reg, dict):
         if "reference_session" in data and "translation_m" in data:
@@ -107,89 +135,385 @@ def load_registration_audit(audit_path: Optional[Path]) -> RegistrationInfo:
                 diagnostics=["JSON root lacks a valid 'registration' dictionary."],
             )
 
-    ref_sess = reg.get("reference_session")
-    align_sess = reg.get("aligned_session")
-    rot_deg = reg.get("rotation_deg")
-    trans = reg.get("translation_m")
-    anchors = reg.get("anchors", [])
+    ref_sess = str(reg.get("reference_session") or "").strip()
+    align_sess = str(reg.get("aligned_session") or "").strip()
 
-    robust_block = data.get("robust_estimation", {})
-    robust_tf = robust_block.get("robust_transform", {})
-    if robust_tf and "rotation_deg" in robust_tf and "translation_m" in robust_tf:
-        rot_deg = float(robust_tf["rotation_deg"])
-        trans = robust_tf["translation_m"]
-    else:
-        rot_deg = reg.get("rotation_deg")
-        trans = reg.get("translation_m")
-
-    diagnostics = []
-    if not ref_sess or not align_sess:
-        diagnostics.append("Missing reference_session or aligned_session in registration.")
-    if rot_deg is None or not isinstance(rot_deg, (int, float)):
-        diagnostics.append("Missing or non-numeric rotation_deg.")
-    if trans is None or len(trans) < 2:
-        diagnostics.append("Missing or invalid translation_m 2D vector.")
-    if len(anchors) < 3:
-        diagnostics.append(f"Insufficient anchor correspondences ({len(anchors)} < 3 required).")
-
-    if diagnostics:
+    if not ref_sess or not align_sess or ref_sess == align_sess:
         return RegistrationInfo(
             is_valid=False,
-            reference_session=str(ref_sess or ""),
-            aligned_session=str(align_sess or ""),
+            reference_session=ref_sess,
+            aligned_session=align_sess,
             rotation_deg=0.0,
             translation_m=np.zeros(2),
             R_12=np.eye(2),
             anchor_rms_residual_m=0.0,
-            anchor_count=len(anchors),
-            status="MALFORMED_REGISTRATION_PARAMETERS",
-            diagnostics=diagnostics,
+            anchor_count=0,
+            status="SESSION_DIRECTION_INVALID",
+            diagnostics=["Missing, empty, or identical reference_session and aligned_session."],
         )
 
-    t_vec = np.array(trans[:2], dtype=np.float64)
-    rad = math.radians(float(rot_deg))
+    if expected_ref_session and ref_sess != expected_ref_session:
+        return RegistrationInfo(
+            is_valid=False,
+            reference_session=ref_sess,
+            aligned_session=align_sess,
+            rotation_deg=0.0,
+            translation_m=np.zeros(2),
+            R_12=np.eye(2),
+            anchor_rms_residual_m=0.0,
+            anchor_count=0,
+            status="SESSION_DIRECTION_INVALID",
+            diagnostics=[f"Reference session '{ref_sess}' does not match expected '{expected_ref_session}'."],
+        )
+
+    if expected_align_session and align_sess != expected_align_session:
+        return RegistrationInfo(
+            is_valid=False,
+            reference_session=ref_sess,
+            aligned_session=align_sess,
+            rotation_deg=0.0,
+            translation_m=np.zeros(2),
+            R_12=np.eye(2),
+            anchor_rms_residual_m=0.0,
+            anchor_count=0,
+            status="SESSION_DIRECTION_INVALID",
+            diagnostics=[f"Aligned session '{align_sess}' does not match expected '{expected_align_session}'."],
+        )
+
+    robust_block = data.get("robust_estimation", {})
+    robust_tf = robust_block.get("robust_transform", {}) if isinstance(robust_block, dict) else {}
+    if robust_tf and "rotation_deg" in robust_tf and "translation_m" in robust_tf:
+        rot_raw = robust_tf.get("rotation_deg")
+        trans_raw = robust_tf.get("translation_m")
+    else:
+        rot_raw = reg.get("rotation_deg")
+        trans_raw = reg.get("translation_m")
+
+    # Validate rotation finiteness
+    if rot_raw is None or not isinstance(rot_raw, (int, float)) or not math.isfinite(float(rot_raw)):
+        return RegistrationInfo(
+            is_valid=False,
+            reference_session=ref_sess,
+            aligned_session=align_sess,
+            rotation_deg=0.0,
+            translation_m=np.zeros(2),
+            R_12=np.eye(2),
+            anchor_rms_residual_m=0.0,
+            anchor_count=0,
+            status="MALFORMED_TRANSFORM_PARAMETERS",
+            diagnostics=["Missing, non-numeric, or non-finite rotation_deg."],
+        )
+    rot_deg = float(rot_raw)
+
+    # Validate translation finiteness & dimension
+    if not isinstance(trans_raw, (list, tuple, np.ndarray)) or len(trans_raw) < 2:
+        return RegistrationInfo(
+            is_valid=False,
+            reference_session=ref_sess,
+            aligned_session=align_sess,
+            rotation_deg=rot_deg,
+            translation_m=np.zeros(2),
+            R_12=np.eye(2),
+            anchor_rms_residual_m=0.0,
+            anchor_count=0,
+            status="MALFORMED_TRANSFORM_PARAMETERS",
+            diagnostics=["Missing or invalid translation_m 2D vector."],
+        )
+
+    try:
+        t_vec = np.array(trans_raw[:2], dtype=np.float64)
+        if not np.all(np.isfinite(t_vec)):
+            return RegistrationInfo(
+                is_valid=False,
+                reference_session=ref_sess,
+                aligned_session=align_sess,
+                rotation_deg=rot_deg,
+                translation_m=np.zeros(2),
+                R_12=np.eye(2),
+                anchor_rms_residual_m=0.0,
+                anchor_count=0,
+                status="MALFORMED_TRANSFORM_PARAMETERS",
+                diagnostics=["Non-finite values (NaN/Inf) in translation_m."],
+            )
+    except Exception as e:
+        return RegistrationInfo(
+            is_valid=False,
+            reference_session=ref_sess,
+            aligned_session=align_sess,
+            rotation_deg=rot_deg,
+            translation_m=np.zeros(2),
+            R_12=np.eye(2),
+            anchor_rms_residual_m=0.0,
+            anchor_count=0,
+            status="MALFORMED_TRANSFORM_PARAMETERS",
+            diagnostics=[f"Failed to parse translation_m: {str(e)}"],
+        )
+
+    # Derive rotation matrix and check orthonormality & det = +1
+    rad = math.radians(rot_deg)
     R_12 = np.array([
         [math.cos(rad), -math.sin(rad)],
         [math.sin(rad),  math.cos(rad)],
     ], dtype=np.float64)
 
-    # Compute empirical residuals over anchor pairs with authoritative robust transform
-    residuals = []
-    for a in anchors:
+    det_R = float(np.linalg.det(R_12))
+    if abs(det_R - 1.0) > 1e-5:
+        return RegistrationInfo(
+            is_valid=False,
+            reference_session=ref_sess,
+            aligned_session=align_sess,
+            rotation_deg=rot_deg,
+            translation_m=t_vec,
+            R_12=R_12,
+            anchor_rms_residual_m=0.0,
+            anchor_count=0,
+            status="TRANSFORM_MATRIX_INCONSISTENCY",
+            diagnostics=[f"Rotation matrix determinant {det_R:.6f} != +1.0"],
+        )
+
+    ortho_err = float(np.max(np.abs(R_12.T @ R_12 - np.eye(2))))
+    if ortho_err > 1e-5:
+        return RegistrationInfo(
+            is_valid=False,
+            reference_session=ref_sess,
+            aligned_session=align_sess,
+            rotation_deg=rot_deg,
+            translation_m=t_vec,
+            R_12=R_12,
+            anchor_rms_residual_m=0.0,
+            anchor_count=0,
+            status="TRANSFORM_MATRIX_INCONSISTENCY",
+            diagnostics=[f"Rotation matrix non-orthonormal (error {ortho_err:.6e})."],
+        )
+
+    if "R_12" in reg and isinstance(reg["R_12"], list):
+        try:
+            stored_R = np.array(reg["R_12"], dtype=np.float64)
+            if stored_R.shape == (2, 2) and float(np.max(np.abs(stored_R - R_12))) > 1e-3:
+                return RegistrationInfo(
+                    is_valid=False,
+                    reference_session=ref_sess,
+                    aligned_session=align_sess,
+                    rotation_deg=rot_deg,
+                    translation_m=t_vec,
+                    R_12=R_12,
+                    anchor_rms_residual_m=0.0,
+                    anchor_count=0,
+                    status="TRANSFORM_MATRIX_INCONSISTENCY",
+                    diagnostics=["Stored R_12 matrix disagrees with derived rotation matrix."],
+                )
+        except Exception:
+            pass
+
+    # Validate anchor correspondences
+    anchors = reg.get("anchors", [])
+    if not isinstance(anchors, list) or len(anchors) < 3:
+        return RegistrationInfo(
+            is_valid=False,
+            reference_session=ref_sess,
+            aligned_session=align_sess,
+            rotation_deg=rot_deg,
+            translation_m=t_vec,
+            R_12=R_12,
+            anchor_rms_residual_m=0.0,
+            anchor_count=len(anchors) if isinstance(anchors, list) else 0,
+            status="INSUFFICIENT_ANCHOR_CORRESPONDENCES",
+            diagnostics=[f"Insufficient anchor correspondences ({len(anchors) if isinstance(anchors, list) else 0} < 3 required)."],
+        )
+
+    pts1: List[np.ndarray] = []
+    pts2: List[np.ndarray] = []
+    stored_residuals: List[Optional[float]] = []
+
+    for idx, a in enumerate(anchors):
+        if not isinstance(a, dict):
+            return RegistrationInfo(
+                is_valid=False,
+                reference_session=ref_sess,
+                aligned_session=align_sess,
+                rotation_deg=rot_deg,
+                translation_m=t_vec,
+                R_12=R_12,
+                anchor_rms_residual_m=0.0,
+                anchor_count=len(anchors),
+                status="MALFORMED_ANCHOR_RECORD",
+                diagnostics=[f"Anchor at index {idx} is not a dictionary."],
+            )
         c1 = a.get("c1")
         c2 = a.get("c2")
-        if c1 and c2 and len(c1) >= 2 and len(c2) >= 2:
+        if c1 is None or c2 is None or len(c1) < 2 or len(c2) < 2:
+            return RegistrationInfo(
+                is_valid=False,
+                reference_session=ref_sess,
+                aligned_session=align_sess,
+                rotation_deg=rot_deg,
+                translation_m=t_vec,
+                R_12=R_12,
+                anchor_rms_residual_m=0.0,
+                anchor_count=len(anchors),
+                status="MALFORMED_ANCHOR_RECORD",
+                diagnostics=[f"Anchor at index {idx} lacks 2D coordinate vectors."],
+            )
+        try:
             p1 = np.array(c1[:2], dtype=np.float64)
             p2 = np.array(c2[:2], dtype=np.float64)
-            p2_trans = R_12 @ p2 + t_vec
-            residuals.append(float(np.linalg.norm(p2_trans - p1)))
+            if not np.all(np.isfinite(p1)) or not np.all(np.isfinite(p2)):
+                return RegistrationInfo(
+                    is_valid=False,
+                    reference_session=ref_sess,
+                    aligned_session=align_sess,
+                    rotation_deg=rot_deg,
+                    translation_m=t_vec,
+                    R_12=R_12,
+                    anchor_rms_residual_m=0.0,
+                    anchor_count=len(anchors),
+                    status="MALFORMED_ANCHOR_RECORD",
+                    diagnostics=[f"Anchor at index {idx} contains non-finite coordinates."],
+                )
+        except Exception as e:
+            return RegistrationInfo(
+                is_valid=False,
+                reference_session=ref_sess,
+                aligned_session=align_sess,
+                rotation_deg=rot_deg,
+                translation_m=t_vec,
+                R_12=R_12,
+                anchor_rms_residual_m=0.0,
+                anchor_count=len(anchors),
+                status="MALFORMED_ANCHOR_RECORD",
+                diagnostics=[f"Anchor at index {idx} failed coordinate conversion: {str(e)}"],
+            )
 
-    if residuals:
-        rms_res = float(np.sqrt(np.mean(np.array(residuals)**2)))
+        pts1.append(p1)
+        pts2.append(p2)
+        stored_res = a.get("residual_m")
+        stored_residuals.append(float(stored_res) if stored_res is not None and isinstance(stored_res, (int, float)) else None)
+
+    pts1_arr = np.array(pts1)
+    pts2_arr = np.array(pts2)
+
+    # Check for duplicate anchors
+    for i in range(len(pts1)):
+        for j in range(i + 1, len(pts1)):
+            if float(np.linalg.norm(pts1_arr[i] - pts1_arr[j])) < 1e-3 or float(np.linalg.norm(pts2_arr[i] - pts2_arr[j])) < 1e-3:
+                return RegistrationInfo(
+                    is_valid=False,
+                    reference_session=ref_sess,
+                    aligned_session=align_sess,
+                    rotation_deg=rot_deg,
+                    translation_m=t_vec,
+                    R_12=R_12,
+                    anchor_rms_residual_m=0.0,
+                    anchor_count=len(anchors),
+                    status="DEGENERATE_ANCHOR_GEOMETRY",
+                    diagnostics=[f"Anchors {i} and {j} are duplicate/coincident coordinates."],
+                )
+
+    # Spatial collinearity and rank degeneracy check
+    centered1 = pts1_arr - np.mean(pts1_arr, axis=0)
+    centered2 = pts2_arr - np.mean(pts2_arr, axis=0)
+    s1 = np.linalg.svd(centered1, compute_uv=False)
+    s2 = np.linalg.svd(centered2, compute_uv=False)
+    if s1[1] < 1e-3 or (s1[0] / max(1e-9, s1[1])) > 500.0 or s2[1] < 1e-3 or (s2[0] / max(1e-9, s2[1])) > 500.0:
+        return RegistrationInfo(
+            is_valid=False,
+            reference_session=ref_sess,
+            aligned_session=align_sess,
+            rotation_deg=rot_deg,
+            translation_m=t_vec,
+            R_12=R_12,
+            anchor_rms_residual_m=0.0,
+            anchor_count=len(anchors),
+            status="DEGENERATE_ANCHOR_GEOMETRY",
+            diagnostics=["Anchors are nearly collinear or span insufficient 2D spatial area."],
+        )
+
+    # Recompute empirical residuals from R_12 @ c2 + t_vec against c1
+    recomputed_residuals: List[float] = []
+    for p1, p2 in zip(pts1, pts2):
+        p2_trans = R_12 @ p2 + t_vec
+        res = float(np.linalg.norm(p2_trans - p1))
+        recomputed_residuals.append(res)
+
+    # Compare recomputed and stored residuals within 2 cm tolerance
+    for idx, (recomp, stored) in enumerate(zip(recomputed_residuals, stored_residuals)):
+        if stored is not None:
+            if abs(recomp - stored) > 0.02:
+                return RegistrationInfo(
+                    is_valid=False,
+                    reference_session=ref_sess,
+                    aligned_session=align_sess,
+                    rotation_deg=rot_deg,
+                    translation_m=t_vec,
+                    R_12=R_12,
+                    anchor_rms_residual_m=0.0,
+                    anchor_count=len(anchors),
+                    status="STORED_RESIDUAL_DISCREPANCY",
+                    diagnostics=[f"Anchor {idx} stored residual ({stored:.4f}m) disagrees with recomputed ({recomp:.4f}m) beyond 0.02m."],
+                )
+
+    rms_residual = float(np.sqrt(np.mean(np.array(recomputed_residuals)**2)))
+    median_residual = float(np.median(recomputed_residuals))
+
+    # Identify RANSAC consensus inliers vs strict post-refit inliers (<= 0.20m)
+    consensus_inliers = [
+        idx for idx, a in enumerate(anchors)
+        if a.get("is_robust_inlier") is True or a.get("pre_refit_consensus_inlier") is True
+    ]
+    strict_inliers = [idx for idx, r in enumerate(recomputed_residuals) if r <= 0.20]
+
+    consensus_inlier_count = len(consensus_inliers) if consensus_inliers else len(strict_inliers)
+    post_refit_strict_count = len(strict_inliers)
+
+    robust_inlier_residuals = [recomputed_residuals[i] for i in (consensus_inliers or strict_inliers)]
+    inlier_rms = float(np.sqrt(np.mean(np.array(robust_inlier_residuals)**2))) if robust_inlier_residuals else None
+    median_residual = float(np.median(robust_inlier_residuals)) if robust_inlier_residuals else float(np.median(recomputed_residuals))
+
+    strict_inlier_residuals = [recomputed_residuals[i] for i in strict_inliers]
+    post_refit_strict_rms = float(np.sqrt(np.mean(np.array(strict_inlier_residuals)**2))) if strict_inlier_residuals else None
+
+    residuals_block = data.get("residuals", {}) if isinstance(data.get("residuals"), dict) else {}
+    stored_inlier_cnt = robust_block.get("inlier_count", residuals_block.get("inlier_count"))
+    stored_outlier_cnt = robust_block.get("outlier_count", residuals_block.get("outlier_count"))
+
+    if stored_inlier_cnt is not None and stored_outlier_cnt is not None:
+        if int(stored_inlier_cnt) + int(stored_outlier_cnt) != len(anchors):
+            return RegistrationInfo(
+                is_valid=False,
+                reference_session=ref_sess,
+                aligned_session=align_sess,
+                rotation_deg=rot_deg,
+                translation_m=t_vec,
+                R_12=R_12,
+                anchor_rms_residual_m=rms_residual,
+                anchor_count=len(anchors),
+                status="INCONSISTENT_INLIER_COUNTS",
+                diagnostics=[f"Stored inlier ({stored_inlier_cnt}) + outlier ({stored_outlier_cnt}) != total anchors ({len(anchors)})."],
+            )
+        robust_inlier_count = int(stored_inlier_cnt)
+        robust_outlier_count = int(stored_outlier_cnt)
     else:
-        rms_res = 0.25
-
-    residuals_block = data.get("residuals", {})
-    inlier_rms = float(robust_block.get("inlier_rms_residual_m", residuals_block.get("inlier_rms_residual_m", 0.1198)))
-    median_res = float(residuals_block.get("inlier_median_residual_m", residuals_block.get("median_residual_m", 0.0924)))
-    inlier_count = int(robust_block.get("inlier_count", residuals_block.get("inlier_count", 7)))
-    outlier_count = int(robust_block.get("outlier_count", residuals_block.get("outlier_count", 3)))
+        robust_inlier_count = consensus_inlier_count
+        robust_outlier_count = len(anchors) - consensus_inlier_count
 
     return RegistrationInfo(
         is_valid=True,
         reference_session=ref_sess,
         aligned_session=align_sess,
-        rotation_deg=float(rot_deg),
+        rotation_deg=rot_deg,
         translation_m=t_vec,
         R_12=R_12,
-        anchor_rms_residual_m=rms_res,
-        anchor_count=len(residuals),
+        anchor_rms_residual_m=rms_residual,
+        anchor_count=len(anchors),
         status="SE2_REGISTERED_VERIFIED",
         diagnostics=[],
-        median_residual_m=median_res,
-        robust_inlier_count=inlier_count,
-        robust_outlier_count=outlier_count,
+        median_residual_m=median_residual,
+        robust_inlier_count=robust_inlier_count,
+        robust_outlier_count=robust_outlier_count,
+        consensus_inlier_count=consensus_inlier_count,
+        post_refit_strict_inlier_count=post_refit_strict_count,
         inlier_rms_residual_m=inlier_rms,
+        post_refit_strict_inlier_rms_residual_m=post_refit_strict_rms,
         is_calibrated_covariance=False,
     )
 
@@ -227,14 +551,15 @@ class Stage5EvidenceAdapter:
         self.duplicate_obs_ids: List[str] = []
         self.missing_fused_obs_ids: List[str] = []
 
-        # Load data
+        # Load data with canonical input path resolution
         if obs_path is None:
-            obs_path = self.repo_root / "vlm" / "outputs" / "object_observations.jsonl"
+            canonical_cand = self.repo_root / "vlm" / "data" / "observations" / "object_observations.jsonl"
+            obs_path = canonical_cand if canonical_cand.exists() else self.repo_root / "vlm" / "outputs" / "object_observations.jsonl"
         if fused_path is None:
             fused_path = self.repo_root / "vlm" / "outputs" / "stage5_fused_evidence.jsonl"
 
-        self._load_observations(obs_path)
-        self._load_fused_evidence(fused_path)
+        self._load_observations(Path(obs_path))
+        self._load_fused_evidence(Path(fused_path))
 
     def _load_observations(self, path: Path):
         if not path.exists():
@@ -258,7 +583,9 @@ class Stage5EvidenceAdapter:
                 if oid:
                     if oid in self.obs_by_obs_id:
                         self.duplicate_obs_ids.append(oid)
-                    self.obs_by_obs_id[oid] = o
+                        self.obs_by_obs_id[oid] = None  # Sentinel: quarantined duplicate fails closed
+                    else:
+                        self.obs_by_obs_id[oid] = o
 
                 if sess and eid:
                     self.obs_by_session_and_entity[(sess, eid)].append(o)
@@ -286,7 +613,10 @@ class Stage5EvidenceAdapter:
                 sess = rec.get("source_session", "")
 
                 if oid:
-                    self.fused_by_obs_id[oid] = rec
+                    if oid in self.fused_by_obs_id:
+                        self.fused_by_obs_id[oid] = None  # Quarantined duplicate
+                    else:
+                        self.fused_by_obs_id[oid] = rec
                 if sess and eid:
                     self.fused_by_session_and_entity[(sess, eid)].append(rec)
                 if eid:
@@ -312,9 +642,13 @@ class Stage5EvidenceAdapter:
         # Strategy 1: Direct match on unique obs_id
         if identifier in self.obs_by_obs_id:
             obs = self.obs_by_obs_id[identifier]
+            if obs is None:
+                return [], [], [f"Observation '{identifier}' is a quarantined duplicate ID; failing closed."]
             obs_matches.append(obs)
             if identifier in self.fused_by_obs_id:
-                fused_matches.append(self.fused_by_obs_id[identifier])
+                frec = self.fused_by_obs_id[identifier]
+                if frec is not None:
+                    fused_matches.append(frec)
             else:
                 diagnostics.append(f"Observation {identifier} found, but missing fused evidence.")
 

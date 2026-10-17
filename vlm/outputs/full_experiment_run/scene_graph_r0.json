@@ -1,9 +1,9 @@
 {
-  "total_nodes": 195,
-  "timestamp": 1792266192.9726925,
+  "total_nodes": 180,
+  "timestamp": 1792272770.7785492,
   "nodes": {
-    "entity_s1_backpack_001": {
-      "entity_id": "entity_s1_backpack_001",
+    "phys_backpack_001": {
+      "entity_id": "phys_backpack_001",
       "semantic_class": "backpack",
       "contextual_movability": "MOVABLE",
       "observed_motion": "STATIC",
@@ -27,7 +27,7 @@
       "source_track_ids": [
         "backpack_001"
       ],
-      "contributing_observations_count": 1,
+      "contributing_observations_count": 2,
       "total_observations_count": 2,
       "relocation_evaluable": true,
       "measured_displacement_m": 0.0,
@@ -40,8 +40,8 @@
       "vlm_inference_executed": false,
       "vlm_reason_codes": []
     },
-    "inst_backpack_001": {
-      "entity_id": "inst_backpack_001",
+    "phys_backpack_002": {
+      "entity_id": "phys_backpack_002",
       "semantic_class": "backpack",
       "contextual_movability": "MOVABLE",
       "observed_motion": "STATIC",
@@ -49,36 +49,38 @@
       "physical_support": null,
       "geometry_valid": true,
       "centroid_world": [
-        -3.469,
-        -1.0139,
+        -3.5683,
+        -1.5936,
         0.0
       ],
-      "spatial_extent_m": 0.4039,
-      "coordinate_frame": "floor_map",
-      "semantic_confidence": 0.9,
+      "spatial_extent_m": 0.637,
+      "coordinate_frame": "reference_frame",
+      "semantic_confidence": 0.99,
       "geometric_confidence": 0.85,
       "evidence_provenance": "MEASURED_CLUSTER",
       "source_sessions": [
-        "semantic_mapping_my_desk_recording_01"
+        "semantic_mapping_my_desk_recording_01",
+        "semantic_mapping_my_desk_recording_02"
       ],
       "source_track_ids": [
-        "backpack_002"
+        "backpack_002",
+        "handbag_002"
       ],
-      "contributing_observations_count": 1,
-      "total_observations_count": 1,
-      "relocation_evaluable": false,
-      "measured_displacement_m": null,
-      "displacement_uncertainty_m": null,
+      "contributing_observations_count": 3,
+      "total_observations_count": 3,
+      "relocation_evaluable": true,
+      "measured_displacement_m": 0.0,
+      "displacement_uncertainty_m": 0.007609493622210672,
       "pose_history": [],
       "first_seen": 100.0,
-      "last_seen": 100.0,
+      "last_seen": 200.0,
       "vlm_decision": "RESOLVE_CHEAP",
       "vlm_query_requested": false,
       "vlm_inference_executed": false,
       "vlm_reason_codes": []
     },
-    "inst_backpack_002": {
-      "entity_id": "inst_backpack_002",
+    "phys_backpack_003": {
+      "entity_id": "phys_backpack_003",
       "semantic_class": "backpack",
       "contextual_movability": "MOVABLE",
       "observed_motion": "STATIC",
@@ -114,8 +116,8 @@
       "vlm_inference_executed": false,
       "vlm_reason_codes": []
     },
-    "entity_s1_ceiling fan_002": {
-      "entity_id": "entity_s1_ceiling fan_002",
+    "phys_ceiling fan_002": {
+      "entity_id": "phys_ceiling fan_002",
       "semantic_class": "ceiling fan",
       "contextual_movability": "IMMOVABLE",
       "observed_motion": "STATIC",
@@ -123,36 +125,37 @@
       "physical_support": null,
       "geometry_valid": true,
       "centroid_world": [
-        0.9419,
-        0.1132,
+        2.0995,
+        -1.3295,
         0.0
       ],
-      "spatial_extent_m": 0.0496,
-      "coordinate_frame": "floor_map",
-      "semantic_confidence": 0.9,
+      "spatial_extent_m": 0.572,
+      "coordinate_frame": "reference_frame",
+      "semantic_confidence": 0.95,
       "geometric_confidence": 0.85,
       "evidence_provenance": "MEASURED_CLUSTER",
       "source_sessions": [
-        "semantic_mapping_my_desk_recording_01"
+        "semantic_mapping_my_desk_recording_01",
+        "semantic_mapping_my_desk_recording_02"
       ],
       "source_track_ids": [
         "ceiling fan_002"
       ],
-      "contributing_observations_count": 1,
-      "total_observations_count": 1,
+      "contributing_observations_count": 2,
+      "total_observations_count": 2,
       "relocation_evaluable": false,
       "measured_displacement_m": null,
       "displacement_uncertainty_m": null,
       "pose_history": [],
       "first_seen": 100.0,
-      "last_seen": 100.0,
+      "last_seen": 200.0,
       "vlm_decision": "RESOLVE_CHEAP",
       "vlm_query_requested": false,
       "vlm_inference_executed": false,
       "vlm_reason_codes": []
     },
-    "entity_s1_ceiling fan_003": {
-      "entity_id": "entity_s1_ceiling fan_003",
+    "phys_ceiling fan_003": {
+      "entity_id": "phys_ceiling fan_003",
       "semantic_class": "ceiling fan",
       "contextual_movability": "IMMOVABLE",
       "observed_motion": "STATIC",
@@ -160,36 +163,37 @@
       "physical_support": null,
       "geometry_valid": true,
       "centroid_world": [
-        2.4673,
-        -2.1429,
+        1.7373,
+        -3.7641,
         0.0
       ],
-      "spatial_extent_m": 0.1093,
-      "coordinate_frame": "floor_map",
-      "semantic_confidence": 0.9,
+      "spatial_extent_m": 0.2154,
+      "coordinate_frame": "reference_frame",
+      "semantic_confidence": 0.95,
       "geometric_confidence": 0.85,
       "evidence_provenance": "MEASURED_CLUSTER",
       "source_sessions": [
-        "semantic_mapping_my_desk_recording_01"
+        "semantic_mapping_my_desk_recording_01",
+        "semantic_mapping_my_desk_recording_02"
       ],
       "source_track_ids": [
         "ceiling fan_003"
       ],
-      "contributing_observations_count": 1,
-      "total_observations_count": 1,
+      "contributing_observations_count": 2,
+      "total_observations_count": 2,
       "relocation_evaluable": false,
       "measured_displacement_m": null,
       "displacement_uncertainty_m": null,
       "pose_history": [],
       "first_seen": 100.0,
-      "last_seen": 100.0,
+      "last_seen": 200.0,
       "vlm_decision": "RESOLVE_CHEAP",
       "vlm_query_requested": false,
       "vlm_inference_executed": false,
       "vlm_reason_codes": []
     },
-    "entity_s1_ceiling fan_004": {
-      "entity_id": "entity_s1_ceiling fan_004",
+    "phys_ceiling fan_004": {
+      "entity_id": "phys_ceiling fan_004",
       "semantic_class": "ceiling fan",
       "contextual_movability": "IMMOVABLE",
       "observed_motion": "STATIC",
@@ -197,36 +201,37 @@
       "physical_support": null,
       "geometry_valid": true,
       "centroid_world": [
-        1.1386,
-        -2.8364,
+        -0.3768,
+        -3.133,
         0.0
       ],
-      "spatial_extent_m": 0.064,
-      "coordinate_frame": "floor_map",
-      "semantic_confidence": 0.9,
+      "spatial_extent_m": 0.1985,
+      "coordinate_frame": "reference_frame",
+      "semantic_confidence": 0.95,
       "geometric_confidence": 0.85,
       "evidence_provenance": "MEASURED_CLUSTER",
       "source_sessions": [
-        "semantic_mapping_my_desk_recording_01"
+        "semantic_mapping_my_desk_recording_01",
+        "semantic_mapping_my_desk_recording_02"
       ],
       "source_track_ids": [
         "ceiling fan_004"
       ],
-      "contributing_observations_count": 1,
-      "total_observations_count": 1,
+      "contributing_observations_count": 2,
+      "total_observations_count": 2,
       "relocation_evaluable": false,
       "measured_displacement_m": null,
       "displacement_uncertainty_m": null,
       "pose_history": [],
       "first_seen": 100.0,
-      "last_seen": 100.0,
+      "last_seen": 200.0,
       "vlm_decision": "RESOLVE_CHEAP",
       "vlm_query_requested": false,
       "vlm_inference_executed": false,
       "vlm_reason_codes": []
     },
-    "entity_s1_ceiling fan_006": {
-      "entity_id": "entity_s1_ceiling fan_006",
+    "phys_ceiling fan_006": {
+      "entity_id": "phys_ceiling fan_006",
       "semantic_class": "ceiling fan",
       "contextual_movability": "IMMOVABLE",
       "observed_motion": "STATIC",
@@ -262,8 +267,8 @@
       "vlm_inference_executed": false,
       "vlm_reason_codes": []
     },
-    "entity_s1_ceiling fan_007": {
-      "entity_id": "entity_s1_ceiling fan_007",
+    "phys_ceiling fan_007": {
+      "entity_id": "phys_ceiling fan_007",
       "semantic_class": "ceiling fan",
       "contextual_movability": "IMMOVABLE",
       "observed_motion": "STATIC",
@@ -299,8 +304,8 @@
       "vlm_inference_executed": false,
       "vlm_reason_codes": []
     },
-    "inst_ceiling_fan_001": {
-      "entity_id": "inst_ceiling_fan_001",
+    "phys_ceiling fan_010": {
+      "entity_id": "phys_ceiling fan_010",
       "semantic_class": "ceiling fan",
       "contextual_movability": "IMMOVABLE",
       "observed_motion": "STATIC",
@@ -338,8 +343,8 @@
       "vlm_inference_executed": false,
       "vlm_reason_codes": []
     },
-    "inst_chair_001": {
-      "entity_id": "inst_chair_001",
+    "phys_chair_001": {
+      "entity_id": "phys_chair_001",
       "semantic_class": "chair",
       "contextual_movability": "MOVABLE",
       "observed_motion": "STATIC",
@@ -377,8 +382,8 @@
       "vlm_inference_executed": false,
       "vlm_reason_codes": []
     },
-    "inst_chair_002": {
-      "entity_id": "inst_chair_002",
+    "phys_chair_002": {
+      "entity_id": "phys_chair_002",
       "semantic_class": "chair",
       "contextual_movability": "MOVABLE",
       "observed_motion": "STATIC",
@@ -416,8 +421,8 @@
       "vlm_inference_executed": false,
       "vlm_reason_codes": []
     },
-    "inst_chair_003": {
-      "entity_id": "inst_chair_003",
+    "phys_chair_003": {
+      "entity_id": "phys_chair_003",
       "semantic_class": "chair",
       "contextual_movability": "MOVABLE",
       "observed_motion": "STATIC",
@@ -453,8 +458,8 @@
       "vlm_inference_executed": false,
       "vlm_reason_codes": []
     },
-    "inst_chair_004": {
-      "entity_id": "inst_chair_004",
+    "phys_chair_004": {
+      "entity_id": "phys_chair_004",
       "semantic_class": "chair",
       "contextual_movability": "MOVABLE",
       "observed_motion": "STATIC",
@@ -492,8 +497,8 @@
       "vlm_inference_executed": false,
       "vlm_reason_codes": []
     },
-    "inst_chair_005": {
-      "entity_id": "inst_chair_005",
+    "phys_chair_005": {
+      "entity_id": "phys_chair_005",
       "semantic_class": "chair",
       "contextual_movability": "MOVABLE",
       "observed_motion": "STATIC",
@@ -531,8 +536,8 @@
       "vlm_inference_executed": false,
       "vlm_reason_codes": []
     },
-    "inst_chair_007": {
-      "entity_id": "inst_chair_007",
+    "phys_chair_007": {
+      "entity_id": "phys_chair_007",
       "semantic_class": "chair",
       "contextual_movability": "MOVABLE",
       "observed_motion": "STATIC",
@@ -570,8 +575,8 @@
       "vlm_inference_executed": false,
       "vlm_reason_codes": []
     },
-    "inst_chair_008": {
-      "entity_id": "inst_chair_008",
+    "phys_chair_008": {
+      "entity_id": "phys_chair_008",
       "semantic_class": "chair",
       "contextual_movability": "MOVABLE",
       "observed_motion": "STATIC",
@@ -607,8 +612,8 @@
       "vlm_inference_executed": false,
       "vlm_reason_codes": []
     },
-    "inst_chair_009": {
-      "entity_id": "inst_chair_009",
+    "phys_chair_009": {
+      "entity_id": "phys_chair_009",
       "semantic_class": "chair",
       "contextual_movability": "MOVABLE",
       "observed_motion": "STATIC",
@@ -644,8 +649,8 @@
       "vlm_inference_executed": false,
       "vlm_reason_codes": []
     },
-    "inst_chair_011": {
-      "entity_id": "inst_chair_011",
+    "phys_chair_011": {
+      "entity_id": "phys_chair_011",
       "semantic_class": "chair",
       "contextual_movability": "MOVABLE",
       "observed_motion": "STATIC",
@@ -683,8 +688,8 @@
       "vlm_inference_executed": false,
       "vlm_reason_codes": []
     },
-    "entity_s1_chair_015": {
-      "entity_id": "entity_s1_chair_015",
+    "phys_chair_015": {
+      "entity_id": "phys_chair_015",
       "semantic_class": "chair",
       "contextual_movability": "MOVABLE",
       "observed_motion": "STATIC",
@@ -708,7 +713,7 @@
       "source_track_ids": [
         "chair_015"
       ],
-      "contributing_observations_count": 1,
+      "contributing_observations_count": 2,
       "total_observations_count": 2,
       "relocation_evaluable": true,
       "measured_displacement_m": 0.0,
@@ -721,8 +726,8 @@
       "vlm_inference_executed": false,
       "vlm_reason_codes": []
     },
-    "inst_chair_017": {
-      "entity_id": "inst_chair_017",
+    "phys_chair_017": {
+      "entity_id": "phys_chair_017",
       "semantic_class": "chair",
       "contextual_movability": "MOVABLE",
       "observed_motion": "STATIC",
@@ -758,8 +763,8 @@
       "vlm_inference_executed": false,
       "vlm_reason_codes": []
     },
-    "inst_chair_018": {
-      "entity_id": "inst_chair_018",
+    "phys_chair_018": {
+      "entity_id": "phys_chair_018",
       "semantic_class": "chair",
       "contextual_movability": "MOVABLE",
       "observed_motion": "STATIC",
@@ -784,7 +789,7 @@
         "chair_016",
         "chair_018"
       ],
-      "contributing_observations_count": 2,
+      "contributing_observations_count": 3,
       "total_observations_count": 3,
       "relocation_evaluable": false,
       "measured_displacement_m": 0.0,
@@ -797,8 +802,8 @@
       "vlm_inference_executed": false,
       "vlm_reason_codes": []
     },
-    "inst_chair_019": {
-      "entity_id": "inst_chair_019",
+    "phys_chair_019": {
+      "entity_id": "phys_chair_019",
       "semantic_class": "chair",
       "contextual_movability": "MOVABLE",
       "observed_motion": "STATIC",
@@ -836,8 +841,8 @@
       "vlm_inference_executed": false,
       "vlm_reason_codes": []
     },
-    "entity_s1_chair_020": {
-      "entity_id": "entity_s1_chair_020",
+    "phys_chair_020": {
+      "entity_id": "phys_chair_020",
       "semantic_class": "chair",
       "contextual_movability": "MOVABLE",
       "observed_motion": "STATIC",
@@ -875,8 +880,8 @@
       "vlm_inference_executed": false,
       "vlm_reason_codes": []
     },
-    "inst_chair_021": {
-      "entity_id": "inst_chair_021",
+    "phys_chair_021": {
+      "entity_id": "phys_chair_021",
       "semantic_class": "chair",
       "contextual_movability": "MOVABLE",
       "observed_motion": "STATIC",
@@ -912,8 +917,8 @@
       "vlm_inference_executed": false,
       "vlm_reason_codes": []
     },
-    "entity_s1_chair_023": {
-      "entity_id": "entity_s1_chair_023",
+    "phys_chair_023": {
+      "entity_id": "phys_chair_023",
       "semantic_class": "chair",
       "contextual_movability": "MOVABLE",
       "observed_motion": "STATIC",
@@ -949,8 +954,8 @@
       "vlm_inference_executed": false,
       "vlm_reason_codes": []
     },
-    "entity_s1_chair_025": {
-      "entity_id": "entity_s1_chair_025",
+    "phys_chair_025": {
+      "entity_id": "phys_chair_025",
       "semantic_class": "chair",
       "contextual_movability": "MOVABLE",
       "observed_motion": "STATIC",
@@ -958,13 +963,13 @@
       "physical_support": null,
       "geometry_valid": true,
       "centroid_world": [
-        -1.3927,
-        -1.6028,
+        -0.2137,
+        -3.5545,
         0.0
       ],
-      "spatial_extent_m": 0.5529,
+      "spatial_extent_m": 0.5871,
       "coordinate_frame": "reference_frame",
-      "semantic_confidence": 0.95,
+      "semantic_confidence": 0.99,
       "geometric_confidence": 0.85,
       "evidence_provenance": "MEASURED_CLUSTER",
       "source_sessions": [
@@ -975,8 +980,8 @@
         "chair_025",
         "chair_046"
       ],
-      "contributing_observations_count": 2,
-      "total_observations_count": 2,
+      "contributing_observations_count": 3,
+      "total_observations_count": 3,
       "relocation_evaluable": true,
       "measured_displacement_m": 0.0,
       "displacement_uncertainty_m": 0.023073026176334676,
@@ -988,8 +993,8 @@
       "vlm_inference_executed": false,
       "vlm_reason_codes": []
     },
-    "inst_chair_027": {
-      "entity_id": "inst_chair_027",
+    "phys_chair_027": {
+      "entity_id": "phys_chair_027",
       "semantic_class": "chair",
       "contextual_movability": "MOVABLE",
       "observed_motion": "STATIC",
@@ -997,13 +1002,13 @@
       "physical_support": null,
       "geometry_valid": true,
       "centroid_world": [
-        -0.2154,
-        -1.1745,
+        -0.1301,
+        -2.6801,
         0.0
       ],
-      "spatial_extent_m": 0.7446,
+      "spatial_extent_m": 0.5438,
       "coordinate_frame": "reference_frame",
-      "semantic_confidence": 0.95,
+      "semantic_confidence": 0.99,
       "geometric_confidence": 0.85,
       "evidence_provenance": "MEASURED_CLUSTER",
       "source_sessions": [
@@ -1014,8 +1019,8 @@
         "chair_027",
         "chair_041"
       ],
-      "contributing_observations_count": 2,
-      "total_observations_count": 2,
+      "contributing_observations_count": 3,
+      "total_observations_count": 3,
       "relocation_evaluable": true,
       "measured_displacement_m": 0.0,
       "displacement_uncertainty_m": 0.006702417315875104,
@@ -1027,8 +1032,8 @@
       "vlm_inference_executed": false,
       "vlm_reason_codes": []
     },
-    "entity_s1_chair_028": {
-      "entity_id": "entity_s1_chair_028",
+    "phys_chair_028": {
+      "entity_id": "phys_chair_028",
       "semantic_class": "chair",
       "contextual_movability": "MOVABLE",
       "observed_motion": "STATIC",
@@ -1036,36 +1041,37 @@
       "physical_support": null,
       "geometry_valid": true,
       "centroid_world": [
-        -2.4446,
-        -0.0176,
+        -2.3424,
+        -2.4967,
         0.0
       ],
-      "spatial_extent_m": 1.0757,
-      "coordinate_frame": "floor_map",
-      "semantic_confidence": 0.9,
+      "spatial_extent_m": 1.5615,
+      "coordinate_frame": "reference_frame",
+      "semantic_confidence": 0.95,
       "geometric_confidence": 0.85,
       "evidence_provenance": "MEASURED_CLUSTER",
       "source_sessions": [
-        "semantic_mapping_my_desk_recording_01"
+        "semantic_mapping_my_desk_recording_01",
+        "semantic_mapping_my_desk_recording_02"
       ],
       "source_track_ids": [
         "chair_028"
       ],
-      "contributing_observations_count": 1,
-      "total_observations_count": 1,
+      "contributing_observations_count": 2,
+      "total_observations_count": 2,
       "relocation_evaluable": false,
       "measured_displacement_m": null,
       "displacement_uncertainty_m": null,
       "pose_history": [],
       "first_seen": 100.0,
-      "last_seen": 100.0,
+      "last_seen": 200.0,
       "vlm_decision": "RESOLVE_CHEAP",
       "vlm_query_requested": false,
       "vlm_inference_executed": false,
       "vlm_reason_codes": []
     },
-    "inst_chair_030": {
-      "entity_id": "inst_chair_030",
+    "phys_chair_030": {
+      "entity_id": "phys_chair_030",
       "semantic_class": "chair",
       "contextual_movability": "MOVABLE",
       "observed_motion": "STATIC",
@@ -1103,8 +1109,8 @@
       "vlm_inference_executed": false,
       "vlm_reason_codes": []
     },
-    "entity_s1_chair_031": {
-      "entity_id": "entity_s1_chair_031",
+    "phys_chair_031": {
+      "entity_id": "phys_chair_031",
       "semantic_class": "chair",
       "contextual_movability": "MOVABLE",
       "observed_motion": "STATIC",
@@ -1112,13 +1118,13 @@
       "physical_support": null,
       "geometry_valid": true,
       "centroid_world": [
-        0.8375,
-        -1.1794,
+        -0.4467,
+        -1.4196,
         0.0
       ],
-      "spatial_extent_m": 0.594,
+      "spatial_extent_m": 0.7048,
       "coordinate_frame": "reference_frame",
-      "semantic_confidence": 0.95,
+      "semantic_confidence": 0.99,
       "geometric_confidence": 0.85,
       "evidence_provenance": "MEASURED_CLUSTER",
       "source_sessions": [
@@ -1129,9 +1135,9 @@
         "chair_002",
         "chair_031"
       ],
-      "contributing_observations_count": 2,
-      "total_observations_count": 2,
-      "relocation_evaluable": true,
+      "contributing_observations_count": 3,
+      "total_observations_count": 3,
+      "relocation_evaluable": false,
       "measured_displacement_m": 0.0,
       "displacement_uncertainty_m": 0.09654323071495247,
       "pose_history": [],
@@ -1142,8 +1148,8 @@
       "vlm_inference_executed": false,
       "vlm_reason_codes": []
     },
-    "inst_chair_032": {
-      "entity_id": "inst_chair_032",
+    "phys_chair_032": {
+      "entity_id": "phys_chair_032",
       "semantic_class": "chair",
       "contextual_movability": "MOVABLE",
       "observed_motion": "STATIC",
@@ -1167,7 +1173,7 @@
       "source_track_ids": [
         "chair_032"
       ],
-      "contributing_observations_count": 1,
+      "contributing_observations_count": 2,
       "total_observations_count": 2,
       "relocation_evaluable": false,
       "measured_displacement_m": null,
@@ -1180,8 +1186,8 @@
       "vlm_inference_executed": false,
       "vlm_reason_codes": []
     },
-    "inst_chair_035": {
-      "entity_id": "inst_chair_035",
+    "phys_chair_035": {
+      "entity_id": "phys_chair_035",
       "semantic_class": "chair",
       "contextual_movability": "MOVABLE",
       "observed_motion": "STATIC",
@@ -1217,8 +1223,8 @@
       "vlm_inference_executed": false,
       "vlm_reason_codes": []
     },
-    "entity_s1_chair_038": {
-      "entity_id": "entity_s1_chair_038",
+    "phys_chair_038": {
+      "entity_id": "phys_chair_038",
       "semantic_class": "chair",
       "contextual_movability": "MOVABLE",
       "observed_motion": "STATIC",
@@ -1254,8 +1260,8 @@
       "vlm_inference_executed": false,
       "vlm_reason_codes": []
     },
-    "entity_s1_chair_039": {
-      "entity_id": "entity_s1_chair_039",
+    "phys_chair_039": {
+      "entity_id": "phys_chair_039",
       "semantic_class": "chair",
       "contextual_movability": "MOVABLE",
       "observed_motion": "STATIC",
@@ -1263,36 +1269,37 @@
       "physical_support": null,
       "geometry_valid": true,
       "centroid_world": [
-        -0.2929,
-        -2.2929,
+        -1.7314,
+        -1.5774,
         0.0
       ],
-      "spatial_extent_m": 0.9559,
-      "coordinate_frame": "floor_map",
-      "semantic_confidence": 0.9,
+      "spatial_extent_m": 0.703,
+      "coordinate_frame": "reference_frame",
+      "semantic_confidence": 0.95,
       "geometric_confidence": 0.85,
       "evidence_provenance": "MEASURED_CLUSTER",
       "source_sessions": [
-        "semantic_mapping_my_desk_recording_01"
+        "semantic_mapping_my_desk_recording_01",
+        "semantic_mapping_my_desk_recording_02"
       ],
       "source_track_ids": [
         "chair_039"
       ],
-      "contributing_observations_count": 1,
-      "total_observations_count": 1,
+      "contributing_observations_count": 2,
+      "total_observations_count": 2,
       "relocation_evaluable": false,
       "measured_displacement_m": null,
       "displacement_uncertainty_m": null,
       "pose_history": [],
       "first_seen": 100.0,
-      "last_seen": 100.0,
+      "last_seen": 200.0,
       "vlm_decision": "RESOLVE_CHEAP",
       "vlm_query_requested": false,
       "vlm_inference_executed": false,
       "vlm_reason_codes": []
     },
-    "entity_s1_chair_041": {
-      "entity_id": "entity_s1_chair_041",
+    "phys_chair_041": {
+      "entity_id": "phys_chair_041",
       "semantic_class": "chair",
       "contextual_movability": "MOVABLE",
       "observed_motion": "STATIC",
@@ -1328,8 +1335,8 @@
       "vlm_inference_executed": false,
       "vlm_reason_codes": []
     },
-    "inst_monitor_001": {
-      "entity_id": "inst_monitor_001",
+    "phys_computer monitor_001": {
+      "entity_id": "phys_computer monitor_001",
       "semantic_class": "computer monitor",
       "contextual_movability": "MOVABLE",
       "observed_motion": "STATIC",
@@ -1353,7 +1360,7 @@
       "source_track_ids": [
         "computer monitor_001"
       ],
-      "contributing_observations_count": 1,
+      "contributing_observations_count": 2,
       "total_observations_count": 2,
       "relocation_evaluable": false,
       "measured_displacement_m": null,
@@ -1366,8 +1373,8 @@
       "vlm_inference_executed": false,
       "vlm_reason_codes": []
     },
-    "entity_s1_computer monitor_003": {
-      "entity_id": "entity_s1_computer monitor_003",
+    "phys_computer monitor_003": {
+      "entity_id": "phys_computer monitor_003",
       "semantic_class": "computer monitor",
       "contextual_movability": "MOVABLE",
       "observed_motion": "STATIC",
@@ -1375,36 +1382,37 @@
       "physical_support": null,
       "geometry_valid": true,
       "centroid_world": [
-        -1.53,
-        -5.2264,
+        -0.6756,
+        -3.8907,
         0.0
       ],
-      "spatial_extent_m": 0.5747,
-      "coordinate_frame": "floor_map",
-      "semantic_confidence": 0.9,
+      "spatial_extent_m": 0.5047,
+      "coordinate_frame": "reference_frame",
+      "semantic_confidence": 0.95,
       "geometric_confidence": 0.85,
       "evidence_provenance": "MEASURED_CLUSTER",
       "source_sessions": [
-        "semantic_mapping_my_desk_recording_01"
+        "semantic_mapping_my_desk_recording_01",
+        "semantic_mapping_my_desk_recording_02"
       ],
       "source_track_ids": [
         "computer monitor_003"
       ],
-      "contributing_observations_count": 1,
-      "total_observations_count": 1,
+      "contributing_observations_count": 2,
+      "total_observations_count": 2,
       "relocation_evaluable": false,
       "measured_displacement_m": null,
       "displacement_uncertainty_m": null,
       "pose_history": [],
       "first_seen": 100.0,
-      "last_seen": 100.0,
+      "last_seen": 200.0,
       "vlm_decision": "RESOLVE_CHEAP",
       "vlm_query_requested": false,
       "vlm_inference_executed": false,
       "vlm_reason_codes": []
     },
-    "entity_s1_computer monitor_004": {
-      "entity_id": "entity_s1_computer monitor_004",
+    "phys_computer monitor_004": {
+      "entity_id": "phys_computer monitor_004",
       "semantic_class": "computer monitor",
       "contextual_movability": "MOVABLE",
       "observed_motion": "STATIC",
@@ -1412,36 +1420,37 @@
       "physical_support": null,
       "geometry_valid": true,
       "centroid_world": [
-        0.1237,
-        -2.7316,
+        0.6133,
+        -3.4787,
         0.0
       ],
-      "spatial_extent_m": 1.0911,
-      "coordinate_frame": "floor_map",
-      "semantic_confidence": 0.9,
+      "spatial_extent_m": 0.8028,
+      "coordinate_frame": "reference_frame",
+      "semantic_confidence": 0.95,
       "geometric_confidence": 0.85,
       "evidence_provenance": "MEASURED_CLUSTER",
       "source_sessions": [
-        "semantic_mapping_my_desk_recording_01"
+        "semantic_mapping_my_desk_recording_01",
+        "semantic_mapping_my_desk_recording_02"
       ],
       "source_track_ids": [
         "computer monitor_004"
       ],
-      "contributing_observations_count": 1,
-      "total_observations_count": 1,
+      "contributing_observations_count": 2,
+      "total_observations_count": 2,
       "relocation_evaluable": false,
       "measured_displacement_m": null,
       "displacement_uncertainty_m": null,
       "pose_history": [],
       "first_seen": 100.0,
-      "last_seen": 100.0,
+      "last_seen": 200.0,
       "vlm_decision": "RESOLVE_CHEAP",
       "vlm_query_requested": false,
       "vlm_inference_executed": false,
       "vlm_reason_codes": []
     },
-    "inst_desk_001": {
-      "entity_id": "inst_desk_001",
+    "phys_desk_001": {
+      "entity_id": "phys_desk_001",
       "semantic_class": "desk",
       "contextual_movability": "MOVABLE",
       "observed_motion": "STATIC",
@@ -1465,7 +1474,7 @@
       "source_track_ids": [
         "desk_001"
       ],
-      "contributing_observations_count": 1,
+      "contributing_observations_count": 2,
       "total_observations_count": 2,
       "relocation_evaluable": true,
       "measured_displacement_m": 0.0,
@@ -1478,8 +1487,8 @@
       "vlm_inference_executed": false,
       "vlm_reason_codes": []
     },
-    "inst_desk_003": {
-      "entity_id": "inst_desk_003",
+    "phys_desk_003": {
+      "entity_id": "phys_desk_003",
       "semantic_class": "desk",
       "contextual_movability": "MOVABLE",
       "observed_motion": "STATIC",
@@ -1517,8 +1526,8 @@
       "vlm_inference_executed": false,
       "vlm_reason_codes": []
     },
-    "entity_s1_desk_004": {
-      "entity_id": "entity_s1_desk_004",
+    "phys_desk_004": {
+      "entity_id": "phys_desk_004",
       "semantic_class": "desk",
       "contextual_movability": "MOVABLE",
       "observed_motion": "STATIC",
@@ -1556,8 +1565,8 @@
       "vlm_inference_executed": false,
       "vlm_reason_codes": []
     },
-    "inst_desk_005": {
-      "entity_id": "inst_desk_005",
+    "phys_desk_005": {
+      "entity_id": "phys_desk_005",
       "semantic_class": "desk",
       "contextual_movability": "MOVABLE",
       "observed_motion": "STATIC",
@@ -1595,8 +1604,8 @@
       "vlm_inference_executed": false,
       "vlm_reason_codes": []
     },
-    "inst_desk_008": {
-      "entity_id": "inst_desk_008",
+    "phys_desk_008": {
+      "entity_id": "phys_desk_008",
       "semantic_class": "desk",
       "contextual_movability": "MOVABLE",
       "observed_motion": "STATIC",
@@ -1634,8 +1643,8 @@
       "vlm_inference_executed": false,
       "vlm_reason_codes": []
     },
-    "entity_s1_desk_009": {
-      "entity_id": "entity_s1_desk_009",
+    "phys_desk_009": {
+      "entity_id": "phys_desk_009",
       "semantic_class": "desk",
       "contextual_movability": "MOVABLE",
       "observed_motion": "STATIC",
@@ -1673,8 +1682,8 @@
       "vlm_inference_executed": false,
       "vlm_reason_codes": []
     },
-    "entity_s1_desk_011": {
-      "entity_id": "entity_s1_desk_011",
+    "phys_desk_011": {
+      "entity_id": "phys_desk_011",
       "semantic_class": "desk",
       "contextual_movability": "MOVABLE",
       "observed_motion": "STATIC",
@@ -1682,13 +1691,13 @@
       "physical_support": null,
       "geometry_valid": true,
       "centroid_world": [
-        -1.2701,
-        -4.9518,
+        -0.4331,
+        -4.5011,
         0.0
       ],
-      "spatial_extent_m": 1.018,
+      "spatial_extent_m": 1.1622,
       "coordinate_frame": "reference_frame",
-      "semantic_confidence": 0.95,
+      "semantic_confidence": 0.99,
       "geometric_confidence": 0.85,
       "evidence_provenance": "MEASURED_CLUSTER",
       "source_sessions": [
@@ -1699,9 +1708,9 @@
         "desk_009",
         "desk_011"
       ],
-      "contributing_observations_count": 2,
-      "total_observations_count": 2,
-      "relocation_evaluable": true,
+      "contributing_observations_count": 3,
+      "total_observations_count": 3,
+      "relocation_evaluable": false,
       "measured_displacement_m": 0.0,
       "displacement_uncertainty_m": 0.01353871934466616,
       "pose_history": [],
@@ -1712,8 +1721,8 @@
       "vlm_inference_executed": false,
       "vlm_reason_codes": []
     },
-    "inst_desk_012": {
-      "entity_id": "inst_desk_012",
+    "phys_desk_012": {
+      "entity_id": "phys_desk_012",
       "semantic_class": "desk",
       "contextual_movability": "MOVABLE",
       "observed_motion": "STATIC",
@@ -1737,7 +1746,7 @@
       "source_track_ids": [
         "desk_012"
       ],
-      "contributing_observations_count": 1,
+      "contributing_observations_count": 2,
       "total_observations_count": 2,
       "relocation_evaluable": false,
       "measured_displacement_m": null,
@@ -1750,8 +1759,8 @@
       "vlm_inference_executed": false,
       "vlm_reason_codes": []
     },
-    "entity_s1_desk_013": {
-      "entity_id": "entity_s1_desk_013",
+    "phys_desk_013": {
+      "entity_id": "phys_desk_013",
       "semantic_class": "desk",
       "contextual_movability": "MOVABLE",
       "observed_motion": "STATIC",
@@ -1787,8 +1796,8 @@
       "vlm_inference_executed": false,
       "vlm_reason_codes": []
     },
-    "entity_s1_desk_014": {
-      "entity_id": "entity_s1_desk_014",
+    "phys_desk_014": {
+      "entity_id": "phys_desk_014",
       "semantic_class": "desk",
       "contextual_movability": "MOVABLE",
       "observed_motion": "STATIC",
@@ -1826,8 +1835,8 @@
       "vlm_inference_executed": false,
       "vlm_reason_codes": []
     },
-    "inst_desk_016": {
-      "entity_id": "inst_desk_016",
+    "phys_desk_016": {
+      "entity_id": "phys_desk_016",
       "semantic_class": "desk",
       "contextual_movability": "MOVABLE",
       "observed_motion": "STATIC",
@@ -1835,13 +1844,13 @@
       "physical_support": null,
       "geometry_valid": true,
       "centroid_world": [
-        -2.1525,
-        -2.0193,
+        -3.5205,
+        -0.7636,
         0.0
       ],
-      "spatial_extent_m": 0.8484,
+      "spatial_extent_m": 0.8401,
       "coordinate_frame": "reference_frame",
-      "semantic_confidence": 0.99,
+      "semantic_confidence": 0.95,
       "geometric_confidence": 0.85,
       "evidence_provenance": "MEASURED_CLUSTER",
       "source_sessions": [
@@ -1849,12 +1858,11 @@
         "semantic_mapping_my_desk_recording_02"
       ],
       "source_track_ids": [
-        "desk_015",
         "desk_016",
         "desk_026"
       ],
-      "contributing_observations_count": 3,
-      "total_observations_count": 3,
+      "contributing_observations_count": 2,
+      "total_observations_count": 2,
       "relocation_evaluable": true,
       "measured_displacement_m": 0.0,
       "displacement_uncertainty_m": 0.05041671349860086,
@@ -1866,8 +1874,8 @@
       "vlm_inference_executed": false,
       "vlm_reason_codes": []
     },
-    "inst_desk_017": {
-      "entity_id": "inst_desk_017",
+    "phys_desk_017": {
+      "entity_id": "phys_desk_017",
       "semantic_class": "desk",
       "contextual_movability": "MOVABLE",
       "observed_motion": "STATIC",
@@ -1875,38 +1883,36 @@
       "physical_support": null,
       "geometry_valid": true,
       "centroid_world": [
-        -2.7564,
-        -3.3253,
+        -1.9216,
+        -1.716,
         0.0
       ],
-      "spatial_extent_m": 2.5338,
-      "coordinate_frame": "reference_frame",
-      "semantic_confidence": 0.95,
+      "spatial_extent_m": 2.4229,
+      "coordinate_frame": "floor_map",
+      "semantic_confidence": 0.9,
       "geometric_confidence": 0.85,
       "evidence_provenance": "MEASURED_CLUSTER",
       "source_sessions": [
-        "semantic_mapping_my_desk_recording_01",
-        "semantic_mapping_my_desk_recording_02"
+        "semantic_mapping_my_desk_recording_01"
       ],
       "source_track_ids": [
-        "desk_017",
-        "desk_020"
+        "desk_017"
       ],
-      "contributing_observations_count": 2,
-      "total_observations_count": 2,
+      "contributing_observations_count": 1,
+      "total_observations_count": 1,
       "relocation_evaluable": false,
       "measured_displacement_m": null,
       "displacement_uncertainty_m": null,
       "pose_history": [],
       "first_seen": 100.0,
-      "last_seen": 200.0,
+      "last_seen": 100.0,
       "vlm_decision": "RESOLVE_CHEAP",
       "vlm_query_requested": false,
       "vlm_inference_executed": false,
       "vlm_reason_codes": []
     },
-    "inst_desk_018": {
-      "entity_id": "inst_desk_018",
+    "phys_desk_018": {
+      "entity_id": "phys_desk_018",
       "semantic_class": "desk",
       "contextual_movability": "MOVABLE",
       "observed_motion": "STATIC",
@@ -1944,8 +1950,8 @@
       "vlm_inference_executed": false,
       "vlm_reason_codes": []
     },
-    "entity_s1_desk_020": {
-      "entity_id": "entity_s1_desk_020",
+    "phys_desk_020": {
+      "entity_id": "phys_desk_020",
       "semantic_class": "desk",
       "contextual_movability": "MOVABLE",
       "observed_motion": "STATIC",
@@ -1953,13 +1959,13 @@
       "physical_support": null,
       "geometry_valid": true,
       "centroid_world": [
-        -3.3187,
-        -2.1399,
+        -3.4095,
+        -3.0714,
         0.0
       ],
-      "spatial_extent_m": 0.3549,
+      "spatial_extent_m": 1.1182,
       "coordinate_frame": "reference_frame",
-      "semantic_confidence": 0.95,
+      "semantic_confidence": 0.99,
       "geometric_confidence": 0.85,
       "evidence_provenance": "MEASURED_CLUSTER",
       "source_sessions": [
@@ -1970,8 +1976,8 @@
         "desk_020",
         "desk_030"
       ],
-      "contributing_observations_count": 2,
-      "total_observations_count": 2,
+      "contributing_observations_count": 3,
+      "total_observations_count": 3,
       "relocation_evaluable": true,
       "measured_displacement_m": 0.0,
       "displacement_uncertainty_m": 0.01971505906669929,
@@ -1983,8 +1989,8 @@
       "vlm_inference_executed": false,
       "vlm_reason_codes": []
     },
-    "entity_s1_desk_021": {
-      "entity_id": "entity_s1_desk_021",
+    "phys_desk_021": {
+      "entity_id": "phys_desk_021",
       "semantic_class": "desk",
       "contextual_movability": "MOVABLE",
       "observed_motion": "STATIC",
@@ -1992,36 +1998,37 @@
       "physical_support": null,
       "geometry_valid": true,
       "centroid_world": [
-        -2.79,
-        -1.4682,
+        -1.6285,
+        -3.9231,
         0.0
       ],
-      "spatial_extent_m": 0.2953,
-      "coordinate_frame": "floor_map",
-      "semantic_confidence": 0.9,
+      "spatial_extent_m": 0.8575,
+      "coordinate_frame": "reference_frame",
+      "semantic_confidence": 0.95,
       "geometric_confidence": 0.85,
       "evidence_provenance": "MEASURED_CLUSTER",
       "source_sessions": [
-        "semantic_mapping_my_desk_recording_01"
+        "semantic_mapping_my_desk_recording_01",
+        "semantic_mapping_my_desk_recording_02"
       ],
       "source_track_ids": [
         "desk_021"
       ],
-      "contributing_observations_count": 1,
-      "total_observations_count": 1,
+      "contributing_observations_count": 2,
+      "total_observations_count": 2,
       "relocation_evaluable": false,
       "measured_displacement_m": null,
       "displacement_uncertainty_m": null,
       "pose_history": [],
       "first_seen": 100.0,
-      "last_seen": 100.0,
+      "last_seen": 200.0,
       "vlm_decision": "RESOLVE_CHEAP",
       "vlm_query_requested": false,
       "vlm_inference_executed": false,
       "vlm_reason_codes": []
     },
-    "entity_s1_desk_022": {
-      "entity_id": "entity_s1_desk_022",
+    "phys_desk_022": {
+      "entity_id": "phys_desk_022",
       "semantic_class": "desk",
       "contextual_movability": "MOVABLE",
       "observed_motion": "STATIC",
@@ -2029,36 +2036,37 @@
       "physical_support": null,
       "geometry_valid": true,
       "centroid_world": [
-        -2.565,
-        0.5414,
+        -1.6047,
+        -2.9752,
         0.0
       ],
-      "spatial_extent_m": 1.6265,
-      "coordinate_frame": "floor_map",
-      "semantic_confidence": 0.9,
+      "spatial_extent_m": 1.246,
+      "coordinate_frame": "reference_frame",
+      "semantic_confidence": 0.95,
       "geometric_confidence": 0.85,
       "evidence_provenance": "MEASURED_CLUSTER",
       "source_sessions": [
-        "semantic_mapping_my_desk_recording_01"
+        "semantic_mapping_my_desk_recording_01",
+        "semantic_mapping_my_desk_recording_02"
       ],
       "source_track_ids": [
         "desk_022"
       ],
-      "contributing_observations_count": 1,
-      "total_observations_count": 1,
+      "contributing_observations_count": 2,
+      "total_observations_count": 2,
       "relocation_evaluable": false,
       "measured_displacement_m": null,
       "displacement_uncertainty_m": null,
       "pose_history": [],
       "first_seen": 100.0,
-      "last_seen": 100.0,
+      "last_seen": 200.0,
       "vlm_decision": "RESOLVE_CHEAP",
       "vlm_query_requested": false,
       "vlm_inference_executed": false,
       "vlm_reason_codes": []
     },
-    "inst_desk_023": {
-      "entity_id": "inst_desk_023",
+    "phys_desk_023": {
+      "entity_id": "phys_desk_023",
       "semantic_class": "desk",
       "contextual_movability": "MOVABLE",
       "observed_motion": "STATIC",
@@ -2066,13 +2074,13 @@
       "physical_support": null,
       "geometry_valid": true,
       "centroid_world": [
-        -1.4056,
-        -1.5754,
+        -1.2718,
+        -1.3864,
         0.0
       ],
-      "spatial_extent_m": 1.4311,
+      "spatial_extent_m": 1.31,
       "coordinate_frame": "reference_frame",
-      "semantic_confidence": 0.99,
+      "semantic_confidence": 0.95,
       "geometric_confidence": 0.85,
       "evidence_provenance": "MEASURED_CLUSTER",
       "source_sessions": [
@@ -2081,11 +2089,10 @@
       ],
       "source_track_ids": [
         "desk_023",
-        "desk_034",
         "desk_035"
       ],
-      "contributing_observations_count": 3,
-      "total_observations_count": 3,
+      "contributing_observations_count": 2,
+      "total_observations_count": 2,
       "relocation_evaluable": true,
       "measured_displacement_m": 0.0,
       "displacement_uncertainty_m": 0.019831793523995545,
@@ -2097,8 +2104,8 @@
       "vlm_inference_executed": false,
       "vlm_reason_codes": []
     },
-    "inst_desk_024": {
-      "entity_id": "inst_desk_024",
+    "phys_desk_024": {
+      "entity_id": "phys_desk_024",
       "semantic_class": "desk",
       "contextual_movability": "MOVABLE",
       "observed_motion": "STATIC",
@@ -2106,11 +2113,11 @@
       "physical_support": null,
       "geometry_valid": true,
       "centroid_world": [
-        -0.6556,
-        -2.3954,
+        -0.8443,
+        -2.6891,
         0.0
       ],
-      "spatial_extent_m": 0.84,
+      "spatial_extent_m": 1.153,
       "coordinate_frame": "reference_frame",
       "semantic_confidence": 0.99,
       "geometric_confidence": 0.85,
@@ -2120,7 +2127,6 @@
         "semantic_mapping_my_desk_recording_02"
       ],
       "source_track_ids": [
-        "desk_022",
         "desk_024",
         "desk_032"
       ],
@@ -2137,8 +2143,8 @@
       "vlm_inference_executed": false,
       "vlm_reason_codes": []
     },
-    "inst_desk_025": {
-      "entity_id": "inst_desk_025",
+    "phys_desk_025": {
+      "entity_id": "phys_desk_025",
       "semantic_class": "desk",
       "contextual_movability": "MOVABLE",
       "observed_motion": "STATIC",
@@ -2174,8 +2180,8 @@
       "vlm_inference_executed": false,
       "vlm_reason_codes": []
     },
-    "entity_s1_desk_028": {
-      "entity_id": "entity_s1_desk_028",
+    "phys_desk_028": {
+      "entity_id": "phys_desk_028",
       "semantic_class": "desk",
       "contextual_movability": "MOVABLE",
       "observed_motion": "STATIC",
@@ -2211,8 +2217,8 @@
       "vlm_inference_executed": false,
       "vlm_reason_codes": []
     },
-    "inst_desk_031": {
-      "entity_id": "inst_desk_031",
+    "phys_desk_031": {
+      "entity_id": "phys_desk_031",
       "semantic_class": "desk",
       "contextual_movability": "MOVABLE",
       "observed_motion": "STATIC",
@@ -2250,8 +2256,8 @@
       "vlm_inference_executed": false,
       "vlm_reason_codes": []
     },
-    "inst_door_001": {
-      "entity_id": "inst_door_001",
+    "phys_door_001": {
+      "entity_id": "phys_door_001",
       "semantic_class": "door",
       "contextual_movability": "IMMOVABLE",
       "observed_motion": "STATIC",
@@ -2287,8 +2293,8 @@
       "vlm_inference_executed": false,
       "vlm_reason_codes": []
     },
-    "entity_s1_door_002": {
-      "entity_id": "entity_s1_door_002",
+    "phys_door_002": {
+      "entity_id": "phys_door_002",
       "semantic_class": "door",
       "contextual_movability": "IMMOVABLE",
       "observed_motion": "STATIC",
@@ -2324,8 +2330,8 @@
       "vlm_inference_executed": false,
       "vlm_reason_codes": []
     },
-    "entity_s1_door_003": {
-      "entity_id": "entity_s1_door_003",
+    "phys_door_003": {
+      "entity_id": "phys_door_003",
       "semantic_class": "door",
       "contextual_movability": "IMMOVABLE",
       "observed_motion": "STATIC",
@@ -2361,8 +2367,8 @@
       "vlm_inference_executed": false,
       "vlm_reason_codes": []
     },
-    "entity_s1_door_005": {
-      "entity_id": "entity_s1_door_005",
+    "phys_door_005": {
+      "entity_id": "phys_door_005",
       "semantic_class": "door",
       "contextual_movability": "IMMOVABLE",
       "observed_motion": "STATIC",
@@ -2398,8 +2404,8 @@
       "vlm_inference_executed": false,
       "vlm_reason_codes": []
     },
-    "entity_s1_handbag_001": {
-      "entity_id": "entity_s1_handbag_001",
+    "phys_handbag_001": {
+      "entity_id": "phys_handbag_001",
       "semantic_class": "handbag",
       "contextual_movability": "MOVABLE",
       "observed_motion": "STATIC",
@@ -2435,8 +2441,8 @@
       "vlm_inference_executed": false,
       "vlm_reason_codes": []
     },
-    "entity_s1_handbag_002": {
-      "entity_id": "entity_s1_handbag_002",
+    "phys_handbag_002": {
+      "entity_id": "phys_handbag_002",
       "semantic_class": "handbag",
       "contextual_movability": "MOVABLE",
       "observed_motion": "STATIC",
@@ -2472,8 +2478,8 @@
       "vlm_inference_executed": false,
       "vlm_reason_codes": []
     },
-    "entity_s1_handbag_003": {
-      "entity_id": "entity_s1_handbag_003",
+    "phys_handbag_003": {
+      "entity_id": "phys_handbag_003",
       "semantic_class": "handbag",
       "contextual_movability": "MOVABLE",
       "observed_motion": "STATIC",
@@ -2509,8 +2515,8 @@
       "vlm_inference_executed": false,
       "vlm_reason_codes": []
     },
-    "entity_s1_laptop_003": {
-      "entity_id": "entity_s1_laptop_003",
+    "phys_laptop_003": {
+      "entity_id": "phys_laptop_003",
       "semantic_class": "laptop",
       "contextual_movability": "MOVABLE",
       "observed_motion": "STATIC",
@@ -2518,13 +2524,13 @@
       "physical_support": null,
       "geometry_valid": true,
       "centroid_world": [
-        0.1787,
-        -6.5174,
+        1.0669,
+        -5.8016,
         0.0
       ],
-      "spatial_extent_m": 0.7652,
+      "spatial_extent_m": 0.6785,
       "coordinate_frame": "reference_frame",
-      "semantic_confidence": 0.95,
+      "semantic_confidence": 0.99,
       "geometric_confidence": 0.85,
       "evidence_provenance": "MEASURED_CLUSTER",
       "source_sessions": [
@@ -2535,8 +2541,8 @@
         "laptop_003",
         "laptop_024"
       ],
-      "contributing_observations_count": 2,
-      "total_observations_count": 2,
+      "contributing_observations_count": 3,
+      "total_observations_count": 3,
       "relocation_evaluable": true,
       "measured_displacement_m": 0.0,
       "displacement_uncertainty_m": 0.03988233350239315,
@@ -2548,8 +2554,8 @@
       "vlm_inference_executed": false,
       "vlm_reason_codes": []
     },
-    "entity_s1_laptop_004": {
-      "entity_id": "entity_s1_laptop_004",
+    "phys_laptop_004": {
+      "entity_id": "phys_laptop_004",
       "semantic_class": "laptop",
       "contextual_movability": "MOVABLE",
       "observed_motion": "STATIC",
@@ -2557,85 +2563,11 @@
       "physical_support": null,
       "geometry_valid": true,
       "centroid_world": [
-        -0.7264,
-        -7.117,
+        1.0614,
+        -5.6548,
         0.0
       ],
-      "spatial_extent_m": 0.988,
-      "coordinate_frame": "floor_map",
-      "semantic_confidence": 0.9,
-      "geometric_confidence": 0.85,
-      "evidence_provenance": "MEASURED_CLUSTER",
-      "source_sessions": [
-        "semantic_mapping_my_desk_recording_01"
-      ],
-      "source_track_ids": [
-        "laptop_004"
-      ],
-      "contributing_observations_count": 1,
-      "total_observations_count": 1,
-      "relocation_evaluable": false,
-      "measured_displacement_m": null,
-      "displacement_uncertainty_m": null,
-      "pose_history": [],
-      "first_seen": 100.0,
-      "last_seen": 100.0,
-      "vlm_decision": "RESOLVE_CHEAP",
-      "vlm_query_requested": false,
-      "vlm_inference_executed": false,
-      "vlm_reason_codes": []
-    },
-    "entity_s1_laptop_005": {
-      "entity_id": "entity_s1_laptop_005",
-      "semantic_class": "laptop",
-      "contextual_movability": "MOVABLE",
-      "observed_motion": "STATIC",
-      "slam_invalidated": false,
-      "physical_support": null,
-      "geometry_valid": true,
-      "centroid_world": [
-        -3.7129,
-        -4.1481,
-        0.0
-      ],
-      "spatial_extent_m": 1.085,
-      "coordinate_frame": "floor_map",
-      "semantic_confidence": 0.9,
-      "geometric_confidence": 0.85,
-      "evidence_provenance": "MEASURED_CLUSTER",
-      "source_sessions": [
-        "semantic_mapping_my_desk_recording_01"
-      ],
-      "source_track_ids": [
-        "laptop_005"
-      ],
-      "contributing_observations_count": 1,
-      "total_observations_count": 1,
-      "relocation_evaluable": false,
-      "measured_displacement_m": null,
-      "displacement_uncertainty_m": null,
-      "pose_history": [],
-      "first_seen": 100.0,
-      "last_seen": 100.0,
-      "vlm_decision": "RESOLVE_CHEAP",
-      "vlm_query_requested": false,
-      "vlm_inference_executed": false,
-      "vlm_reason_codes": []
-    },
-    "inst_laptop_001": {
-      "entity_id": "inst_laptop_001",
-      "semantic_class": "laptop",
-      "contextual_movability": "MOVABLE",
-      "observed_motion": "STATIC",
-      "slam_invalidated": false,
-      "physical_support": null,
-      "geometry_valid": true,
-      "centroid_world": [
-        0.5138,
-        -1.3485,
-        0.0
-      ],
-      "spatial_extent_m": 1.1795,
+      "spatial_extent_m": 0.5951,
       "coordinate_frame": "reference_frame",
       "semantic_confidence": 0.95,
       "geometric_confidence": 0.85,
@@ -2645,7 +2577,82 @@
         "semantic_mapping_my_desk_recording_02"
       ],
       "source_track_ids": [
-        "laptop_001",
+        "laptop_004"
+      ],
+      "contributing_observations_count": 2,
+      "total_observations_count": 2,
+      "relocation_evaluable": false,
+      "measured_displacement_m": null,
+      "displacement_uncertainty_m": null,
+      "pose_history": [],
+      "first_seen": 100.0,
+      "last_seen": 200.0,
+      "vlm_decision": "RESOLVE_CHEAP",
+      "vlm_query_requested": false,
+      "vlm_inference_executed": false,
+      "vlm_reason_codes": []
+    },
+    "phys_laptop_005": {
+      "entity_id": "phys_laptop_005",
+      "semantic_class": "laptop",
+      "contextual_movability": "MOVABLE",
+      "observed_motion": "STATIC",
+      "slam_invalidated": false,
+      "physical_support": null,
+      "geometry_valid": true,
+      "centroid_world": [
+        -0.5635,
+        -3.1594,
+        0.0
+      ],
+      "spatial_extent_m": 1.2435,
+      "coordinate_frame": "reference_frame",
+      "semantic_confidence": 0.95,
+      "geometric_confidence": 0.85,
+      "evidence_provenance": "MEASURED_CLUSTER",
+      "source_sessions": [
+        "semantic_mapping_my_desk_recording_01",
+        "semantic_mapping_my_desk_recording_02"
+      ],
+      "source_track_ids": [
+        "laptop_005"
+      ],
+      "contributing_observations_count": 2,
+      "total_observations_count": 2,
+      "relocation_evaluable": false,
+      "measured_displacement_m": null,
+      "displacement_uncertainty_m": null,
+      "pose_history": [],
+      "first_seen": 100.0,
+      "last_seen": 200.0,
+      "vlm_decision": "RESOLVE_CHEAP",
+      "vlm_query_requested": false,
+      "vlm_inference_executed": false,
+      "vlm_reason_codes": []
+    },
+    "phys_laptop_006": {
+      "entity_id": "phys_laptop_006",
+      "semantic_class": "laptop",
+      "contextual_movability": "MOVABLE",
+      "observed_motion": "STATIC",
+      "slam_invalidated": false,
+      "physical_support": null,
+      "geometry_valid": true,
+      "centroid_world": [
+        0.1147,
+        -1.1424,
+        0.0
+      ],
+      "spatial_extent_m": 0.9174,
+      "coordinate_frame": "reference_frame",
+      "semantic_confidence": 0.95,
+      "geometric_confidence": 0.85,
+      "evidence_provenance": "MEASURED_CLUSTER",
+      "source_sessions": [
+        "semantic_mapping_my_desk_recording_01",
+        "semantic_mapping_my_desk_recording_02"
+      ],
+      "source_track_ids": [
         "laptop_006"
       ],
       "contributing_observations_count": 2,
@@ -2661,8 +2668,8 @@
       "vlm_inference_executed": false,
       "vlm_reason_codes": []
     },
-    "entity_s1_laptop_007": {
-      "entity_id": "entity_s1_laptop_007",
+    "phys_laptop_007": {
+      "entity_id": "phys_laptop_007",
       "semantic_class": "laptop",
       "contextual_movability": "MOVABLE",
       "observed_motion": "STATIC",
@@ -2700,8 +2707,8 @@
       "vlm_inference_executed": false,
       "vlm_reason_codes": []
     },
-    "entity_s1_laptop_009": {
-      "entity_id": "entity_s1_laptop_009",
+    "phys_laptop_009": {
+      "entity_id": "phys_laptop_009",
       "semantic_class": "laptop",
       "contextual_movability": "MOVABLE",
       "observed_motion": "STATIC",
@@ -2737,8 +2744,8 @@
       "vlm_inference_executed": false,
       "vlm_reason_codes": []
     },
-    "entity_s1_laptop_010": {
-      "entity_id": "entity_s1_laptop_010",
+    "phys_laptop_010": {
+      "entity_id": "phys_laptop_010",
       "semantic_class": "laptop",
       "contextual_movability": "MOVABLE",
       "observed_motion": "STATIC",
@@ -2746,13 +2753,13 @@
       "physical_support": null,
       "geometry_valid": true,
       "centroid_world": [
-        0.6997,
-        -1.6075,
+        1.6228,
+        -2.07,
         0.0
       ],
-      "spatial_extent_m": 0.3568,
+      "spatial_extent_m": 0.7116,
       "coordinate_frame": "reference_frame",
-      "semantic_confidence": 0.95,
+      "semantic_confidence": 0.99,
       "geometric_confidence": 0.85,
       "evidence_provenance": "MEASURED_CLUSTER",
       "source_sessions": [
@@ -2763,8 +2770,8 @@
         "laptop_010",
         "laptop_053"
       ],
-      "contributing_observations_count": 2,
-      "total_observations_count": 2,
+      "contributing_observations_count": 3,
+      "total_observations_count": 3,
       "relocation_evaluable": true,
       "measured_displacement_m": 0.0,
       "displacement_uncertainty_m": 0.04138881862973714,
@@ -2776,8 +2783,8 @@
       "vlm_inference_executed": false,
       "vlm_reason_codes": []
     },
-    "entity_s1_pedestal fan_002": {
-      "entity_id": "entity_s1_pedestal fan_002",
+    "phys_pedestal fan_002": {
+      "entity_id": "phys_pedestal fan_002",
       "semantic_class": "pedestal fan",
       "contextual_movability": "MOVABLE",
       "observed_motion": "STATIC",
@@ -2813,8 +2820,8 @@
       "vlm_inference_executed": false,
       "vlm_reason_codes": []
     },
-    "inst_pedestal_fan_001": {
-      "entity_id": "inst_pedestal_fan_001",
+    "phys_pedestal fan_003": {
+      "entity_id": "phys_pedestal fan_003",
       "semantic_class": "pedestal fan",
       "contextual_movability": "MOVABLE",
       "observed_motion": "STATIC",
@@ -2850,8 +2857,8 @@
       "vlm_inference_executed": false,
       "vlm_reason_codes": []
     },
-    "entity_s1_person_001": {
-      "entity_id": "entity_s1_person_001",
+    "phys_person_001": {
+      "entity_id": "phys_person_001",
       "semantic_class": "person",
       "contextual_movability": "MOBILE",
       "observed_motion": "STATIC",
@@ -2887,8 +2894,8 @@
       "vlm_inference_executed": false,
       "vlm_reason_codes": []
     },
-    "entity_s1_person_002": {
-      "entity_id": "entity_s1_person_002",
+    "phys_person_002": {
+      "entity_id": "phys_person_002",
       "semantic_class": "person",
       "contextual_movability": "MOBILE",
       "observed_motion": "STATIC",
@@ -2926,8 +2933,8 @@
       "vlm_inference_executed": false,
       "vlm_reason_codes": []
     },
-    "entity_s1_person_003": {
-      "entity_id": "entity_s1_person_003",
+    "phys_person_003": {
+      "entity_id": "phys_person_003",
       "semantic_class": "person",
       "contextual_movability": "MOBILE",
       "observed_motion": "STATIC",
@@ -2935,13 +2942,13 @@
       "physical_support": null,
       "geometry_valid": true,
       "centroid_world": [
-        -3.7858,
-        -3.7645,
+        -3.1367,
+        -3.6407,
         0.0
       ],
-      "spatial_extent_m": 1.4092,
+      "spatial_extent_m": 1.1707,
       "coordinate_frame": "reference_frame",
-      "semantic_confidence": 0.95,
+      "semantic_confidence": 0.99,
       "geometric_confidence": 0.85,
       "evidence_provenance": "MEASURED_CLUSTER",
       "source_sessions": [
@@ -2952,8 +2959,8 @@
         "person_003",
         "person_019"
       ],
-      "contributing_observations_count": 2,
-      "total_observations_count": 2,
+      "contributing_observations_count": 3,
+      "total_observations_count": 3,
       "relocation_evaluable": true,
       "measured_displacement_m": 0.0,
       "displacement_uncertainty_m": 0.020880570316237797,
@@ -2965,8 +2972,8 @@
       "vlm_inference_executed": false,
       "vlm_reason_codes": []
     },
-    "entity_s1_person_004": {
-      "entity_id": "entity_s1_person_004",
+    "phys_person_004": {
+      "entity_id": "phys_person_004",
       "semantic_class": "person",
       "contextual_movability": "MOBILE",
       "observed_motion": "STATIC",
@@ -2974,36 +2981,37 @@
       "physical_support": null,
       "geometry_valid": true,
       "centroid_world": [
-        -4.3127,
-        -3.546,
+        -2.8731,
+        -3.1776,
         0.0
       ],
-      "spatial_extent_m": 0.5792,
-      "coordinate_frame": "floor_map",
-      "semantic_confidence": 0.9,
+      "spatial_extent_m": 0.3903,
+      "coordinate_frame": "reference_frame",
+      "semantic_confidence": 0.95,
       "geometric_confidence": 0.85,
       "evidence_provenance": "MEASURED_CLUSTER",
       "source_sessions": [
-        "semantic_mapping_my_desk_recording_01"
+        "semantic_mapping_my_desk_recording_01",
+        "semantic_mapping_my_desk_recording_02"
       ],
       "source_track_ids": [
         "person_004"
       ],
-      "contributing_observations_count": 1,
-      "total_observations_count": 1,
+      "contributing_observations_count": 2,
+      "total_observations_count": 2,
       "relocation_evaluable": false,
       "measured_displacement_m": null,
       "displacement_uncertainty_m": null,
       "pose_history": [],
       "first_seen": 100.0,
-      "last_seen": 100.0,
+      "last_seen": 200.0,
       "vlm_decision": "RESOLVE_CHEAP",
       "vlm_query_requested": false,
       "vlm_inference_executed": false,
       "vlm_reason_codes": []
     },
-    "entity_s1_person_005": {
-      "entity_id": "entity_s1_person_005",
+    "phys_person_005": {
+      "entity_id": "phys_person_005",
       "semantic_class": "person",
       "contextual_movability": "MOBILE",
       "observed_motion": "STATIC",
@@ -3011,36 +3019,37 @@
       "physical_support": null,
       "geometry_valid": true,
       "centroid_world": [
-        -4.1784,
-        -3.62,
+        -3.8427,
+        -3.6813,
         0.0
       ],
-      "spatial_extent_m": 0.6479,
-      "coordinate_frame": "floor_map",
-      "semantic_confidence": 0.9,
+      "spatial_extent_m": 1.0558,
+      "coordinate_frame": "reference_frame",
+      "semantic_confidence": 0.95,
       "geometric_confidence": 0.85,
       "evidence_provenance": "MEASURED_CLUSTER",
       "source_sessions": [
-        "semantic_mapping_my_desk_recording_01"
+        "semantic_mapping_my_desk_recording_01",
+        "semantic_mapping_my_desk_recording_02"
       ],
       "source_track_ids": [
         "person_005"
       ],
-      "contributing_observations_count": 1,
-      "total_observations_count": 1,
+      "contributing_observations_count": 2,
+      "total_observations_count": 2,
       "relocation_evaluable": false,
       "measured_displacement_m": null,
       "displacement_uncertainty_m": null,
       "pose_history": [],
       "first_seen": 100.0,
-      "last_seen": 100.0,
+      "last_seen": 200.0,
       "vlm_decision": "RESOLVE_CHEAP",
       "vlm_query_requested": false,
       "vlm_inference_executed": false,
       "vlm_reason_codes": []
     },
-    "entity_s1_person_006": {
-      "entity_id": "entity_s1_person_006",
+    "phys_person_006": {
+      "entity_id": "phys_person_006",
       "semantic_class": "person",
       "contextual_movability": "MOBILE",
       "observed_motion": "STATIC",
@@ -3048,36 +3057,37 @@
       "physical_support": null,
       "geometry_valid": true,
       "centroid_world": [
-        -3.7487,
-        -4.0084,
+        -3.0762,
+        -3.5591,
         0.0
       ],
-      "spatial_extent_m": 0.6709,
-      "coordinate_frame": "floor_map",
-      "semantic_confidence": 0.9,
+      "spatial_extent_m": 0.5768,
+      "coordinate_frame": "reference_frame",
+      "semantic_confidence": 0.95,
       "geometric_confidence": 0.85,
       "evidence_provenance": "MEASURED_CLUSTER",
       "source_sessions": [
-        "semantic_mapping_my_desk_recording_01"
+        "semantic_mapping_my_desk_recording_01",
+        "semantic_mapping_my_desk_recording_02"
       ],
       "source_track_ids": [
         "person_006"
       ],
-      "contributing_observations_count": 1,
-      "total_observations_count": 1,
+      "contributing_observations_count": 2,
+      "total_observations_count": 2,
       "relocation_evaluable": false,
       "measured_displacement_m": null,
       "displacement_uncertainty_m": null,
       "pose_history": [],
       "first_seen": 100.0,
-      "last_seen": 100.0,
+      "last_seen": 200.0,
       "vlm_decision": "RESOLVE_CHEAP",
       "vlm_query_requested": false,
       "vlm_inference_executed": false,
       "vlm_reason_codes": []
     },
-    "entity_s1_person_007": {
-      "entity_id": "entity_s1_person_007",
+    "phys_person_007": {
+      "entity_id": "phys_person_007",
       "semantic_class": "person",
       "contextual_movability": "MOBILE",
       "observed_motion": "STATIC",
@@ -3113,8 +3123,8 @@
       "vlm_inference_executed": false,
       "vlm_reason_codes": []
     },
-    "entity_s1_person_008": {
-      "entity_id": "entity_s1_person_008",
+    "phys_person_008": {
+      "entity_id": "phys_person_008",
       "semantic_class": "person",
       "contextual_movability": "MOBILE",
       "observed_motion": "STATIC",
@@ -3122,122 +3132,11 @@
       "physical_support": null,
       "geometry_valid": true,
       "centroid_world": [
-        -5.2198,
-        -5.5268,
+        -2.8992,
+        -4.8676,
         0.0
       ],
-      "spatial_extent_m": 1.1338,
-      "coordinate_frame": "floor_map",
-      "semantic_confidence": 0.9,
-      "geometric_confidence": 0.85,
-      "evidence_provenance": "MEASURED_CLUSTER",
-      "source_sessions": [
-        "semantic_mapping_my_desk_recording_01"
-      ],
-      "source_track_ids": [
-        "person_008"
-      ],
-      "contributing_observations_count": 1,
-      "total_observations_count": 1,
-      "relocation_evaluable": false,
-      "measured_displacement_m": null,
-      "displacement_uncertainty_m": null,
-      "pose_history": [],
-      "first_seen": 100.0,
-      "last_seen": 100.0,
-      "vlm_decision": "RESOLVE_CHEAP",
-      "vlm_query_requested": false,
-      "vlm_inference_executed": false,
-      "vlm_reason_codes": []
-    },
-    "entity_s1_person_009": {
-      "entity_id": "entity_s1_person_009",
-      "semantic_class": "person",
-      "contextual_movability": "MOBILE",
-      "observed_motion": "STATIC",
-      "slam_invalidated": true,
-      "physical_support": null,
-      "geometry_valid": true,
-      "centroid_world": [
-        -5.622,
-        -3.7713,
-        0.0
-      ],
-      "spatial_extent_m": 0.4294,
-      "coordinate_frame": "floor_map",
-      "semantic_confidence": 0.9,
-      "geometric_confidence": 0.85,
-      "evidence_provenance": "MEASURED_CLUSTER",
-      "source_sessions": [
-        "semantic_mapping_my_desk_recording_01"
-      ],
-      "source_track_ids": [
-        "person_009"
-      ],
-      "contributing_observations_count": 1,
-      "total_observations_count": 1,
-      "relocation_evaluable": false,
-      "measured_displacement_m": null,
-      "displacement_uncertainty_m": null,
-      "pose_history": [],
-      "first_seen": 100.0,
-      "last_seen": 100.0,
-      "vlm_decision": "RESOLVE_CHEAP",
-      "vlm_query_requested": false,
-      "vlm_inference_executed": false,
-      "vlm_reason_codes": []
-    },
-    "entity_s1_person_010": {
-      "entity_id": "entity_s1_person_010",
-      "semantic_class": "person",
-      "contextual_movability": "MOBILE",
-      "observed_motion": "STATIC",
-      "slam_invalidated": true,
-      "physical_support": null,
-      "geometry_valid": true,
-      "centroid_world": [
-        -2.5585,
-        -3.8539,
-        0.0
-      ],
-      "spatial_extent_m": 0.503,
-      "coordinate_frame": "floor_map",
-      "semantic_confidence": 0.9,
-      "geometric_confidence": 0.85,
-      "evidence_provenance": "MEASURED_CLUSTER",
-      "source_sessions": [
-        "semantic_mapping_my_desk_recording_01"
-      ],
-      "source_track_ids": [
-        "person_010"
-      ],
-      "contributing_observations_count": 1,
-      "total_observations_count": 1,
-      "relocation_evaluable": false,
-      "measured_displacement_m": null,
-      "displacement_uncertainty_m": null,
-      "pose_history": [],
-      "first_seen": 100.0,
-      "last_seen": 100.0,
-      "vlm_decision": "RESOLVE_CHEAP",
-      "vlm_query_requested": false,
-      "vlm_inference_executed": false,
-      "vlm_reason_codes": []
-    },
-    "entity_s1_person_011": {
-      "entity_id": "entity_s1_person_011",
-      "semantic_class": "person",
-      "contextual_movability": "MOBILE",
-      "observed_motion": "STATIC",
-      "slam_invalidated": true,
-      "physical_support": null,
-      "geometry_valid": true,
-      "centroid_world": [
-        -1.6875,
-        -2.9855,
-        0.0
-      ],
-      "spatial_extent_m": 0.4095,
+      "spatial_extent_m": 0.8134,
       "coordinate_frame": "reference_frame",
       "semantic_confidence": 0.95,
       "geometric_confidence": 0.85,
@@ -3247,14 +3146,13 @@
         "semantic_mapping_my_desk_recording_02"
       ],
       "source_track_ids": [
-        "person_004",
-        "person_011"
+        "person_008"
       ],
       "contributing_observations_count": 2,
       "total_observations_count": 2,
-      "relocation_evaluable": true,
-      "measured_displacement_m": 0.0,
-      "displacement_uncertainty_m": 0.008750446417183493,
+      "relocation_evaluable": false,
+      "measured_displacement_m": null,
+      "displacement_uncertainty_m": null,
       "pose_history": [],
       "first_seen": 100.0,
       "last_seen": 200.0,
@@ -3263,8 +3161,8 @@
       "vlm_inference_executed": false,
       "vlm_reason_codes": []
     },
-    "entity_s1_person_012": {
-      "entity_id": "entity_s1_person_012",
+    "phys_person_009": {
+      "entity_id": "phys_person_009",
       "semantic_class": "person",
       "contextual_movability": "MOBILE",
       "observed_motion": "STATIC",
@@ -3272,11 +3170,87 @@
       "physical_support": null,
       "geometry_valid": true,
       "centroid_world": [
-        -2.6731,
-        -2.101,
+        -2.9745,
+        -3.7758,
         0.0
       ],
-      "spatial_extent_m": 0.7703,
+      "spatial_extent_m": 0.2702,
+      "coordinate_frame": "reference_frame",
+      "semantic_confidence": 0.95,
+      "geometric_confidence": 0.85,
+      "evidence_provenance": "MEASURED_CLUSTER",
+      "source_sessions": [
+        "semantic_mapping_my_desk_recording_01",
+        "semantic_mapping_my_desk_recording_02"
+      ],
+      "source_track_ids": [
+        "person_009"
+      ],
+      "contributing_observations_count": 2,
+      "total_observations_count": 2,
+      "relocation_evaluable": false,
+      "measured_displacement_m": null,
+      "displacement_uncertainty_m": null,
+      "pose_history": [],
+      "first_seen": 100.0,
+      "last_seen": 200.0,
+      "vlm_decision": "RESOLVE_CHEAP",
+      "vlm_query_requested": false,
+      "vlm_inference_executed": false,
+      "vlm_reason_codes": []
+    },
+    "phys_person_010": {
+      "entity_id": "phys_person_010",
+      "semantic_class": "person",
+      "contextual_movability": "MOBILE",
+      "observed_motion": "STATIC",
+      "slam_invalidated": true,
+      "physical_support": null,
+      "geometry_valid": true,
+      "centroid_world": [
+        -1.8787,
+        -4.4868,
+        0.0
+      ],
+      "spatial_extent_m": 0.3167,
+      "coordinate_frame": "reference_frame",
+      "semantic_confidence": 0.95,
+      "geometric_confidence": 0.85,
+      "evidence_provenance": "MEASURED_CLUSTER",
+      "source_sessions": [
+        "semantic_mapping_my_desk_recording_01",
+        "semantic_mapping_my_desk_recording_02"
+      ],
+      "source_track_ids": [
+        "person_010"
+      ],
+      "contributing_observations_count": 2,
+      "total_observations_count": 2,
+      "relocation_evaluable": false,
+      "measured_displacement_m": null,
+      "displacement_uncertainty_m": null,
+      "pose_history": [],
+      "first_seen": 100.0,
+      "last_seen": 200.0,
+      "vlm_decision": "RESOLVE_CHEAP",
+      "vlm_query_requested": false,
+      "vlm_inference_executed": false,
+      "vlm_reason_codes": []
+    },
+    "phys_person_011": {
+      "entity_id": "phys_person_011",
+      "semantic_class": "person",
+      "contextual_movability": "MOBILE",
+      "observed_motion": "STATIC",
+      "slam_invalidated": true,
+      "physical_support": null,
+      "geometry_valid": true,
+      "centroid_world": [
+        -1.9414,
+        -3.1618,
+        0.0
+      ],
+      "spatial_extent_m": 0.5528,
       "coordinate_frame": "floor_map",
       "semantic_confidence": 0.9,
       "geometric_confidence": 0.85,
@@ -3285,7 +3259,7 @@
         "semantic_mapping_my_desk_recording_01"
       ],
       "source_track_ids": [
-        "person_012"
+        "person_011"
       ],
       "contributing_observations_count": 1,
       "total_observations_count": 1,
@@ -3300,8 +3274,8 @@
       "vlm_inference_executed": false,
       "vlm_reason_codes": []
     },
-    "entity_s1_person_013": {
-      "entity_id": "entity_s1_person_013",
+    "phys_person_012": {
+      "entity_id": "phys_person_012",
       "semantic_class": "person",
       "contextual_movability": "MOBILE",
       "observed_motion": "STATIC",
@@ -3309,13 +3283,51 @@
       "physical_support": null,
       "geometry_valid": true,
       "centroid_world": [
-        -3.7708,
-        -1.8397,
+        -3.0848,
+        -3.3515,
         0.0
       ],
-      "spatial_extent_m": 0.8371,
+      "spatial_extent_m": 0.758,
       "coordinate_frame": "reference_frame",
       "semantic_confidence": 0.95,
+      "geometric_confidence": 0.85,
+      "evidence_provenance": "MEASURED_CLUSTER",
+      "source_sessions": [
+        "semantic_mapping_my_desk_recording_01",
+        "semantic_mapping_my_desk_recording_02"
+      ],
+      "source_track_ids": [
+        "person_012"
+      ],
+      "contributing_observations_count": 2,
+      "total_observations_count": 2,
+      "relocation_evaluable": false,
+      "measured_displacement_m": null,
+      "displacement_uncertainty_m": null,
+      "pose_history": [],
+      "first_seen": 100.0,
+      "last_seen": 200.0,
+      "vlm_decision": "RESOLVE_CHEAP",
+      "vlm_query_requested": false,
+      "vlm_inference_executed": false,
+      "vlm_reason_codes": []
+    },
+    "phys_person_013": {
+      "entity_id": "phys_person_013",
+      "semantic_class": "person",
+      "contextual_movability": "MOBILE",
+      "observed_motion": "STATIC",
+      "slam_invalidated": true,
+      "physical_support": null,
+      "geometry_valid": true,
+      "centroid_world": [
+        -3.5799,
+        -2.9436,
+        0.0
+      ],
+      "spatial_extent_m": 0.9146,
+      "coordinate_frame": "reference_frame",
+      "semantic_confidence": 0.99,
       "geometric_confidence": 0.85,
       "evidence_provenance": "MEASURED_CLUSTER",
       "source_sessions": [
@@ -3326,8 +3338,8 @@
         "person_013",
         "person_020"
       ],
-      "contributing_observations_count": 2,
-      "total_observations_count": 2,
+      "contributing_observations_count": 3,
+      "total_observations_count": 3,
       "relocation_evaluable": true,
       "measured_displacement_m": 0.0,
       "displacement_uncertainty_m": 0.018339320887608007,
@@ -3339,8 +3351,8 @@
       "vlm_inference_executed": false,
       "vlm_reason_codes": []
     },
-    "entity_s1_person_014": {
-      "entity_id": "entity_s1_person_014",
+    "phys_person_014": {
+      "entity_id": "phys_person_014",
       "semantic_class": "person",
       "contextual_movability": "MOBILE",
       "observed_motion": "STATIC",
@@ -3348,36 +3360,37 @@
       "physical_support": null,
       "geometry_valid": true,
       "centroid_world": [
-        -4.5918,
-        -0.7228,
+        -4.0717,
+        -2.7256,
         0.0
       ],
-      "spatial_extent_m": 0.8398,
-      "coordinate_frame": "floor_map",
-      "semantic_confidence": 0.9,
+      "spatial_extent_m": 0.8872,
+      "coordinate_frame": "reference_frame",
+      "semantic_confidence": 0.95,
       "geometric_confidence": 0.85,
       "evidence_provenance": "MEASURED_CLUSTER",
       "source_sessions": [
-        "semantic_mapping_my_desk_recording_01"
+        "semantic_mapping_my_desk_recording_01",
+        "semantic_mapping_my_desk_recording_02"
       ],
       "source_track_ids": [
         "person_014"
       ],
-      "contributing_observations_count": 1,
-      "total_observations_count": 1,
+      "contributing_observations_count": 2,
+      "total_observations_count": 2,
       "relocation_evaluable": false,
       "measured_displacement_m": null,
       "displacement_uncertainty_m": null,
       "pose_history": [],
       "first_seen": 100.0,
-      "last_seen": 100.0,
+      "last_seen": 200.0,
       "vlm_decision": "RESOLVE_CHEAP",
       "vlm_query_requested": false,
       "vlm_inference_executed": false,
       "vlm_reason_codes": []
     },
-    "entity_s1_person_015": {
-      "entity_id": "entity_s1_person_015",
+    "phys_person_015": {
+      "entity_id": "phys_person_015",
       "semantic_class": "person",
       "contextual_movability": "MOBILE",
       "observed_motion": "STATIC",
@@ -3385,36 +3398,37 @@
       "physical_support": null,
       "geometry_valid": true,
       "centroid_world": [
-        -2.491,
-        -3.7235,
+        -3.1743,
+        -4.865,
         0.0
       ],
-      "spatial_extent_m": 0.1672,
-      "coordinate_frame": "floor_map",
-      "semantic_confidence": 0.9,
+      "spatial_extent_m": 0.4611,
+      "coordinate_frame": "reference_frame",
+      "semantic_confidence": 0.95,
       "geometric_confidence": 0.85,
       "evidence_provenance": "MEASURED_CLUSTER",
       "source_sessions": [
-        "semantic_mapping_my_desk_recording_01"
+        "semantic_mapping_my_desk_recording_01",
+        "semantic_mapping_my_desk_recording_02"
       ],
       "source_track_ids": [
         "person_015"
       ],
-      "contributing_observations_count": 1,
-      "total_observations_count": 1,
+      "contributing_observations_count": 2,
+      "total_observations_count": 2,
       "relocation_evaluable": false,
       "measured_displacement_m": null,
       "displacement_uncertainty_m": null,
       "pose_history": [],
       "first_seen": 100.0,
-      "last_seen": 100.0,
+      "last_seen": 200.0,
       "vlm_decision": "RESOLVE_CHEAP",
       "vlm_query_requested": false,
       "vlm_inference_executed": false,
       "vlm_reason_codes": []
     },
-    "entity_s1_person_016": {
-      "entity_id": "entity_s1_person_016",
+    "phys_person_016": {
+      "entity_id": "phys_person_016",
       "semantic_class": "person",
       "contextual_movability": "MOBILE",
       "observed_motion": "STATIC",
@@ -3422,36 +3436,37 @@
       "physical_support": null,
       "geometry_valid": true,
       "centroid_world": [
-        -2.5487,
-        -3.8188,
+        -3.7938,
+        -4.3055,
         0.0
       ],
-      "spatial_extent_m": 0.1149,
-      "coordinate_frame": "floor_map",
-      "semantic_confidence": 0.9,
+      "spatial_extent_m": 0.5807,
+      "coordinate_frame": "reference_frame",
+      "semantic_confidence": 0.95,
       "geometric_confidence": 0.85,
       "evidence_provenance": "MEASURED_CLUSTER",
       "source_sessions": [
-        "semantic_mapping_my_desk_recording_01"
+        "semantic_mapping_my_desk_recording_01",
+        "semantic_mapping_my_desk_recording_02"
       ],
       "source_track_ids": [
         "person_016"
       ],
-      "contributing_observations_count": 1,
-      "total_observations_count": 1,
+      "contributing_observations_count": 2,
+      "total_observations_count": 2,
       "relocation_evaluable": false,
       "measured_displacement_m": null,
       "displacement_uncertainty_m": null,
       "pose_history": [],
       "first_seen": 100.0,
-      "last_seen": 100.0,
+      "last_seen": 200.0,
       "vlm_decision": "RESOLVE_CHEAP",
       "vlm_query_requested": false,
       "vlm_inference_executed": false,
       "vlm_reason_codes": []
     },
-    "entity_s1_person_017": {
-      "entity_id": "entity_s1_person_017",
+    "phys_person_017": {
+      "entity_id": "phys_person_017",
       "semantic_class": "person",
       "contextual_movability": "MOBILE",
       "observed_motion": "STATIC",
@@ -3459,36 +3474,37 @@
       "physical_support": null,
       "geometry_valid": true,
       "centroid_world": [
-        -2.8264,
-        -3.1195,
+        -3.7506,
+        -4.1065,
         0.0
       ],
-      "spatial_extent_m": 0.4002,
-      "coordinate_frame": "floor_map",
-      "semantic_confidence": 0.9,
+      "spatial_extent_m": 0.75,
+      "coordinate_frame": "reference_frame",
+      "semantic_confidence": 0.95,
       "geometric_confidence": 0.85,
       "evidence_provenance": "MEASURED_CLUSTER",
       "source_sessions": [
-        "semantic_mapping_my_desk_recording_01"
+        "semantic_mapping_my_desk_recording_01",
+        "semantic_mapping_my_desk_recording_02"
       ],
       "source_track_ids": [
         "person_017"
       ],
-      "contributing_observations_count": 1,
-      "total_observations_count": 1,
+      "contributing_observations_count": 2,
+      "total_observations_count": 2,
       "relocation_evaluable": false,
       "measured_displacement_m": null,
       "displacement_uncertainty_m": null,
       "pose_history": [],
       "first_seen": 100.0,
-      "last_seen": 100.0,
+      "last_seen": 200.0,
       "vlm_decision": "RESOLVE_CHEAP",
       "vlm_query_requested": false,
       "vlm_inference_executed": false,
       "vlm_reason_codes": []
     },
-    "entity_s1_projector_001": {
-      "entity_id": "entity_s1_projector_001",
+    "phys_projector_001": {
+      "entity_id": "phys_projector_001",
       "semantic_class": "projector",
       "contextual_movability": "IMMOVABLE",
       "observed_motion": "STATIC",
@@ -3496,36 +3512,37 @@
       "physical_support": null,
       "geometry_valid": true,
       "centroid_world": [
-        -2.9668,
-        -3.2168,
+        -3.0905,
+        -3.8092,
         0.0
       ],
-      "spatial_extent_m": 0.6459,
-      "coordinate_frame": "floor_map",
-      "semantic_confidence": 0.9,
+      "spatial_extent_m": 0.5792,
+      "coordinate_frame": "reference_frame",
+      "semantic_confidence": 0.95,
       "geometric_confidence": 0.85,
       "evidence_provenance": "MEASURED_CLUSTER",
       "source_sessions": [
-        "semantic_mapping_my_desk_recording_01"
+        "semantic_mapping_my_desk_recording_01",
+        "semantic_mapping_my_desk_recording_02"
       ],
       "source_track_ids": [
         "projector_001"
       ],
-      "contributing_observations_count": 1,
-      "total_observations_count": 1,
+      "contributing_observations_count": 2,
+      "total_observations_count": 2,
       "relocation_evaluable": false,
       "measured_displacement_m": null,
       "displacement_uncertainty_m": null,
       "pose_history": [],
       "first_seen": 100.0,
-      "last_seen": 100.0,
+      "last_seen": 200.0,
       "vlm_decision": "RESOLVE_CHEAP",
       "vlm_query_requested": false,
       "vlm_inference_executed": false,
       "vlm_reason_codes": []
     },
-    "inst_quadcopter_drone_001": {
-      "entity_id": "inst_quadcopter_drone_001",
+    "phys_quadcopter drone_001": {
+      "entity_id": "phys_quadcopter drone_001",
       "semantic_class": "quadcopter drone",
       "contextual_movability": "MOBILE",
       "observed_motion": "STATIC",
@@ -3533,36 +3550,37 @@
       "physical_support": null,
       "geometry_valid": true,
       "centroid_world": [
-        -2.7023,
-        -3.2953,
+        -0.2733,
+        -2.8076,
         0.0
       ],
-      "spatial_extent_m": 0.6817,
-      "coordinate_frame": "floor_map",
-      "semantic_confidence": 0.9,
+      "spatial_extent_m": 0.4467,
+      "coordinate_frame": "reference_frame",
+      "semantic_confidence": 0.95,
       "geometric_confidence": 0.85,
       "evidence_provenance": "MEASURED_CLUSTER",
       "source_sessions": [
-        "semantic_mapping_my_desk_recording_01"
+        "semantic_mapping_my_desk_recording_01",
+        "semantic_mapping_my_desk_recording_02"
       ],
       "source_track_ids": [
         "quadcopter drone_001"
       ],
-      "contributing_observations_count": 1,
-      "total_observations_count": 1,
+      "contributing_observations_count": 2,
+      "total_observations_count": 2,
       "relocation_evaluable": false,
       "measured_displacement_m": null,
       "displacement_uncertainty_m": null,
       "pose_history": [],
       "first_seen": 100.0,
-      "last_seen": 100.0,
+      "last_seen": 200.0,
       "vlm_decision": "RESOLVE_CHEAP",
       "vlm_query_requested": false,
       "vlm_inference_executed": false,
       "vlm_reason_codes": []
     },
-    "entity_s1_robot_001": {
-      "entity_id": "entity_s1_robot_001",
+    "phys_robot_001": {
+      "entity_id": "phys_robot_001",
       "semantic_class": "robot",
       "contextual_movability": "MOBILE",
       "observed_motion": "STATIC",
@@ -3586,7 +3604,7 @@
       "source_track_ids": [
         "robot_001"
       ],
-      "contributing_observations_count": 1,
+      "contributing_observations_count": 2,
       "total_observations_count": 2,
       "relocation_evaluable": true,
       "measured_displacement_m": 0.0,
@@ -3599,8 +3617,8 @@
       "vlm_inference_executed": false,
       "vlm_reason_codes": []
     },
-    "inst_storage_box_001": {
-      "entity_id": "inst_storage_box_001",
+    "phys_storage box_001": {
+      "entity_id": "phys_storage box_001",
       "semantic_class": "storage box",
       "contextual_movability": "MOVABLE",
       "observed_motion": "STATIC",
@@ -3608,13 +3626,13 @@
       "physical_support": null,
       "geometry_valid": true,
       "centroid_world": [
-        1.7243,
-        -2.9273,
+        1.3149,
+        -2.5874,
         0.0
       ],
-      "spatial_extent_m": 0.324,
+      "spatial_extent_m": 0.9665,
       "coordinate_frame": "reference_frame",
-      "semantic_confidence": 0.95,
+      "semantic_confidence": 0.99,
       "geometric_confidence": 0.85,
       "evidence_provenance": "MEASURED_CLUSTER",
       "source_sessions": [
@@ -3625,8 +3643,8 @@
         "storage box_001",
         "storage box_003"
       ],
-      "contributing_observations_count": 2,
-      "total_observations_count": 2,
+      "contributing_observations_count": 3,
+      "total_observations_count": 3,
       "relocation_evaluable": true,
       "measured_displacement_m": 0.0,
       "displacement_uncertainty_m": 0.007820247780824102,
@@ -3638,8 +3656,8 @@
       "vlm_inference_executed": false,
       "vlm_reason_codes": []
     },
-    "entity_s1_storage box_002": {
-      "entity_id": "entity_s1_storage box_002",
+    "phys_storage box_002": {
+      "entity_id": "phys_storage box_002",
       "semantic_class": "storage box",
       "contextual_movability": "MOVABLE",
       "observed_motion": "STATIC",
@@ -3675,8 +3693,8 @@
       "vlm_inference_executed": false,
       "vlm_reason_codes": []
     },
-    "inst_storage_box_004": {
-      "entity_id": "inst_storage_box_004",
+    "phys_storage box_004": {
+      "entity_id": "phys_storage box_004",
       "semantic_class": "storage box",
       "contextual_movability": "MOVABLE",
       "observed_motion": "STATIC",
@@ -3701,7 +3719,7 @@
         "storage box_004",
         "storage box_010"
       ],
-      "contributing_observations_count": 2,
+      "contributing_observations_count": 3,
       "total_observations_count": 3,
       "relocation_evaluable": true,
       "measured_displacement_m": 0.0,
@@ -3714,8 +3732,8 @@
       "vlm_inference_executed": false,
       "vlm_reason_codes": []
     },
-    "entity_s1_storage box_005": {
-      "entity_id": "entity_s1_storage box_005",
+    "phys_storage box_005": {
+      "entity_id": "phys_storage box_005",
       "semantic_class": "storage box",
       "contextual_movability": "MOVABLE",
       "observed_motion": "STATIC",
@@ -3723,36 +3741,37 @@
       "physical_support": null,
       "geometry_valid": true,
       "centroid_world": [
-        -3.5128,
-        -0.3961,
+        -1.5147,
+        -2.4798,
         0.0
       ],
-      "spatial_extent_m": 0.4054,
-      "coordinate_frame": "floor_map",
-      "semantic_confidence": 0.9,
+      "spatial_extent_m": 0.2433,
+      "coordinate_frame": "reference_frame",
+      "semantic_confidence": 0.95,
       "geometric_confidence": 0.85,
       "evidence_provenance": "MEASURED_CLUSTER",
       "source_sessions": [
-        "semantic_mapping_my_desk_recording_01"
+        "semantic_mapping_my_desk_recording_01",
+        "semantic_mapping_my_desk_recording_02"
       ],
       "source_track_ids": [
         "storage box_005"
       ],
-      "contributing_observations_count": 1,
-      "total_observations_count": 1,
+      "contributing_observations_count": 2,
+      "total_observations_count": 2,
       "relocation_evaluable": false,
       "measured_displacement_m": null,
       "displacement_uncertainty_m": null,
       "pose_history": [],
       "first_seen": 100.0,
-      "last_seen": 100.0,
+      "last_seen": 200.0,
       "vlm_decision": "RESOLVE_CHEAP",
       "vlm_query_requested": false,
       "vlm_inference_executed": false,
       "vlm_reason_codes": []
     },
-    "inst_storage_box_007": {
-      "entity_id": "inst_storage_box_007",
+    "phys_storage box_007": {
+      "entity_id": "phys_storage box_007",
       "semantic_class": "storage box",
       "contextual_movability": "MOVABLE",
       "observed_motion": "STATIC",
@@ -3760,13 +3779,13 @@
       "physical_support": null,
       "geometry_valid": true,
       "centroid_world": [
-        -0.8034,
-        -0.3912,
+        -1.1651,
+        -0.8561,
         0.0
       ],
-      "spatial_extent_m": 0.2718,
+      "spatial_extent_m": 0.3928,
       "coordinate_frame": "reference_frame",
-      "semantic_confidence": 0.95,
+      "semantic_confidence": 0.99,
       "geometric_confidence": 0.85,
       "evidence_provenance": "MEASURED_CLUSTER",
       "source_sessions": [
@@ -3777,8 +3796,8 @@
         "storage box_007",
         "storage box_011"
       ],
-      "contributing_observations_count": 2,
-      "total_observations_count": 2,
+      "contributing_observations_count": 3,
+      "total_observations_count": 3,
       "relocation_evaluable": true,
       "measured_displacement_m": 0.0,
       "displacement_uncertainty_m": 0.00203787672185531,
@@ -3790,8 +3809,8 @@
       "vlm_inference_executed": false,
       "vlm_reason_codes": []
     },
-    "entity_s1_toolbox_001": {
-      "entity_id": "entity_s1_toolbox_001",
+    "phys_toolbox_001": {
+      "entity_id": "phys_toolbox_001",
       "semantic_class": "toolbox",
       "contextual_movability": "MOVABLE",
       "observed_motion": "STATIC",
@@ -3827,8 +3846,8 @@
       "vlm_inference_executed": false,
       "vlm_reason_codes": []
     },
-    "entity_s1_whiteboard_001": {
-      "entity_id": "entity_s1_whiteboard_001",
+    "phys_whiteboard_001": {
+      "entity_id": "phys_whiteboard_001",
       "semantic_class": "whiteboard",
       "contextual_movability": "IMMOVABLE",
       "observed_motion": "STATIC",
@@ -3836,184 +3855,37 @@
       "physical_support": null,
       "geometry_valid": true,
       "centroid_world": [
-        0.2255,
-        -2.705,
+        1.1457,
+        -2.5727,
         0.0
       ],
-      "spatial_extent_m": 2.7204,
-      "coordinate_frame": "floor_map",
-      "semantic_confidence": 0.9,
+      "spatial_extent_m": 1.4439,
+      "coordinate_frame": "reference_frame",
+      "semantic_confidence": 0.95,
       "geometric_confidence": 0.85,
       "evidence_provenance": "MEASURED_CLUSTER",
       "source_sessions": [
-        "semantic_mapping_my_desk_recording_01"
+        "semantic_mapping_my_desk_recording_01",
+        "semantic_mapping_my_desk_recording_02"
       ],
       "source_track_ids": [
         "whiteboard_001"
       ],
-      "contributing_observations_count": 1,
-      "total_observations_count": 1,
+      "contributing_observations_count": 2,
+      "total_observations_count": 2,
       "relocation_evaluable": false,
       "measured_displacement_m": null,
       "displacement_uncertainty_m": null,
       "pose_history": [],
       "first_seen": 100.0,
-      "last_seen": 100.0,
-      "vlm_decision": "RESOLVE_CHEAP",
-      "vlm_query_requested": false,
-      "vlm_inference_executed": false,
-      "vlm_reason_codes": []
-    },
-    "entity_s2_backpack_002": {
-      "entity_id": "entity_s2_backpack_002",
-      "semantic_class": "backpack",
-      "contextual_movability": "MOVABLE",
-      "observed_motion": "STATIC",
-      "slam_invalidated": false,
-      "physical_support": null,
-      "geometry_valid": true,
-      "centroid_world": [
-        -3.7995,
-        -2.8871,
-        0.0
-      ],
-      "spatial_extent_m": 1.1562,
-      "coordinate_frame": "reference_frame",
-      "semantic_confidence": 0.9,
-      "geometric_confidence": 0.85,
-      "evidence_provenance": "MEASURED_CLUSTER_S2",
-      "source_sessions": [
-        "semantic_mapping_my_desk_recording_02"
-      ],
-      "source_track_ids": [
-        "backpack_002"
-      ],
-      "contributing_observations_count": 1,
-      "total_observations_count": 1,
-      "relocation_evaluable": false,
-      "measured_displacement_m": null,
-      "displacement_uncertainty_m": null,
-      "pose_history": [],
-      "first_seen": 200.0,
       "last_seen": 200.0,
       "vlm_decision": "RESOLVE_CHEAP",
       "vlm_query_requested": false,
       "vlm_inference_executed": false,
       "vlm_reason_codes": []
     },
-    "entity_s2_ceiling fan_002": {
-      "entity_id": "entity_s2_ceiling fan_002",
-      "semantic_class": "ceiling fan",
-      "contextual_movability": "IMMOVABLE",
-      "observed_motion": "STATIC",
-      "slam_invalidated": false,
-      "physical_support": null,
-      "geometry_valid": true,
-      "centroid_world": [
-        3.2571,
-        -2.7721,
-        0.0
-      ],
-      "spatial_extent_m": 1.0944,
-      "coordinate_frame": "reference_frame",
-      "semantic_confidence": 0.9,
-      "geometric_confidence": 0.85,
-      "evidence_provenance": "MEASURED_CLUSTER_S2",
-      "source_sessions": [
-        "semantic_mapping_my_desk_recording_02"
-      ],
-      "source_track_ids": [
-        "ceiling fan_002"
-      ],
-      "contributing_observations_count": 1,
-      "total_observations_count": 1,
-      "relocation_evaluable": false,
-      "measured_displacement_m": null,
-      "displacement_uncertainty_m": null,
-      "pose_history": [],
-      "first_seen": 200.0,
-      "last_seen": 200.0,
-      "vlm_decision": "RESOLVE_CHEAP",
-      "vlm_query_requested": false,
-      "vlm_inference_executed": false,
-      "vlm_reason_codes": []
-    },
-    "entity_s2_ceiling fan_003": {
-      "entity_id": "entity_s2_ceiling fan_003",
-      "semantic_class": "ceiling fan",
-      "contextual_movability": "IMMOVABLE",
-      "observed_motion": "STATIC",
-      "slam_invalidated": false,
-      "physical_support": null,
-      "geometry_valid": true,
-      "centroid_world": [
-        1.0073,
-        -5.3853,
-        0.0
-      ],
-      "spatial_extent_m": 0.3216,
-      "coordinate_frame": "reference_frame",
-      "semantic_confidence": 0.9,
-      "geometric_confidence": 0.85,
-      "evidence_provenance": "MEASURED_CLUSTER_S2",
-      "source_sessions": [
-        "semantic_mapping_my_desk_recording_02"
-      ],
-      "source_track_ids": [
-        "ceiling fan_003"
-      ],
-      "contributing_observations_count": 1,
-      "total_observations_count": 1,
-      "relocation_evaluable": false,
-      "measured_displacement_m": null,
-      "displacement_uncertainty_m": null,
-      "pose_history": [],
-      "first_seen": 200.0,
-      "last_seen": 200.0,
-      "vlm_decision": "RESOLVE_CHEAP",
-      "vlm_query_requested": false,
-      "vlm_inference_executed": false,
-      "vlm_reason_codes": []
-    },
-    "entity_s2_ceiling fan_004": {
-      "entity_id": "entity_s2_ceiling fan_004",
-      "semantic_class": "ceiling fan",
-      "contextual_movability": "IMMOVABLE",
-      "observed_motion": "STATIC",
-      "slam_invalidated": false,
-      "physical_support": null,
-      "geometry_valid": true,
-      "centroid_world": [
-        -1.8922,
-        -3.4295,
-        0.0
-      ],
-      "spatial_extent_m": 0.333,
-      "coordinate_frame": "reference_frame",
-      "semantic_confidence": 0.9,
-      "geometric_confidence": 0.85,
-      "evidence_provenance": "MEASURED_CLUSTER_S2",
-      "source_sessions": [
-        "semantic_mapping_my_desk_recording_02"
-      ],
-      "source_track_ids": [
-        "ceiling fan_004"
-      ],
-      "contributing_observations_count": 1,
-      "total_observations_count": 1,
-      "relocation_evaluable": false,
-      "measured_displacement_m": null,
-      "displacement_uncertainty_m": null,
-      "pose_history": [],
-      "first_seen": 200.0,
-      "last_seen": 200.0,
-      "vlm_decision": "RESOLVE_CHEAP",
-      "vlm_query_requested": false,
-      "vlm_inference_executed": false,
-      "vlm_reason_codes": []
-    },
-    "entity_s2_ceiling fan_005": {
-      "entity_id": "entity_s2_ceiling fan_005",
+    "phys_ceiling fan_005": {
+      "entity_id": "phys_ceiling fan_005",
       "semantic_class": "ceiling fan",
       "contextual_movability": "IMMOVABLE",
       "observed_motion": "STATIC",
@@ -4049,8 +3921,8 @@
       "vlm_inference_executed": false,
       "vlm_reason_codes": []
     },
-    "entity_s2_chair_006": {
-      "entity_id": "entity_s2_chair_006",
+    "phys_chair_006": {
+      "entity_id": "phys_chair_006",
       "semantic_class": "chair",
       "contextual_movability": "MOVABLE",
       "observed_motion": "STATIC",
@@ -4086,8 +3958,8 @@
       "vlm_inference_executed": false,
       "vlm_reason_codes": []
     },
-    "entity_s2_chair_012": {
-      "entity_id": "entity_s2_chair_012",
+    "phys_chair_012": {
+      "entity_id": "phys_chair_012",
       "semantic_class": "chair",
       "contextual_movability": "MOVABLE",
       "observed_motion": "STATIC",
@@ -4123,8 +3995,8 @@
       "vlm_inference_executed": false,
       "vlm_reason_codes": []
     },
-    "entity_s2_chair_024": {
-      "entity_id": "entity_s2_chair_024",
+    "phys_chair_024": {
+      "entity_id": "phys_chair_024",
       "semantic_class": "chair",
       "contextual_movability": "MOVABLE",
       "observed_motion": "STATIC",
@@ -4160,119 +4032,8 @@
       "vlm_inference_executed": false,
       "vlm_reason_codes": []
     },
-    "entity_s2_chair_025": {
-      "entity_id": "entity_s2_chair_025",
-      "semantic_class": "chair",
-      "contextual_movability": "MOVABLE",
-      "observed_motion": "STATIC",
-      "slam_invalidated": false,
-      "physical_support": null,
-      "geometry_valid": true,
-      "centroid_world": [
-        2.1443,
-        -7.4579,
-        0.0
-      ],
-      "spatial_extent_m": 0.6554,
-      "coordinate_frame": "reference_frame",
-      "semantic_confidence": 0.9,
-      "geometric_confidence": 0.85,
-      "evidence_provenance": "MEASURED_CLUSTER_S2",
-      "source_sessions": [
-        "semantic_mapping_my_desk_recording_02"
-      ],
-      "source_track_ids": [
-        "chair_025"
-      ],
-      "contributing_observations_count": 1,
-      "total_observations_count": 1,
-      "relocation_evaluable": false,
-      "measured_displacement_m": null,
-      "displacement_uncertainty_m": null,
-      "pose_history": [],
-      "first_seen": 200.0,
-      "last_seen": 200.0,
-      "vlm_decision": "RESOLVE_CHEAP",
-      "vlm_query_requested": false,
-      "vlm_inference_executed": false,
-      "vlm_reason_codes": []
-    },
-    "entity_s2_chair_027": {
-      "entity_id": "entity_s2_chair_027",
-      "semantic_class": "chair",
-      "contextual_movability": "MOVABLE",
-      "observed_motion": "STATIC",
-      "slam_invalidated": false,
-      "physical_support": null,
-      "geometry_valid": true,
-      "centroid_world": [
-        0.0405,
-        -5.6913,
-        0.0
-      ],
-      "spatial_extent_m": 0.1421,
-      "coordinate_frame": "reference_frame",
-      "semantic_confidence": 0.9,
-      "geometric_confidence": 0.85,
-      "evidence_provenance": "MEASURED_CLUSTER_S2",
-      "source_sessions": [
-        "semantic_mapping_my_desk_recording_02"
-      ],
-      "source_track_ids": [
-        "chair_027"
-      ],
-      "contributing_observations_count": 1,
-      "total_observations_count": 1,
-      "relocation_evaluable": false,
-      "measured_displacement_m": null,
-      "displacement_uncertainty_m": null,
-      "pose_history": [],
-      "first_seen": 200.0,
-      "last_seen": 200.0,
-      "vlm_decision": "RESOLVE_CHEAP",
-      "vlm_query_requested": false,
-      "vlm_inference_executed": false,
-      "vlm_reason_codes": []
-    },
-    "entity_s2_chair_028": {
-      "entity_id": "entity_s2_chair_028",
-      "semantic_class": "chair",
-      "contextual_movability": "MOVABLE",
-      "observed_motion": "STATIC",
-      "slam_invalidated": false,
-      "physical_support": null,
-      "geometry_valid": true,
-      "centroid_world": [
-        -2.2403,
-        -4.9758,
-        0.0
-      ],
-      "spatial_extent_m": 2.0474,
-      "coordinate_frame": "reference_frame",
-      "semantic_confidence": 0.9,
-      "geometric_confidence": 0.85,
-      "evidence_provenance": "MEASURED_CLUSTER_S2",
-      "source_sessions": [
-        "semantic_mapping_my_desk_recording_02"
-      ],
-      "source_track_ids": [
-        "chair_028"
-      ],
-      "contributing_observations_count": 1,
-      "total_observations_count": 1,
-      "relocation_evaluable": false,
-      "measured_displacement_m": null,
-      "displacement_uncertainty_m": null,
-      "pose_history": [],
-      "first_seen": 200.0,
-      "last_seen": 200.0,
-      "vlm_decision": "RESOLVE_CHEAP",
-      "vlm_query_requested": false,
-      "vlm_inference_executed": false,
-      "vlm_reason_codes": []
-    },
-    "entity_s2_chair_029": {
-      "entity_id": "entity_s2_chair_029",
+    "phys_chair_029": {
+      "entity_id": "phys_chair_029",
       "semantic_class": "chair",
       "contextual_movability": "MOVABLE",
       "observed_motion": "STATIC",
@@ -4308,82 +4069,8 @@
       "vlm_inference_executed": false,
       "vlm_reason_codes": []
     },
-    "entity_s2_chair_031": {
-      "entity_id": "entity_s2_chair_031",
-      "semantic_class": "chair",
-      "contextual_movability": "MOVABLE",
-      "observed_motion": "STATIC",
-      "slam_invalidated": false,
-      "physical_support": null,
-      "geometry_valid": true,
-      "centroid_world": [
-        -3.0153,
-        -1.9001,
-        0.0
-      ],
-      "spatial_extent_m": 0.9264,
-      "coordinate_frame": "reference_frame",
-      "semantic_confidence": 0.9,
-      "geometric_confidence": 0.85,
-      "evidence_provenance": "MEASURED_CLUSTER_S2",
-      "source_sessions": [
-        "semantic_mapping_my_desk_recording_02"
-      ],
-      "source_track_ids": [
-        "chair_031"
-      ],
-      "contributing_observations_count": 1,
-      "total_observations_count": 1,
-      "relocation_evaluable": false,
-      "measured_displacement_m": null,
-      "displacement_uncertainty_m": null,
-      "pose_history": [],
-      "first_seen": 200.0,
-      "last_seen": 200.0,
-      "vlm_decision": "RESOLVE_CHEAP",
-      "vlm_query_requested": false,
-      "vlm_inference_executed": false,
-      "vlm_reason_codes": []
-    },
-    "entity_s2_chair_039": {
-      "entity_id": "entity_s2_chair_039",
-      "semantic_class": "chair",
-      "contextual_movability": "MOVABLE",
-      "observed_motion": "STATIC",
-      "slam_invalidated": false,
-      "physical_support": null,
-      "geometry_valid": true,
-      "centroid_world": [
-        -3.17,
-        -0.8618,
-        0.0
-      ],
-      "spatial_extent_m": 0.45,
-      "coordinate_frame": "reference_frame",
-      "semantic_confidence": 0.9,
-      "geometric_confidence": 0.85,
-      "evidence_provenance": "MEASURED_CLUSTER_S2",
-      "source_sessions": [
-        "semantic_mapping_my_desk_recording_02"
-      ],
-      "source_track_ids": [
-        "chair_039"
-      ],
-      "contributing_observations_count": 1,
-      "total_observations_count": 1,
-      "relocation_evaluable": false,
-      "measured_displacement_m": null,
-      "displacement_uncertainty_m": null,
-      "pose_history": [],
-      "first_seen": 200.0,
-      "last_seen": 200.0,
-      "vlm_decision": "RESOLVE_CHEAP",
-      "vlm_query_requested": false,
-      "vlm_inference_executed": false,
-      "vlm_reason_codes": []
-    },
-    "entity_s2_chair_040": {
-      "entity_id": "entity_s2_chair_040",
+    "phys_chair_040": {
+      "entity_id": "phys_chair_040",
       "semantic_class": "chair",
       "contextual_movability": "MOVABLE",
       "observed_motion": "STATIC",
@@ -4419,8 +4106,8 @@
       "vlm_inference_executed": false,
       "vlm_reason_codes": []
     },
-    "entity_s2_chair_048": {
-      "entity_id": "entity_s2_chair_048",
+    "phys_chair_048": {
+      "entity_id": "phys_chair_048",
       "semantic_class": "chair",
       "contextual_movability": "MOVABLE",
       "observed_motion": "STATIC",
@@ -4456,8 +4143,8 @@
       "vlm_inference_executed": false,
       "vlm_reason_codes": []
     },
-    "inst_monitor_002": {
-      "entity_id": "inst_monitor_002",
+    "phys_computer monitor_002": {
+      "entity_id": "phys_computer monitor_002",
       "semantic_class": "computer monitor",
       "contextual_movability": "MOVABLE",
       "observed_motion": "STATIC",
@@ -4493,82 +4180,8 @@
       "vlm_inference_executed": false,
       "vlm_reason_codes": []
     },
-    "entity_s2_computer monitor_003": {
-      "entity_id": "entity_s2_computer monitor_003",
-      "semantic_class": "computer monitor",
-      "contextual_movability": "MOVABLE",
-      "observed_motion": "STATIC",
-      "slam_invalidated": false,
-      "physical_support": null,
-      "geometry_valid": true,
-      "centroid_world": [
-        0.1788,
-        -2.555,
-        0.0
-      ],
-      "spatial_extent_m": 0.4348,
-      "coordinate_frame": "reference_frame",
-      "semantic_confidence": 0.9,
-      "geometric_confidence": 0.85,
-      "evidence_provenance": "MEASURED_CLUSTER_S2",
-      "source_sessions": [
-        "semantic_mapping_my_desk_recording_02"
-      ],
-      "source_track_ids": [
-        "computer monitor_003"
-      ],
-      "contributing_observations_count": 1,
-      "total_observations_count": 1,
-      "relocation_evaluable": false,
-      "measured_displacement_m": null,
-      "displacement_uncertainty_m": null,
-      "pose_history": [],
-      "first_seen": 200.0,
-      "last_seen": 200.0,
-      "vlm_decision": "RESOLVE_CHEAP",
-      "vlm_query_requested": false,
-      "vlm_inference_executed": false,
-      "vlm_reason_codes": []
-    },
-    "entity_s2_computer monitor_004": {
-      "entity_id": "entity_s2_computer monitor_004",
-      "semantic_class": "computer monitor",
-      "contextual_movability": "MOVABLE",
-      "observed_motion": "STATIC",
-      "slam_invalidated": false,
-      "physical_support": null,
-      "geometry_valid": true,
-      "centroid_world": [
-        1.1029,
-        -4.2258,
-        0.0
-      ],
-      "spatial_extent_m": 0.5145,
-      "coordinate_frame": "reference_frame",
-      "semantic_confidence": 0.9,
-      "geometric_confidence": 0.85,
-      "evidence_provenance": "MEASURED_CLUSTER_S2",
-      "source_sessions": [
-        "semantic_mapping_my_desk_recording_02"
-      ],
-      "source_track_ids": [
-        "computer monitor_004"
-      ],
-      "contributing_observations_count": 1,
-      "total_observations_count": 1,
-      "relocation_evaluable": false,
-      "measured_displacement_m": null,
-      "displacement_uncertainty_m": null,
-      "pose_history": [],
-      "first_seen": 200.0,
-      "last_seen": 200.0,
-      "vlm_decision": "RESOLVE_CHEAP",
-      "vlm_query_requested": false,
-      "vlm_inference_executed": false,
-      "vlm_reason_codes": []
-    },
-    "entity_s2_computer monitor_005": {
-      "entity_id": "entity_s2_computer monitor_005",
+    "phys_computer monitor_005": {
+      "entity_id": "phys_computer monitor_005",
       "semantic_class": "computer monitor",
       "contextual_movability": "MOVABLE",
       "observed_motion": "STATIC",
@@ -4604,8 +4217,8 @@
       "vlm_inference_executed": false,
       "vlm_reason_codes": []
     },
-    "entity_s2_computer monitor_006": {
-      "entity_id": "entity_s2_computer monitor_006",
+    "phys_computer monitor_006": {
+      "entity_id": "phys_computer monitor_006",
       "semantic_class": "computer monitor",
       "contextual_movability": "MOVABLE",
       "observed_motion": "STATIC",
@@ -4641,8 +4254,8 @@
       "vlm_inference_executed": false,
       "vlm_reason_codes": []
     },
-    "entity_s2_computer monitor_010": {
-      "entity_id": "entity_s2_computer monitor_010",
+    "phys_computer monitor_010": {
+      "entity_id": "phys_computer monitor_010",
       "semantic_class": "computer monitor",
       "contextual_movability": "MOVABLE",
       "observed_motion": "STATIC",
@@ -4678,8 +4291,8 @@
       "vlm_inference_executed": false,
       "vlm_reason_codes": []
     },
-    "entity_s2_computer monitor_012": {
-      "entity_id": "entity_s2_computer monitor_012",
+    "phys_computer monitor_012": {
+      "entity_id": "phys_computer monitor_012",
       "semantic_class": "computer monitor",
       "contextual_movability": "MOVABLE",
       "observed_motion": "STATIC",
@@ -4715,8 +4328,8 @@
       "vlm_inference_executed": false,
       "vlm_reason_codes": []
     },
-    "inst_desk_007_s2": {
-      "entity_id": "inst_desk_007_s2",
+    "phys_desk_007": {
+      "entity_id": "phys_desk_007",
       "semantic_class": "desk",
       "contextual_movability": "MOVABLE",
       "observed_motion": "STATIC",
@@ -4752,8 +4365,8 @@
       "vlm_inference_executed": false,
       "vlm_reason_codes": []
     },
-    "inst_desk_010_s2": {
-      "entity_id": "inst_desk_010_s2",
+    "phys_desk_010": {
+      "entity_id": "phys_desk_010",
       "semantic_class": "desk",
       "contextual_movability": "MOVABLE",
       "observed_motion": "STATIC",
@@ -4789,8 +4402,8 @@
       "vlm_inference_executed": false,
       "vlm_reason_codes": []
     },
-    "entity_s2_desk_011": {
-      "entity_id": "entity_s2_desk_011",
+    "phys_desk_015": {
+      "entity_id": "phys_desk_015",
       "semantic_class": "desk",
       "contextual_movability": "MOVABLE",
       "observed_motion": "STATIC",
@@ -4798,11 +4411,11 @@
       "physical_support": null,
       "geometry_valid": true,
       "centroid_world": [
-        1.2408,
-        -3.5999,
+        0.5837,
+        -4.5308,
         0.0
       ],
-      "spatial_extent_m": 1.4505,
+      "spatial_extent_m": 0.8651,
       "coordinate_frame": "reference_frame",
       "semantic_confidence": 0.9,
       "geometric_confidence": 0.85,
@@ -4811,7 +4424,7 @@
         "semantic_mapping_my_desk_recording_02"
       ],
       "source_track_ids": [
-        "desk_011"
+        "desk_015"
       ],
       "contributing_observations_count": 1,
       "total_observations_count": 1,
@@ -4826,8 +4439,8 @@
       "vlm_inference_executed": false,
       "vlm_reason_codes": []
     },
-    "entity_s2_desk_019": {
-      "entity_id": "entity_s2_desk_019",
+    "phys_desk_019": {
+      "entity_id": "phys_desk_019",
       "semantic_class": "desk",
       "contextual_movability": "MOVABLE",
       "observed_motion": "STATIC",
@@ -4863,82 +4476,8 @@
       "vlm_inference_executed": false,
       "vlm_reason_codes": []
     },
-    "entity_s2_desk_021": {
-      "entity_id": "entity_s2_desk_021",
-      "semantic_class": "desk",
-      "contextual_movability": "MOVABLE",
-      "observed_motion": "STATIC",
-      "slam_invalidated": false,
-      "physical_support": null,
-      "geometry_valid": true,
-      "centroid_world": [
-        -0.4669,
-        -6.3779,
-        0.0
-      ],
-      "spatial_extent_m": 1.4197,
-      "coordinate_frame": "reference_frame",
-      "semantic_confidence": 0.9,
-      "geometric_confidence": 0.85,
-      "evidence_provenance": "MEASURED_CLUSTER_S2",
-      "source_sessions": [
-        "semantic_mapping_my_desk_recording_02"
-      ],
-      "source_track_ids": [
-        "desk_021"
-      ],
-      "contributing_observations_count": 1,
-      "total_observations_count": 1,
-      "relocation_evaluable": false,
-      "measured_displacement_m": null,
-      "displacement_uncertainty_m": null,
-      "pose_history": [],
-      "first_seen": 200.0,
-      "last_seen": 200.0,
-      "vlm_decision": "RESOLVE_CHEAP",
-      "vlm_query_requested": false,
-      "vlm_inference_executed": false,
-      "vlm_reason_codes": []
-    },
-    "entity_s2_desk_024": {
-      "entity_id": "entity_s2_desk_024",
-      "semantic_class": "desk",
-      "contextual_movability": "MOVABLE",
-      "observed_motion": "STATIC",
-      "slam_invalidated": false,
-      "physical_support": null,
-      "geometry_valid": true,
-      "centroid_world": [
-        -1.2103,
-        -7.3731,
-        0.0
-      ],
-      "spatial_extent_m": 1.8044,
-      "coordinate_frame": "reference_frame",
-      "semantic_confidence": 0.9,
-      "geometric_confidence": 0.85,
-      "evidence_provenance": "MEASURED_CLUSTER_S2",
-      "source_sessions": [
-        "semantic_mapping_my_desk_recording_02"
-      ],
-      "source_track_ids": [
-        "desk_024"
-      ],
-      "contributing_observations_count": 1,
-      "total_observations_count": 1,
-      "relocation_evaluable": false,
-      "measured_displacement_m": null,
-      "displacement_uncertainty_m": null,
-      "pose_history": [],
-      "first_seen": 200.0,
-      "last_seen": 200.0,
-      "vlm_decision": "RESOLVE_CHEAP",
-      "vlm_query_requested": false,
-      "vlm_inference_executed": false,
-      "vlm_reason_codes": []
-    },
-    "entity_s2_desk_027": {
-      "entity_id": "entity_s2_desk_027",
+    "phys_desk_027": {
+      "entity_id": "phys_desk_027",
       "semantic_class": "desk",
       "contextual_movability": "MOVABLE",
       "observed_motion": "STATIC",
@@ -4974,20 +4513,20 @@
       "vlm_inference_executed": false,
       "vlm_reason_codes": []
     },
-    "inst_handbag_001": {
-      "entity_id": "inst_handbag_001",
-      "semantic_class": "handbag",
+    "phys_desk_034": {
+      "entity_id": "phys_desk_034",
+      "semantic_class": "desk",
       "contextual_movability": "MOVABLE",
       "observed_motion": "STATIC",
       "slam_invalidated": false,
       "physical_support": null,
       "geometry_valid": true,
       "centroid_world": [
-        -3.4364,
-        -0.8798,
+        -1.6732,
+        -1.9533,
         0.0
       ],
-      "spatial_extent_m": 0.351,
+      "spatial_extent_m": 1.6735,
       "coordinate_frame": "reference_frame",
       "semantic_confidence": 0.9,
       "geometric_confidence": 0.85,
@@ -4996,7 +4535,7 @@
         "semantic_mapping_my_desk_recording_02"
       ],
       "source_track_ids": [
-        "handbag_002"
+        "desk_034"
       ],
       "contributing_observations_count": 1,
       "total_observations_count": 1,
@@ -5011,8 +4550,8 @@
       "vlm_inference_executed": false,
       "vlm_reason_codes": []
     },
-    "entity_s2_handbag_005": {
-      "entity_id": "entity_s2_handbag_005",
+    "phys_handbag_005": {
+      "entity_id": "phys_handbag_005",
       "semantic_class": "handbag",
       "contextual_movability": "MOVABLE",
       "observed_motion": "STATIC",
@@ -5048,8 +4587,8 @@
       "vlm_inference_executed": false,
       "vlm_reason_codes": []
     },
-    "entity_s2_keyboard_001": {
-      "entity_id": "entity_s2_keyboard_001",
+    "phys_keyboard_001": {
+      "entity_id": "phys_keyboard_001",
       "semantic_class": "keyboard",
       "contextual_movability": "MOVABLE",
       "observed_motion": "STATIC",
@@ -5085,8 +4624,8 @@
       "vlm_inference_executed": false,
       "vlm_reason_codes": []
     },
-    "entity_s2_keyboard_002": {
-      "entity_id": "entity_s2_keyboard_002",
+    "phys_keyboard_002": {
+      "entity_id": "phys_keyboard_002",
       "semantic_class": "keyboard",
       "contextual_movability": "MOVABLE",
       "observed_motion": "STATIC",
@@ -5122,8 +4661,8 @@
       "vlm_inference_executed": false,
       "vlm_reason_codes": []
     },
-    "inst_keyboard_001": {
-      "entity_id": "inst_keyboard_001",
+    "phys_keyboard_003": {
+      "entity_id": "phys_keyboard_003",
       "semantic_class": "keyboard",
       "contextual_movability": "MOVABLE",
       "observed_motion": "STATIC",
@@ -5159,8 +4698,8 @@
       "vlm_inference_executed": false,
       "vlm_reason_codes": []
     },
-    "entity_s2_keyboard_004": {
-      "entity_id": "entity_s2_keyboard_004",
+    "phys_keyboard_004": {
+      "entity_id": "phys_keyboard_004",
       "semantic_class": "keyboard",
       "contextual_movability": "MOVABLE",
       "observed_motion": "STATIC",
@@ -5196,8 +4735,8 @@
       "vlm_inference_executed": false,
       "vlm_reason_codes": []
     },
-    "entity_s2_keyboard_005": {
-      "entity_id": "entity_s2_keyboard_005",
+    "phys_keyboard_005": {
+      "entity_id": "phys_keyboard_005",
       "semantic_class": "keyboard",
       "contextual_movability": "MOVABLE",
       "observed_motion": "STATIC",
@@ -5233,8 +4772,8 @@
       "vlm_inference_executed": false,
       "vlm_reason_codes": []
     },
-    "entity_s2_keyboard_006": {
-      "entity_id": "entity_s2_keyboard_006",
+    "phys_keyboard_006": {
+      "entity_id": "phys_keyboard_006",
       "semantic_class": "keyboard",
       "contextual_movability": "MOVABLE",
       "observed_motion": "STATIC",
@@ -5270,8 +4809,8 @@
       "vlm_inference_executed": false,
       "vlm_reason_codes": []
     },
-    "entity_s2_keyboard_009": {
-      "entity_id": "entity_s2_keyboard_009",
+    "phys_keyboard_009": {
+      "entity_id": "phys_keyboard_009",
       "semantic_class": "keyboard",
       "contextual_movability": "MOVABLE",
       "observed_motion": "STATIC",
@@ -5307,8 +4846,8 @@
       "vlm_inference_executed": false,
       "vlm_reason_codes": []
     },
-    "entity_s2_keyboard_012": {
-      "entity_id": "entity_s2_keyboard_012",
+    "phys_keyboard_012": {
+      "entity_id": "phys_keyboard_012",
       "semantic_class": "keyboard",
       "contextual_movability": "MOVABLE",
       "observed_motion": "STATIC",
@@ -5344,8 +4883,8 @@
       "vlm_inference_executed": false,
       "vlm_reason_codes": []
     },
-    "entity_s2_keyboard_013": {
-      "entity_id": "entity_s2_keyboard_013",
+    "phys_keyboard_013": {
+      "entity_id": "phys_keyboard_013",
       "semantic_class": "keyboard",
       "contextual_movability": "MOVABLE",
       "observed_motion": "STATIC",
@@ -5381,8 +4920,8 @@
       "vlm_inference_executed": false,
       "vlm_reason_codes": []
     },
-    "entity_s2_keyboard_014": {
-      "entity_id": "entity_s2_keyboard_014",
+    "phys_keyboard_014": {
+      "entity_id": "phys_keyboard_014",
       "semantic_class": "keyboard",
       "contextual_movability": "MOVABLE",
       "observed_motion": "STATIC",
@@ -5418,8 +4957,8 @@
       "vlm_inference_executed": false,
       "vlm_reason_codes": []
     },
-    "entity_s2_keyboard_015": {
-      "entity_id": "entity_s2_keyboard_015",
+    "phys_keyboard_015": {
+      "entity_id": "phys_keyboard_015",
       "semantic_class": "keyboard",
       "contextual_movability": "MOVABLE",
       "observed_motion": "STATIC",
@@ -5455,8 +4994,8 @@
       "vlm_inference_executed": false,
       "vlm_reason_codes": []
     },
-    "entity_s2_keyboard_016": {
-      "entity_id": "entity_s2_keyboard_016",
+    "phys_keyboard_016": {
+      "entity_id": "phys_keyboard_016",
       "semantic_class": "keyboard",
       "contextual_movability": "MOVABLE",
       "observed_motion": "STATIC",
@@ -5492,8 +5031,45 @@
       "vlm_inference_executed": false,
       "vlm_reason_codes": []
     },
-    "inst_laptop_002": {
-      "entity_id": "inst_laptop_002",
+    "phys_laptop_001": {
+      "entity_id": "phys_laptop_001",
+      "semantic_class": "laptop",
+      "contextual_movability": "MOVABLE",
+      "observed_motion": "STATIC",
+      "slam_invalidated": false,
+      "physical_support": null,
+      "geometry_valid": true,
+      "centroid_world": [
+        2.2801,
+        -2.1722,
+        0.0
+      ],
+      "spatial_extent_m": 0.6013,
+      "coordinate_frame": "reference_frame",
+      "semantic_confidence": 0.9,
+      "geometric_confidence": 0.85,
+      "evidence_provenance": "MEASURED_CLUSTER_S2",
+      "source_sessions": [
+        "semantic_mapping_my_desk_recording_02"
+      ],
+      "source_track_ids": [
+        "laptop_001"
+      ],
+      "contributing_observations_count": 1,
+      "total_observations_count": 1,
+      "relocation_evaluable": false,
+      "measured_displacement_m": null,
+      "displacement_uncertainty_m": null,
+      "pose_history": [],
+      "first_seen": 200.0,
+      "last_seen": 200.0,
+      "vlm_decision": "RESOLVE_CHEAP",
+      "vlm_query_requested": false,
+      "vlm_inference_executed": false,
+      "vlm_reason_codes": []
+    },
+    "phys_laptop_002": {
+      "entity_id": "phys_laptop_002",
       "semantic_class": "laptop",
       "contextual_movability": "MOVABLE",
       "observed_motion": "STATIC",
@@ -5529,193 +5105,8 @@
       "vlm_inference_executed": false,
       "vlm_reason_codes": []
     },
-    "inst_laptop_003": {
-      "entity_id": "inst_laptop_003",
-      "semantic_class": "laptop",
-      "contextual_movability": "MOVABLE",
-      "observed_motion": "STATIC",
-      "slam_invalidated": false,
-      "physical_support": null,
-      "geometry_valid": true,
-      "centroid_world": [
-        2.8434,
-        -4.3701,
-        0.0
-      ],
-      "spatial_extent_m": 0.505,
-      "coordinate_frame": "reference_frame",
-      "semantic_confidence": 0.9,
-      "geometric_confidence": 0.85,
-      "evidence_provenance": "MEASURED_CLUSTER_S2",
-      "source_sessions": [
-        "semantic_mapping_my_desk_recording_02"
-      ],
-      "source_track_ids": [
-        "laptop_003"
-      ],
-      "contributing_observations_count": 1,
-      "total_observations_count": 1,
-      "relocation_evaluable": false,
-      "measured_displacement_m": null,
-      "displacement_uncertainty_m": null,
-      "pose_history": [],
-      "first_seen": 200.0,
-      "last_seen": 200.0,
-      "vlm_decision": "RESOLVE_CHEAP",
-      "vlm_query_requested": false,
-      "vlm_inference_executed": false,
-      "vlm_reason_codes": []
-    },
-    "entity_s2_laptop_004": {
-      "entity_id": "entity_s2_laptop_004",
-      "semantic_class": "laptop",
-      "contextual_movability": "MOVABLE",
-      "observed_motion": "STATIC",
-      "slam_invalidated": false,
-      "physical_support": null,
-      "geometry_valid": true,
-      "centroid_world": [
-        2.8491,
-        -4.1926,
-        0.0
-      ],
-      "spatial_extent_m": 0.2021,
-      "coordinate_frame": "reference_frame",
-      "semantic_confidence": 0.9,
-      "geometric_confidence": 0.85,
-      "evidence_provenance": "MEASURED_CLUSTER_S2",
-      "source_sessions": [
-        "semantic_mapping_my_desk_recording_02"
-      ],
-      "source_track_ids": [
-        "laptop_004"
-      ],
-      "contributing_observations_count": 1,
-      "total_observations_count": 1,
-      "relocation_evaluable": false,
-      "measured_displacement_m": null,
-      "displacement_uncertainty_m": null,
-      "pose_history": [],
-      "first_seen": 200.0,
-      "last_seen": 200.0,
-      "vlm_decision": "RESOLVE_CHEAP",
-      "vlm_query_requested": false,
-      "vlm_inference_executed": false,
-      "vlm_reason_codes": []
-    },
-    "entity_s2_laptop_005": {
-      "entity_id": "entity_s2_laptop_005",
-      "semantic_class": "laptop",
-      "contextual_movability": "MOVABLE",
-      "observed_motion": "STATIC",
-      "slam_invalidated": false,
-      "physical_support": null,
-      "geometry_valid": true,
-      "centroid_world": [
-        2.5859,
-        -2.1706,
-        0.0
-      ],
-      "spatial_extent_m": 1.402,
-      "coordinate_frame": "reference_frame",
-      "semantic_confidence": 0.9,
-      "geometric_confidence": 0.85,
-      "evidence_provenance": "MEASURED_CLUSTER_S2",
-      "source_sessions": [
-        "semantic_mapping_my_desk_recording_02"
-      ],
-      "source_track_ids": [
-        "laptop_005"
-      ],
-      "contributing_observations_count": 1,
-      "total_observations_count": 1,
-      "relocation_evaluable": false,
-      "measured_displacement_m": null,
-      "displacement_uncertainty_m": null,
-      "pose_history": [],
-      "first_seen": 200.0,
-      "last_seen": 200.0,
-      "vlm_decision": "RESOLVE_CHEAP",
-      "vlm_query_requested": false,
-      "vlm_inference_executed": false,
-      "vlm_reason_codes": []
-    },
-    "entity_s2_laptop_006": {
-      "entity_id": "entity_s2_laptop_006",
-      "semantic_class": "laptop",
-      "contextual_movability": "MOVABLE",
-      "observed_motion": "STATIC",
-      "slam_invalidated": false,
-      "physical_support": null,
-      "geometry_valid": true,
-      "centroid_world": [
-        1.4818,
-        -1.76,
-        0.0
-      ],
-      "spatial_extent_m": 0.0771,
-      "coordinate_frame": "reference_frame",
-      "semantic_confidence": 0.9,
-      "geometric_confidence": 0.85,
-      "evidence_provenance": "MEASURED_CLUSTER_S2",
-      "source_sessions": [
-        "semantic_mapping_my_desk_recording_02"
-      ],
-      "source_track_ids": [
-        "laptop_006"
-      ],
-      "contributing_observations_count": 1,
-      "total_observations_count": 1,
-      "relocation_evaluable": false,
-      "measured_displacement_m": null,
-      "displacement_uncertainty_m": null,
-      "pose_history": [],
-      "first_seen": 200.0,
-      "last_seen": 200.0,
-      "vlm_decision": "RESOLVE_CHEAP",
-      "vlm_query_requested": false,
-      "vlm_inference_executed": false,
-      "vlm_reason_codes": []
-    },
-    "entity_s2_laptop_010": {
-      "entity_id": "entity_s2_laptop_010",
-      "semantic_class": "laptop",
-      "contextual_movability": "MOVABLE",
-      "observed_motion": "STATIC",
-      "slam_invalidated": false,
-      "physical_support": null,
-      "geometry_valid": true,
-      "centroid_world": [
-        3.4691,
-        -2.9949,
-        0.0
-      ],
-      "spatial_extent_m": 1.4212,
-      "coordinate_frame": "reference_frame",
-      "semantic_confidence": 0.9,
-      "geometric_confidence": 0.85,
-      "evidence_provenance": "MEASURED_CLUSTER_S2",
-      "source_sessions": [
-        "semantic_mapping_my_desk_recording_02"
-      ],
-      "source_track_ids": [
-        "laptop_010"
-      ],
-      "contributing_observations_count": 1,
-      "total_observations_count": 1,
-      "relocation_evaluable": false,
-      "measured_displacement_m": null,
-      "displacement_uncertainty_m": null,
-      "pose_history": [],
-      "first_seen": 200.0,
-      "last_seen": 200.0,
-      "vlm_decision": "RESOLVE_CHEAP",
-      "vlm_query_requested": false,
-      "vlm_inference_executed": false,
-      "vlm_reason_codes": []
-    },
-    "entity_s2_laptop_011": {
-      "entity_id": "entity_s2_laptop_011",
+    "phys_laptop_011": {
+      "entity_id": "phys_laptop_011",
       "semantic_class": "laptop",
       "contextual_movability": "MOVABLE",
       "observed_motion": "STATIC",
@@ -5751,8 +5142,8 @@
       "vlm_inference_executed": false,
       "vlm_reason_codes": []
     },
-    "inst_laptop_004": {
-      "entity_id": "inst_laptop_004",
+    "phys_laptop_012": {
+      "entity_id": "phys_laptop_012",
       "semantic_class": "laptop",
       "contextual_movability": "MOVABLE",
       "observed_motion": "STATIC",
@@ -5788,8 +5179,8 @@
       "vlm_inference_executed": false,
       "vlm_reason_codes": []
     },
-    "entity_s2_laptop_013": {
-      "entity_id": "entity_s2_laptop_013",
+    "phys_laptop_013": {
+      "entity_id": "phys_laptop_013",
       "semantic_class": "laptop",
       "contextual_movability": "MOVABLE",
       "observed_motion": "STATIC",
@@ -5825,8 +5216,8 @@
       "vlm_inference_executed": false,
       "vlm_reason_codes": []
     },
-    "entity_s2_laptop_014": {
-      "entity_id": "entity_s2_laptop_014",
+    "phys_laptop_014": {
+      "entity_id": "phys_laptop_014",
       "semantic_class": "laptop",
       "contextual_movability": "MOVABLE",
       "observed_motion": "STATIC",
@@ -5862,8 +5253,8 @@
       "vlm_inference_executed": false,
       "vlm_reason_codes": []
     },
-    "entity_s2_laptop_015": {
-      "entity_id": "entity_s2_laptop_015",
+    "phys_laptop_015": {
+      "entity_id": "phys_laptop_015",
       "semantic_class": "laptop",
       "contextual_movability": "MOVABLE",
       "observed_motion": "STATIC",
@@ -5899,8 +5290,8 @@
       "vlm_inference_executed": false,
       "vlm_reason_codes": []
     },
-    "entity_s2_laptop_016": {
-      "entity_id": "entity_s2_laptop_016",
+    "phys_laptop_016": {
+      "entity_id": "phys_laptop_016",
       "semantic_class": "laptop",
       "contextual_movability": "MOVABLE",
       "observed_motion": "STATIC",
@@ -5936,8 +5327,8 @@
       "vlm_inference_executed": false,
       "vlm_reason_codes": []
     },
-    "entity_s2_laptop_017": {
-      "entity_id": "entity_s2_laptop_017",
+    "phys_laptop_017": {
+      "entity_id": "phys_laptop_017",
       "semantic_class": "laptop",
       "contextual_movability": "MOVABLE",
       "observed_motion": "STATIC",
@@ -5973,8 +5364,8 @@
       "vlm_inference_executed": false,
       "vlm_reason_codes": []
     },
-    "entity_s2_laptop_018": {
-      "entity_id": "entity_s2_laptop_018",
+    "phys_laptop_018": {
+      "entity_id": "phys_laptop_018",
       "semantic_class": "laptop",
       "contextual_movability": "MOVABLE",
       "observed_motion": "STATIC",
@@ -6010,8 +5401,8 @@
       "vlm_inference_executed": false,
       "vlm_reason_codes": []
     },
-    "entity_s2_laptop_019": {
-      "entity_id": "entity_s2_laptop_019",
+    "phys_laptop_019": {
+      "entity_id": "phys_laptop_019",
       "semantic_class": "laptop",
       "contextual_movability": "MOVABLE",
       "observed_motion": "STATIC",
@@ -6047,8 +5438,8 @@
       "vlm_inference_executed": false,
       "vlm_reason_codes": []
     },
-    "entity_s2_laptop_020": {
-      "entity_id": "entity_s2_laptop_020",
+    "phys_laptop_020": {
+      "entity_id": "phys_laptop_020",
       "semantic_class": "laptop",
       "contextual_movability": "MOVABLE",
       "observed_motion": "STATIC",
@@ -6084,8 +5475,8 @@
       "vlm_inference_executed": false,
       "vlm_reason_codes": []
     },
-    "entity_s2_laptop_021": {
-      "entity_id": "entity_s2_laptop_021",
+    "phys_laptop_021": {
+      "entity_id": "phys_laptop_021",
       "semantic_class": "laptop",
       "contextual_movability": "MOVABLE",
       "observed_motion": "STATIC",
@@ -6121,8 +5512,8 @@
       "vlm_inference_executed": false,
       "vlm_reason_codes": []
     },
-    "entity_s2_laptop_022": {
-      "entity_id": "entity_s2_laptop_022",
+    "phys_laptop_022": {
+      "entity_id": "phys_laptop_022",
       "semantic_class": "laptop",
       "contextual_movability": "MOVABLE",
       "observed_motion": "STATIC",
@@ -6158,8 +5549,8 @@
       "vlm_inference_executed": false,
       "vlm_reason_codes": []
     },
-    "entity_s2_laptop_023": {
-      "entity_id": "entity_s2_laptop_023",
+    "phys_laptop_023": {
+      "entity_id": "phys_laptop_023",
       "semantic_class": "laptop",
       "contextual_movability": "MOVABLE",
       "observed_motion": "STATIC",
@@ -6195,8 +5586,8 @@
       "vlm_inference_executed": false,
       "vlm_reason_codes": []
     },
-    "entity_s2_laptop_025": {
-      "entity_id": "entity_s2_laptop_025",
+    "phys_laptop_025": {
+      "entity_id": "phys_laptop_025",
       "semantic_class": "laptop",
       "contextual_movability": "MOVABLE",
       "observed_motion": "STATIC",
@@ -6232,8 +5623,8 @@
       "vlm_inference_executed": false,
       "vlm_reason_codes": []
     },
-    "entity_s2_laptop_027": {
-      "entity_id": "entity_s2_laptop_027",
+    "phys_laptop_027": {
+      "entity_id": "phys_laptop_027",
       "semantic_class": "laptop",
       "contextual_movability": "MOVABLE",
       "observed_motion": "STATIC",
@@ -6269,8 +5660,8 @@
       "vlm_inference_executed": false,
       "vlm_reason_codes": []
     },
-    "entity_s2_laptop_028": {
-      "entity_id": "entity_s2_laptop_028",
+    "phys_laptop_028": {
+      "entity_id": "phys_laptop_028",
       "semantic_class": "laptop",
       "contextual_movability": "MOVABLE",
       "observed_motion": "STATIC",
@@ -6306,8 +5697,8 @@
       "vlm_inference_executed": false,
       "vlm_reason_codes": []
     },
-    "entity_s2_laptop_029": {
-      "entity_id": "entity_s2_laptop_029",
+    "phys_laptop_029": {
+      "entity_id": "phys_laptop_029",
       "semantic_class": "laptop",
       "contextual_movability": "MOVABLE",
       "observed_motion": "STATIC",
@@ -6343,8 +5734,8 @@
       "vlm_inference_executed": false,
       "vlm_reason_codes": []
     },
-    "entity_s2_laptop_030": {
-      "entity_id": "entity_s2_laptop_030",
+    "phys_laptop_030": {
+      "entity_id": "phys_laptop_030",
       "semantic_class": "laptop",
       "contextual_movability": "MOVABLE",
       "observed_motion": "STATIC",
@@ -6380,8 +5771,8 @@
       "vlm_inference_executed": false,
       "vlm_reason_codes": []
     },
-    "entity_s2_laptop_032": {
-      "entity_id": "entity_s2_laptop_032",
+    "phys_laptop_032": {
+      "entity_id": "phys_laptop_032",
       "semantic_class": "laptop",
       "contextual_movability": "MOVABLE",
       "observed_motion": "STATIC",
@@ -6417,8 +5808,8 @@
       "vlm_inference_executed": false,
       "vlm_reason_codes": []
     },
-    "entity_s2_laptop_035": {
-      "entity_id": "entity_s2_laptop_035",
+    "phys_laptop_035": {
+      "entity_id": "phys_laptop_035",
       "semantic_class": "laptop",
       "contextual_movability": "MOVABLE",
       "observed_motion": "STATIC",
@@ -6454,8 +5845,8 @@
       "vlm_inference_executed": false,
       "vlm_reason_codes": []
     },
-    "entity_s2_laptop_036": {
-      "entity_id": "entity_s2_laptop_036",
+    "phys_laptop_036": {
+      "entity_id": "phys_laptop_036",
       "semantic_class": "laptop",
       "contextual_movability": "MOVABLE",
       "observed_motion": "STATIC",
@@ -6491,8 +5882,8 @@
       "vlm_inference_executed": false,
       "vlm_reason_codes": []
     },
-    "entity_s2_laptop_039": {
-      "entity_id": "entity_s2_laptop_039",
+    "phys_laptop_039": {
+      "entity_id": "phys_laptop_039",
       "semantic_class": "laptop",
       "contextual_movability": "MOVABLE",
       "observed_motion": "STATIC",
@@ -6528,8 +5919,8 @@
       "vlm_inference_executed": false,
       "vlm_reason_codes": []
     },
-    "entity_s2_laptop_040": {
-      "entity_id": "entity_s2_laptop_040",
+    "phys_laptop_040": {
+      "entity_id": "phys_laptop_040",
       "semantic_class": "laptop",
       "contextual_movability": "MOVABLE",
       "observed_motion": "STATIC",
@@ -6565,8 +5956,8 @@
       "vlm_inference_executed": false,
       "vlm_reason_codes": []
     },
-    "entity_s2_laptop_041": {
-      "entity_id": "entity_s2_laptop_041",
+    "phys_laptop_041": {
+      "entity_id": "phys_laptop_041",
       "semantic_class": "laptop",
       "contextual_movability": "MOVABLE",
       "observed_motion": "STATIC",
@@ -6602,8 +5993,8 @@
       "vlm_inference_executed": false,
       "vlm_reason_codes": []
     },
-    "entity_s2_laptop_044": {
-      "entity_id": "entity_s2_laptop_044",
+    "phys_laptop_044": {
+      "entity_id": "phys_laptop_044",
       "semantic_class": "laptop",
       "contextual_movability": "MOVABLE",
       "observed_motion": "STATIC",
@@ -6639,8 +6030,8 @@
       "vlm_inference_executed": false,
       "vlm_reason_codes": []
     },
-    "entity_s2_laptop_046": {
-      "entity_id": "entity_s2_laptop_046",
+    "phys_laptop_046": {
+      "entity_id": "phys_laptop_046",
       "semantic_class": "laptop",
       "contextual_movability": "MOVABLE",
       "observed_motion": "STATIC",
@@ -6676,8 +6067,8 @@
       "vlm_inference_executed": false,
       "vlm_reason_codes": []
     },
-    "entity_s2_laptop_047": {
-      "entity_id": "entity_s2_laptop_047",
+    "phys_laptop_047": {
+      "entity_id": "phys_laptop_047",
       "semantic_class": "laptop",
       "contextual_movability": "MOVABLE",
       "observed_motion": "STATIC",
@@ -6713,8 +6104,8 @@
       "vlm_inference_executed": false,
       "vlm_reason_codes": []
     },
-    "entity_s2_laptop_049": {
-      "entity_id": "entity_s2_laptop_049",
+    "phys_laptop_049": {
+      "entity_id": "phys_laptop_049",
       "semantic_class": "laptop",
       "contextual_movability": "MOVABLE",
       "observed_motion": "STATIC",
@@ -6750,8 +6141,8 @@
       "vlm_inference_executed": false,
       "vlm_reason_codes": []
     },
-    "entity_s2_laptop_050": {
-      "entity_id": "entity_s2_laptop_050",
+    "phys_laptop_050": {
+      "entity_id": "phys_laptop_050",
       "semantic_class": "laptop",
       "contextual_movability": "MOVABLE",
       "observed_motion": "STATIC",
@@ -6787,8 +6178,8 @@
       "vlm_inference_executed": false,
       "vlm_reason_codes": []
     },
-    "entity_s2_laptop_051": {
-      "entity_id": "entity_s2_laptop_051",
+    "phys_laptop_051": {
+      "entity_id": "phys_laptop_051",
       "semantic_class": "laptop",
       "contextual_movability": "MOVABLE",
       "observed_motion": "STATIC",
@@ -6824,8 +6215,8 @@
       "vlm_inference_executed": false,
       "vlm_reason_codes": []
     },
-    "entity_s2_pedestal fan_001": {
-      "entity_id": "entity_s2_pedestal fan_001",
+    "phys_pedestal fan_001": {
+      "entity_id": "phys_pedestal fan_001",
       "semantic_class": "pedestal fan",
       "contextual_movability": "MOVABLE",
       "observed_motion": "STATIC",
@@ -6861,8 +6252,8 @@
       "vlm_inference_executed": false,
       "vlm_reason_codes": []
     },
-    "inst_human_operator_001": {
-      "entity_id": "inst_human_operator_001",
+    "phys_person_018": {
+      "entity_id": "phys_person_018",
       "semantic_class": "person",
       "contextual_movability": "MOBILE",
       "observed_motion": "STATIC",
@@ -6870,68 +6261,11 @@
       "physical_support": null,
       "geometry_valid": true,
       "centroid_world": [
-        -2.6863,
-        -3.2945,
+        -3.1822,
+        -3.3421,
         0.0
       ],
-      "spatial_extent_m": 1.0286,
-      "coordinate_frame": "reference_frame",
-      "semantic_confidence": 0.99,
-      "geometric_confidence": 0.85,
-      "evidence_provenance": "MEASURED_CLUSTER_S2",
-      "source_sessions": [
-        "semantic_mapping_my_desk_recording_02"
-      ],
-      "source_track_ids": [
-        "person_003",
-        "person_005",
-        "person_006",
-        "person_008",
-        "person_009",
-        "person_010",
-        "person_012",
-        "person_013",
-        "person_014",
-        "person_015",
-        "person_016",
-        "person_017",
-        "person_018",
-        "person_021",
-        "person_022",
-        "person_024",
-        "person_025",
-        "person_026",
-        "person_027",
-        "person_028",
-        "person_030"
-      ],
-      "contributing_observations_count": 21,
-      "total_observations_count": 21,
-      "relocation_evaluable": false,
-      "measured_displacement_m": null,
-      "displacement_uncertainty_m": null,
-      "pose_history": [],
-      "first_seen": 200.0,
-      "last_seen": 200.0,
-      "vlm_decision": "RESOLVE_CHEAP",
-      "vlm_query_requested": false,
-      "vlm_inference_executed": false,
-      "vlm_reason_codes": []
-    },
-    "entity_s2_projector_001": {
-      "entity_id": "entity_s2_projector_001",
-      "semantic_class": "projector",
-      "contextual_movability": "IMMOVABLE",
-      "observed_motion": "STATIC",
-      "slam_invalidated": false,
-      "physical_support": null,
-      "geometry_valid": true,
-      "centroid_world": [
-        -3.2142,
-        -4.4016,
-        0.0
-      ],
-      "spatial_extent_m": 0.5126,
+      "spatial_extent_m": 1.3664,
       "coordinate_frame": "reference_frame",
       "semantic_confidence": 0.9,
       "geometric_confidence": 0.85,
@@ -6940,7 +6274,7 @@
         "semantic_mapping_my_desk_recording_02"
       ],
       "source_track_ids": [
-        "projector_001"
+        "person_018"
       ],
       "contributing_observations_count": 1,
       "total_observations_count": 1,
@@ -6955,8 +6289,304 @@
       "vlm_inference_executed": false,
       "vlm_reason_codes": []
     },
-    "entity_s2_projector_002": {
-      "entity_id": "entity_s2_projector_002",
+    "phys_person_021": {
+      "entity_id": "phys_person_021",
+      "semantic_class": "person",
+      "contextual_movability": "MOBILE",
+      "observed_motion": "STATIC",
+      "slam_invalidated": true,
+      "physical_support": null,
+      "geometry_valid": true,
+      "centroid_world": [
+        -3.3957,
+        -3.2675,
+        0.0
+      ],
+      "spatial_extent_m": 1.6326,
+      "coordinate_frame": "reference_frame",
+      "semantic_confidence": 0.9,
+      "geometric_confidence": 0.85,
+      "evidence_provenance": "MEASURED_CLUSTER_S2",
+      "source_sessions": [
+        "semantic_mapping_my_desk_recording_02"
+      ],
+      "source_track_ids": [
+        "person_021"
+      ],
+      "contributing_observations_count": 1,
+      "total_observations_count": 1,
+      "relocation_evaluable": false,
+      "measured_displacement_m": null,
+      "displacement_uncertainty_m": null,
+      "pose_history": [],
+      "first_seen": 200.0,
+      "last_seen": 200.0,
+      "vlm_decision": "RESOLVE_CHEAP",
+      "vlm_query_requested": false,
+      "vlm_inference_executed": false,
+      "vlm_reason_codes": []
+    },
+    "phys_person_022": {
+      "entity_id": "phys_person_022",
+      "semantic_class": "person",
+      "contextual_movability": "MOBILE",
+      "observed_motion": "STATIC",
+      "slam_invalidated": true,
+      "physical_support": null,
+      "geometry_valid": true,
+      "centroid_world": [
+        -3.4941,
+        -2.5873,
+        0.0
+      ],
+      "spatial_extent_m": 1.8689,
+      "coordinate_frame": "reference_frame",
+      "semantic_confidence": 0.9,
+      "geometric_confidence": 0.85,
+      "evidence_provenance": "MEASURED_CLUSTER_S2",
+      "source_sessions": [
+        "semantic_mapping_my_desk_recording_02"
+      ],
+      "source_track_ids": [
+        "person_022"
+      ],
+      "contributing_observations_count": 1,
+      "total_observations_count": 1,
+      "relocation_evaluable": false,
+      "measured_displacement_m": null,
+      "displacement_uncertainty_m": null,
+      "pose_history": [],
+      "first_seen": 200.0,
+      "last_seen": 200.0,
+      "vlm_decision": "RESOLVE_CHEAP",
+      "vlm_query_requested": false,
+      "vlm_inference_executed": false,
+      "vlm_reason_codes": []
+    },
+    "phys_person_024": {
+      "entity_id": "phys_person_024",
+      "semantic_class": "person",
+      "contextual_movability": "MOBILE",
+      "observed_motion": "STATIC",
+      "slam_invalidated": true,
+      "physical_support": null,
+      "geometry_valid": true,
+      "centroid_world": [
+        -2.4797,
+        0.2025,
+        0.0
+      ],
+      "spatial_extent_m": 0.7109,
+      "coordinate_frame": "reference_frame",
+      "semantic_confidence": 0.9,
+      "geometric_confidence": 0.85,
+      "evidence_provenance": "MEASURED_CLUSTER_S2",
+      "source_sessions": [
+        "semantic_mapping_my_desk_recording_02"
+      ],
+      "source_track_ids": [
+        "person_024"
+      ],
+      "contributing_observations_count": 1,
+      "total_observations_count": 1,
+      "relocation_evaluable": false,
+      "measured_displacement_m": null,
+      "displacement_uncertainty_m": null,
+      "pose_history": [],
+      "first_seen": 200.0,
+      "last_seen": 200.0,
+      "vlm_decision": "RESOLVE_CHEAP",
+      "vlm_query_requested": false,
+      "vlm_inference_executed": false,
+      "vlm_reason_codes": []
+    },
+    "phys_person_025": {
+      "entity_id": "phys_person_025",
+      "semantic_class": "person",
+      "contextual_movability": "MOBILE",
+      "observed_motion": "STATIC",
+      "slam_invalidated": true,
+      "physical_support": null,
+      "geometry_valid": true,
+      "centroid_world": [
+        -1.7159,
+        -2.0458,
+        0.0
+      ],
+      "spatial_extent_m": 1.0619,
+      "coordinate_frame": "reference_frame",
+      "semantic_confidence": 0.9,
+      "geometric_confidence": 0.85,
+      "evidence_provenance": "MEASURED_CLUSTER_S2",
+      "source_sessions": [
+        "semantic_mapping_my_desk_recording_02"
+      ],
+      "source_track_ids": [
+        "person_025"
+      ],
+      "contributing_observations_count": 1,
+      "total_observations_count": 1,
+      "relocation_evaluable": false,
+      "measured_displacement_m": null,
+      "displacement_uncertainty_m": null,
+      "pose_history": [],
+      "first_seen": 200.0,
+      "last_seen": 200.0,
+      "vlm_decision": "RESOLVE_CHEAP",
+      "vlm_query_requested": false,
+      "vlm_inference_executed": false,
+      "vlm_reason_codes": []
+    },
+    "phys_person_026": {
+      "entity_id": "phys_person_026",
+      "semantic_class": "person",
+      "contextual_movability": "MOBILE",
+      "observed_motion": "STATIC",
+      "slam_invalidated": true,
+      "physical_support": null,
+      "geometry_valid": true,
+      "centroid_world": [
+        -1.7445,
+        -2.0032,
+        0.0
+      ],
+      "spatial_extent_m": 1.8006,
+      "coordinate_frame": "reference_frame",
+      "semantic_confidence": 0.9,
+      "geometric_confidence": 0.85,
+      "evidence_provenance": "MEASURED_CLUSTER_S2",
+      "source_sessions": [
+        "semantic_mapping_my_desk_recording_02"
+      ],
+      "source_track_ids": [
+        "person_026"
+      ],
+      "contributing_observations_count": 1,
+      "total_observations_count": 1,
+      "relocation_evaluable": false,
+      "measured_displacement_m": null,
+      "displacement_uncertainty_m": null,
+      "pose_history": [],
+      "first_seen": 200.0,
+      "last_seen": 200.0,
+      "vlm_decision": "RESOLVE_CHEAP",
+      "vlm_query_requested": false,
+      "vlm_inference_executed": false,
+      "vlm_reason_codes": []
+    },
+    "phys_person_027": {
+      "entity_id": "phys_person_027",
+      "semantic_class": "person",
+      "contextual_movability": "MOBILE",
+      "observed_motion": "STATIC",
+      "slam_invalidated": true,
+      "physical_support": null,
+      "geometry_valid": true,
+      "centroid_world": [
+        -2.1152,
+        -1.3066,
+        0.0
+      ],
+      "spatial_extent_m": 1.7726,
+      "coordinate_frame": "reference_frame",
+      "semantic_confidence": 0.9,
+      "geometric_confidence": 0.85,
+      "evidence_provenance": "MEASURED_CLUSTER_S2",
+      "source_sessions": [
+        "semantic_mapping_my_desk_recording_02"
+      ],
+      "source_track_ids": [
+        "person_027"
+      ],
+      "contributing_observations_count": 1,
+      "total_observations_count": 1,
+      "relocation_evaluable": false,
+      "measured_displacement_m": null,
+      "displacement_uncertainty_m": null,
+      "pose_history": [],
+      "first_seen": 200.0,
+      "last_seen": 200.0,
+      "vlm_decision": "RESOLVE_CHEAP",
+      "vlm_query_requested": false,
+      "vlm_inference_executed": false,
+      "vlm_reason_codes": []
+    },
+    "phys_person_028": {
+      "entity_id": "phys_person_028",
+      "semantic_class": "person",
+      "contextual_movability": "MOBILE",
+      "observed_motion": "STATIC",
+      "slam_invalidated": true,
+      "physical_support": null,
+      "geometry_valid": true,
+      "centroid_world": [
+        -2.1279,
+        -1.2747,
+        0.0
+      ],
+      "spatial_extent_m": 1.5113,
+      "coordinate_frame": "reference_frame",
+      "semantic_confidence": 0.9,
+      "geometric_confidence": 0.85,
+      "evidence_provenance": "MEASURED_CLUSTER_S2",
+      "source_sessions": [
+        "semantic_mapping_my_desk_recording_02"
+      ],
+      "source_track_ids": [
+        "person_028"
+      ],
+      "contributing_observations_count": 1,
+      "total_observations_count": 1,
+      "relocation_evaluable": false,
+      "measured_displacement_m": null,
+      "displacement_uncertainty_m": null,
+      "pose_history": [],
+      "first_seen": 200.0,
+      "last_seen": 200.0,
+      "vlm_decision": "RESOLVE_CHEAP",
+      "vlm_query_requested": false,
+      "vlm_inference_executed": false,
+      "vlm_reason_codes": []
+    },
+    "phys_person_030": {
+      "entity_id": "phys_person_030",
+      "semantic_class": "person",
+      "contextual_movability": "MOBILE",
+      "observed_motion": "STATIC",
+      "slam_invalidated": true,
+      "physical_support": null,
+      "geometry_valid": true,
+      "centroid_world": [
+        -2.4854,
+        0.1679,
+        0.0
+      ],
+      "spatial_extent_m": 0.7619,
+      "coordinate_frame": "reference_frame",
+      "semantic_confidence": 0.9,
+      "geometric_confidence": 0.85,
+      "evidence_provenance": "MEASURED_CLUSTER_S2",
+      "source_sessions": [
+        "semantic_mapping_my_desk_recording_02"
+      ],
+      "source_track_ids": [
+        "person_030"
+      ],
+      "contributing_observations_count": 1,
+      "total_observations_count": 1,
+      "relocation_evaluable": false,
+      "measured_displacement_m": null,
+      "displacement_uncertainty_m": null,
+      "pose_history": [],
+      "first_seen": 200.0,
+      "last_seen": 200.0,
+      "vlm_decision": "RESOLVE_CHEAP",
+      "vlm_query_requested": false,
+      "vlm_inference_executed": false,
+      "vlm_reason_codes": []
+    },
+    "phys_projector_002": {
+      "entity_id": "phys_projector_002",
       "semantic_class": "projector",
       "contextual_movability": "IMMOVABLE",
       "observed_motion": "STATIC",
@@ -6992,8 +6622,8 @@
       "vlm_inference_executed": false,
       "vlm_reason_codes": []
     },
-    "entity_s2_projector_004": {
-      "entity_id": "entity_s2_projector_004",
+    "phys_projector_004": {
+      "entity_id": "phys_projector_004",
       "semantic_class": "projector",
       "contextual_movability": "IMMOVABLE",
       "observed_motion": "STATIC",
@@ -7029,156 +6659,8 @@
       "vlm_inference_executed": false,
       "vlm_reason_codes": []
     },
-    "entity_s2_quadcopter drone_001": {
-      "entity_id": "entity_s2_quadcopter drone_001",
-      "semantic_class": "quadcopter drone",
-      "contextual_movability": "MOBILE",
-      "observed_motion": "STATIC",
-      "slam_invalidated": false,
-      "physical_support": null,
-      "geometry_valid": true,
-      "centroid_world": [
-        2.1557,
-        -2.3198,
-        0.0
-      ],
-      "spatial_extent_m": 0.2116,
-      "coordinate_frame": "reference_frame",
-      "semantic_confidence": 0.9,
-      "geometric_confidence": 0.85,
-      "evidence_provenance": "MEASURED_CLUSTER_S2",
-      "source_sessions": [
-        "semantic_mapping_my_desk_recording_02"
-      ],
-      "source_track_ids": [
-        "quadcopter drone_001"
-      ],
-      "contributing_observations_count": 1,
-      "total_observations_count": 1,
-      "relocation_evaluable": false,
-      "measured_displacement_m": null,
-      "displacement_uncertainty_m": null,
-      "pose_history": [],
-      "first_seen": 200.0,
-      "last_seen": 200.0,
-      "vlm_decision": "RESOLVE_CHEAP",
-      "vlm_query_requested": false,
-      "vlm_inference_executed": false,
-      "vlm_reason_codes": []
-    },
-    "entity_s2_storage box_001": {
-      "entity_id": "entity_s2_storage box_001",
-      "semantic_class": "storage box",
-      "contextual_movability": "MOVABLE",
-      "observed_motion": "STATIC",
-      "slam_invalidated": false,
-      "physical_support": null,
-      "geometry_valid": true,
-      "centroid_world": [
-        0.4961,
-        -1.9076,
-        0.0
-      ],
-      "spatial_extent_m": 2.2513,
-      "coordinate_frame": "reference_frame",
-      "semantic_confidence": 0.9,
-      "geometric_confidence": 0.85,
-      "evidence_provenance": "MEASURED_CLUSTER_S2",
-      "source_sessions": [
-        "semantic_mapping_my_desk_recording_02"
-      ],
-      "source_track_ids": [
-        "storage box_001"
-      ],
-      "contributing_observations_count": 1,
-      "total_observations_count": 1,
-      "relocation_evaluable": false,
-      "measured_displacement_m": null,
-      "displacement_uncertainty_m": null,
-      "pose_history": [],
-      "first_seen": 200.0,
-      "last_seen": 200.0,
-      "vlm_decision": "RESOLVE_CHEAP",
-      "vlm_query_requested": false,
-      "vlm_inference_executed": false,
-      "vlm_reason_codes": []
-    },
-    "entity_s2_storage box_005": {
-      "entity_id": "entity_s2_storage box_005",
-      "semantic_class": "storage box",
-      "contextual_movability": "MOVABLE",
-      "observed_motion": "STATIC",
-      "slam_invalidated": false,
-      "physical_support": null,
-      "geometry_valid": true,
-      "centroid_world": [
-        0.4833,
-        -4.5635,
-        0.0
-      ],
-      "spatial_extent_m": 0.0813,
-      "coordinate_frame": "reference_frame",
-      "semantic_confidence": 0.9,
-      "geometric_confidence": 0.85,
-      "evidence_provenance": "MEASURED_CLUSTER_S2",
-      "source_sessions": [
-        "semantic_mapping_my_desk_recording_02"
-      ],
-      "source_track_ids": [
-        "storage box_005"
-      ],
-      "contributing_observations_count": 1,
-      "total_observations_count": 1,
-      "relocation_evaluable": false,
-      "measured_displacement_m": null,
-      "displacement_uncertainty_m": null,
-      "pose_history": [],
-      "first_seen": 200.0,
-      "last_seen": 200.0,
-      "vlm_decision": "RESOLVE_CHEAP",
-      "vlm_query_requested": false,
-      "vlm_inference_executed": false,
-      "vlm_reason_codes": []
-    },
-    "entity_s2_storage box_007": {
-      "entity_id": "entity_s2_storage box_007",
-      "semantic_class": "storage box",
-      "contextual_movability": "MOVABLE",
-      "observed_motion": "STATIC",
-      "slam_invalidated": false,
-      "physical_support": null,
-      "geometry_valid": true,
-      "centroid_world": [
-        -1.8883,
-        -1.7858,
-        0.0
-      ],
-      "spatial_extent_m": 0.6348,
-      "coordinate_frame": "reference_frame",
-      "semantic_confidence": 0.9,
-      "geometric_confidence": 0.85,
-      "evidence_provenance": "MEASURED_CLUSTER_S2",
-      "source_sessions": [
-        "semantic_mapping_my_desk_recording_02"
-      ],
-      "source_track_ids": [
-        "storage box_007"
-      ],
-      "contributing_observations_count": 1,
-      "total_observations_count": 1,
-      "relocation_evaluable": false,
-      "measured_displacement_m": null,
-      "displacement_uncertainty_m": null,
-      "pose_history": [],
-      "first_seen": 200.0,
-      "last_seen": 200.0,
-      "vlm_decision": "RESOLVE_CHEAP",
-      "vlm_query_requested": false,
-      "vlm_inference_executed": false,
-      "vlm_reason_codes": []
-    },
-    "entity_s2_storage box_009": {
-      "entity_id": "entity_s2_storage box_009",
+    "phys_storage box_009": {
+      "entity_id": "phys_storage box_009",
       "semantic_class": "storage box",
       "contextual_movability": "MOVABLE",
       "observed_motion": "STATIC",
@@ -7214,8 +6696,8 @@
       "vlm_inference_executed": false,
       "vlm_reason_codes": []
     },
-    "entity_s2_storage box_013": {
-      "entity_id": "entity_s2_storage box_013",
+    "phys_storage box_013": {
+      "entity_id": "phys_storage box_013",
       "semantic_class": "storage box",
       "contextual_movability": "MOVABLE",
       "observed_motion": "STATIC",
@@ -7251,45 +6733,8 @@
       "vlm_inference_executed": false,
       "vlm_reason_codes": []
     },
-    "entity_s2_whiteboard_001": {
-      "entity_id": "entity_s2_whiteboard_001",
-      "semantic_class": "whiteboard",
-      "contextual_movability": "IMMOVABLE",
-      "observed_motion": "STATIC",
-      "slam_invalidated": false,
-      "physical_support": null,
-      "geometry_valid": true,
-      "centroid_world": [
-        2.0659,
-        -2.4405,
-        0.0
-      ],
-      "spatial_extent_m": 0.1674,
-      "coordinate_frame": "reference_frame",
-      "semantic_confidence": 0.9,
-      "geometric_confidence": 0.85,
-      "evidence_provenance": "MEASURED_CLUSTER_S2",
-      "source_sessions": [
-        "semantic_mapping_my_desk_recording_02"
-      ],
-      "source_track_ids": [
-        "whiteboard_001"
-      ],
-      "contributing_observations_count": 1,
-      "total_observations_count": 1,
-      "relocation_evaluable": false,
-      "measured_displacement_m": null,
-      "displacement_uncertainty_m": null,
-      "pose_history": [],
-      "first_seen": 200.0,
-      "last_seen": 200.0,
-      "vlm_decision": "RESOLVE_CHEAP",
-      "vlm_query_requested": false,
-      "vlm_inference_executed": false,
-      "vlm_reason_codes": []
-    },
-    "entity_s2_whiteboard_002": {
-      "entity_id": "entity_s2_whiteboard_002",
+    "phys_whiteboard_002": {
+      "entity_id": "phys_whiteboard_002",
       "semantic_class": "whiteboard",
       "contextual_movability": "IMMOVABLE",
       "observed_motion": "STATIC",

@@ -330,7 +330,10 @@ def evaluate_stage5() -> Dict[str, Any]:
         "max_displacement_error_m": round(float(np.max(disp_errors_m)), 4) if disp_errors_m else None,
         "mean_relative_displacement_error_pct": round(float(np.mean(disp_rel_errors)), 2) if disp_rel_errors else None,
         "false_motion_rate_pct": round(false_motion_rate, 2),
-        "static_stability_accuracy_pct": round(100.0 - false_motion_rate, 2),
+        "static_stability_pass_rate_pct": round(100.0 - false_motion_rate, 2),
+        "static_stability_accuracy_pct": round(100.0 - false_motion_rate, 2),  # Backward-compatible alias
+        "static_structures_evaluated_count": total_static_evaluated,
+        "static_structures_falsely_moving_count": false_motion_count,
         "controlled_evaluations": controlled_eval,
     }
 
@@ -393,7 +396,8 @@ def evaluate_stage5() -> Dict[str, Any]:
     temporal_metrics = {
         "total_unique_tracks": total_tracks,
         "total_occlusion_gap_events": occlusion_events,
-        "occlusion_recovery_rate_pct": 100.0 if occlusion_events > 0 else 0.0,
+        "occlusion_recovery_rate_pct": None,  # Not evaluable: re-identification requires ground truth camera tracking across occlusion gaps
+        "occlusion_recovery_status": "NOT_EVALUABLE_NO_GT_REID",
         "multi_track_entity_count": id_switch_entities,
         "multi_track_entity_rate_pct": round(id_switch_rate, 2),
         "ground_truth_objects_evaluated": gt_evaluable,
@@ -473,7 +477,9 @@ def evaluate_stage5() -> Dict[str, Any]:
         "macro_f1": round(macro_f1, 4),
         "matched_support_macro_f1": round(macro_f1, 4),
         "matched_observations_count": len(y_true),
+        "total_observations_count": n_total,
         "evaluation_coverage_pct": round(cov_pct, 2),
+        "evaluable_coverage_ratio": f"{len(y_true)}/{n_total}",
         "classes_evaluated": len(f1_list),
         "total_classes": len(classes),
         "unknown_rate_pct": round(unknown_rate, 2),
@@ -482,6 +488,8 @@ def evaluate_stage5() -> Dict[str, Any]:
         "per_class": per_class,
         "confusion_matrix": cm,
         "unmatched_observations_count": unmatched_records,
+        "evidence_type": "fixed_semantic_class_mobility_prior_baseline",
+        "evaluation_scope": "Matched ground-truth taxonomy support only",
     }
 
     # -------------------------------------------------------------
