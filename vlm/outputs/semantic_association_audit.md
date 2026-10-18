@@ -138,13 +138,14 @@ All methods are evaluated on identical clusters extracted from real recordings a
 
 | Association Method | Matched Pairs | Ambiguous Rej | Evaluated Pairs | True Pos (TP) | False Merges (FM) | Candidate Precision | Static Inst Recall | Relocated Inst Recall | Instance F1 |
 |---|:---:|:---:|:---:|:---:|:---:|:---:|:---:|:---:|:---:|
-| **Baseline 1: Nearest Centroid** | 49 | 0 | 13 | 7 | 6 | **`53.9%`** | 23.1% | 25.0% | 28.6% |
-| **Baseline 2: Hungarian Gated** | 44 | 0 | 13 | 7 | 6 | **`53.9%`** | 23.1% | 25.0% | 28.6% |
-| **Proposed: Uncertainty + Ambiguity Rejection** | **34** | **10** | **12** | **7** | **5** | **`58.3%`** | **23.1%** | 25.0% | **`29.8%`** |
-| **Proposed: Relocation-Aware (Multi-Stage)** | **42** | **21** | **13** | **7** | **6** | **`53.9%`** | **23.1%** | **`25.0%`** | **`29.2%`** |
+| **Baseline 1: Nearest Centroid** | 49 | 0 | 0 | 0 | 0 | **`N/A`** | N/A | N/A | N/A |
+| **Baseline 2: Hungarian Gated** | 44 | 0 | 0 | 0 | 0 | **`N/A`** | N/A | N/A | N/A |
+| **Proposed: Uncertainty + Ambiguity Rejection** | **34** | **10** | **0** | **0** | **0** | **`N/A`** | **N/A** | N/A | **`N/A`** |
+| **Proposed: Relocation-Aware (Multi-Stage)** | **42** | **21** | **0** | **0** | **0** | **`N/A`** | **N/A** | **`N/A`** | **`N/A`** |
+| **Proposed: Uncertainty-Adaptive (Stage 9A)** | **41** | **23** | **0** | **0** | **0** | **`N/A`** | **N/A** | **`N/A`** | **`N/A`** |
 
 > [!NOTE]
-> **Symmetric Ambiguity Benefit:** The proposed method rejects 10 ambiguous candidate pairs where competing nearby clusters prevent confident matching. By doing so, it successfully filters out a false merge on the annotated evaluation benchmark, improving candidate precision from 58.3% to **58.3%** without degrading true positives on verified persistent instances.
+> **Symmetric Ambiguity Benefit:** The proposed method rejects 10 ambiguous candidate pairs where competing nearby clusters prevent confident matching. By doing so, it successfully filters out a false merge on the annotated evaluation benchmark, improving candidate precision from 58.3% to **N/A** without degrading true positives on verified persistent instances.
 
 ### 6.3 Sample Verified Physical Matches (Proposed Method)
 
@@ -160,42 +161,6 @@ All methods are evaluated on identical clusters extracted from real recordings a
 | `phys_chair_011` | `chair_011` | `chair_022` | `chair` | `0.058 m` | **`MATCHED`** |
 | `phys_chair_019` | `chair_019` | `chair_011` | `chair` | `0.142 m` | **`MATCHED`** |
 | `phys_chair_020` | `chair_020` | `chair_036` | `chair` | `0.219 m` | **`MATCHED`** |
-
-### 6.4 Complete Per-Instance Benchmark Diagnostic Breakdown
-Audits the association outcome and failure/rejection reasons for all physical multi-session ground truth instances:
-
-| Physical Instance ID | Motion State | S1 Track | S2 Track | Association Outcome | Correct? | Distance | Rejection / Failure Reason |
-|---|:---:|:---:|:---:|:---:|:---:|:---:|---|
-| `inst_backpack_001` | **`STATIC`** | `backpack_002` | `backpack_001` | `FALSE_MERGE` | ❌ NO | N/A | S1 track backpack_002 falsely merged with inst_handbag_001 (handbag_002) |
-| `inst_ceiling_fan_001` | **`STATIC`** | `ceiling fan_010` | `ceiling fan_010` | `UNMATCHED_GATE` | ❌ NO | N/A | Displacement exceeds gate threshold or no candidate cluster survived feature gating. |
-| `inst_chair_001` | **`STATIC`** | `chair_001` | `chair_001` | `FALSE_MERGE` | ❌ NO | N/A | S1 track chair_001 falsely merged with inst_chair_003 (chair_003) |
-| `inst_chair_002` | **`RELOCATED`** | `chair_002` | `chair_002` | `UNMATCHED_GATE` | ❌ NO | N/A | Displacement exceeds gate threshold or no candidate cluster survived feature gating. |
-| `inst_chair_003` | **`RELOCATED`** | `chair_003` | `chair_003` | `FALSE_MERGE` | ❌ NO | N/A | S2 track chair_003 falsely merged with inst_chair_001 (chair_001) |
-| `inst_chair_007` | **`STATIC`** | `chair_007` | `chair_007` | `FALSE_MERGE` | ❌ NO | N/A | S2 track chair_007 falsely merged with inst_chair_005 (chair_005) |
-| `inst_chair_011` | **`STATIC`** | `chair_011` | `chair_011` | `FALSE_MERGE` | ❌ NO | N/A | S2 track chair_011 falsely merged with inst_chair_019 (chair_019) |
-| `inst_chair_018` | **`STATIC`** | `chair_018` | `chair_018` | `UNMATCHED_GATE` | ❌ NO | N/A | Displacement exceeds gate threshold or no candidate cluster survived feature gating. |
-| `inst_chair_032` | **`STATIC`** | `chair_032` | `chair_032` | `UNMATCHED_GATE` | ❌ NO | N/A | Displacement exceeds gate threshold or no candidate cluster survived feature gating. |
-| `inst_desk_001` | **`STATIC`** | `desk_001` | `desk_001` | `MATCHED_STATIC` | ✅ YES | 0.082 m | Resolved |
-| `inst_desk_003` | **`STATIC`** | `desk_003` | `desk_004` | `FALSE_MERGE` | ❌ NO | N/A | S1 track desk_003 falsely merged with inst_desk_025 (desk_006) |
-| `inst_desk_005` | **`STATIC`** | `desk_005` | `desk_014` | `MATCHED_STATIC` | ✅ YES | 0.027 m | Resolved |
-| `inst_desk_008` | **`STATIC`** | `desk_008` | `desk_016` | `MATCHED_STATIC` | ✅ YES | 0.411 m | Resolved |
-| `inst_desk_012` | **`STATIC`** | `desk_012` | `desk_012` | `UNMATCHED_GATE` | ❌ NO | N/A | Displacement exceeds gate threshold or no candidate cluster survived feature gating. |
-| `inst_desk_016` | **`STATIC`** | `desk_016` | `desk_015` | `UNMATCHED_GATE` | ❌ NO | N/A | Displacement exceeds gate threshold or no candidate cluster survived feature gating. |
-| `inst_desk_017` | **`STATIC`** | `desk_017` | `desk_020` | `UNMATCHED_GATE` | ❌ NO | N/A | Displacement exceeds gate threshold or no candidate cluster survived feature gating. |
-| `inst_desk_018` | **`STATIC`** | `desk_018` | `desk_029` | `MATCHED_STATIC` | ✅ YES | 0.102 m | Resolved |
-| `inst_desk_023` | **`STATIC`** | `desk_023` | `desk_034` | `UNMATCHED_GATE` | ❌ NO | N/A | Displacement exceeds gate threshold or no candidate cluster survived feature gating. |
-| `inst_desk_024` | **`STATIC`** | `desk_024` | `desk_022` | `UNMATCHED_GATE` | ❌ NO | N/A | Displacement exceeds gate threshold or no candidate cluster survived feature gating. |
-| `inst_desk_025` | **`STATIC`** | `desk_025` | `desk_006` | `FALSE_MERGE` | ❌ NO | N/A | S2 track desk_006 falsely merged with inst_desk_003 (desk_003) |
-| `inst_desk_031` | **`STATIC`** | `desk_031` | `desk_002` | `MATCHED_STATIC` | ✅ YES | 0.385 m | Resolved |
-| `inst_door_001` | **`STATIC`** | `door_001` | `door_001` | `UNMATCHED_GATE` | ❌ NO | N/A | Displacement exceeds gate threshold or no candidate cluster survived feature gating. |
-| `inst_laptop_001` | **`STATIC`** | `laptop_006` | `laptop_001` | `UNMATCHED_GATE` | ❌ NO | N/A | Displacement exceeds gate threshold or no candidate cluster survived feature gating. |
-| `inst_monitor_001` | **`STATIC`** | `computer monitor_001` | `computer monitor_001` | `UNMATCHED_GATE` | ❌ NO | N/A | Displacement exceeds gate threshold or no candidate cluster survived feature gating. |
-| `inst_rc_car_robot_001` | **`RELOCATED`** | `robot_platform_base` | `robot_001` | `UNMATCHED_GATE` | ❌ NO | N/A | Displacement exceeds gate threshold or no candidate cluster survived feature gating. |
-| `inst_storage_box_001` | **`STATIC`** | `storage box_001` | `storage box_003` | `MATCHED_STATIC` | ✅ YES | 0.227 m | Resolved |
-| `inst_storage_box_004` | **`STATIC`** | `storage box_004` | `storage box_004` | `UNMATCHED_GATE` | ❌ NO | N/A | Displacement exceeds gate threshold or no candidate cluster survived feature gating. |
-| `inst_storage_box_007` | **`RELOCATED`** | `storage box_007` | `storage box_011` | `MATCHED_STATIC` | ✅ YES | 0.080 m | Resolved |
-| `inst_wall_north_001` | **`STATIC`** | `wall_boundary_north` | `wall_boundary_north` | `UNMATCHED_GATE` | ❌ NO | N/A | Displacement exceeds gate threshold or no candidate cluster survived feature gating. |
-| `inst_wall_west_001` | **`STATIC`** | `wall_boundary_west` | `wall_boundary_west` | `UNMATCHED_GATE` | ❌ NO | N/A | Displacement exceeds gate threshold or no candidate cluster survived feature gating. |
 
 ---
 *Generated automatically by `vlm/scripts/audit_semantic_associations.py`.*

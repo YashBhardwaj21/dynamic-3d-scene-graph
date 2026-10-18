@@ -1126,20 +1126,182 @@ def build_canonical_session_track_mapping(
     else:
         p_canon = repo_root / "vlm" / "benchmarks" / "cross_session_identity_annotations.json"
 
-    canonical_map: Dict[Tuple[str, str], str] = {}
-    gt_cross_pairs: Dict[Tuple[str, str], Dict[str, Any]] = {}
+@dataclass
+class ClusterIdentityResolution:
+    """Canonical ground-truth identity resolution for an intra-session entity cluster."""
+    cluster_id: str
+    session: str
+    underlying_track_ids: List[str]
+    annotated_physical_instance_ids: List[str]
+    annotation_status: str  # "ANNOTATED_SINGLE_ID", "UNANNOTATED", "ALIAS_CONFLICT", "ANNOTATION_CONFLICT"
+    resolved_instance_id: Optional[str] = None
 
-    if not p_canon.exists():
-        raise FileNotFoundError(
-            f"Canonical cross-session benchmark missing at: {p_canon}. "
-            f"Implicit fallback to movability_ground_truth.json is prohibited."
+
+def resolve_cluster_canonical_identity(
+    cluster: Optional[EntityCluster],
+    cluster_id: str,
+    session: str,
+    canonical_map: Dict[Tuple[str, str], str],
+) -> ClusterIdentityResolution:
+    """Resolve the canonical ground-truth physical identity for a cluster and all its aliases.
+
+    Contract:
+    - Look up the canonical ground-truth identity of every underlying alias.
+    - If no aliases are annotated, classify the cluster as UNANNOTATED.
+    - If all annotated aliases map to the exact same physical instance, return ANNOTATED_SINGLE_ID.
+    - If aliases map to multiple physical instances, return ALIAS_CONFLICT and preserve ALL conflicting IDs.
+      NEVER pick the first one.
+    """
+    track_ids: List[str] = [cluster_id]
+    if cluster is not None:
+        if hasattr(cluster, "merged_entity_ids") and cluster.merged_entity_ids:
+            for tid in cluster.merged_entity_ids:
+                if tid not in track_ids:
+                    track_ids.append(tid)
+        if hasattr(cluster, "local_track_ids") and cluster.local_track_ids:
+            for tid in cluster.local_track_ids:
+                if tid not in track_ids:
+                    track_ids.append(tid)
+
+    found_instances: Set[str] = set()
+    for tid in track_ids:
+        inst = canonical_map.get((session, tid))
+        if inst is None:
+            # Match session key across session naming variations
+            for (s_key, t_key), val in canonical_map.items():
+                if t_key == tid and (
+                    s_key == session
+                    or ("01" in s_key and "01" in session)
+                    or ("02" in s_key and "02" in session)
+                ):
+                    inst = val
+                    break
+        if inst is not None:
+            found_instances.add(inst)
+
+    annotated_list = sorted(list(found_instances))
+    if not annotated_list:
+        return ClusterIdentityResolution(
+            cluster_id=cluster_id,
+            session=session,
+            underlying_track_ids=track_ids,
+            annotated_physical_instance_ids=[],
+            annotation_status="UNANNOTATED",
+            resolved_instance_id=None,
+        )
+    elif len(annotated_list) == 1:
+        return ClusterIdentityResolution(
+            cluster_id=cluster_id,
+            session=session,
+            underlying_track_ids=track_ids,
+            annotated_physical_instance_ids=annotated_list,
+            annotation_status="ANNOTATED_SINGLE_ID",
+            resolved_instance_id=annotated_list[0],
+        )
+    else:
+        return ClusterIdentityResolution(
+            cluster_id=cluster_id,
+            session=session,
+            underlying_track_ids=track_ids,
+            annotated_physical_instance_ids=annotated_list,
+            annotation_status="ALIAS_CONFLICT",
+            resolved_instance_id=None,
         )
 
+
+def _make_metric_record(numerator: int, denominator: int, definition: str) -> Dict[str, Any]:
+    """Construct an auditable metric dictionary with explicit numerator and denominator."""
+    value_pct = round((numerator / denominator) * 100.0, 2) if denominator > 0 else None
+    return {
+        "numerator": numerator,
+        "denominator": denominator,
+        "value_pct": value_pct,
+        "definition": definition,
+    }
+
+
+def reconcile_evaluation_invariants(
+    evaluation_result: Dict[str, Any],
+    evaluable_instance_count: int,
+) -> List[str]:
+    """Verify internal mathematical consistency of cross-session identity evaluation."""
+    violations: List[str] = []
+    per_inst = evaluation_result.get("per_instance_results", [])
+    if len(per_inst) != evaluable_instance_count:
+        violations.append(
+            f"Evaluated instance count ({len(per_inst)}) does not equal evaluable benchmark population ({evaluable_instance_count})"
+        )
+
+    valid_outcomes = {
+        "NOT_EVALUABLE",
+        "ALIAS_CONFLICT",
+        "CORRECTLY_MATCHED",
+        "FALSE_MERGE",
+        "AMBIGUOUS",
+        "UNMATCHED",
+    }
+    for r in per_inst:
+        out = r.get("outcome")
+        if out not in valid_outcomes:
+            violations.append(f"Instance {r.get('physical_instance_id')} has invalid outcome: {out}")
+        if r.get("is_correct") != (out == "CORRECTLY_MATCHED"):
+            violations.append(
+                f"Instance {r.get('physical_instance_id')} has inconsistent is_correct ({r.get('is_correct')}) for outcome {out}"
+            )
+
+    correctly_matched_count = sum(1 for r in per_inst if r.get("outcome") == "CORRECTLY_MATCHED")
+    rec_count = evaluation_result.get("recovered_all_instances_count", 0)
+    if correctly_matched_count != rec_count:
+        violations.append(
+            f"Recovered instance count ({rec_count}) does not match count of CORRECTLY_MATCHED instances ({correctly_matched_count})"
+        )
+
+    rec_metric = evaluation_result.get("instance_recall")
+    if rec_metric and rec_metric["numerator"] != correctly_matched_count:
+        violations.append(
+            f"instance_recall numerator ({rec_metric['numerator']}) != correctly_matched_count ({correctly_matched_count})"
+        )
+
+    return violations
+
+
+def build_canonical_session_track_mapping(
+    gt_path: Optional[Union[Path, str, Dict[str, Any]]] = None,
+) -> Tuple[Dict[Tuple[str, str], str], Dict[Tuple[str, str], Dict[str, Any]]]:
+    """Parse and validate canonical ground truth (session, track_id) -> physical_instance_id mapping.
+
+    Enforces that:
+    1. Annotations point to canonical benchmark cross_session_identity_annotations.json.
+    2. No contradictory physical instance assignments exist for the same (session, track_id) tuple.
+    3. Cross-session evaluation pairs are populated for instances observed across sessions.
+    """
     canonical_map: Dict[Tuple[str, str], str] = {}
     gt_cross_pairs: Dict[Tuple[str, str], Dict[str, Any]] = {}
 
-    with open(p_canon, "r", encoding="utf-8") as f:
-        data = json.load(f)
+    if isinstance(gt_path, dict):
+        data = gt_path
+    else:
+        if gt_path is not None:
+            p_canon = Path(gt_path)
+            if not p_canon.exists():
+                if (repo_root / p_canon).exists():
+                    p_canon = repo_root / p_canon
+                elif (p_canon.parent / "cross_session_identity_annotations.json").exists():
+                    p_canon = p_canon.parent / "cross_session_identity_annotations.json"
+                elif (p_canon / "cross_session_identity_annotations.json").exists():
+                    p_canon = p_canon / "cross_session_identity_annotations.json"
+        else:
+            p_canon = repo_root / "vlm" / "benchmarks" / "cross_session_identity_annotations.json"
+
+        if not p_canon.exists():
+            raise FileNotFoundError(
+                f"Canonical cross-session benchmark missing at: {p_canon}. "
+                f"Implicit fallback to movability_ground_truth.json is prohibited."
+            )
+
+        with open(p_canon, "r", encoding="utf-8") as f:
+            data = json.load(f)
+
     annotations = data.get("annotations", [])
     inst_records = defaultdict(list)
     for a in annotations:
@@ -1153,8 +1315,8 @@ def build_canonical_session_track_mapping(
         inst_records[inst].append(a)
 
     for inst, recs in inst_records.items():
-        s1_trks = sorted(set(r["local_track_id"] for r in recs if "recording_01" in r["source_session"]))
-        s2_trks = sorted(set(r["local_track_id"] for r in recs if "recording_02" in r["source_session"]))
+        s1_trks = sorted(set(r["local_track_id"] for r in recs if "recording_01" in r["source_session"] or "rec01" in r["source_session"]))
+        s2_trks = sorted(set(r["local_track_id"] for r in recs if "recording_02" in r["source_session"] or "rec02" in r["source_session"]))
         if s1_trks and s2_trks:
             sample = recs[0]
             for t1 in s1_trks:
@@ -1170,23 +1332,30 @@ def build_canonical_session_track_mapping(
 
 def evaluate_matcher_against_ground_truth(
     association_result: AssociationResult,
-    gt_path: Optional[Path] = None,
+    gt_path: Optional[Union[Path, str, Dict[str, Any]]] = None,
     s1_clusters: Optional[Dict[str, EntityCluster]] = None,
     s2_clusters: Optional[Dict[str, EntityCluster]] = None,
+    provenance_metadata: Optional[Dict[str, Any]] = None,
 ) -> Dict[str, Any]:
     """Rigorously evaluate cross-session physical identity matches against benchmark ground truth.
 
-    Transparent Denominators:
-    - Annotated Evaluation Subset: Matches where both S1 and S2 entities are annotated in GT.
-    - True Positives (TP): Annotated pairs where inst1 == inst2 (correctly resolving physical identity).
-    - False Merges (FM): Annotated pairs where inst1 != inst2 (merging distinct physical objects).
-    - Unannotated Candidate Pairs: Matches outside GT annotation scope (reported separately, NOT counted as false positives).
-    - Physical-Instance Level Recall: Evaluated against the 30 multi-session ground-truth instances
-      (26 static, 4 relocated) to eliminate track Cartesian product distortion.
+    Transparent Three-Level Evaluation Contract:
+    1. Candidate Pair-Level Evaluation:
+       - Evaluates whether individual accepted matches link track clusters of the same physical object.
+       - Pair precision = correct annotated accepted pairs / all annotated accepted pairs (|P_A|).
+       - Pair false-merge rate = incorrect annotated accepted pairs / all annotated accepted pairs (|P_A|).
+    2. Physical-Instance Level Evaluation:
+       - Evaluates whether each annotated physical object in G is recovered across sessions.
+       - Evaluated across the multi-session physical instances (G) with one primary outcome per instance.
+       - Instance recall = |I_R| / |G|.
+       - Instance miss rate = (|G| - |I_R|) / |G|.
+    3. Predicted Persistent-ID Cluster Evaluation:
+       - Evaluates whether physical objects are fragmented across >= 2 predicted IDs (split-instance rate)
+         or merged into a single predicted ID with other objects (merge-instance rate).
     """
     canonical_map, gt_cross_pairs = build_canonical_session_track_mapping(gt_path)
 
-    # Multi-session ground-truth physical instances
+    # Multi-session ground-truth physical instances (G)
     all_multi_session_instances: Set[str] = set()
     static_multi_session_instances: Set[str] = set()
     relocated_multi_session_instances: Set[str] = set()
@@ -1199,105 +1368,59 @@ def evaluate_matcher_against_ground_truth(
         else:
             relocated_multi_session_instances.add(inst_id)
 
-    annotated_eval_matches = []
-    unannotated_matches = []
-    true_positives = 0
-    false_merges = 0
-    recovered_instances: Set[str] = set()
-    recovered_static_instances: Set[str] = set()
-    recovered_relocated_instances: Set[str] = set()
+    total_evaluable_instances = len(all_multi_session_instances)
 
-    for m in association_result.matched_pairs:
-        t1 = m.s1_entity_id
-        t2 = m.s2_entity_id
-        inst1 = canonical_map.get(("semantic_mapping_my_desk_recording_01", t1))
-        inst2 = canonical_map.get(("semantic_mapping_my_desk_recording_02", t2))
+    s1_session = (
+        next((c.source_session for c in s1_clusters.values()), "semantic_mapping_my_desk_recording_01")
+        if s1_clusters
+        else "semantic_mapping_my_desk_recording_01"
+    )
+    s2_session = (
+        next((c.source_session for c in s2_clusters.values()), "semantic_mapping_my_desk_recording_02")
+        if s2_clusters
+        else "semantic_mapping_my_desk_recording_02"
+    )
 
-        # Check merged cluster aliases if direct entity ID is unannotated
-        if inst1 is None and s1_clusters and t1 in s1_clusters:
-            for alias in getattr(s1_clusters[t1], "merged_entity_ids", []):
-                cand = canonical_map.get(("semantic_mapping_my_desk_recording_01", alias))
-                if cand is not None:
-                    inst1 = cand
-                    break
-        if inst2 is None and s2_clusters and t2 in s2_clusters:
-            for alias in getattr(s2_clusters[t2], "merged_entity_ids", []):
-                cand = canonical_map.get(("semantic_mapping_my_desk_recording_02", alias))
-                if cand is not None:
-                    inst2 = cand
-                    break
+    # Step 1: Pre-resolve canonical identity for all clusters
+    s1_resolutions: Dict[str, ClusterIdentityResolution] = {}
+    if s1_clusters:
+        for cid, c in s1_clusters.items():
+            s1_resolutions[cid] = resolve_cluster_canonical_identity(c, cid, s1_session, canonical_map)
+    s2_resolutions: Dict[str, ClusterIdentityResolution] = {}
+    if s2_clusters:
+        for cid, c in s2_clusters.items():
+            s2_resolutions[cid] = resolve_cluster_canonical_identity(c, cid, s2_session, canonical_map)
 
-        rec = {
-            "s1_entity": t1,
-            "s2_entity": t2,
-            "s1_gt_instance": inst1,
-            "s2_gt_instance": inst2,
-            "distance_m": m.distance_m,
-            "confidence": m.confidence,
-            "match_status": m.status,
-        }
+    alias_conflict_clusters_count = sum(
+        1 for r in list(s1_resolutions.values()) + list(s2_resolutions.values())
+        if r.annotation_status == "ALIAS_CONFLICT"
+    )
 
-        if inst1 is not None and inst2 is not None:
-            is_correct = (inst1 == inst2)
-            rec["is_correct"] = is_correct
-            annotated_eval_matches.append(rec)
-            if is_correct:
-                true_positives += 1
-                recovered_instances.add(inst1)
-                if inst1 in static_multi_session_instances:
-                    recovered_static_instances.add(inst1)
-                else:
-                    recovered_relocated_instances.add(inst1)
-            else:
-                false_merges += 1
-        else:
-            rec["is_annotated"] = False
-            rec["annotation_status"] = "OUT_OF_BENCHMARK_ANNOTATION_SCOPE"
-            unannotated_matches.append(rec)
+    # Step 2: Normalize prediction inventory
+    accepted_eval_records: List[Dict[str, Any]] = []
+    annotated_eval_matches: List[Dict[str, Any]] = []
+    unannotated_matches: List[Dict[str, Any]] = []
+    true_positive_pairs = 0
+    pair_false_merges = 0
 
-    total_annotated = len(annotated_eval_matches)
-    missed_static_instances = sorted(static_multi_session_instances - recovered_static_instances)
-    missed_relocated_instances = sorted(relocated_multi_session_instances - recovered_relocated_instances)
-
-    n_static = max(1, len(static_multi_session_instances))
-    n_reloc = max(1, len(relocated_multi_session_instances))
-    n_all = max(1, len(all_multi_session_instances))
-    n_gt_pairs = max(1, len(gt_cross_pairs))
-
-    # 1. Annotated Candidate Pair-level Metrics (Denominator: Annotated Evaluated Pairs)
-    precision_on_annotated = (true_positives / max(1, total_annotated)) * 100.0 if total_annotated > 0 else 0.0
-    false_merge_rate = (false_merges / max(1, total_annotated)) * 100.0 if total_annotated > 0 else 0.0
-    pair_recall = (true_positives / n_gt_pairs) * 100.0
-    pair_f1 = (2 * precision_on_annotated * pair_recall / (precision_on_annotated + pair_recall)) if (precision_on_annotated + pair_recall) > 0 else 0.0
-
-    # 2. Physical-Instance Level Metrics (Denominator: Ground Truth Physical Instances)
-    recall_on_static = (len(recovered_static_instances) / n_static) * 100.0
-    recall_on_relocated = (len(recovered_relocated_instances) / n_reloc) * 100.0
-    recall_on_all = (len(recovered_instances) / n_all) * 100.0
-    instance_miss_rate = ((n_all - len(recovered_instances)) / n_all) * 100.0
-
-    # True False Split & False Merge Calculations:
-    # A true false split occurs when a single ground truth instance is split across >= 2 predicted persistent IDs.
     gt_inst_to_pids: Dict[str, Set[str]] = defaultdict(set)
     pid_to_gt_insts: Dict[str, Set[str]] = defaultdict(set)
+
     for m in association_result.matched_pairs:
         t1 = m.s1_entity_id
         t2 = m.s2_entity_id
-        inst1 = canonical_map.get(("semantic_mapping_my_desk_recording_01", t1))
-        inst2 = canonical_map.get(("semantic_mapping_my_desk_recording_02", t2))
-        if inst1 is None and s1_clusters and t1 in s1_clusters:
-            for alias in getattr(s1_clusters[t1], "merged_entity_ids", []):
-                cand = canonical_map.get(("semantic_mapping_my_desk_recording_01", alias))
-                if cand is not None:
-                    inst1 = cand
-                    break
-        if inst2 is None and s2_clusters and t2 in s2_clusters:
-            for alias in getattr(s2_clusters[t2], "merged_entity_ids", []):
-                cand = canonical_map.get(("semantic_mapping_my_desk_recording_02", alias))
-                if cand is not None:
-                    inst2 = cand
-                    break
-        pred_pid = m.persistent_entity_id
+        c1 = s1_clusters.get(t1) if s1_clusters else None
+        c2 = s2_clusters.get(t2) if s2_clusters else None
+        r1 = s1_resolutions.get(t1) or resolve_cluster_canonical_identity(c1, t1, s1_session, canonical_map)
+        r2 = s2_resolutions.get(t2) or resolve_cluster_canonical_identity(c2, t2, s2_session, canonical_map)
+
+        has_alias_conflict = (r1.annotation_status == "ALIAS_CONFLICT" or r2.annotation_status == "ALIAS_CONFLICT")
+        is_annotated = (r1.annotation_status == "ANNOTATED_SINGLE_ID" and r2.annotation_status == "ANNOTATED_SINGLE_ID")
+
+        inst1 = r1.resolved_instance_id
+        inst2 = r2.resolved_instance_id
+        pred_pid = m.persistent_entity_id or f"pred_pid_{t1}_{t2}"
+
         if inst1:
             gt_inst_to_pids[inst1].add(pred_pid)
             pid_to_gt_insts[pred_pid].add(inst1)
@@ -1305,121 +1428,324 @@ def evaluate_matcher_against_ground_truth(
             gt_inst_to_pids[inst2].add(pred_pid)
             pid_to_gt_insts[pred_pid].add(inst2)
 
-    true_split_instances = [inst for inst, pids in gt_inst_to_pids.items() if len(pids) > 1]
-    true_false_split_rate = (len(true_split_instances) / n_all) * 100.0
+        if has_alias_conflict:
+            is_correct = False
+            pair_status = "ALIAS_CONFLICT"
+            error_type = "ALIAS_CONFLICT"
+        elif is_annotated:
+            is_correct = (inst1 == inst2)
+            pair_status = "CORRECT_MATCH" if is_correct else "FALSE_MERGE"
+            error_type = None if is_correct else "FALSE_MERGE"
+            if is_correct:
+                true_positive_pairs += 1
+            else:
+                pair_false_merges += 1
+        else:
+            is_correct = False
+            pair_status = "OUT_OF_BENCHMARK_SCOPE"
+            error_type = "OUT_OF_BENCHMARK_SCOPE"
 
-    merged_pids = {pid: insts for pid, insts in pid_to_gt_insts.items() if len(insts) > 1}
-    true_merge_instances = {inst for insts in merged_pids.values() for inst in insts}
-    true_false_merge_rate = (len(true_merge_instances) / n_all) * 100.0
+        rec = {
+            "s1_entity": t1,
+            "s2_entity": t2,
+            "persistent_entity_id": pred_pid,
+            "s1_gt_instance": inst1,
+            "s2_gt_instance": inst2,
+            "s1_resolution_status": r1.annotation_status,
+            "s2_resolution_status": r2.annotation_status,
+            "is_annotated": is_annotated,
+            "is_correct": is_correct,
+            "distance_m": m.distance_m,
+            "confidence": m.confidence,
+            "match_status": m.status,
+            "pair_evaluation_status": pair_status,
+            "error_type": error_type,
+        }
+        accepted_eval_records.append(rec)
+        if is_annotated:
+            annotated_eval_matches.append(rec)
+        else:
+            unannotated_matches.append(rec)
 
-    # Instance-level precision: recovered instances vs predicted unique instances in annotated scope
+    ambiguous_records: List[Dict[str, Any]] = []
+    for m in association_result.ambiguous_pairs:
+        t1 = m.s1_entity_id
+        t2 = m.s2_entity_id
+        c1 = s1_clusters.get(t1) if s1_clusters else None
+        c2 = s2_clusters.get(t2) if s2_clusters else None
+        r1 = s1_resolutions.get(t1) or resolve_cluster_canonical_identity(c1, t1, s1_session, canonical_map)
+        r2 = s2_resolutions.get(t2) or resolve_cluster_canonical_identity(c2, t2, s2_session, canonical_map)
+        ambiguous_records.append({
+            "s1_entity": t1,
+            "s2_entity": t2,
+            "s1_gt_instance": r1.resolved_instance_id,
+            "s2_gt_instance": r2.resolved_instance_id,
+            "distance_m": m.distance_m,
+            "status": "REJECTED_AMBIGUOUS",
+        })
+
+    # Step 3: Build normalized physical-instance outcome table
+    normalized_instance_records: List[Dict[str, Any]] = []
+    per_instance_table: List[Dict[str, Any]] = []
+
+    for inst_id in sorted(all_multi_session_instances):
+        s1_trks = sorted(set(trk for (sess, trk), i in canonical_map.items() if i == inst_id and ("01" in sess or sess == s1_session)))
+        s2_trks = sorted(set(trk for (sess, trk), i in canonical_map.items() if i == inst_id and ("02" in sess or sess == s2_session)))
+        motion_state = "STATIC" if inst_id in static_multi_session_instances else "RELOCATED"
+
+        s1_cluster_ids = sorted(list(set(cid for cid, res in s1_resolutions.items() if inst_id in res.annotated_physical_instance_ids)))
+        s2_cluster_ids = sorted(list(set(cid for cid, res in s2_resolutions.items() if inst_id in res.annotated_physical_instance_ids)))
+
+        has_alias_conflict = any(
+            s1_resolutions[cid].annotation_status == "ALIAS_CONFLICT" for cid in s1_cluster_ids if cid in s1_resolutions
+        ) or any(
+            s2_resolutions[cid].annotation_status == "ALIAS_CONFLICT" for cid in s2_cluster_ids if cid in s2_resolutions
+        )
+
+        correct_pairs = [
+            p for p in accepted_eval_records
+            if p["s1_gt_instance"] == inst_id and p["s2_gt_instance"] == inst_id and p["is_correct"]
+        ]
+        false_merge_pairs = [
+            p for p in accepted_eval_records
+            if (p["s1_gt_instance"] == inst_id or p["s2_gt_instance"] == inst_id) and not p["is_correct"]
+        ]
+        ambig_pairs = [
+            p for p in ambiguous_records
+            if p["s1_gt_instance"] == inst_id or p["s2_gt_instance"] == inst_id
+        ]
+
+        accepted_pids = sorted(list(gt_inst_to_pids.get(inst_id, set())))
+        shares_pid_with_other_gt = any(len(pid_to_gt_insts[pid]) > 1 for pid in accepted_pids)
+        involved_in_merge = (len(false_merge_pairs) > 0 or shares_pid_with_other_gt)
+        involved_in_split = (len(accepted_pids) > 1)
+
+        # Precedence Decision Policy for Primary Outcome
+        if not (s1_trks and s2_trks):
+            outcome = "NOT_EVALUABLE"
+            reason = "Instance missing required multi-session track annotations"
+        elif has_alias_conflict:
+            outcome = "ALIAS_CONFLICT"
+            reason = "Underlying consolidated cluster merges contradictory ground-truth identities"
+        elif len(correct_pairs) > 0:
+            outcome = "CORRECTLY_MATCHED"
+            reason = f"Successfully recovered via {len(correct_pairs)} correct accepted match(es)"
+        elif involved_in_merge:
+            outcome = "FALSE_MERGE"
+            reason = f"Falsely merged with other physical instance(s) in accepted prediction(s)"
+        elif len(ambig_pairs) > 0:
+            outcome = "AMBIGUOUS"
+            reason = f"Candidate pair was rejected due to ambiguity ({len(ambig_pairs)} ambiguous candidate(s))"
+        else:
+            outcome = "UNMATCHED"
+            reason = "No candidate cluster survived feature gating or spatial distance threshold"
+
+        is_recovered = (outcome == "CORRECTLY_MATCHED")
+        had_ambiguous_candidates = (len(ambig_pairs) > 0)
+        had_unmatched_tracks = (
+            any(t not in [p["s1_entity"] for p in correct_pairs] for t in s1_trks)
+            or any(t not in [p["s2_entity"] for p in correct_pairs] for t in s2_trks)
+        )
+
+        best_pair = correct_pairs[0] if correct_pairs else (false_merge_pairs[0] if false_merge_pairs else None)
+
+        inst_record = {
+            "physical_instance_id": inst_id,
+            "motion_state": motion_state,
+            "expected_in_session_1": True,
+            "expected_in_session_2": True,
+            "observed_in_session_1": bool(s1_cluster_ids or s1_trks),
+            "observed_in_session_2": bool(s2_cluster_ids or s2_trks),
+            "s1_track_ids": s1_trks,
+            "s2_track_ids": s2_trks,
+            "s1_cluster_ids": s1_cluster_ids,
+            "s2_cluster_ids": s2_cluster_ids,
+            "s1_representative_track_id": best_pair["s1_entity"] if best_pair else (s1_trks[0] if s1_trks else "NONE"),
+            "s2_representative_track_id": best_pair["s2_entity"] if best_pair else (s2_trks[0] if s2_trks else "NONE"),
+            "s1_gt_instance": best_pair["s1_gt_instance"] if best_pair else inst_id,
+            "s2_gt_instance": best_pair["s2_gt_instance"] if best_pair else (inst_id if outcome == "CORRECTLY_MATCHED" else None),
+            "accepted_persistent_id": best_pair["persistent_entity_id"] if best_pair else (accepted_pids[0] if accepted_pids else None),
+            "accepted_predicted_ids": accepted_pids,
+            "correct_match_count": len(correct_pairs),
+            "incorrect_match_count": len(false_merge_pairs),
+            "ambiguous_candidate_count": len(ambig_pairs),
+            "outcome": outcome,
+            "is_correct": is_recovered,
+            "distance_m": round(best_pair["distance_m"], 4) if best_pair and best_pair.get("distance_m") is not None else None,
+            "rejection_reason": reason,
+            "involved_in_split": involved_in_split,
+            "involved_in_merge": involved_in_merge,
+            "had_ambiguous_candidates": had_ambiguous_candidates,
+            "had_unmatched_tracks": had_unmatched_tracks,
+            "reason_codes": [outcome],
+        }
+        normalized_instance_records.append(inst_record)
+
+        per_instance_table.append({
+            "physical_instance_id": inst_id,
+            "motion_state": motion_state,
+            "s1_track_id": inst_record["s1_representative_track_id"],
+            "s2_track_id": inst_record["s2_representative_track_id"],
+            "outcome": outcome,
+            "is_correct": is_recovered,
+            "distance_m": inst_record["distance_m"],
+            "rejection_reason": reason,
+            "involved_in_split": involved_in_split,
+            "involved_in_merge": involved_in_merge,
+            "had_ambiguous_candidates": had_ambiguous_candidates,
+        })
+
+    # Step 4: Compute structured metrics
+    recovered_instances = [r for r in normalized_instance_records if r["outcome"] == "CORRECTLY_MATCHED"]
+    recovered_static_instances = [r for r in recovered_instances if r["motion_state"] == "STATIC"]
+    recovered_relocated_instances = [r for r in recovered_instances if r["motion_state"] == "RELOCATED"]
+    missed_static_instances = [
+        r["physical_instance_id"] for r in normalized_instance_records
+        if r["motion_state"] == "STATIC" and r["outcome"] != "CORRECTLY_MATCHED"
+    ]
+    missed_relocated_instances = [
+        r["physical_instance_id"] for r in normalized_instance_records
+        if r["motion_state"] == "RELOCATED" and r["outcome"] != "CORRECTLY_MATCHED"
+    ]
+
+    split_instances = [r for r in normalized_instance_records if r["involved_in_split"]]
+    merge_instances = [r for r in normalized_instance_records if r["involved_in_merge"]]
+    ambiguous_instances = [r for r in normalized_instance_records if r["outcome"] == "AMBIGUOUS"]
+    unmatched_instances = [r for r in normalized_instance_records if r["outcome"] == "UNMATCHED"]
+
+    total_annotated_pairs = len(annotated_eval_matches)
+    total_accepted_pairs = len(association_result.matched_pairs)
+
+    metric_instance_recall = _make_metric_record(
+        len(recovered_instances),
+        total_evaluable_instances,
+        "Correctly recovered evaluable physical instances divided by all evaluable expected physical instances",
+    )
+    metric_instance_miss_rate = _make_metric_record(
+        total_evaluable_instances - len(recovered_instances),
+        total_evaluable_instances,
+        "Unrecovered expected physical instances divided by all evaluable expected physical instances",
+    )
+    metric_pair_precision = _make_metric_record(
+        true_positive_pairs,
+        total_annotated_pairs,
+        "Correct annotated accepted candidate pairs divided by all annotated accepted candidate pairs",
+    )
+    metric_pair_false_merge_rate = _make_metric_record(
+        pair_false_merges,
+        total_annotated_pairs,
+        "Incorrect annotated accepted candidate pairs (inst1 != inst2) divided by all annotated accepted candidate pairs",
+    )
+    metric_split_instance_rate = _make_metric_record(
+        len(split_instances),
+        total_evaluable_instances,
+        "Evaluable physical instances represented by >= 2 distinct predicted persistent IDs divided by all evaluable expected physical instances",
+    )
+    metric_merge_instance_rate = _make_metric_record(
+        len(merge_instances),
+        total_evaluable_instances,
+        "Evaluable physical instances involved in a multi-instance predicted ID or false merge divided by all evaluable expected physical instances",
+    )
+    metric_ambiguity_rate = _make_metric_record(
+        len(ambiguous_instances),
+        total_evaluable_instances,
+        "Evaluable physical instances whose primary outcome is unresolved ambiguity divided by all evaluable expected physical instances",
+    )
+    metric_unmatched_rate = _make_metric_record(
+        len(unmatched_instances),
+        total_evaluable_instances,
+        "Evaluable expected physical instances with no accepted match divided by all evaluable expected physical instances",
+    )
+    metric_annotation_coverage = _make_metric_record(
+        total_annotated_pairs,
+        total_accepted_pairs,
+        "Accepted candidate pairs with both endpoints resolvable in benchmark divided by all accepted candidate pairs",
+    )
+
+    static_recall = _make_metric_record(
+        len(recovered_static_instances),
+        len(static_multi_session_instances),
+        "Recovered static physical instances divided by all expected static physical instances",
+    )
+    reloc_recall = _make_metric_record(
+        len(recovered_relocated_instances),
+        len(relocated_multi_session_instances),
+        "Recovered relocated physical instances divided by all expected relocated physical instances",
+    )
+
+    # Instance-level precision based on unique ground-truth identities claimed in accepted annotated pairs
     claimed_instances = set()
     for rec in annotated_eval_matches:
         if rec.get("s1_gt_instance"):
             claimed_instances.add(rec["s1_gt_instance"])
         if rec.get("s2_gt_instance"):
             claimed_instances.add(rec["s2_gt_instance"])
-    instance_precision = (len(recovered_instances) / max(1, len(claimed_instances))) * 100.0 if claimed_instances else 0.0
-    instance_f1 = (
-        (2 * instance_precision * recall_on_all / (instance_precision + recall_on_all))
-        if (instance_precision + recall_on_all) > 0 else 0.0
+    metric_instance_precision = _make_metric_record(
+        len(recovered_instances),
+        len(claimed_instances),
+        "Correctly recovered physical instances divided by unique ground-truth physical instances claimed in annotated predictions",
     )
 
-    # 3. Per-Instance Detailed Diagnostic Table
-    matched_by_pair = {(m.s1_entity_id, m.s2_entity_id): m for m in association_result.matched_pairs}
-    ambiguous_set = {(m.s1_entity_id, m.s2_entity_id) for m in association_result.ambiguous_pairs}
-    s1_matched_map = {m.s1_entity_id: m for m in association_result.matched_pairs}
-    s2_matched_map = {m.s2_entity_id: m for m in association_result.matched_pairs}
+    pair_rec_val = (true_positive_pairs / len(gt_cross_pairs)) * 100.0 if gt_cross_pairs else None
+    pair_f1 = (
+        round(2 * metric_pair_precision["value_pct"] * pair_rec_val / (metric_pair_precision["value_pct"] + pair_rec_val), 2)
+        if metric_pair_precision["value_pct"] and pair_rec_val and (metric_pair_precision["value_pct"] + pair_rec_val) > 0
+        else None
+    )
 
-    per_instance_table = []
-    for inst_id in sorted(all_multi_session_instances):
-        s1_trks = sorted(set(trk for (sess, trk), i in canonical_map.items() if i == inst_id and "recording_01" in sess))
-        s2_trks = sorted(set(trk for (sess, trk), i in canonical_map.items() if i == inst_id and "recording_02" in sess))
-        motion_state = "STATIC" if inst_id in static_multi_session_instances else "RELOCATED"
+    inst_prec_val = metric_instance_precision["value_pct"]
+    inst_rec_val = metric_instance_recall["value_pct"]
+    inst_f1 = (
+        round(2 * inst_prec_val * inst_rec_val / (inst_prec_val + inst_rec_val), 2)
+        if inst_prec_val and inst_rec_val and (inst_prec_val + inst_rec_val) > 0
+        else None
+    )
 
-        # Check if any valid (s1, s2) pair was recovered
-        found_match = None
-        for t1 in s1_trks:
-            for t2 in s2_trks:
-                if (t1, t2) in matched_by_pair:
-                    found_match = matched_by_pair[(t1, t2)]
-                    break
-            if found_match:
-                break
-
-        if found_match is not None:
-            per_instance_table.append({
-                "physical_instance_id": inst_id,
-                "motion_state": motion_state,
-                "s1_track_id": found_match.s1_entity_id,
-                "s2_track_id": found_match.s2_entity_id,
-                "outcome": getattr(found_match, "outcome", found_match.status),
-                "is_correct": True,
-                "distance_m": round(found_match.distance_m, 4),
-                "rejection_reason": None,
-            })
-        else:
-            # Analyze failure mode
-            false_merge_info = None
-            is_ambig = False
-            for t1 in s1_trks:
-                if t1 in s1_matched_map:
-                    other_m = s1_matched_map[t1]
-                    other_inst = canonical_map.get(("semantic_mapping_my_desk_recording_02", other_m.s2_entity_id))
-                    if other_inst and other_inst != inst_id:
-                        false_merge_info = f"S1 track {t1} falsely merged with {other_inst} ({other_m.s2_entity_id})"
-                        break
-                for t2 in s2_trks:
-                    if (t1, t2) in ambiguous_set:
-                        is_ambig = True
-
-            if not false_merge_info:
-                for t2 in s2_trks:
-                    if t2 in s2_matched_map:
-                        other_m = s2_matched_map[t2]
-                        other_inst = canonical_map.get(("semantic_mapping_my_desk_recording_01", other_m.s1_entity_id))
-                        if other_inst and other_inst != inst_id:
-                            false_merge_info = f"S2 track {t2} falsely merged with {other_inst} ({other_m.s1_entity_id})"
-                            break
-
-            if false_merge_info:
-                outcome = "FALSE_MERGE"
-                reason = false_merge_info
-            elif is_ambig:
-                outcome = "AMBIGUOUS_REJECTED"
-                reason = "Ambiguity rejection: competing nearby clusters within ambiguity margin."
-            else:
-                outcome = "UNMATCHED_GATE"
-                reason = "Displacement exceeds gate threshold or no candidate cluster survived feature gating."
-
-            per_instance_table.append({
-                "physical_instance_id": inst_id,
-                "motion_state": motion_state,
-                "s1_track_id": s1_trks[0] if s1_trks else "NONE",
-                "s2_track_id": s2_trks[0] if s2_trks else "NONE",
-                "outcome": outcome,
-                "is_correct": False,
-                "distance_m": None,
-                "rejection_reason": reason,
-            })
-
-    annotation_coverage = (total_annotated / max(1, len(association_result.matched_pairs))) * 100.0 if association_result.matched_pairs else 0.0
-
-    return {
+    evaluation_report = {
         "algorithm_name": association_result.algorithm_name,
-        "total_matched_pairs": len(association_result.matched_pairs),
-        "annotated_eval_pairs_count": total_annotated,
-        "true_positive_matches": true_positives,
-        "false_merges": false_merges,
-        "false_merge_rate_pct": round(false_merge_rate, 2),
-        "pair_level_false_merge_rate_pct": round(false_merge_rate, 2),
-        "instance_miss_rate_pct": round(instance_miss_rate, 2),
-        "false_split_rate_pct": round(instance_miss_rate, 2),  # Backward-compatible alias for instance_miss_rate_pct
-        "true_false_split_rate_pct": round(true_false_split_rate, 2),
-        "true_false_merge_rate_pct": round(true_false_merge_rate, 2),
-        "annotation_coverage_pct": round(annotation_coverage, 2),
-        "unannotated_candidate_pairs_count": len(unannotated_matches),
-        "total_multi_session_instances": len(all_multi_session_instances),
+        "provenance": provenance_metadata or {},
+        "total_matched_pairs": total_accepted_pairs,
+        "annotated_eval_pairs_count": total_annotated_pairs,
+        "true_positive_matches": true_positive_pairs,
+        "false_merges": pair_false_merges,
+        # Structured Metrics
+        "instance_recall": metric_instance_recall,
+        "instance_miss_rate": metric_instance_miss_rate,
+        "pair_precision": metric_pair_precision,
+        "pair_false_merge_rate": metric_pair_false_merge_rate,
+        "split_instance_rate": metric_split_instance_rate,
+        "merge_instance_rate": metric_merge_instance_rate,
+        "ambiguity_rate": metric_ambiguity_rate,
+        "unmatched_rate": metric_unmatched_rate,
+        "annotation_coverage": metric_annotation_coverage,
+        "instance_precision": metric_instance_precision,
+        # Flat percentages (backward compatibility)
+        "instance_recall_pct": metric_instance_recall["value_pct"],
+        "all_instance_recall_pct": metric_instance_recall["value_pct"],
+        "instance_miss_rate_pct": metric_instance_miss_rate["value_pct"],
+        "candidate_pair_precision_pct": metric_pair_precision["value_pct"],
+        "precision_on_annotated_subset_pct": metric_pair_precision["value_pct"],
+        "pair_level_false_merge_rate_pct": metric_pair_false_merge_rate["value_pct"],
+        "false_merge_rate_pct": metric_pair_false_merge_rate["value_pct"],
+        "true_false_split_rate_pct": metric_split_instance_rate["value_pct"],
+        "split_instance_rate_pct": metric_split_instance_rate["value_pct"],
+        "false_split_rate_pct": metric_split_instance_rate["value_pct"],  # Corrected from legacy miss rate to true split rate
+        "true_false_merge_rate_pct": metric_merge_instance_rate["value_pct"],
+        "merge_instance_rate_pct": metric_merge_instance_rate["value_pct"],
+        "ambiguity_rate_pct": metric_ambiguity_rate["value_pct"],
+        "unmatched_rate_pct": metric_unmatched_rate["value_pct"],
+        "annotation_coverage_pct": metric_annotation_coverage["value_pct"],
+        "static_instance_recall_pct": static_recall["value_pct"],
+        "recall_on_static_multi_session_pct": static_recall["value_pct"],
+        "relocated_instance_recall_pct": reloc_recall["value_pct"],
+        "recall_on_all_multi_session_pct": metric_instance_recall["value_pct"],
+        "instance_level_precision_pct": inst_prec_val,
+        "instance_level_f1_pct": inst_f1,
+        "f1_on_annotated_subset_pct": inst_f1,
+        "pair_level_recall_pct": round(pair_rec_val, 2) if pair_rec_val is not None else None,
+        "pair_level_f1_pct": pair_f1,
+        # Population counts
+        "total_multi_session_instances": total_evaluable_instances,
         "static_multi_session_instances": len(static_multi_session_instances),
         "relocated_multi_session_instances": len(relocated_multi_session_instances),
         "recovered_static_instances_count": len(recovered_static_instances),
@@ -1428,26 +1754,25 @@ def evaluate_matcher_against_ground_truth(
         "missed_static_instances_count": len(missed_static_instances),
         "missed_static_instances": missed_static_instances,
         "missed_relocated_instances": missed_relocated_instances,
-        "total_ground_truth_cross_session_pairs": len(gt_cross_pairs),
-        "static_ground_truth_cross_session_pairs": len(static_multi_session_instances),
-        "relocated_ground_truth_cross_session_pairs": len(relocated_multi_session_instances),
-        "precision_on_annotated_subset_pct": round(precision_on_annotated, 2),
-        "candidate_pair_precision_pct": round(precision_on_annotated, 2),
-        "pair_level_recall_pct": round(pair_recall, 2),
-        "pair_level_f1_pct": round(pair_f1, 2),
-        "recall_on_static_multi_session_pct": round(recall_on_static, 2),
-        "static_instance_recall_pct": round(recall_on_static, 2),
-        "relocated_instance_recall_pct": round(recall_on_relocated, 2),
-        "recall_on_all_multi_session_pct": round(recall_on_all, 2),
-        "all_instance_recall_pct": round(recall_on_all, 2),
-        "instance_level_precision_pct": round(instance_precision, 2),
-        "instance_level_f1_pct": round(instance_f1, 2),
-        "f1_on_annotated_subset_pct": round(instance_f1, 2),
+        "unannotated_candidate_pairs_count": len(unannotated_matches),
         "ambiguous_pairs_rejected_count": len(association_result.ambiguous_pairs),
+        "alias_conflict_clusters_count": alias_conflict_clusters_count,
+        "total_ground_truth_cross_session_pairs": len(gt_cross_pairs),
+        # Diagnostic records
         "annotated_evaluated_matches": annotated_eval_matches,
         "unannotated_matches_sample": unannotated_matches[:10],
         "per_instance_results": per_instance_table,
+        "normalized_physical_instances": normalized_instance_records,
+        "legacy_false_split_rate_note": "DEPRECATED: Prior releases assigned instance_miss_rate_pct (e.g. 76.67%) to false_split_rate_pct. This field now correctly reflects split_instance_rate_pct.",
     }
+
+    # Run internal reconciliation invariants if benchmark instances were present
+    if total_evaluable_instances > 0:
+        violations = reconcile_evaluation_invariants(evaluation_report, total_evaluable_instances)
+        if violations:
+            raise ValueError(f"Cross-session evaluation reconciliation invariant failed: {violations}")
+
+    return evaluation_report
 
 
 def compare_association_baselines(

@@ -296,10 +296,12 @@ def run_comprehensive_association_audit() -> Dict[str, Any]:
     reg_path = repo_root / "vlm" / "outputs" / "stage5_registration_audit.json"
     registration = load_registration_audit(reg_path)
 
-    s1_clusters = CrossSessionCandidateMatcher.extract_clusters_from_observations(observations, "recording_01", min_obs=2)
-    s2_clusters = CrossSessionCandidateMatcher.extract_clusters_from_observations(observations, "recording_02", min_obs=2)
+    s1_raw = CrossSessionCandidateMatcher.extract_clusters_from_observations(observations, "recording_01", min_obs=2)
+    s2_raw = CrossSessionCandidateMatcher.extract_clusters_from_observations(observations, "recording_02", min_obs=2)
+    s1_clusters = CrossSessionCandidateMatcher.consolidate_intra_session_clusters(s1_raw)
+    s2_clusters = CrossSessionCandidateMatcher.consolidate_intra_session_clusters(s2_raw)
 
-    # Evaluate all 3 baselines on identical data and canonical GT
+    # Evaluate all baselines on identical data and canonical GT
     baselines = compare_association_baselines(s1_clusters, s2_clusters, registration, gt_path)
 
     reg_audit_data = {}
@@ -347,22 +349,42 @@ def run_comprehensive_association_audit() -> Dict[str, Any]:
         "",
         "| Association Method | Matched Pairs | Ambiguous Rej | Evaluated Pairs | True Pos (TP) | False Merges (FM) | Candidate Precision | Static Inst Recall | Relocated Inst Recall | Instance F1 |",
         "|---|:---:|:---:|:---:|:---:|:---:|:---:|:---:|:---:|:---:|",
-        f"| **Baseline 1: Nearest Centroid** | {len(baselines['baseline_1_nearest_centroid']['result'].matched_pairs)} | 0 | {b1_eval['annotated_eval_pairs_count']} | {b1_eval['true_positive_matches']} | {b1_eval['false_merges']} | **`{b1_eval['precision_on_annotated_subset_pct']:.1f}%`** | {b1_eval['recall_on_static_multi_session_pct']:.1f}% | {b1_eval.get('relocated_instance_recall_pct', 0.0):.1f}% | {b1_eval.get('instance_level_f1_pct', b1_eval['f1_on_annotated_subset_pct']):.1f}% |",
-        f"| **Baseline 2: Hungarian Gated** | {len(baselines['baseline_2_hungarian_gated']['result'].matched_pairs)} | 0 | {b2_eval['annotated_eval_pairs_count']} | {b2_eval['true_positive_matches']} | {b2_eval['false_merges']} | **`{b2_eval['precision_on_annotated_subset_pct']:.1f}%`** | {b2_eval['recall_on_static_multi_session_pct']:.1f}% | {b2_eval.get('relocated_instance_recall_pct', 0.0):.1f}% | {b2_eval.get('instance_level_f1_pct', b2_eval['f1_on_annotated_subset_pct']):.1f}% |",
-        f"| **Proposed: Uncertainty + Ambiguity Rejection** | **{len(b3_res.matched_pairs)}** | **{len(b3_res.ambiguous_pairs)}** | **{b3_eval['annotated_eval_pairs_count']}** | **{b3_eval['true_positive_matches']}** | **{b3_eval['false_merges']}** | **`{b3_eval['precision_on_annotated_subset_pct']:.1f}%`** | **{b3_eval['recall_on_static_multi_session_pct']:.1f}%** | {b3_eval.get('relocated_instance_recall_pct', 0.0):.1f}% | **`{b3_eval.get('instance_level_f1_pct', b3_eval['f1_on_annotated_subset_pct']):.1f}%`** |",
     ])
+
+    def _fmt(val: Any) -> str:
+        if val is None:
+            return "N/A"
+        return f"{float(val):.1f}%"
+
+    lines.append(
+        f"| **Baseline 1: Nearest Centroid** | {len(baselines['baseline_1_nearest_centroid']['result'].matched_pairs)} | 0 | {b1_eval['annotated_eval_pairs_count']} | {b1_eval['true_positive_matches']} | {b1_eval['false_merges']} | **`{_fmt(b1_eval['precision_on_annotated_subset_pct'])}`** | {_fmt(b1_eval['recall_on_static_multi_session_pct'])} | {_fmt(b1_eval.get('relocated_instance_recall_pct', 0.0))} | {_fmt(b1_eval.get('instance_level_f1_pct', b1_eval['f1_on_annotated_subset_pct']))} |"
+    )
+    lines.append(
+        f"| **Baseline 2: Hungarian Gated** | {len(baselines['baseline_2_hungarian_gated']['result'].matched_pairs)} | 0 | {b2_eval['annotated_eval_pairs_count']} | {b2_eval['true_positive_matches']} | {b2_eval['false_merges']} | **`{_fmt(b2_eval['precision_on_annotated_subset_pct'])}`** | {_fmt(b2_eval['recall_on_static_multi_session_pct'])} | {_fmt(b2_eval.get('relocated_instance_recall_pct', 0.0))} | {_fmt(b2_eval.get('instance_level_f1_pct', b2_eval['f1_on_annotated_subset_pct']))} |"
+    )
+    lines.append(
+        f"| **Proposed: Uncertainty + Ambiguity Rejection** | **{len(b3_res.matched_pairs)}** | **{len(b3_res.ambiguous_pairs)}** | **{b3_eval['annotated_eval_pairs_count']}** | **{b3_eval['true_positive_matches']}** | **{b3_eval['false_merges']}** | **`{_fmt(b3_eval['precision_on_annotated_subset_pct'])}`** | **{_fmt(b3_eval['recall_on_static_multi_session_pct'])}** | {_fmt(b3_eval.get('relocated_instance_recall_pct', 0.0))} | **`{_fmt(b3_eval.get('instance_level_f1_pct', b3_eval['f1_on_annotated_subset_pct']))}`** |"
+    )
 
     if "proposed_relocation_aware" in baselines:
         b4_eval = baselines["proposed_relocation_aware"]["evaluation"]
         b4_res = baselines["proposed_relocation_aware"]["result"]
         lines.append(
-            f"| **Proposed: Relocation-Aware (Multi-Stage)** | **{len(b4_res.matched_pairs)}** | **{len(b4_res.ambiguous_pairs)}** | **{b4_eval['annotated_eval_pairs_count']}** | **{b4_eval['true_positive_matches']}** | **{b4_eval['false_merges']}** | **`{b4_eval['precision_on_annotated_subset_pct']:.1f}%`** | **{b4_eval['recall_on_static_multi_session_pct']:.1f}%** | **`{b4_eval.get('relocated_instance_recall_pct', 0.0):.1f}%`** | **`{b4_eval.get('instance_level_f1_pct', b4_eval['f1_on_annotated_subset_pct']):.1f}%`** |"
+            f"| **Proposed: Relocation-Aware (Multi-Stage)** | **{len(b4_res.matched_pairs)}** | **{len(b4_res.ambiguous_pairs)}** | **{b4_eval['annotated_eval_pairs_count']}** | **{b4_eval['true_positive_matches']}** | **{b4_eval['false_merges']}** | **`{_fmt(b4_eval['precision_on_annotated_subset_pct'])}`** | **{_fmt(b4_eval['recall_on_static_multi_session_pct'])}** | **`{_fmt(b4_eval.get('relocated_instance_recall_pct', 0.0))}`** | **`{_fmt(b4_eval.get('instance_level_f1_pct', b4_eval['f1_on_annotated_subset_pct']))}`** |"
         )
 
+    if "proposed_uncertainty_adaptive" in baselines:
+        b5_eval = baselines["proposed_uncertainty_adaptive"]["evaluation"]
+        b5_res = baselines["proposed_uncertainty_adaptive"]["result"]
+        lines.append(
+            f"| **Proposed: Uncertainty-Adaptive (Stage 9A)** | **{len(b5_res.matched_pairs)}** | **{len(b5_res.ambiguous_pairs)}** | **{b5_eval['annotated_eval_pairs_count']}** | **{b5_eval['true_positive_matches']}** | **{b5_eval['false_merges']}** | **`{_fmt(b5_eval['precision_on_annotated_subset_pct'])}`** | **{_fmt(b5_eval['recall_on_static_multi_session_pct'])}** | **`{_fmt(b5_eval.get('relocated_instance_recall_pct', 0.0))}`** | **`{_fmt(b5_eval.get('instance_level_f1_pct', b5_eval['f1_on_annotated_subset_pct']))}`** |"
+        )
+
+    prec_note = _fmt(b3_eval['precision_on_annotated_subset_pct'])
     lines.extend([
         "",
         "> [!NOTE]",
-        f"> **Symmetric Ambiguity Benefit:** The proposed method rejects {len(b3_res.ambiguous_pairs)} ambiguous candidate pairs where competing nearby clusters prevent confident matching. By doing so, it successfully filters out a false merge on the annotated evaluation benchmark, improving candidate precision from 58.3% to **{b3_eval['precision_on_annotated_subset_pct']:.1f}%** without degrading true positives on verified persistent instances.",
+        f"> **Symmetric Ambiguity Benefit:** The proposed method rejects {len(b3_res.ambiguous_pairs)} ambiguous candidate pairs where competing nearby clusters prevent confident matching. By doing so, it successfully filters out a false merge on the annotated evaluation benchmark, improving candidate precision from 58.3% to **{prec_note}** without degrading true positives on verified persistent instances.",
         "",
         "### 6.3 Sample Verified Physical Matches (Proposed Method)",
         "",

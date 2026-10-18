@@ -7,10 +7,13 @@ import pytest
 from vlm.src.stage5_adapter import RegistrationInfo
 from vlm.src.cross_session_association import (
     EntityCluster,
+    PhysicalInstanceMatch,
+    AssociationResult,
     CrossSessionCandidateMatcher,
     evaluate_matcher_against_ground_truth,
     build_canonical_session_track_mapping,
     compare_association_baselines,
+    reconcile_evaluation_invariants,
 )
 
 
@@ -557,5 +560,284 @@ def test_match_entities_uncertainty_adaptive():
     assert m.distance_m == pytest.approx(0.52, abs=0.01)
 
 
+def _make_synth_benchmark(annotations: list) -> dict:
+    return {
+        "version": "3.0.0",
+        "title": "Synthetic Test Benchmark",
+        "total_physical_instances": len(set(a["physical_instance_id"] for a in annotations)),
+        "annotations": annotations,
+    }
 
 
+def _make_match(s1_id: str, s2_id: str, pid: str, dist: float = 0.1, status: str = "MATCHED") -> PhysicalInstanceMatch:
+    return PhysicalInstanceMatch(
+        persistent_entity_id=pid,
+        s1_entity_id=s1_id,
+        s2_entity_id=s2_id,
+        semantic_class="chair",
+        distance_m=dist,
+        position_uncertainty_m=0.02,
+        extent_diff_m=0.01,
+        match_score=0.95,
+        confidence=0.95,
+        status=status,
+        s1_obs_count=10,
+        s2_obs_count=10,
+    )
+
+
+def test_evaluator_missed_instance_classified_as_unmatched_not_false_split():
+    """An unrecovered physical object must be reported as UNMATCHED with 0% false-split rate."""
+    gt = _make_synth_benchmark([
+        {"source_session": "rec01", "local_track_id": "c1", "physical_instance_id": "inst_1", "presence": "PRESENT_BOTH", "motion": "STATIC"},
+        {"source_session": "rec02", "local_track_id": "c1", "physical_instance_id": "inst_1", "presence": "PRESENT_BOTH", "motion": "STATIC"},
+    ])
+    res = AssociationResult(
+        is_valid=True,
+        registration_status="VERIFIED",
+        total_s1_entities=1,
+        total_s2_entities=1,
+        matched_pairs=[],
+        unmatched_s1=["c1"],
+        unmatched_s2=["c1"],
+        ambiguous_pairs=[],
+    )
+    s1_cls = {"c1": _make_cluster("c1", "chair", 0.0, 0.0, session="rec01")}
+    s2_cls = {"c1": _make_cluster("c1", "chair", 1.0, 1.0, session="rec02")}
+
+    eval_out = evaluate_matcher_against_ground_truth(res, gt_path=gt, s1_clusters=s1_cls, s2_clusters=s2_cls)
+
+    assert eval_out["instance_recall"]["value_pct"] == 0.0
+    assert eval_out["instance_miss_rate"]["value_pct"] == 100.0
+    # Crucial: missed instance is NOT a false split!
+    assert eval_out["split_instance_rate"]["value_pct"] == 0.0
+    assert eval_out["true_false_split_rate_pct"] == 0.0
+    assert eval_out["false_split_rate_pct"] == 0.0
+
+    per_inst = eval_out["per_instance_results"]
+    assert len(per_inst) == 1
+    assert per_inst[0]["outcome"] == "UNMATCHED"
+    assert per_inst[0]["is_correct"] is False
+    assert per_inst[0]["involved_in_split"] is False
+
+
+def test_evaluator_genuine_identity_split_increments_split_rate():
+    """A physical object split across multiple predicted persistent IDs must increment split rate."""
+    gt = _make_synth_benchmark([
+        {"source_session": "rec01", "local_track_id": "desk_part1", "physical_instance_id": "inst_desk", "presence": "PRESENT_BOTH", "motion": "STATIC"},
+        {"source_session": "rec01", "local_track_id": "desk_part2", "physical_instance_id": "inst_desk", "presence": "PRESENT_BOTH", "motion": "STATIC"},
+        {"source_session": "rec02", "local_track_id": "desk_s2_a", "physical_instance_id": "inst_desk", "presence": "PRESENT_BOTH", "motion": "STATIC"},
+        {"source_session": "rec02", "local_track_id": "desk_s2_b", "physical_instance_id": "inst_desk", "presence": "PRESENT_BOTH", "motion": "STATIC"},
+    ])
+    # Predictions associate the same physical object into two different persistent entity IDs
+    m1 = _make_match("desk_part1", "desk_s2_a", pid="persistent_id_A")
+    m2 = _make_match("desk_part2", "desk_s2_b", pid="persistent_id_B")
+    res = AssociationResult(
+        is_valid=True,
+        registration_status="VERIFIED",
+        total_s1_entities=2,
+        total_s2_entities=2,
+        matched_pairs=[m1, m2],
+        unmatched_s1=[],
+        unmatched_s2=[],
+        ambiguous_pairs=[],
+    )
+    s1_cls = {
+        "desk_part1": _make_cluster("desk_part1", "desk", 0.0, 0.0, session="rec01"),
+        "desk_part2": _make_cluster("desk_part2", "desk", 0.2, 0.0, session="rec01"),
+    }
+    s2_cls = {
+        "desk_s2_a": _make_cluster("desk_s2_a", "desk", 0.0, 0.0, session="rec02"),
+        "desk_s2_b": _make_cluster("desk_s2_b", "desk", 0.2, 0.0, session="rec02"),
+    }
+
+    eval_out = evaluate_matcher_against_ground_truth(res, gt_path=gt, s1_clusters=s1_cls, s2_clusters=s2_cls)
+
+    # It was recovered, but it genuinely split
+    assert eval_out["instance_recall"]["value_pct"] == 100.0
+    assert eval_out["split_instance_rate"]["value_pct"] == 100.0
+    assert eval_out["true_false_split_rate_pct"] == 100.0
+    assert eval_out["false_split_rate_pct"] == 100.0
+
+    per_inst = eval_out["per_instance_results"]
+    assert len(per_inst) == 1
+    assert per_inst[0]["outcome"] == "CORRECTLY_MATCHED"
+    assert per_inst[0]["is_correct"] is True
+    assert per_inst[0]["involved_in_split"] is True
+
+
+def test_evaluator_false_merge_increments_merge_rate_and_rejects_correctness():
+    """A predicted pair joining two distinct physical objects must never mark both as correct."""
+    gt = _make_synth_benchmark([
+        {"source_session": "rec01", "local_track_id": "c1", "physical_instance_id": "inst_chair_1", "presence": "PRESENT_BOTH", "motion": "STATIC"},
+        {"source_session": "rec02", "local_track_id": "c1", "physical_instance_id": "inst_chair_1", "presence": "PRESENT_BOTH", "motion": "STATIC"},
+        {"source_session": "rec01", "local_track_id": "d2", "physical_instance_id": "inst_desk_2", "presence": "PRESENT_BOTH", "motion": "STATIC"},
+        {"source_session": "rec02", "local_track_id": "d2", "physical_instance_id": "inst_desk_2", "presence": "PRESENT_BOTH", "motion": "STATIC"},
+    ])
+    # Faulty matcher merges c1 (chair_1) with d2 (desk_2)
+    m = _make_match("c1", "d2", pid="fused_wrong_pid")
+    res = AssociationResult(
+        is_valid=True,
+        registration_status="VERIFIED",
+        total_s1_entities=2,
+        total_s2_entities=2,
+        matched_pairs=[m],
+        unmatched_s1=["d2"],
+        unmatched_s2=["c1"],
+        ambiguous_pairs=[],
+    )
+    s1_cls = {
+        "c1": _make_cluster("c1", "chair", 0.0, 0.0, session="rec01"),
+        "d2": _make_cluster("d2", "desk", 2.0, 2.0, session="rec01"),
+    }
+    s2_cls = {
+        "c1": _make_cluster("c1", "chair", 0.0, 0.0, session="rec02"),
+        "d2": _make_cluster("d2", "desk", 2.0, 2.0, session="rec02"),
+    }
+
+    eval_out = evaluate_matcher_against_ground_truth(res, gt_path=gt, s1_clusters=s1_cls, s2_clusters=s2_cls)
+
+    # 1 annotated pair, 0 true positives, 1 false merge
+    assert eval_out["pair_precision"]["value_pct"] == 0.0
+    assert eval_out["pair_false_merge_rate"]["value_pct"] == 100.0
+    # Both instances are involved in the merge
+    assert eval_out["merge_instance_rate"]["numerator"] == 2
+    assert eval_out["merge_instance_rate"]["value_pct"] == 100.0
+    assert eval_out["instance_recall"]["value_pct"] == 0.0
+
+    for rec in eval_out["per_instance_results"]:
+        assert rec["outcome"] == "FALSE_MERGE"
+        assert rec["is_correct"] is False
+        assert rec["involved_in_merge"] is True
+
+
+def test_evaluator_ambiguous_candidate_rejected_classified_as_ambiguous():
+    """When a candidate pair is rejected for ambiguity with no accepted match, outcome is AMBIGUOUS."""
+    gt = _make_synth_benchmark([
+        {"source_session": "rec01", "local_track_id": "c1", "physical_instance_id": "inst_1", "presence": "PRESENT_BOTH", "motion": "STATIC"},
+        {"source_session": "rec02", "local_track_id": "c1", "physical_instance_id": "inst_1", "presence": "PRESENT_BOTH", "motion": "STATIC"},
+    ])
+    ambig_m = _make_match("c1", "c1", pid="ambig_pid", status="AMBIGUOUS")
+    res = AssociationResult(
+        is_valid=True,
+        registration_status="VERIFIED",
+        total_s1_entities=1,
+        total_s2_entities=1,
+        matched_pairs=[],
+        unmatched_s1=[],
+        unmatched_s2=[],
+        ambiguous_pairs=[ambig_m],
+    )
+    s1_cls = {"c1": _make_cluster("c1", "chair", 0.0, 0.0, session="rec01")}
+    s2_cls = {"c1": _make_cluster("c1", "chair", 0.0, 0.0, session="rec02")}
+
+    eval_out = evaluate_matcher_against_ground_truth(res, gt_path=gt, s1_clusters=s1_cls, s2_clusters=s2_cls)
+
+    assert eval_out["ambiguity_rate"]["value_pct"] == 100.0
+    assert eval_out["instance_recall"]["value_pct"] == 0.0
+    assert eval_out["per_instance_results"][0]["outcome"] == "AMBIGUOUS"
+    assert eval_out["per_instance_results"][0]["is_correct"] is False
+    assert eval_out["per_instance_results"][0]["had_ambiguous_candidates"] is True
+
+
+def test_evaluator_unannotated_prediction_scope_separated():
+    """Unannotated predictions must be reported as OUT_OF_BENCHMARK_SCOPE, not silent errors."""
+    gt = _make_synth_benchmark([
+        {"source_session": "rec01", "local_track_id": "c1", "physical_instance_id": "inst_1", "presence": "PRESENT_BOTH", "motion": "STATIC"},
+        {"source_session": "rec02", "local_track_id": "c1", "physical_instance_id": "inst_1", "presence": "PRESENT_BOTH", "motion": "STATIC"},
+    ])
+    # Matcher accepts unannotated objects
+    m_unann = _make_match("unknown_a", "unknown_b", pid="pid_unann")
+    res = AssociationResult(
+        is_valid=True,
+        registration_status="VERIFIED",
+        total_s1_entities=2,
+        total_s2_entities=2,
+        matched_pairs=[m_unann],
+        unmatched_s1=["c1"],
+        unmatched_s2=["c1"],
+        ambiguous_pairs=[],
+    )
+    s1_cls = {
+        "c1": _make_cluster("c1", "chair", 0.0, 0.0, session="rec01"),
+        "unknown_a": _make_cluster("unknown_a", "chair", 5.0, 5.0, session="rec01"),
+    }
+    s2_cls = {
+        "c1": _make_cluster("c1", "chair", 0.0, 0.0, session="rec02"),
+        "unknown_b": _make_cluster("unknown_b", "chair", 5.0, 5.0, session="rec02"),
+    }
+
+    eval_out = evaluate_matcher_against_ground_truth(res, gt_path=gt, s1_clusters=s1_cls, s2_clusters=s2_cls)
+
+    assert eval_out["unannotated_candidate_pairs_count"] == 1
+    assert eval_out["annotated_eval_pairs_count"] == 0
+    assert eval_out["annotation_coverage"]["value_pct"] == 0.0
+    # Pair precision is null because denominator is 0
+    assert eval_out["pair_precision"]["value_pct"] is None
+
+
+def test_evaluator_alias_conflict_cluster_retains_all_conflicting_ids():
+    """A cluster merging tracks from contradictory ground-truth instances results in ALIAS_CONFLICT."""
+    gt = _make_synth_benchmark([
+        {"source_session": "rec01", "local_track_id": "track_alpha", "physical_instance_id": "inst_A", "presence": "PRESENT_BOTH", "motion": "STATIC"},
+        {"source_session": "rec01", "local_track_id": "track_beta", "physical_instance_id": "inst_B", "presence": "PRESENT_BOTH", "motion": "STATIC"},
+        {"source_session": "rec02", "local_track_id": "track_s2", "physical_instance_id": "inst_A", "presence": "PRESENT_BOTH", "motion": "STATIC"},
+    ])
+    # Consolidated cluster in S1 erroneously contains both alpha and beta
+    cl_conflict = _make_cluster("cl_merged", "chair", 0.0, 0.0, session="rec01")
+    cl_conflict.merged_entity_ids = ["track_alpha", "track_beta"]
+
+    s1_cls = {"cl_merged": cl_conflict}
+    s2_cls = {"track_s2": _make_cluster("track_s2", "chair", 0.0, 0.0, session="rec02")}
+
+    m = _make_match("cl_merged", "track_s2", pid="fused_conflict_pid")
+    res = AssociationResult(
+        is_valid=True,
+        registration_status="VERIFIED",
+        total_s1_entities=1,
+        total_s2_entities=1,
+        matched_pairs=[m],
+        unmatched_s1=[],
+        unmatched_s2=[],
+        ambiguous_pairs=[],
+    )
+
+    eval_out = evaluate_matcher_against_ground_truth(res, gt_path=gt, s1_clusters=s1_cls, s2_clusters=s2_cls)
+
+    assert eval_out["alias_conflict_clusters_count"] == 1
+    # Both inst_A and inst_B are marked ALIAS_CONFLICT in primary outcome
+    outcomes = {r["physical_instance_id"]: r["outcome"] for r in eval_out["per_instance_results"]}
+    assert outcomes["inst_A"] == "ALIAS_CONFLICT"
+
+
+def test_evaluator_empty_population_reports_null_metrics():
+    """When evaluable population is 0, metric values must be None rather than 0.0%."""
+    gt = _make_synth_benchmark([])
+    res = AssociationResult(
+        is_valid=True,
+        registration_status="VERIFIED",
+        total_s1_entities=0,
+        total_s2_entities=0,
+        matched_pairs=[],
+        unmatched_s1=[],
+        unmatched_s2=[],
+        ambiguous_pairs=[],
+    )
+    eval_out = evaluate_matcher_against_ground_truth(res, gt_path=gt, s1_clusters={}, s2_clusters={})
+    assert eval_out["instance_recall"]["value_pct"] is None
+    assert eval_out["instance_miss_rate"]["value_pct"] is None
+
+
+def test_evaluator_reconciliation_invariants_enforcement():
+    """Tampering with results to break reconciliation invariants raises ValueError."""
+    fake_eval = {
+        "recovered_all_instances_count": 5,
+        "instance_recall": {"numerator": 5, "denominator": 10, "value_pct": 50.0},
+        "per_instance_results": [
+            {"physical_instance_id": "inst_1", "outcome": "CORRECTLY_MATCHED", "is_correct": True},
+            # Missing remaining 9 instances!
+        ],
+    }
+    violations = reconcile_evaluation_invariants(fake_eval, evaluable_instance_count=10)
+    assert len(violations) > 0
+    assert "does not equal evaluable benchmark population" in violations[0]

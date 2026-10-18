@@ -1,7 +1,7 @@
 {
   "stage": 5,
   "title": "Stage 5 Inexpensive Pre-Router Evidence Pipeline Evaluation",
-  "timestamp_evaluated": 1792272456.4348965,
+  "timestamp_evaluated": 1792289728.5270424,
   "total_records": 7956,
   "acceptance_gate_passed": true,
   "acceptance_gates": [
@@ -67,6 +67,8 @@
     }
   ],
   "geometry": {
+    "depth_sensor_presence_pct": 100.0,
+    "geometric_consistency_pass_pct": 83.85,
     "depth_validity_percentage": 100.0,
     "mean_point_to_bbox_distance_px": 39.2,
     "median_point_to_bbox_distance_px": 3.2,

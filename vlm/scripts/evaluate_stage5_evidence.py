@@ -115,7 +115,10 @@ def evaluate_stage5() -> Dict[str, Any]:
     # 1. Geometric Evidence Metrics (Honest, Unambiguous Naming)
     # -------------------------------------------------------------
     valid_depth_count = sum(1 for r in geo_records if r.get("depth_valid", False))
-    depth_validity_pct = (valid_depth_count / max(1, n_total)) * 100.0
+    depth_sensor_presence_pct = (valid_depth_count / max(1, n_total)) * 100.0
+    depth_validity_pct = depth_sensor_presence_pct
+    valid_geom_count = sum(1 for r in geo_records if r.get("has_valid_evidence", False))
+    geom_consistency_pass_pct = (valid_geom_count / max(1, n_total)) * 100.0
 
     # Point-to-box consistency distances (px outside bbox)
     measured_pt_dists = [
@@ -139,7 +142,9 @@ def evaluate_stage5() -> Dict[str, Any]:
         prov_counts[r.get("provenance", "UNKNOWN")] += 1
 
     geometry_metrics = {
-        "depth_validity_percentage": round(depth_validity_pct, 2),
+        "depth_sensor_presence_pct": round(depth_sensor_presence_pct, 2),
+        "geometric_consistency_pass_pct": round(geom_consistency_pass_pct, 2),
+        "depth_validity_percentage": round(depth_sensor_presence_pct, 2),  # Backward-compatible alias
         "mean_point_to_bbox_distance_px": round(float(np.mean(measured_pt_dists)), 2) if measured_pt_dists else None,
         "median_point_to_bbox_distance_px": round(float(np.median(measured_pt_dists)), 2) if measured_pt_dists else None,
         "p95_point_to_bbox_distance_px": round(float(np.percentile(measured_pt_dists, 95)), 2) if measured_pt_dists else None,
