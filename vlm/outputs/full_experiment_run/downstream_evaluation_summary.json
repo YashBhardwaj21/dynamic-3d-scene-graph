@@ -1,0 +1,179 @@
+{
+  "R3": {
+    "policy": "R3",
+    "evaluation_contract": "PURE_PREDICTION_EVALUATION_NO_LEAKAGE",
+    "total_nodes_predicted": 180,
+    "nodes_matched_to_ground_truth": 84,
+    "unmatched_nodes_count": 96,
+    "landmark_reliability": {
+      "evaluable_stationary_entities": 44,
+      "correctly_retained_stationary_count": 37,
+      "stationary_retention_rate_pct": 84.09,
+      "falsely_invalidated_count": 7,
+      "false_invalidation_rate_pct": 15.91,
+      "falsely_invalidated_entity_ids": [
+        "inst_chair_001",
+        "inst_chair_018",
+        "inst_desk_008",
+        "inst_desk_017",
+        "inst_desk_031",
+        "inst_human_operator_001",
+        "inst_laptop_003"
+      ],
+      "evaluable_relocated_entities": 4,
+      "correctly_invalidated_relocations_count": 0,
+      "relocation_invalidation_rate_pct": 0.0,
+      "correctly_invalidated_entity_ids": [],
+      "missed_relocation_entity_ids": [
+        "inst_chair_002",
+        "inst_chair_003",
+        "inst_rc_car_robot_001",
+        "inst_storage_box_007"
+      ]
+    },
+    "movability_evaluation": {
+      "evaluable_nodes_count": 84,
+      "correct_movability_count": 84,
+      "movability_accuracy_pct": 100.0
+    }
+  },
+  "R0": {
+    "policy": "R0",
+    "evaluation_contract": "PURE_PREDICTION_EVALUATION_NO_LEAKAGE",
+    "total_nodes_predicted": 181,
+    "nodes_matched_to_ground_truth": 83,
+    "unmatched_nodes_count": 98,
+    "landmark_reliability": {
+      "evaluable_stationary_entities": 45,
+      "correctly_retained_stationary_count": 44,
+      "stationary_retention_rate_pct": 97.78,
+      "falsely_invalidated_count": 1,
+      "false_invalidation_rate_pct": 2.22,
+      "falsely_invalidated_entity_ids": [
+        "inst_human_operator_001"
+      ],
+      "evaluable_relocated_entities": 4,
+      "correctly_invalidated_relocations_count": 0,
+      "relocation_invalidation_rate_pct": 0.0,
+      "correctly_invalidated_entity_ids": [],
+      "missed_relocation_entity_ids": [
+        "inst_chair_002",
+        "inst_chair_003",
+        "inst_rc_car_robot_001",
+        "inst_storage_box_007"
+      ]
+    },
+    "movability_evaluation": {
+      "evaluable_nodes_count": 83,
+      "correct_movability_count": 83,
+      "movability_accuracy_pct": 100.0
+    }
+  },
+  "R1": {
+    "policy": "R1",
+    "evaluation_contract": "PURE_PREDICTION_EVALUATION_NO_LEAKAGE",
+    "total_nodes_predicted": 181,
+    "nodes_matched_to_ground_truth": 83,
+    "unmatched_nodes_count": 98,
+    "landmark_reliability": {
+      "evaluable_stationary_entities": 45,
+      "correctly_retained_stationary_count": 40,
+      "stationary_retention_rate_pct": 88.89,
+      "falsely_invalidated_count": 5,
+      "false_invalidation_rate_pct": 11.11,
+      "falsely_invalidated_entity_ids": [
+        "inst_desk_008",
+        "inst_desk_012",
+        "inst_desk_023",
+        "inst_desk_031",
+        "inst_human_operator_001"
+      ],
+      "evaluable_relocated_entities": 4,
+      "correctly_invalidated_relocations_count": 1,
+      "relocation_invalidation_rate_pct": 25.0,
+      "correctly_invalidated_entity_ids": [
+        "inst_chair_003"
+      ],
+      "missed_relocation_entity_ids": [
+        "inst_chair_002",
+        "inst_rc_car_robot_001",
+        "inst_storage_box_007"
+      ]
+    },
+    "movability_evaluation": {
+      "evaluable_nodes_count": 83,
+      "correct_movability_count": 83,
+      "movability_accuracy_pct": 100.0
+    }
+  },
+  "R2": {
+    "policy": "R2",
+    "evaluation_contract": "PURE_PREDICTION_EVALUATION_NO_LEAKAGE",
+    "total_nodes_predicted": 181,
+    "nodes_matched_to_ground_truth": 83,
+    "unmatched_nodes_count": 98,
+    "landmark_reliability": {
+      "evaluable_stationary_entities": 45,
+      "correctly_retained_stationary_count": 44,
+      "stationary_retention_rate_pct": 97.78,
+      "falsely_invalidated_count": 1,
+      "false_invalidation_rate_pct": 2.22,
+      "falsely_invalidated_entity_ids": [
+        "inst_human_operator_001"
+      ],
+      "evaluable_relocated_entities": 4,
+      "correctly_invalidated_relocations_count": 0,
+      "relocation_invalidation_rate_pct": 0.0,
+      "correctly_invalidated_entity_ids": [],
+      "missed_relocation_entity_ids": [
+        "inst_chair_002",
+        "inst_chair_003",
+        "inst_rc_car_robot_001",
+        "inst_storage_box_007"
+      ]
+    },
+    "movability_evaluation": {
+      "evaluable_nodes_count": 83,
+      "correct_movability_count": 83,
+      "movability_accuracy_pct": 100.0
+    }
+  },
+  "R4": {
+    "policy": "R4",
+    "evaluation_contract": "PURE_PREDICTION_EVALUATION_NO_LEAKAGE",
+    "total_nodes_predicted": 180,
+    "nodes_matched_to_ground_truth": 84,
+    "unmatched_nodes_count": 96,
+    "landmark_reliability": {
+      "evaluable_stationary_entities": 44,
+      "correctly_retained_stationary_count": 37,
+      "stationary_retention_rate_pct": 84.09,
+      "falsely_invalidated_count": 7,
+      "false_invalidation_rate_pct": 15.91,
+      "falsely_invalidated_entity_ids": [
+        "inst_chair_001",
+        "inst_chair_018",
+        "inst_desk_008",
+        "inst_desk_017",
+        "inst_desk_031",
+        "inst_human_operator_001",
+        "inst_laptop_003"
+      ],
+      "evaluable_relocated_entities": 4,
+      "correctly_invalidated_relocations_count": 0,
+      "relocation_invalidation_rate_pct": 0.0,
+      "correctly_invalidated_entity_ids": [],
+      "missed_relocation_entity_ids": [
+        "inst_chair_002",
+        "inst_chair_003",
+        "inst_rc_car_robot_001",
+        "inst_storage_box_007"
+      ]
+    },
+    "movability_evaluation": {
+      "evaluable_nodes_count": 84,
+      "correct_movability_count": 84,
+      "movability_accuracy_pct": 100.0
+    }
+  }
+}

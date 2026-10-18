@@ -1,0 +1,19 @@
+{
+  "object_instance_id": "inst_rc_car_robot_001",
+  "semantic_class": "robot",
+  "movability_gt": "MOBILE",
+  "current_motion_gt": "MOVING",
+  "displacement_gt": 0.996,
+  "visual_suitability": "UNSUITABLE_FOR_VISUAL_EVAL",
+  "evaluation_eligible": false,
+  "exclusion_reason": "HEAVY_DESK_OCCLUSION_AND_CLUTTER",
+  "total_views": 0,
+  "angular_diversity_verified": false,
+  "view_diversity_valid": false,
+  "views": [],
+  "conditions": {
+    "one_view": [],
+    "two_views": [],
+    "three_views": []
+  }
+}

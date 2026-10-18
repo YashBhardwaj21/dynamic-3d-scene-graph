@@ -324,10 +324,33 @@ def parse_vlm_output(
     return result, is_json_valid, is_schema_valid
 
 
+def check_vlm_server_health(server_url: str = DEFAULT_SERVER_URL, timeout: float = 2.0) -> Dict[str, Any]:
+    """Probe whether the local or remote VLM inference server is reachable."""
+    health_url = server_url.replace("/v1/chat/completions", "/health")
+    try:
+        req = urllib.request.Request(health_url)
+        with urllib.request.urlopen(req, timeout=timeout) as resp:
+            return {"status": "ONLINE", "url": health_url, "code": resp.getcode()}
+    except Exception:
+        pass
+
+    try:
+        req = urllib.request.Request(server_url, method="GET")
+        with urllib.request.urlopen(req, timeout=timeout) as resp:
+            return {"status": "ONLINE", "url": server_url, "code": resp.getcode()}
+    except urllib.error.HTTPError as e:
+        # HTTP 400 or 405 means the server is actively listening and handling HTTP
+        if e.code in [400, 405]:
+            return {"status": "ONLINE", "url": server_url, "code": e.code}
+        return {"status": "OFFLINE", "url": server_url, "error": str(e), "code": e.code}
+    except Exception as e:
+        return {"status": "OFFLINE", "url": server_url, "error": str(e)}
+
+
 def query_llama_server(
     messages: List[Dict[str, Any]],
     server_url: str = DEFAULT_SERVER_URL,
-    max_tokens: int = 75,
+    max_tokens: int = 150,
     temperature: float = 0.0,
     timeout: float = 120.0,
 ) -> Tuple[str, float, Dict[str, Any]]:
@@ -360,14 +383,18 @@ class SelectiveRouter:
         server_url: str = DEFAULT_SERVER_URL,
         model_name: str = DEFAULT_MODEL_NAME,
         enable_vlm: bool = True,
-        mode: Literal["replay", "live"] = "replay",
+        mode: Literal["CACHED_HISTORICAL", "LIVE_INFERENCE", "replay", "live"] = "CACHED_HISTORICAL",
         configured_views: int = 2,
     ):
         self.cache_path = cache_path
         self.server_url = server_url
         self.model_name = model_name
         self.enable_vlm = enable_vlm
-        self.mode = mode
+        mode_str = str(mode).upper()
+        if mode_str in ["LIVE", "LIVE_INFERENCE"]:
+            self.mode: Literal["CACHED_HISTORICAL", "LIVE_INFERENCE"] = "LIVE_INFERENCE"
+        else:
+            self.mode: Literal["CACHED_HISTORICAL", "LIVE_INFERENCE"] = "CACHED_HISTORICAL"
         self.configured_views = configured_views
         self.cache: Dict[str, Dict[str, Any]] = {}
 
@@ -515,15 +542,7 @@ class SelectiveRouter:
             return result
 
         # Compute full cryptographic cache key fingerprint
-        cache_data = {
-            "entity_id": entity_id,
-            "semantic_class": sem_class,
-            "model_name": self.model_name,
-            "prompt_version": PROMPT_TEMPLATE_VERSION,
-            "views_to_use": img_telemetry["usable_views"],
-            "img_hashes": img_telemetry["image_hashes"],
-        }
-        cache_key = hashlib.sha256(json.dumps(cache_data, sort_keys=True).encode()).hexdigest()[:24]
+        cache_key = self.compute_cache_key(entity_id, sem_class, img_telemetry)
 
         # Check Cache
         # Backward compatibility fallback for legacy 20-char entity-only keys
@@ -536,32 +555,39 @@ class SelectiveRouter:
             "img_hashes": img_telemetry["image_hashes"][:4],
         }, sort_keys=True).encode()).hexdigest()[:20]
 
-        matched_key = cache_key if cache_key in self.cache else (legacy_key if legacy_key in self.cache else None)
+        # Check Cache only if explicitly in CACHED_HISTORICAL mode
+        if self.mode == "CACHED_HISTORICAL":
+            matched_key = cache_key if cache_key in self.cache else (legacy_key if legacy_key in self.cache else None)
+            if matched_key is None:
+                for k, v in self.cache.items():
+                    if k.startswith(f"{entity_id}_") or (isinstance(v, dict) and v.get("entity_id") == entity_id):
+                        matched_key = k
+                        break
 
-        if matched_key is not None:
-            cached = self.cache[matched_key]
-            result["vlm_cache_hit"] = True
-            result["prediction"] = cached.get("movability")
-            result["abstained"] = cached.get("abstain", False)
-            result["views_used"] = cached.get("total_views", img_telemetry["usable_views"])
-            # Distinguish cached historical latency from live execution latency
-            result["cached_latency_ms"] = round(cached.get("latency_s", 0.0) * 1000.0, 2)
-            result["inference_latency_ms"] = 0.0 if self.mode == "replay" else round(cached.get("latency_s", 0.0) * 1000.0, 2)
-            result["token_usage"] = cached.get("token_usage")
-            return result
+            if matched_key is not None:
+                cached = self.cache[matched_key]
+                result["vlm_cache_hit"] = True
+                result["prediction"] = cached.get("movability")
+                result["abstained"] = cached.get("abstain", False)
+                result["views_used"] = cached.get("total_views", img_telemetry["usable_views"])
+                # Distinguish cached historical latency from live execution latency
+                result["cached_latency_ms"] = round(cached.get("latency_s", 0.0) * 1000.0, 2)
+                result["inference_latency_ms"] = 0.0
+                result["token_usage"] = cached.get("token_usage")
+                return result
 
-        # Replay mode miss: do not call live server
-        if self.mode == "replay":
+            # Cached historical mode miss: do not call live server
             result["vlm_cache_hit"] = False
             result["vlm_inference_executed"] = False
             result["prediction"] = "UNKNOWN"
             result["abstained"] = True
             result["vlm_output_valid"] = False
             result["vlm_prediction_accepted"] = False
-            result["validation_error"] = "replay_cache_miss"
+            result["validation_error"] = "cached_historical_cache_miss"
             return result
 
-        # Live inference execution mode
+        # Strict Live inference execution mode (zero cached lookups)
+        result["vlm_cache_hit"] = False
         result["vlm_inference_executed"] = True
 
         prompt = build_structured_affordance_prompt(entity_id, sem_class, PROMPT_TEMPLATE_VERSION)
@@ -576,7 +602,7 @@ class SelectiveRouter:
         messages = [{"role": "user", "content": image_contents}]
 
         try:
-            raw_text, lat_s, usage = query_llama_server(messages, server_url=self.server_url, max_tokens=75)
+            raw_text, lat_s, usage = query_llama_server(messages, server_url=self.server_url, max_tokens=150)
             parsed, is_json, is_schema = parse_vlm_output(raw_text, entity_id, sem_class)
             pred = parsed.get("movability", "UNKNOWN")
             abstained = parsed.get("abstain", False) or pred == "UNKNOWN"

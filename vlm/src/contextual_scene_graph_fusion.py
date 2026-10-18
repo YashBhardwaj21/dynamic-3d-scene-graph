@@ -86,6 +86,9 @@ class ContextualSceneGraphNode:
     # Cross-session relocation and pose history
     relocation_evaluable: bool = False
     slam_invalidated: bool = False
+    predicted_landmark_action: str = "RETAIN"  # "INVALIDATE" or "RETAIN"
+    landmark_action_reason: Optional[str] = None
+    motion_confidence: Optional[float] = None
     measured_displacement_m: Optional[float] = None
     displacement_uncertainty_m: Optional[float] = None
     pose_history: List[Dict[str, Any]] = field(default_factory=list)
@@ -98,12 +101,29 @@ class ContextualSceneGraphNode:
     vlm_model: Optional[str] = None
 
     def to_dict(self) -> Dict[str, Any]:
+        mov_str = self.contextual_movability.value if isinstance(self.contextual_movability, ContextualMovability) else str(self.contextual_movability)
+        mot_str = self.observed_motion.value if isinstance(self.observed_motion, ObservedMotionState) else str(self.observed_motion)
+        action_str = self.predicted_landmark_action
+        if not action_str or action_str == "RETAIN":
+            if self.slam_invalidated:
+                action_str = "INVALIDATE"
+            else:
+                action_str = "RETAIN"
+        reason_str = self.landmark_action_reason or ("SIGNIFICANT_REGISTERED_DISPLACEMENT" if self.slam_invalidated else "STATISTICALLY_STATIONARY")
+
         return {
             "entity_id": self.entity_id,
+            "predicted_entity_id": self.entity_id,
             "semantic_class": self.semantic_class,
-            "contextual_movability": self.contextual_movability.value if isinstance(self.contextual_movability, ContextualMovability) else str(self.contextual_movability),
-            "observed_motion": self.observed_motion.value if isinstance(self.observed_motion, ObservedMotionState) else str(self.observed_motion),
+            "contextual_movability": mov_str,
+            "predicted_movability": mov_str,
+            "observed_motion": mot_str,
+            "predicted_motion": mot_str,
+            "motion_confidence": self.motion_confidence,
+            "abstained": (mov_str in ["UNKNOWN", "None", None]),
             "slam_invalidated": self.slam_invalidated,
+            "predicted_landmark_action": action_str,
+            "landmark_action_reason": reason_str,
             "physical_support": self.physical_support,
             "geometry_valid": self.geometry_valid,
             "centroid_world": [round(float(x), 4) for x in self.centroid_world] if self.centroid_world is not None else None,
@@ -292,6 +312,13 @@ class ContextualSceneGraphFusion:
                 ),
                 measured_displacement_m=routed_result.get("world_displacement_m"),
                 displacement_uncertainty_m=routed_result.get("displacement_uncertainty_m"),
+                predicted_landmark_action=routed_result.get("predicted_landmark_action", "INVALIDATE" if (
+                    semantic_class == "person"
+                    or new_motion in [ObservedMotionState.DYNAMIC, ObservedMotionState.DISPLACED]
+                    or bool(obs_meta.get("is_relocation_event", False))
+                ) else "RETAIN"),
+                landmark_action_reason=routed_result.get("landmark_action_reason"),
+                motion_confidence=routed_result.get("motion_confidence"),
                 vlm_query_requested=bool(routed_result.get("vlm_required", False)),
                 vlm_inference_executed=bool(routed_result.get("vlm_inference_executed", False)),
                 vlm_decision=routed_result.get("decision", "RESOLVE_CHEAP"),
@@ -414,6 +441,12 @@ class ContextualSceneGraphFusion:
             node.measured_displacement_m = routed_result["world_displacement_m"]
         if routed_result.get("displacement_uncertainty_m") is not None:
             node.displacement_uncertainty_m = routed_result["displacement_uncertainty_m"]
+        if routed_result.get("predicted_landmark_action") is not None:
+            node.predicted_landmark_action = routed_result["predicted_landmark_action"]
+        if routed_result.get("landmark_action_reason") is not None:
+            node.landmark_action_reason = routed_result["landmark_action_reason"]
+        if routed_result.get("motion_confidence") is not None:
+            node.motion_confidence = routed_result["motion_confidence"]
 
         return node
 

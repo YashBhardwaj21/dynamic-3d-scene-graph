@@ -22,7 +22,11 @@ if sys.stdout and hasattr(sys.stdout, "reconfigure"):
     except Exception:
         pass
 
-from vlm.src.selective_router import SelectiveRouter
+from vlm.src.selective_router import (
+    SelectiveRouter,
+    check_vlm_server_health,
+    DEFAULT_SERVER_URL,
+)
 from vlm.src.stage5_adapter import Stage5EvidenceAdapter
 
 
@@ -62,7 +66,12 @@ def compute_metrics(records: List[Dict[str, Any]]) -> Dict[str, Any]:
             decision_latencies_ms.append(float(d_lat))
 
         # End to end latency: decision time + inference time if queried
-        inf_ms = r.get("inference_latency_ms")
+        mode = r.get("execution_mode", "CACHED_HISTORICAL")
+        if mode == "LIVE_INFERENCE":
+            inf_ms = r.get("inference_latency_ms", 0.0)
+        else:
+            inf_ms = r.get("cached_latency_ms") if r.get("cached_latency_ms") is not None else r.get("inference_latency_ms", 0.0)
+
         if d_lat is not None and isinstance(d_lat, (int, float)):
             if r.get("vlm_required", False):
                 if inf_ms is not None and isinstance(inf_ms, (int, float)):
@@ -139,6 +148,7 @@ def compute_metrics(records: List[Dict[str, Any]]) -> Dict[str, Any]:
             "vlm_query_rate_pct": round(query_rate_pct, 2),
             "vlm_outputs_valid": vlm_outputs_valid_count,
             "vlm_predictions_accepted": vlm_predictions_accepted_count,
+            "latency_accounting": "MEASURED_LIVE_INFERENCE" if any(r.get("execution_mode") == "LIVE_INFERENCE" for r in records) else "HISTORICAL_REPLAY_PROJECTION",
             "decision_latency_ms": {
                 "population": "all_instances",
                 "mean": round(float(np.mean(decision_latencies_ms)), 3),
@@ -169,6 +179,8 @@ def compute_metrics(records: List[Dict[str, Any]]) -> Dict[str, Any]:
 def run_selective_router_evaluation(
     enable_vlm: bool = True,
     cache_path: Optional[Path] = None,
+    mode: str = "LIVE_INFERENCE",
+    server_url: str = DEFAULT_SERVER_URL,
 ) -> Dict[str, Any]:
     manifest_path = repo_root / "vlm" / "benchmarks" / "router_evaluation_manifest.json"
     with open(manifest_path, "r", encoding="utf-8") as f:
@@ -177,14 +189,24 @@ def run_selective_router_evaluation(
     if cache_path is None:
         cache_path = repo_root / "vlm" / "outputs" / "stage6" / "router_vlm_cache.json"
 
+    if enable_vlm and mode == "LIVE_INFERENCE":
+        health = check_vlm_server_health(server_url)
+        if health.get("status") != "ONLINE":
+            print(f"[WARNING] VLM Server is OFFLINE at {server_url}: {health}. Falling back to CACHED_HISTORICAL.")
+            mode = "CACHED_HISTORICAL"
+        else:
+            print(f"[LIVE MODE] VLM Server is ONLINE at {server_url}. Metrics will be derived strictly from live run.")
+
     router = SelectiveRouter(
         cache_path=cache_path,
+        server_url=server_url,
         enable_vlm=enable_vlm,
+        mode=mode,
     )
 
     adapter = Stage5EvidenceAdapter(repo_root=repo_root)
     instances = manifest["evaluation_instances"]
-    print(f"\nEvaluating Selective Router on {len(instances)} physical instances (VLM Enabled: {enable_vlm})...")
+    print(f"\nEvaluating Selective Router on {len(instances)} physical instances (VLM Enabled: {enable_vlm}, Mode: {mode})...")
 
     results = []
     for inst in instances:
@@ -204,6 +226,7 @@ def run_selective_router_evaluation(
 
     summary = {
         "evaluation_name": f"Stage 6 Selective Router ({suffix})",
+        "execution_mode": mode if enable_vlm else "DISABLED",
         "timestamp": time.time(),
         "metrics": metrics,
         "records": results,
@@ -224,4 +247,5 @@ def run_selective_router_evaluation(
 
 if __name__ == "__main__":
     enable = "--no-vlm" not in sys.argv
-    run_selective_router_evaluation(enable_vlm=enable)
+    eval_mode = "CACHED_HISTORICAL" if "--cached" in sys.argv else "LIVE_INFERENCE"
+    run_selective_router_evaluation(enable_vlm=enable, mode=eval_mode)

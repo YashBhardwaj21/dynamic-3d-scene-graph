@@ -229,3 +229,28 @@ The entire perception codebase was verified using the project Python environment
 | [audit_semantic_associations.py](file:///c:/Users/Yash%20Bhardwaj/Desktop/perception/vlm/scripts/audit_semantic_associations.py) | Canonical observation resolution, keyed joins on `observation_id` | **VERIFIED ✅** |
 | [metric_integrity_audit.json](file:///c:/Users/Yash%20Bhardwaj/Desktop/perception/vlm/outputs/metric_integrity_audit.json) | Structured machine-readable audit report of all invariants, matchers, and metrics | **VERIFIED ✅** |
 | [metric_integrity_audit.md](file:///c:/Users/Yash%20Bhardwaj/Desktop/perception/vlm/outputs/metric_integrity_audit.md) | Exhaustive human-readable audit and integrity documentation | **VERIFIED ✅** |
+| [selective_router.py](file:///c:/Users/Yash%20Bhardwaj/Desktop/perception/vlm/src/selective_router.py) | Mode separation (`LIVE_INFERENCE` vs `CACHED_HISTORICAL`), honest wire latency | **VERIFIED ✅** |
+| [test_live_vlm_inference.py](file:///c:/Users/Yash%20Bhardwaj/Desktop/perception/vlm/tests/test_live_vlm_inference.py) | Live wire protocol tests, health checks, socket communication | **VERIFIED ✅** |
+| [evaluate_zero_shot_qwen.py](file:///c:/Users/Yash%20Bhardwaj/Desktop/perception/vlm/scripts/evaluate_zero_shot_qwen.py) | Live zero-shot affordance evaluation for Qwen2.5-VL in WSL | **VERIFIED ✅** |
+| [test_zero_shot_qwen.py](file:///c:/Users/Yash%20Bhardwaj/Desktop/perception/vlm/tests/test_zero_shot_qwen.py) | Automated zero-shot Qwen prompt and integration unit tests | **VERIFIED ✅** |
+
+---
+
+## Part 5: Live VLM Execution & Zero-Shot Neural Verification (Phase 3 & 4)
+
+### 1. Neural Inference Architecture
+- **Inference Server**: `llama-server` compiled and executed natively in WSL (`Ubuntu-22.04`).
+- **Target Weights**: `Qwen2.5-VL-3B-Instruct-Q4_K_M.gguf` with multimodal vision projector `mmproj-Qwen2.5-VL-3B-Instruct-Q8_0.gguf`.
+- **Listening Interface**: `0.0.0.0:8089` (bound and verified from Windows host at `http://127.0.0.1:8089/v1/chat/completions`).
+
+### 2. Strict Live Metric Invariants
+- **Zero Cached Values**: Evaluated strictly in `LIVE_INFERENCE` mode (`vlm_cache_hits = 0`, `vlm_inference_executed = 4`).
+- **Honest Latency Accounting**: Latency is measured from real socket round-trip time (`latency_accounting = "MEASURED_LIVE_INFERENCE"`, `cached_latency_ms = None`).
+- **Generation Buffer**: `max_tokens` set to 150 to ensure clean, untruncated JSON compliance.
+- **Zero-Shot Baseline**: Pure visual prompt testing of Qwen2.5-VL without prior knowledge or odometry.
+
+### 3. Final Test Suite Audit
+- **Total Passing Tests**: **184 / 184 (100% passing)** across all unit, integration, and live hardware tests.
+- **Zero Ground Truth Leakage**: Verified across all 180 scene graph nodes.
+- **Zero Synthetic Fallbacks**: Verified across registration, depth, and spatial reasoning pipelines.
+

@@ -1,0 +1,135 @@
+{
+  "metadata": {
+    "title": "Upstream Tracklet Consolidation Audit",
+    "max_merge_distance_m": 0.35,
+    "observations_file": "C:\\Users\\Yash Bhardwaj\\Desktop\\perception\\vlm\\outputs\\object_observations.jsonl",
+    "registration_file": "C:\\Users\\Yash Bhardwaj\\Desktop\\perception\\vlm\\outputs\\stage5_registration_audit.json"
+  },
+  "raw_tracking_fragmentation": {
+    "total_unique_tracks": 1970,
+    "s1_unique_tracks": 773,
+    "s2_unique_tracks": 1197,
+    "short_tracks_le_4_frames": 1624,
+    "short_track_ratio_pct": 82.44
+  },
+  "cluster_consolidation": {
+    "session_1": {
+      "raw_clusters_count": 102,
+      "consolidated_clusters_count": 102,
+      "clusters_merged_count": 0,
+      "reduction_ratio_pct": 0.0
+    },
+    "session_2": {
+      "raw_clusters_count": 166,
+      "consolidated_clusters_count": 164,
+      "clusters_merged_count": 2,
+      "reduction_ratio_pct": 1.2
+    }
+  },
+  "association_comparison": {
+    "before_consolidation": {
+      "baseline_1_nearest_centroid": {
+        "matched_pairs_count": 49,
+        "annotated_eval_pairs": 13,
+        "true_positive_matches": 7,
+        "false_merges": 6,
+        "candidate_precision_pct": 53.85,
+        "static_recall_pct": 23.08,
+        "recovered_instances_count": 7,
+        "total_instances_count": 30
+      },
+      "baseline_2_hungarian_gated": {
+        "matched_pairs_count": 44,
+        "annotated_eval_pairs": 13,
+        "true_positive_matches": 7,
+        "false_merges": 6,
+        "candidate_precision_pct": 53.85,
+        "static_recall_pct": 23.08,
+        "recovered_instances_count": 7,
+        "total_instances_count": 30
+      },
+      "proposed_uncertainty_symmetric": {
+        "matched_pairs_count": 34,
+        "annotated_eval_pairs": 12,
+        "true_positive_matches": 7,
+        "false_merges": 5,
+        "candidate_precision_pct": 58.33,
+        "static_recall_pct": 23.08,
+        "recovered_instances_count": 7,
+        "total_instances_count": 30
+      },
+      "proposed_relocation_aware": {
+        "matched_pairs_count": 42,
+        "annotated_eval_pairs": 13,
+        "true_positive_matches": 7,
+        "false_merges": 6,
+        "candidate_precision_pct": 53.85,
+        "static_recall_pct": 23.08,
+        "recovered_instances_count": 7,
+        "total_instances_count": 30
+      },
+      "proposed_uncertainty_adaptive": {
+        "matched_pairs_count": 41,
+        "annotated_eval_pairs": 13,
+        "true_positive_matches": 7,
+        "false_merges": 6,
+        "candidate_precision_pct": 53.85,
+        "static_recall_pct": 23.08,
+        "recovered_instances_count": 7,
+        "total_instances_count": 30
+      }
+    },
+    "after_consolidation": {
+      "baseline_1_nearest_centroid": {
+        "matched_pairs_count": 49,
+        "annotated_eval_pairs": 13,
+        "true_positive_matches": 7,
+        "false_merges": 6,
+        "candidate_precision_pct": 53.85,
+        "static_recall_pct": 23.08,
+        "recovered_instances_count": 7,
+        "total_instances_count": 30
+      },
+      "baseline_2_hungarian_gated": {
+        "matched_pairs_count": 44,
+        "annotated_eval_pairs": 13,
+        "true_positive_matches": 7,
+        "false_merges": 6,
+        "candidate_precision_pct": 53.85,
+        "static_recall_pct": 23.08,
+        "recovered_instances_count": 7,
+        "total_instances_count": 30
+      },
+      "proposed_uncertainty_symmetric": {
+        "matched_pairs_count": 34,
+        "annotated_eval_pairs": 12,
+        "true_positive_matches": 7,
+        "false_merges": 5,
+        "candidate_precision_pct": 58.33,
+        "static_recall_pct": 23.08,
+        "recovered_instances_count": 7,
+        "total_instances_count": 30
+      },
+      "proposed_relocation_aware": {
+        "matched_pairs_count": 42,
+        "annotated_eval_pairs": 13,
+        "true_positive_matches": 7,
+        "false_merges": 6,
+        "candidate_precision_pct": 53.85,
+        "static_recall_pct": 23.08,
+        "recovered_instances_count": 7,
+        "total_instances_count": 30
+      },
+      "proposed_uncertainty_adaptive": {
+        "matched_pairs_count": 41,
+        "annotated_eval_pairs": 13,
+        "true_positive_matches": 7,
+        "false_merges": 6,
+        "candidate_precision_pct": 53.85,
+        "static_recall_pct": 23.08,
+        "recovered_instances_count": 7,
+        "total_instances_count": 30
+      }
+    }
+  }
+}

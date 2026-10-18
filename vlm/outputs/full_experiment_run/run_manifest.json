@@ -1,14 +1,14 @@
 {
   "experiment_name": "dynamic_3d_scene_graph_full_pipeline",
-  "timestamp": 1792294578.5618172,
-  "execution_duration_seconds": 9.43,
-  "git_commit": "e625ea21698359068728fcf05fa3daf77b1db986",
+  "timestamp": 1792352729.7670784,
+  "execution_duration_seconds": 33.9,
+  "git_commit": "755a3fc87b548f20237b96ed9294ccc7f976286b",
   "input_artifacts": {
     "observations_file": "C:\\Users\\Yash Bhardwaj\\Desktop\\perception\\vlm\\data\\observations\\object_observations.jsonl",
-    "observations_sha256": "8f6bed9551e57c6320868512e4c29697d2942b1e4ee537d7071aa21238dfab2e",
+    "observations_sha256": "5d7e4beb7d16e769273451a2a336daa6ce064cfeebcce7a2144567428a80c947",
     "observations_count": 7956,
     "registration_audit_file": "C:\\Users\\Yash Bhardwaj\\Desktop\\perception\\vlm\\outputs\\stage5_registration_audit.json",
-    "registration_sha256": "d6ce09f45caa4e6a5f1811fdcda6d0513c537af63f86b521813c6729fc06a6dc",
+    "registration_sha256": "65e639e98a19f6c480f92528ae06b4ec056ccc88fec6ebd74c5673a2d3f3453b",
     "identity_annotations_file": "C:\\Users\\Yash Bhardwaj\\Desktop\\perception\\vlm\\benchmarks\\cross_session_identity_annotations.json",
     "identity_annotations_sha256": "f2deaeb9faf20becf4f71780c14d222f660bb9b3b63ff1fb50c82429600472be"
   },
@@ -41,12 +41,51 @@
     "total_nodes": 180,
     "stationary_fused_entities": 30,
     "relocated_fused_entities": 11,
-    "invalidated_slam_landmarks": 38,
-    "nodes_preserving_pose_history": 15
+    "invalidated_slam_landmarks": 34,
+    "nodes_preserving_pose_history": 11
+  },
+  "downstream_evaluation": {
+    "policy": "R3",
+    "evaluation_contract": "PURE_PREDICTION_EVALUATION_NO_LEAKAGE",
+    "total_nodes_predicted": 180,
+    "nodes_matched_to_ground_truth": 84,
+    "unmatched_nodes_count": 96,
+    "landmark_reliability": {
+      "evaluable_stationary_entities": 44,
+      "correctly_retained_stationary_count": 37,
+      "stationary_retention_rate_pct": 84.09,
+      "falsely_invalidated_count": 7,
+      "false_invalidation_rate_pct": 15.91,
+      "falsely_invalidated_entity_ids": [
+        "inst_chair_001",
+        "inst_chair_018",
+        "inst_desk_008",
+        "inst_desk_017",
+        "inst_desk_031",
+        "inst_human_operator_001",
+        "inst_laptop_003"
+      ],
+      "evaluable_relocated_entities": 4,
+      "correctly_invalidated_relocations_count": 0,
+      "relocation_invalidation_rate_pct": 0.0,
+      "correctly_invalidated_entity_ids": [],
+      "missed_relocation_entity_ids": [
+        "inst_chair_002",
+        "inst_chair_003",
+        "inst_rc_car_robot_001",
+        "inst_storage_box_007"
+      ]
+    },
+    "movability_evaluation": {
+      "evaluable_nodes_count": 84,
+      "correct_movability_count": 84,
+      "movability_accuracy_pct": 100.0
+    }
   },
   "output_artifacts": {
     "scene_graph_json": "C:\\Users\\Yash Bhardwaj\\Desktop\\perception\\vlm\\outputs\\full_experiment_run\\scene_graph.json",
     "baselines_summary_json": "C:\\Users\\Yash Bhardwaj\\Desktop\\perception\\vlm\\outputs\\full_experiment_run\\association_baselines_summary.json",
-    "per_instance_table_json": "C:\\Users\\Yash Bhardwaj\\Desktop\\perception\\vlm\\outputs\\full_experiment_run\\per_instance_association_diagnostics.json"
+    "per_instance_table_json": "C:\\Users\\Yash Bhardwaj\\Desktop\\perception\\vlm\\outputs\\full_experiment_run\\per_instance_association_diagnostics.json",
+    "downstream_evaluation_summary_json": "C:\\Users\\Yash Bhardwaj\\Desktop\\perception\\vlm\\outputs\\full_experiment_run\\downstream_evaluation_summary.json"
   }
 }

@@ -48,7 +48,8 @@ from vlm.src.contextual_scene_graph_fusion import (
     ObservedMotionState,
 )
 from vlm.src.semantic_evidence import CLASS_MOBILITY_PRIORS
-from vlm.src.router_policy import AMBIGUOUS_AFFORDANCE_CLASSES
+from vlm.src.router_policy import AMBIGUOUS_AFFORDANCE_CLASSES, evaluate_router_policy
+from vlm.src.scene_graph_evaluation import evaluate_scene_graph
 
 
 def compute_file_sha256(path: Path) -> str:
@@ -200,41 +201,88 @@ def run_full_experiment(
 
     # Load verified controlled scene events for ground-truth relocation verification
     controlled_events_path = repo_root / "vlm" / "benchmarks" / "controlled_scene_events.json"
-    controlled_invalidations = set()
-    if controlled_events_path.exists():
-        with open(controlled_events_path, "r", encoding="utf-8") as f:
-            for ev in json.load(f).get("events", []):
-                if ev.get("slam_invalidated", False):
-                    controlled_invalidations.add(ev.get("target_object_id"))
 
     def build_policy_scene_graph(
         policy_key: str,
         active_pairs: List[Any],
     ) -> Tuple[Dict[str, Any], Dict[str, int]]:
-        """Construct decoupled persistent 3D scene graph under a specific routing policy."""
+        """Construct decoupled persistent 3D scene graph under a specific routing policy.
+        
+        Pure sensory prediction pipeline:
+        - Strictly independent of controlled scene events or identity annotations.
+        - Relocation detection is driven by measured registered displacement and covariance gating.
+        - Decoupled pose history is recorded purely from measured centroid shifts.
+        """
         fusion = ContextualSceneGraphFusion()
 
-        # Build fast observation lookup index for real timestamps and observation IDs
-        obs_by_id = {o.get("observation_id"): o for o in observations if o.get("observation_id")}
+        # Build fast observation lookup indices per session for real timestamps and observation IDs (obs_id)
+        # Note: obs_id is strictly unique within each session (2,934 in S1, 5,022 in S2).
+        obs_by_session: Dict[str, Dict[str, Dict[str, Any]]] = {}
+        session_time_origins: Dict[str, float] = {}
 
-        # Step 1: Initialize S1 clusters
+        def _matches_session(raw: str, target: str) -> bool:
+            r = raw.strip()
+            t = target.strip()
+            return r == t or r.endswith(f"_{t}") or r.endswith(t)
+
+        for o in observations:
+            sess = str(o.get("source_session", "")).strip()
+            oid = o.get("obs_id")
+            if not sess or not oid:
+                continue
+            obs_by_session.setdefault(sess, {})[oid] = o
+
+            ts = o.get("timestamp")
+            if ts is not None:
+                ts_f = float(ts)
+                if sess not in session_time_origins or ts_f < session_time_origins[sess]:
+                    session_time_origins[sess] = ts_f
+
+        # Resolve observation maps and origins supporting session aliases/suffixes
+        s1_obs_by_id = {}
+        s2_obs_by_id = {}
+        for sess_key, o_map in obs_by_session.items():
+            if _matches_session(sess_key, s1_session):
+                s1_obs_by_id.update(o_map)
+                if sess_key in session_time_origins:
+                    session_time_origins[s1_session] = session_time_origins[sess_key]
+            if _matches_session(sess_key, s2_session):
+                s2_obs_by_id.update(o_map)
+                if sess_key in session_time_origins:
+                    session_time_origins[s2_session] = session_time_origins[sess_key]
+
+        # Strict join assertion: every cluster observation ID must resolve to a valid observation record in its session
+        for t1, c1 in s1_clusters.items():
+            for oid in c1.observation_ids:
+                if oid not in s1_obs_by_id:
+                    raise KeyError(f"Referenced S1 cluster observation ID '{oid}' does not exist in {s1_session} observations.")
+        for t2, c2 in s2_clusters.items():
+            for oid in c2.observation_ids:
+                if oid not in s2_obs_by_id:
+                    raise KeyError(f"Referenced S2 cluster observation ID '{oid}' does not exist in {s2_session} observations.")
+
+        # Step 1: Initialize S1 clusters as reference landmarks
         for t1, c1 in s1_clusters.items():
             entity_id = f"phys_{t1}"
-            gt_inst = canonical_map.get((s1_session, t1))
-            if gt_inst is None:
-                for alias in getattr(c1, "merged_entity_ids", []):
-                    cand = canonical_map.get((s1_session, alias))
-                    if cand is not None:
-                        gt_inst = cand
-                        break
 
-            first_obs_id = c1.observation_ids[0] if c1.observation_ids else f"obs_cluster_{t1}"
-            first_obs = obs_by_id.get(first_obs_id, {})
-            t_stamp = float(first_obs.get("timestamp", 100.0 if "01" in s1_session else 200.0))
+            if not c1.observation_ids:
+                raise ValueError(f"S1 cluster '{t1}' contains no observation IDs.")
+            first_obs_id = c1.observation_ids[0]
+            first_obs = s1_obs_by_id[first_obs_id]
+            if "timestamp" not in first_obs:
+                raise KeyError(f"Observation '{first_obs_id}' is missing required field 'timestamp'.")
+            t_raw = float(first_obs["timestamp"])
+            s1_origin = session_time_origins.get(s1_session)
+            if s1_origin is None:
+                raise ValueError(f"Session origin for '{s1_session}' could not be computed.")
+            t_session_s = t_raw - s1_origin
             depth_valid = bool(getattr(c1, "depth_valid_ratio", 1.0) >= 0.50)
 
             obs_meta = {
-                "timestamp": t_stamp,
+                "timestamp": t_session_s,
+                "timestamp_raw": t_raw,
+                "timestamp_session_s": t_session_s,
+                "temporal_valid": True,
                 "source_session": s1_session,
                 "obs_id": first_obs_id,
                 "local_track_id": t1,
@@ -242,17 +290,39 @@ def run_full_experiment(
                 "spatial_extent_m": c1.spatial_extent_m,
                 "depth_valid": depth_valid,
                 "coordinate_frame": "floor_map",
+                "is_relocation_event": False,
             }
 
-            pred = CLASS_MOBILITY_PRIORS.get(c1.semantic_class, ("MOVABLE", 0.9, ""))[0]
+            s1_ev = {
+                "entity_id": entity_id,
+                "semantic_class": c1.semantic_class,
+                "class_prior_mobility": CLASS_MOBILITY_PRIORS.get(c1.semantic_class, ("MOVABLE", 0.9, ""))[0],
+                "observed_motion": "STATIC",
+                "world_displacement_m": 0.0,
+                "displacement_uncertainty_m": c1.position_uncertainty_m,
+                "has_valid_pose": True,
+                "depth_valid": depth_valid,
+                "s1_obs_count": len(c1.observation_ids),
+                "s2_obs_count": 0,
+                "has_images": bool(c1.observation_ids and len(c1.observation_ids) > 0),
+                "views_count": min(2, len(c1.observation_ids)),
+            }
+            decision = evaluate_router_policy(s1_ev, policy=policy_key)
+            pred = decision.cheap_label or CLASS_MOBILITY_PRIORS.get(c1.semantic_class, ("MOVABLE", 0.9, ""))[0]
 
             routed = {
-                "decision": "RESOLVE_CHEAP",
+                "decision": decision.decision,
                 "prediction": pred,
                 "observed_motion": "STATIC",
                 "evidence_provenance": "MEASURED_CLUSTER",
                 "relocation_evaluable": False,
-                "gt_instance_id": gt_inst,
+                "predicted_landmark_action": "RETAIN",
+                "landmark_action_reason": "SINGLE_SESSION_INITIAL_OBSERVATION",
+                "motion_confidence": decision.confidence,
+                "query_utility": decision.query_utility,
+                "estimator_influence": decision.estimator_influence,
+                "estimator_provenance": decision.estimator_provenance,
+                "reason_codes": decision.reason_codes,
             }
             node = fusion.update_or_create_node(
                 entity_id=entity_id,
@@ -267,18 +337,18 @@ def run_full_experiment(
 
         for t2, c2 in s2_clusters.items():
             matched_m = next((m for m in active_pairs if m.s2_entity_id == t2), None)
-            first_obs_id = c2.observation_ids[0] if c2.observation_ids else f"obs_cluster_{t2}"
-            first_obs = obs_by_id.get(first_obs_id, {})
-            t_stamp = float(first_obs.get("timestamp", 200.0 if "02" in s2_session else 100.0))
+            if not c2.observation_ids:
+                raise ValueError(f"S2 cluster '{t2}' contains no observation IDs.")
+            first_obs_id = c2.observation_ids[0]
+            first_obs = s2_obs_by_id[first_obs_id]
+            if "timestamp" not in first_obs:
+                raise KeyError(f"Observation '{first_obs_id}' is missing required field 'timestamp'.")
+            t_raw = float(first_obs["timestamp"])
+            s2_origin = session_time_origins.get(s2_session)
+            if s2_origin is None:
+                raise ValueError(f"Session origin for '{s2_session}' could not be computed.")
+            t_session_s = t_raw - s2_origin
             depth_valid = bool(getattr(c2, "depth_valid_ratio", 1.0) >= 0.50)
-
-            gt_inst_s2 = canonical_map.get((s2_session, t2))
-            if gt_inst_s2 is None:
-                for alias in getattr(c2, "merged_entity_ids", []):
-                    cand = canonical_map.get((s2_session, alias))
-                    if cand is not None:
-                        gt_inst_s2 = cand
-                        break
 
             if matched_m is not None:
                 entity_id = matched_m.persistent_entity_id
@@ -292,18 +362,29 @@ def run_full_experiment(
                 if policy_key == "R0":
                     # R0 ignores displacement: pure semantic prior, zero landmark invalidations
                     is_reloc = False
+                    action = "RETAIN"
+                    reason = "SEMANTIC_PRIOR_STATIC_POLICY"
                 elif policy_key == "R1":
                     # R1: naive Euclidean displacement threshold >= 0.25m without uncertainty
-                    # Falsely invalidates peripheral entities affected by registration drift
-                    is_reloc = (dist >= 0.25)
+                    is_reloc = bool(dist >= 0.25)
+                    action = "INVALIDATE" if is_reloc else "RETAIN"
+                    reason = "UNWEIGHTED_EUCLIDEAN_DISPLACEMENT" if is_reloc else "STATISTICALLY_STATIONARY"
                 elif policy_key == "R2":
                     # R2: non-estimator-aware relocation
                     has_sem_ambig = (c1.semantic_class in AMBIGUOUS_AFFORDANCE_CLASSES or getattr(c1, "semantic_entropy", 0.0) >= 0.35)
-                    is_reloc = (dist >= 0.25 and has_sem_ambig)
+                    is_reloc = bool(dist >= 0.25 and has_sem_ambig)
+                    action = "INVALIDATE" if is_reloc else "RETAIN"
+                    reason = "SEMANTIC_AMBIGUITY_DISPLACEMENT" if is_reloc else "STATISTICALLY_STATIONARY"
+                elif policy_key == "R3":
+                    # R3: estimator-aware verified relocation via 3-sigma gate
+                    is_reloc = bool(dist >= 0.25 and dist >= 3.0 * sigma_disp)
+                    action = "INVALIDATE" if is_reloc else "RETAIN"
+                    reason = "SIGNIFICANT_REGISTERED_DISPLACEMENT" if is_reloc else "STATISTICALLY_STATIONARY"
                 else:
-                    # R3 & R4: estimator-aware verified relocation
-                    # Rejects peripheral drift via 3-sigma gate, invalidates statistically significant relocations
-                    is_reloc = (dist >= 0.25 and dist >= 3.0 * sigma_disp)
+                    # R4: All-eligible VLM reference policy (combines visual affordance verification with 3-sigma gate)
+                    is_reloc = bool(dist >= 0.25 and dist >= 3.0 * sigma_disp)
+                    action = "INVALIDATE" if is_reloc else "RETAIN"
+                    reason = "VLM_VERIFIED_AFFORDANCE_RELOCATION" if is_reloc else "STATISTICALLY_STATIONARY"
 
                 if is_reloc:
                     relocated_fused_count += 1
@@ -316,7 +397,10 @@ def run_full_experiment(
                 aligned_centroid_3d = [float(c2_aligned_2d[0]), float(c2_aligned_2d[1]), z_coord]
 
                 obs_meta = {
-                    "timestamp": t_stamp,
+                    "timestamp": t_session_s,
+                    "timestamp_raw": t_raw,
+                    "timestamp_session_s": t_session_s,
+                    "temporal_valid": True,
                     "source_session": s2_session,
                     "obs_id": first_obs_id,
                     "local_track_id": t2,
@@ -326,16 +410,38 @@ def run_full_experiment(
                     "coordinate_frame": "reference_frame",
                     "is_relocation_event": is_reloc,
                 }
-                pred = CLASS_MOBILITY_PRIORS.get(c2.semantic_class, ("MOVABLE", 0.9, ""))[0]
+                evidence_rec = {
+                    "entity_id": entity_id,
+                    "semantic_class": c2.semantic_class,
+                    "class_prior_mobility": CLASS_MOBILITY_PRIORS.get(c2.semantic_class, ("MOVABLE", 0.9, ""))[0],
+                    "observed_motion": "DISPLACED" if is_reloc else "STATIC",
+                    "world_displacement_m": dist if is_reloc else 0.0,
+                    "displacement_uncertainty_m": sigma_disp,
+                    "has_valid_pose": True,
+                    "depth_valid": depth_valid,
+                    "s1_obs_count": len(c1.observation_ids),
+                    "s2_obs_count": len(c2.observation_ids),
+                    "has_images": bool(c2.observation_ids and len(c2.observation_ids) > 0),
+                    "views_count": min(2, len(c2.observation_ids)),
+                }
+                decision = evaluate_router_policy(evidence_rec, policy=policy_key)
+                pred = decision.cheap_label or CLASS_MOBILITY_PRIORS.get(c2.semantic_class, ("MOVABLE", 0.9, ""))[0]
+
                 routed = {
-                    "decision": "RESOLVE_CHEAP",
+                    "decision": decision.decision,
                     "prediction": pred,
                     "observed_motion": "DISPLACED" if is_reloc else "STATIC",
                     "world_displacement_m": matched_m.distance_m if is_reloc else 0.0,
                     "displacement_uncertainty_m": c2.position_uncertainty_m,
                     "evidence_provenance": "MEASURED_CLUSTER_ALIGNED",
                     "relocation_evaluable": True,
-                    "gt_instance_id": gt_inst_s2,
+                    "predicted_landmark_action": action,
+                    "landmark_action_reason": reason,
+                    "motion_confidence": decision.confidence,
+                    "query_utility": decision.query_utility,
+                    "estimator_influence": decision.estimator_influence,
+                    "estimator_provenance": decision.estimator_provenance,
+                    "reason_codes": decision.reason_codes,
                 }
                 node = fusion.update_or_create_node(
                     entity_id=entity_id,
@@ -354,7 +460,10 @@ def run_full_experiment(
 
                 is_reloc_unmatched = False
                 obs_meta = {
-                    "timestamp": t_stamp,
+                    "timestamp": t_session_s,
+                    "timestamp_raw": t_raw,
+                    "timestamp_session_s": t_session_s,
+                    "temporal_valid": True,
                     "source_session": s2_session,
                     "obs_id": first_obs_id,
                     "local_track_id": t2,
@@ -364,14 +473,36 @@ def run_full_experiment(
                     "coordinate_frame": "reference_frame",
                     "is_relocation_event": is_reloc_unmatched,
                 }
-                pred = CLASS_MOBILITY_PRIORS.get(c2.semantic_class, ("MOVABLE", 0.9, ""))[0]
+                unmatched_ev = {
+                    "entity_id": entity_id,
+                    "semantic_class": c2.semantic_class,
+                    "class_prior_mobility": CLASS_MOBILITY_PRIORS.get(c2.semantic_class, ("MOVABLE", 0.9, ""))[0],
+                    "observed_motion": "STATIC",
+                    "world_displacement_m": 0.0,
+                    "displacement_uncertainty_m": c2.position_uncertainty_m,
+                    "has_valid_pose": True,
+                    "depth_valid": depth_valid,
+                    "s1_obs_count": 0,
+                    "s2_obs_count": len(c2.observation_ids),
+                    "has_images": bool(c2.observation_ids and len(c2.observation_ids) > 0),
+                    "views_count": min(2, len(c2.observation_ids)),
+                }
+                decision = evaluate_router_policy(unmatched_ev, policy=policy_key)
+                pred = decision.cheap_label or CLASS_MOBILITY_PRIORS.get(c2.semantic_class, ("MOVABLE", 0.9, ""))[0]
+
                 routed = {
-                    "decision": "RESOLVE_CHEAP",
+                    "decision": decision.decision,
                     "prediction": pred,
-                    "observed_motion": "DISPLACED" if is_reloc_unmatched else "STATIC",
+                    "observed_motion": "STATIC",
                     "evidence_provenance": "MEASURED_CLUSTER_S2",
                     "relocation_evaluable": False,
-                    "gt_instance_id": gt_inst_s2,
+                    "predicted_landmark_action": "RETAIN",
+                    "landmark_action_reason": "UNMATCHED_S2_ENTITY",
+                    "motion_confidence": decision.confidence,
+                    "query_utility": decision.query_utility,
+                    "estimator_influence": decision.estimator_influence,
+                    "estimator_provenance": decision.estimator_provenance,
+                    "reason_codes": decision.reason_codes,
                 }
                 node = fusion.update_or_create_node(
                     entity_id=entity_id,
@@ -380,55 +511,12 @@ def run_full_experiment(
                     observation_meta=obs_meta,
                 )
 
-        # Enforce estimator-aware policy ground-truth invalidations and decoupled pose history
-        if policy_key in ["R3", "R4"]:
-            if controlled_events_path.exists():
-                with open(controlled_events_path, "r", encoding="utf-8") as f:
-                    c_events = json.load(f).get("events", [])
-                for ev in c_events:
-                    target_id = ev.get("target_object_id")
-                    if not ev.get("slam_invalidated", False) or not target_id:
-                        continue
-                    matched_node = None
-                    if target_id in fusion.nodes:
-                        matched_node = fusion.nodes[target_id]
-                    else:
-                        target_clean = target_id.replace("inst_", "")
-                        for n in fusion.nodes.values():
-                            is_target = (
-                                (target_clean and target_clean in n.entity_id) or
-                                any(target_clean in trk for trk in n.source_track_ids) or
-                                any(canonical_map.get((s, trk)) == target_id for s in n.source_sessions for trk in n.source_track_ids)
-                            )
-                            if is_target:
-                                matched_node = n
-                                break
-                    if matched_node is not None:
-                        matched_node.slam_invalidated = True
-                        matched_node.observed_motion = ObservedMotionState.DISPLACED
-                        final_pos = ev.get("final_position_floor_m")
-                        disp = ev.get("measured_displacement_m", 0.4)
-                        if len(matched_node.pose_history) == 0 and matched_node.centroid_world is not None:
-                            matched_node.pose_history.append({
-                                "centroid_world": [round(float(x), 4) for x in matched_node.centroid_world],
-                                "spatial_extent_m": round(float(matched_node.spatial_extent_m), 4) if matched_node.spatial_extent_m is not None else None,
-                                "first_seen": matched_node.first_seen,
-                                "last_seen": matched_node.last_seen,
-                                "valid_observations_count": matched_node.valid_geometry_observations_count,
-                                "coordinate_frame": matched_node.coordinate_frame,
-                                "relocation_displacement_m": round(float(disp), 4),
-                                "slam_invalidated": True,
-                                "landmark_status": "INVALIDATED_RELOCATED",
-                            })
-                            if final_pos is not None and len(final_pos) >= 3:
-                                matched_node.centroid_world = np.array(final_pos[:3], dtype=np.float64)
-
         sg_dict = fusion.to_dict()
         stats = {
             "total_nodes": len(sg_dict["nodes"]),
             "stationary_fused": stationary_fused_count,
             "relocated_fused": relocated_fused_count,
-            "invalidated_landmarks": sum(1 for n in sg_dict["nodes"].values() if n.get("slam_invalidated", False)),
+            "invalidated_landmarks": sum(1 for n in sg_dict["nodes"].values() if n.get("slam_invalidated", False) or n.get("predicted_landmark_action") == "INVALIDATE"),
             "nodes_with_history": sum(1 for n in sg_dict["nodes"].values() if len(n.get("pose_history", [])) > 0),
         }
         return sg_dict, stats
@@ -451,7 +539,7 @@ def run_full_experiment(
     policy_scene_graphs = {"R3": canonical_sg}
     hungarian_pairs = baselines.get("baseline_2_hungarian_gated", {}).get("result", active_matcher_res).matched_pairs
 
-    sg_r0, stats_r0 = build_policy_scene_graph("R0", active_matcher_res.matched_pairs)
+    sg_r0, stats_r0 = build_policy_scene_graph("R0", hungarian_pairs)
     sg_r1, stats_r1 = build_policy_scene_graph("R1", hungarian_pairs)
     sg_r2, stats_r2 = build_policy_scene_graph("R2", hungarian_pairs)
     sg_r4, stats_r4 = build_policy_scene_graph("R4", active_matcher_res.matched_pairs)
@@ -487,6 +575,27 @@ def run_full_experiment(
     per_instance_table_path = out_dir / "per_instance_association_diagnostics.json"
     with open(per_instance_table_path, "w", encoding="utf-8") as f:
         json.dump(active_matcher_eval.get("per_instance_results", []), f, indent=2)
+
+    # 7. Independent Downstream Evaluation Against Ground Truth
+    print("\n--- [Stage 5: Independent Downstream Evaluation Against Ground Truth] ---")
+    eval_results = {}
+    movability_gt_file = repo_root / "vlm" / "benchmarks" / "movability_ground_truth.json"
+    for p_name, p_sg in policy_scene_graphs.items():
+        eval_res = evaluate_scene_graph(
+            scene_graph=p_sg,
+            controlled_events_path=controlled_events_path,
+            identity_annotations_path=annotations_path,
+            movability_gt_path=movability_gt_file,
+            policy_name=p_name,
+        )
+        eval_results[p_name] = eval_res
+        reloc_rec = eval_res["landmark_reliability"]["relocation_invalidation_rate_pct"]
+        stat_ret = eval_res["landmark_reliability"]["stationary_retention_rate_pct"]
+        print(f"• Policy {p_name}: Stationary Retention={stat_ret}%, Relocation Invalidation={reloc_rec}%")
+
+    downstream_eval_path = out_dir / "downstream_evaluation_summary.json"
+    with open(downstream_eval_path, "w", encoding="utf-8") as f:
+        json.dump(eval_results, f, indent=2)
 
     elapsed_s = time.time() - start_time
     manifest = {
@@ -532,10 +641,12 @@ def run_full_experiment(
             "invalidated_slam_landmarks": invalidated_landmarks,
             "nodes_preserving_pose_history": nodes_with_history,
         },
+        "downstream_evaluation": eval_results["R3"],
         "output_artifacts": {
             "scene_graph_json": str(sg_path),
             "baselines_summary_json": str(baselines_summary_path),
             "per_instance_table_json": str(per_instance_table_path),
+            "downstream_evaluation_summary_json": str(downstream_eval_path),
         },
     }
 

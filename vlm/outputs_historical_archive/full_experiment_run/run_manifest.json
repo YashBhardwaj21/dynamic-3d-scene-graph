@@ -1,0 +1,52 @@
+{
+  "experiment_name": "dynamic_3d_scene_graph_full_pipeline",
+  "timestamp": 1792294578.5618172,
+  "execution_duration_seconds": 9.43,
+  "git_commit": "e625ea21698359068728fcf05fa3daf77b1db986",
+  "input_artifacts": {
+    "observations_file": "C:\\Users\\Yash Bhardwaj\\Desktop\\perception\\vlm\\data\\observations\\object_observations.jsonl",
+    "observations_sha256": "8f6bed9551e57c6320868512e4c29697d2942b1e4ee537d7071aa21238dfab2e",
+    "observations_count": 7956,
+    "registration_audit_file": "C:\\Users\\Yash Bhardwaj\\Desktop\\perception\\vlm\\outputs\\stage5_registration_audit.json",
+    "registration_sha256": "d6ce09f45caa4e6a5f1811fdcda6d0513c537af63f86b521813c6729fc06a6dc",
+    "identity_annotations_file": "C:\\Users\\Yash Bhardwaj\\Desktop\\perception\\vlm\\benchmarks\\cross_session_identity_annotations.json",
+    "identity_annotations_sha256": "f2deaeb9faf20becf4f71780c14d222f660bb9b3b63ff1fb50c82429600472be"
+  },
+  "registration_diagnostics": {
+    "rotation_deg": -15.558,
+    "translation_m": [
+      -0.1059,
+      0.0486
+    ],
+    "robust_inlier_count": 7,
+    "total_anchors": 10,
+    "inlier_rms_residual_m": 0.11977433343924097,
+    "anchor_rms_residual_m": 0.3086670200691885
+  },
+  "association_summary": {
+    "candidate_precision_pct": 53.85,
+    "static_instance_recall_pct": 23.08,
+    "relocated_instance_recall_pct": 25.0,
+    "all_instance_recall_pct": 23.33,
+    "instance_f1_pct": 29.16,
+    "pair_false_merge_rate_pct": 46.15,
+    "instance_miss_rate_pct": 76.67,
+    "split_instance_rate_pct": 16.67,
+    "merge_instance_rate_pct": 50.0,
+    "annotation_coverage_pct": 31.71,
+    "false_merge_rate_pct": 46.15,
+    "false_split_rate_pct": 16.67
+  },
+  "scene_graph_fusion_summary": {
+    "total_nodes": 180,
+    "stationary_fused_entities": 30,
+    "relocated_fused_entities": 11,
+    "invalidated_slam_landmarks": 38,
+    "nodes_preserving_pose_history": 15
+  },
+  "output_artifacts": {
+    "scene_graph_json": "C:\\Users\\Yash Bhardwaj\\Desktop\\perception\\vlm\\outputs\\full_experiment_run\\scene_graph.json",
+    "baselines_summary_json": "C:\\Users\\Yash Bhardwaj\\Desktop\\perception\\vlm\\outputs\\full_experiment_run\\association_baselines_summary.json",
+    "per_instance_table_json": "C:\\Users\\Yash Bhardwaj\\Desktop\\perception\\vlm\\outputs\\full_experiment_run\\per_instance_association_diagnostics.json"
+  }
+}

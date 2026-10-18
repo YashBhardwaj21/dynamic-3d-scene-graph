@@ -181,12 +181,12 @@
       "excluded_id1": "desk_001",
       "excluded_id2": "desk_001",
       "rotation_deg": -16.179,
-      "delta_rotation_deg": 0.051,
+      "delta_rotation_deg": 0.621,
       "translation_m": [
         -0.0732,
         0.0921
       ],
-      "delta_translation_m": 0.0083,
+      "delta_translation_m": 0.0544,
       "train_rms_residual_m": 0.3214,
       "held_out_residual_m": 0.0577
     },
@@ -195,12 +195,12 @@
       "excluded_id1": "desk_004",
       "excluded_id2": "desk_003",
       "rotation_deg": -15.889,
-      "delta_rotation_deg": 0.239,
+      "delta_rotation_deg": 0.331,
       "translation_m": [
         -0.0862,
         0.1016
       ],
-      "delta_translation_m": 0.0098,
+      "delta_translation_m": 0.0565,
       "train_rms_residual_m": 0.3185,
       "held_out_residual_m": 0.1527
     },
@@ -209,12 +209,12 @@
       "excluded_id1": "desk_005",
       "excluded_id2": "desk_014",
       "rotation_deg": -16.366,
-      "delta_rotation_deg": 0.239,
+      "delta_rotation_deg": 0.808,
       "translation_m": [
         -0.0777,
         0.1056
       ],
-      "delta_translation_m": 0.0131,
+      "delta_translation_m": 0.0636,
       "train_rms_residual_m": 0.3198,
       "held_out_residual_m": 0.1236
     },
@@ -223,12 +223,12 @@
       "excluded_id1": "desk_008",
       "excluded_id2": "desk_016",
       "rotation_deg": -16.218,
-      "delta_rotation_deg": 0.091,
+      "delta_rotation_deg": 0.66,
       "translation_m": [
         -0.0805,
         0.1082
       ],
-      "delta_translation_m": 0.0153,
+      "delta_translation_m": 0.0648,
       "train_rms_residual_m": 0.3188,
       "held_out_residual_m": 0.1422
     },
@@ -237,12 +237,12 @@
       "excluded_id1": "desk_018",
       "excluded_id2": "desk_029",
       "rotation_deg": -16.571,
-      "delta_rotation_deg": 0.443,
+      "delta_rotation_deg": 1.013,
       "translation_m": [
         -0.0546,
         0.1186
       ],
-      "delta_translation_m": 0.0371,
+      "delta_translation_m": 0.0868,
       "train_rms_residual_m": 0.3176,
       "held_out_residual_m": 0.1813
     },
@@ -251,12 +251,12 @@
       "excluded_id1": "desk_023",
       "excluded_id2": "desk_034",
       "rotation_deg": -14.737,
-      "delta_rotation_deg": 1.39,
+      "delta_rotation_deg": 0.821,
       "translation_m": [
         -0.2069,
         0.0178
       ],
-      "delta_translation_m": 0.1462,
+      "delta_translation_m": 0.1056,
       "train_rms_residual_m": 0.2422,
       "held_out_residual_m": 0.7091
     },
@@ -265,12 +265,12 @@
       "excluded_id1": "desk_025",
       "excluded_id2": "desk_006",
       "rotation_deg": -16.99,
-      "delta_rotation_deg": 0.862,
+      "delta_rotation_deg": 1.432,
       "translation_m": [
         0.0171,
         0.069
       ],
-      "delta_translation_m": 0.1014,
+      "delta_translation_m": 0.1247,
       "train_rms_residual_m": 0.2523,
       "held_out_residual_m": 0.6482
     },
@@ -279,12 +279,12 @@
       "excluded_id1": "desk_031",
       "excluded_id2": "desk_002",
       "rotation_deg": -16.173,
-      "delta_rotation_deg": 0.045,
+      "delta_rotation_deg": 0.615,
       "translation_m": [
         -0.0768,
         0.1409
       ],
-      "delta_translation_m": 0.0482,
+      "delta_translation_m": 0.0968,
       "train_rms_residual_m": 0.2852,
       "held_out_residual_m": 0.472
     },
@@ -293,12 +293,12 @@
       "excluded_id1": "storage box_001",
       "excluded_id2": "storage box_003",
       "rotation_deg": -16.242,
-      "delta_rotation_deg": 0.114,
+      "delta_rotation_deg": 0.684,
       "translation_m": [
         -0.0801,
         0.0719
       ],
-      "delta_translation_m": 0.0211,
+      "delta_translation_m": 0.0348,
       "train_rms_residual_m": 0.3132,
       "held_out_residual_m": 0.2359
     },
@@ -307,12 +307,12 @@
       "excluded_id1": "storage box_007",
       "excluded_id2": "storage box_011",
       "rotation_deg": -16.006,
-      "delta_rotation_deg": 0.122,
+      "delta_rotation_deg": 0.448,
       "translation_m": [
         -0.0971,
         0.0949
       ],
-      "delta_translation_m": 0.0158,
+      "delta_translation_m": 0.0471,
       "train_rms_residual_m": 0.3204,
       "held_out_residual_m": 0.0995
     }

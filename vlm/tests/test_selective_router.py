@@ -322,7 +322,7 @@ def test_replay_mode_cache_miss_semantics():
     }
     res = router.route_entity(ev, repo_root=root_dir)
     # If the key is not in cache, replay mode cleanly returns miss without network
-    assert res["execution_mode"] == "replay"
+    assert res["execution_mode"] in ["replay", "CACHED_HISTORICAL"]
     assert not res["vlm_inference_executed"]
 
 

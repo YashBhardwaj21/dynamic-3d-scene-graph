@@ -73,6 +73,12 @@ class PhysicalInstanceMatch:
     s2_obs_count: int
     match_type: str = "MATCHED_STATIC"
     diagnostics: List[str] = field(default_factory=list)
+    p1_raw: Optional[List[float]] = None
+    p2_raw: Optional[List[float]] = None
+    p2_registered: Optional[List[float]] = None
+    coordinate_frame: str = "SESSION_1_WORLD"
+    displacement_xy_m: Optional[float] = None
+    displacement_3d_m: Optional[float] = None
 
     @property
     def outcome(self) -> str:
@@ -477,12 +483,17 @@ class CrossSessionCandidateMatcher:
                 dist = float(np.linalg.norm(c1.centroid_floor - c2.centroid_aligned))
                 if dist <= self.max_static_distance_m and dist < best_dist:
                     best_dist = dist
-                    best_k2 = k2
-
             if best_k2 is not None:
                 c2 = s2_aligned[best_k2]
                 has_extents = (c1.spatial_extent_m is not None and c2.spatial_extent_m is not None)
                 ext_diff = abs(c1.spatial_extent_m - c2.spatial_extent_m) if has_extents else 0.0
+                p1_r = c1.centroid_3d.tolist() if c1.centroid_3d is not None else [float(c1.centroid_floor[0]), float(c1.centroid_floor[1]), 0.0]
+                p2_orig = s2_clusters[best_k2]
+                p2_r = p2_orig.centroid_3d.tolist() if p2_orig.centroid_3d is not None else [float(p2_orig.centroid_floor[0]), float(p2_orig.centroid_floor[1]), 0.0]
+                p2_reg_xy = [float(c2.centroid_aligned[0]), float(c2.centroid_aligned[1])]
+                p2_reg_3d = p2_reg_xy + ([float(p2_r[2])] if len(p2_r) >= 3 else [0.0])
+                disp_3d = float(np.linalg.norm(np.array(p1_r) - np.array(p2_reg_3d))) if (len(p1_r) >= 3 and len(p2_reg_3d) >= 3) else None
+
                 matched_pairs.append(PhysicalInstanceMatch(
                     persistent_entity_id=f"phys_{k1}",
                     s1_entity_id=k1,
@@ -497,6 +508,12 @@ class CrossSessionCandidateMatcher:
                     s1_obs_count=c1.observations_count,
                     s2_obs_count=c2.observations_count,
                     diagnostics=["GREEDY_NEAREST_CENTROID"],
+                    p1_raw=p1_r,
+                    p2_raw=p2_r,
+                    p2_registered=p2_reg_3d,
+                    coordinate_frame="SESSION_1_WORLD",
+                    displacement_xy_m=round(best_dist, 4),
+                    displacement_3d_m=round(disp_3d, 4) if disp_3d is not None else None,
                 ))
                 matched_s1.add(k1)
                 matched_s2.add(best_k2)
@@ -692,6 +709,13 @@ class CrossSessionCandidateMatcher:
             ext_diff = abs(c1.spatial_extent_m - c2.spatial_extent_m) if has_extents else 0.0
             confidence = max(0.20, min(0.99, 1.0 - (dist / self.max_static_distance_m) * 0.5 - (cost / 10.0) * 0.3))
 
+            p1_r = c1.centroid_3d.tolist() if c1.centroid_3d is not None else [float(c1.centroid_floor[0]), float(c1.centroid_floor[1]), 0.0]
+            p2_orig = s2_clusters[k2]
+            p2_r = p2_orig.centroid_3d.tolist() if p2_orig.centroid_3d is not None else [float(p2_orig.centroid_floor[0]), float(p2_orig.centroid_floor[1]), 0.0]
+            p2_reg_xy = [float(c2.centroid_aligned[0]), float(c2.centroid_aligned[1])]
+            p2_reg_3d = p2_reg_xy + ([float(p2_r[2])] if len(p2_r) >= 3 else [0.0])
+            disp_3d = float(np.linalg.norm(np.array(p1_r) - np.array(p2_reg_3d))) if (len(p1_r) >= 3 and len(p2_reg_3d) >= 3) else None
+
             match_obj = PhysicalInstanceMatch(
                 persistent_entity_id=f"phys_{k1}",
                 s1_entity_id=k1,
@@ -707,6 +731,12 @@ class CrossSessionCandidateMatcher:
                 s2_obs_count=c2.observations_count,
                 match_type="MATCHED_STATIC",
                 diagnostics=ambiguity_reasons,
+                p1_raw=p1_r,
+                p2_raw=p2_r,
+                p2_registered=p2_reg_3d,
+                coordinate_frame="SESSION_1_WORLD",
+                displacement_xy_m=round(dist, 4),
+                displacement_3d_m=round(disp_3d, 4) if disp_3d is not None else None,
             )
 
             if is_ambiguous:

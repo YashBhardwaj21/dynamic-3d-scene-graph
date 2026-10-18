@@ -373,5 +373,50 @@
         "cached_tokens": 184
       }
     }
+  },
+  "23848495ff8c41a8a63dbd90": {
+    "entity_id": "inst_chair_003",
+    "movability": "UNKNOWN",
+    "abstain": true,
+    "total_views": 1,
+    "latency_s": 31.799665927886963,
+    "token_usage": {
+      "completion_tokens": 75,
+      "prompt_tokens": 540,
+      "total_tokens": 615,
+      "prompt_tokens_details": {
+        "cached_tokens": 0
+      }
+    }
+  },
+  "b9e1ec011ab148d8f0bb0a1e": {
+    "entity_id": "inst_storage_box_007",
+    "movability": "UNKNOWN",
+    "abstain": true,
+    "total_views": 2,
+    "latency_s": 42.298123836517334,
+    "token_usage": {
+      "completion_tokens": 75,
+      "prompt_tokens": 647,
+      "total_tokens": 722,
+      "prompt_tokens_details": {
+        "cached_tokens": 0
+      }
+    }
+  },
+  "9d2635a3ccce80a66254a274": {
+    "entity_id": "inst_pedestal_fan_001",
+    "movability": "UNKNOWN",
+    "abstain": true,
+    "total_views": 1,
+    "latency_s": 38.96956181526184,
+    "token_usage": {
+      "completion_tokens": 75,
+      "prompt_tokens": 567,
+      "total_tokens": 642,
+      "prompt_tokens_details": {
+        "cached_tokens": 0
+      }
+    }
   }
 }

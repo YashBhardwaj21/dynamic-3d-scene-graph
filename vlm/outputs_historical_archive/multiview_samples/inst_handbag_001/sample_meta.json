@@ -1,0 +1,19 @@
+{
+  "object_instance_id": "inst_handbag_001",
+  "semantic_class": "handbag",
+  "movability_gt": "MOVABLE",
+  "current_motion_gt": "STATIC",
+  "displacement_gt": 0.0,
+  "visual_suitability": "NO_VALID_OBSERVATIONS",
+  "evaluation_eligible": false,
+  "exclusion_reason": "NO_OBSERVATIONS_PASSING_IDENTITY_OR_GEOMETRY_GATE",
+  "total_views": 0,
+  "angular_diversity_verified": false,
+  "view_diversity_valid": false,
+  "views": [],
+  "conditions": {
+    "one_view": [],
+    "two_views": [],
+    "three_views": []
+  }
+}

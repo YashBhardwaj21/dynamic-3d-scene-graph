@@ -1,13 +1,14 @@
 {
   "evaluation_name": "Stage 6 Selective Router (vlm_enabled)",
-  "timestamp": 1792240008.094321,
+  "execution_mode": "LIVE_INFERENCE",
+  "timestamp": 1792351589.4309514,
   "metrics": {
     "quality": {
-      "balanced_accuracy": 0.963,
-      "macro_f1": 0.9804,
+      "balanced_accuracy": 0.8519,
+      "macro_f1": 0.9048,
       "per_class_recall": {
         "IMMOVABLE": 1.0,
-        "MOVABLE": 0.8889,
+        "MOVABLE": 0.5556,
         "MOBILE": 1.0
       },
       "per_class_precision": {
@@ -17,7 +18,7 @@
       },
       "per_class_f1": {
         "IMMOVABLE": 1.0,
-        "MOVABLE": 0.9412,
+        "MOVABLE": 0.7143,
         "MOBILE": 1.0
       },
       "confusion_matrix": {
@@ -29,9 +30,9 @@
         },
         "MOVABLE": {
           "IMMOVABLE": 0,
-          "MOVABLE": 8,
+          "MOVABLE": 5,
           "MOBILE": 0,
-          "UNKNOWN": 1
+          "UNKNOWN": 4
         },
         "MOBILE": {
           "IMMOVABLE": 0,
@@ -40,41 +41,42 @@
           "UNKNOWN": 0
         }
       },
-      "abstention_rate_pct": 6.67
+      "abstention_rate_pct": 26.67
     },
     "efficiency": {
       "total_instances": 15,
       "vlm_queries_requested": 4,
-      "vlm_inference_executed": 0,
-      "vlm_cache_hits": 3,
-      "vlm_queries_invoked": 3,
-      "vlm_queries_avoided": 12,
-      "vlm_query_rate_pct": 20.0,
-      "vlm_outputs_valid": 14,
-      "vlm_predictions_accepted": 14,
+      "vlm_inference_executed": 4,
+      "vlm_cache_hits": 0,
+      "vlm_queries_invoked": 4,
+      "vlm_queries_avoided": 11,
+      "vlm_query_rate_pct": 26.67,
+      "vlm_outputs_valid": 11,
+      "vlm_predictions_accepted": 11,
+      "latency_accounting": "MEASURED_LIVE_INFERENCE",
       "decision_latency_ms": {
         "population": "all_instances",
-        "mean": 0.031,
-        "p50": 0.03,
-        "p95": 0.05
+        "mean": 0.032,
+        "p50": 0.019,
+        "p95": 0.076
       },
       "end_to_end_latency_s": {
         "population": "all_instances_unqueried_include_0ms",
-        "mean": 0.0,
+        "mean": 9.633,
         "p50": 0.0,
-        "p95": 0.0
+        "p95": 39.968
       },
       "queried_instances_latency_s": {
         "population": "queried_instances_only",
-        "mean": 0.0,
-        "p50": 0.0,
-        "p95": 0.0
+        "mean": 36.123,
+        "p50": 35.385,
+        "p95": 41.799
       }
     },
     "reliability": {
       "false_cheap_resolutions": 0,
       "invalid_evidence_escalations": 0,
-      "vlm_abstentions": 1
+      "vlm_abstentions": 4
     }
   },
   "records": [
@@ -86,7 +88,7 @@
         "CANONICAL_IMMOVABLE_ARCHITECTURAL_PRIOR"
       ],
       "query_utility": 0.0,
-      "estimator_influence": 0.1574,
+      "estimator_influence": 0.1575,
       "evidence_valid": true,
       "evidence_provenance": "MEASURED_FULL",
       "vlm_query_requested": false,
@@ -99,7 +101,7 @@
       "views_used": 0,
       "prediction": "IMMOVABLE",
       "abstained": false,
-      "decision_latency_ms": 0.049,
+      "decision_latency_ms": 0.031,
       "inference_latency_ms": 0.0,
       "cached_latency_ms": null,
       "token_usage": null,
@@ -108,7 +110,7 @@
       "displacement_uncertainty_m": 0.04,
       "relocation_evaluable": false,
       "image_telemetry": null,
-      "execution_mode": "replay",
+      "execution_mode": "LIVE_INFERENCE",
       "ground_truth": "IMMOVABLE",
       "semantic_class": "door"
     },
@@ -135,7 +137,7 @@
       "views_used": 0,
       "prediction": "IMMOVABLE",
       "abstained": false,
-      "decision_latency_ms": 0.053,
+      "decision_latency_ms": 0.043,
       "inference_latency_ms": 0.0,
       "cached_latency_ms": null,
       "token_usage": null,
@@ -144,7 +146,7 @@
       "displacement_uncertainty_m": 0.0821,
       "relocation_evaluable": true,
       "image_telemetry": null,
-      "execution_mode": "replay",
+      "execution_mode": "LIVE_INFERENCE",
       "ground_truth": "IMMOVABLE",
       "semantic_class": "ceiling fan"
     },
@@ -157,8 +159,8 @@
         "SUBTHRESHOLD_QUERY_UTILITY_AVOIDED",
         "ESTIMATOR_INFLUENCE_0.08"
       ],
-      "query_utility": -0.4288,
-      "estimator_influence": 0.0838,
+      "query_utility": -0.4289,
+      "estimator_influence": 0.0837,
       "evidence_valid": true,
       "evidence_provenance": "MEASURED_FULL",
       "vlm_query_requested": false,
@@ -171,7 +173,7 @@
       "views_used": 0,
       "prediction": "IMMOVABLE",
       "abstained": false,
-      "decision_latency_ms": 0.03,
+      "decision_latency_ms": 0.027,
       "inference_latency_ms": 0.0,
       "cached_latency_ms": null,
       "token_usage": null,
@@ -180,7 +182,7 @@
       "displacement_uncertainty_m": 0.04,
       "relocation_evaluable": false,
       "image_telemetry": null,
-      "execution_mode": "replay",
+      "execution_mode": "LIVE_INFERENCE",
       "ground_truth": "IMMOVABLE",
       "semantic_class": "whiteboard"
     },
@@ -192,7 +194,7 @@
         "CANONICAL_MOBILE_AGENT_PRIOR"
       ],
       "query_utility": 0.0,
-      "estimator_influence": 0.7109,
+      "estimator_influence": 0.7105,
       "evidence_valid": true,
       "evidence_provenance": "MEASURED_FULL",
       "vlm_query_requested": false,
@@ -205,7 +207,7 @@
       "views_used": 0,
       "prediction": "MOBILE",
       "abstained": false,
-      "decision_latency_ms": 0.023,
+      "decision_latency_ms": 0.014,
       "inference_latency_ms": 0.0,
       "cached_latency_ms": null,
       "token_usage": null,
@@ -214,7 +216,7 @@
       "displacement_uncertainty_m": 0.0616,
       "relocation_evaluable": true,
       "image_telemetry": null,
-      "execution_mode": "replay",
+      "execution_mode": "LIVE_INFERENCE",
       "ground_truth": "MOBILE",
       "semantic_class": "person"
     },
@@ -226,41 +228,7 @@
         "CANONICAL_MOBILE_AGENT_PRIOR"
       ],
       "query_utility": 0.0,
-      "estimator_influence": 0.1144,
-      "evidence_valid": true,
-      "evidence_provenance": "MEASURED_FULL",
-      "vlm_query_requested": false,
-      "vlm_inference_executed": false,
-      "vlm_cache_hit": false,
-      "vlm_output_valid": true,
-      "vlm_prediction_accepted": true,
-      "vlm_required": false,
-      "vlm_model": null,
-      "views_used": 0,
-      "prediction": "MOBILE",
-      "abstained": false,
-      "decision_latency_ms": 0.017,
-      "inference_latency_ms": 0.0,
-      "cached_latency_ms": null,
-      "token_usage": null,
-      "observed_motion": "STATIC",
-      "world_displacement_m": 0.0,
-      "displacement_uncertainty_m": 0.04,
-      "relocation_evaluable": false,
-      "image_telemetry": null,
-      "execution_mode": "replay",
-      "ground_truth": "MOBILE",
-      "semantic_class": "robot"
-    },
-    {
-      "entity_id": "inst_quadcopter_drone_001",
-      "policy_variant": "R3",
-      "decision": "RESOLVE_CHEAP",
-      "reason_codes": [
-        "CANONICAL_MOBILE_AGENT_PRIOR"
-      ],
-      "query_utility": 0.0,
-      "estimator_influence": 0.2063,
+      "estimator_influence": 0.1143,
       "evidence_valid": true,
       "evidence_provenance": "MEASURED_FULL",
       "vlm_query_requested": false,
@@ -282,7 +250,41 @@
       "displacement_uncertainty_m": 0.04,
       "relocation_evaluable": false,
       "image_telemetry": null,
-      "execution_mode": "replay",
+      "execution_mode": "LIVE_INFERENCE",
+      "ground_truth": "MOBILE",
+      "semantic_class": "robot"
+    },
+    {
+      "entity_id": "inst_quadcopter_drone_001",
+      "policy_variant": "R3",
+      "decision": "RESOLVE_CHEAP",
+      "reason_codes": [
+        "CANONICAL_MOBILE_AGENT_PRIOR"
+      ],
+      "query_utility": 0.0,
+      "estimator_influence": 0.2062,
+      "evidence_valid": true,
+      "evidence_provenance": "MEASURED_FULL",
+      "vlm_query_requested": false,
+      "vlm_inference_executed": false,
+      "vlm_cache_hit": false,
+      "vlm_output_valid": true,
+      "vlm_prediction_accepted": true,
+      "vlm_required": false,
+      "vlm_model": null,
+      "views_used": 0,
+      "prediction": "MOBILE",
+      "abstained": false,
+      "decision_latency_ms": 0.008,
+      "inference_latency_ms": 0.0,
+      "cached_latency_ms": null,
+      "token_usage": null,
+      "observed_motion": "STATIC",
+      "world_displacement_m": 0.0,
+      "displacement_uncertainty_m": 0.04,
+      "relocation_evaluable": false,
+      "image_telemetry": null,
+      "execution_mode": "LIVE_INFERENCE",
       "ground_truth": "MOBILE",
       "semantic_class": "robot"
     },
@@ -294,7 +296,7 @@
         "STATIC_CANONICAL_MOVABLE_PRIOR"
       ],
       "query_utility": 0.0,
-      "estimator_influence": 0.5528,
+      "estimator_influence": 0.5529,
       "evidence_valid": true,
       "evidence_provenance": "MEASURED_FULL",
       "vlm_query_requested": false,
@@ -307,7 +309,7 @@
       "views_used": 0,
       "prediction": "MOVABLE",
       "abstained": false,
-      "decision_latency_ms": 0.021,
+      "decision_latency_ms": 0.015,
       "inference_latency_ms": 0.0,
       "cached_latency_ms": null,
       "token_usage": null,
@@ -316,7 +318,7 @@
       "displacement_uncertainty_m": 0.0561,
       "relocation_evaluable": true,
       "image_telemetry": null,
-      "execution_mode": "replay",
+      "execution_mode": "LIVE_INFERENCE",
       "ground_truth": "MOVABLE",
       "semantic_class": "desk"
     },
@@ -328,7 +330,7 @@
         "STATIC_CANONICAL_MOVABLE_PRIOR"
       ],
       "query_utility": 0.0,
-      "estimator_influence": 0.5845,
+      "estimator_influence": 0.5847,
       "evidence_valid": true,
       "evidence_provenance": "MEASURED_FULL",
       "vlm_query_requested": false,
@@ -341,7 +343,7 @@
       "views_used": 0,
       "prediction": "MOVABLE",
       "abstained": false,
-      "decision_latency_ms": 0.031,
+      "decision_latency_ms": 0.012,
       "inference_latency_ms": 0.0,
       "cached_latency_ms": null,
       "token_usage": null,
@@ -350,7 +352,7 @@
       "displacement_uncertainty_m": 0.0477,
       "relocation_evaluable": true,
       "image_telemetry": null,
-      "execution_mode": "replay",
+      "execution_mode": "LIVE_INFERENCE",
       "ground_truth": "MOVABLE",
       "semantic_class": "desk"
     },
@@ -362,7 +364,7 @@
         "STATIC_CANONICAL_MOVABLE_PRIOR"
       ],
       "query_utility": 0.0,
-      "estimator_influence": 0.3387,
+      "estimator_influence": 0.3386,
       "evidence_valid": true,
       "evidence_provenance": "MEASURED_FULL",
       "vlm_query_requested": false,
@@ -375,16 +377,16 @@
       "views_used": 0,
       "prediction": "MOVABLE",
       "abstained": false,
-      "decision_latency_ms": 0.023,
+      "decision_latency_ms": 0.008,
       "inference_latency_ms": 0.0,
       "cached_latency_ms": null,
       "token_usage": null,
-      "observed_motion": "STATIC",
+      "observed_motion": "MOVING",
       "world_displacement_m": 0.1832,
       "displacement_uncertainty_m": 0.04,
       "relocation_evaluable": false,
       "image_telemetry": null,
-      "execution_mode": "replay",
+      "execution_mode": "LIVE_INFERENCE",
       "ground_truth": "MOVABLE",
       "semantic_class": "laptop"
     },
@@ -396,7 +398,7 @@
         "STATIC_CANONICAL_MOVABLE_PRIOR"
       ],
       "query_utility": 0.0,
-      "estimator_influence": 0.7328,
+      "estimator_influence": 0.7336,
       "evidence_valid": true,
       "evidence_provenance": "MEASURED_FULL",
       "vlm_query_requested": false,
@@ -409,16 +411,16 @@
       "views_used": 0,
       "prediction": "MOVABLE",
       "abstained": false,
-      "decision_latency_ms": 0.022,
+      "decision_latency_ms": 0.01,
       "inference_latency_ms": 0.0,
       "cached_latency_ms": null,
       "token_usage": null,
-      "observed_motion": "STATIC",
+      "observed_motion": "MOVING",
       "world_displacement_m": 0.2354,
       "displacement_uncertainty_m": 0.04,
       "relocation_evaluable": false,
       "image_telemetry": null,
-      "execution_mode": "replay",
+      "execution_mode": "LIVE_INFERENCE",
       "ground_truth": "MOVABLE",
       "semantic_class": "backpack"
     },
@@ -433,29 +435,29 @@
         "ESTIMATOR_INFLUENCE_0.92",
         "PROVENANCE_PROXY_SUPPORT"
       ],
-      "query_utility": 0.4198,
-      "estimator_influence": 0.9198,
+      "query_utility": 0.42,
+      "estimator_influence": 0.92,
       "evidence_valid": true,
       "evidence_provenance": "MEASURED_FULL",
       "vlm_query_requested": true,
-      "vlm_inference_executed": false,
-      "vlm_cache_hit": true,
-      "vlm_output_valid": true,
-      "vlm_prediction_accepted": true,
+      "vlm_inference_executed": true,
+      "vlm_cache_hit": false,
+      "vlm_output_valid": false,
+      "vlm_prediction_accepted": false,
       "vlm_required": true,
       "vlm_model": "Qwen2.5-VL-3B-Instruct (GGUF Q4_K_M)",
       "views_used": 1,
-      "prediction": "MOVABLE",
-      "abstained": false,
-      "decision_latency_ms": 0.036,
-      "inference_latency_ms": 0.0,
-      "cached_latency_ms": 6396.13,
+      "prediction": "UNKNOWN",
+      "abstained": true,
+      "decision_latency_ms": 0.019,
+      "inference_latency_ms": 31425.69,
+      "cached_latency_ms": null,
       "token_usage": {
-        "completion_tokens": 54,
-        "prompt_tokens": 301,
-        "total_tokens": 355,
+        "completion_tokens": 75,
+        "prompt_tokens": 559,
+        "total_tokens": 634,
         "prompt_tokens_details": {
-          "cached_tokens": 300
+          "cached_tokens": 443
         }
       },
       "observed_motion": "DISPLACED",
@@ -499,7 +501,7 @@
           ]
         ]
       },
-      "execution_mode": "replay",
+      "execution_mode": "LIVE_INFERENCE",
       "ground_truth": "MOVABLE",
       "semantic_class": "chair"
     },
@@ -514,24 +516,31 @@
         "ESTIMATOR_INFLUENCE_0.96",
         "PROVENANCE_PROXY_SUPPORT"
       ],
-      "query_utility": 0.4616,
-      "estimator_influence": 0.9616,
+      "query_utility": 0.4619,
+      "estimator_influence": 0.9619,
       "evidence_valid": true,
       "evidence_provenance": "MEASURED_FULL",
       "vlm_query_requested": true,
-      "vlm_inference_executed": false,
+      "vlm_inference_executed": true,
       "vlm_cache_hit": false,
       "vlm_output_valid": false,
       "vlm_prediction_accepted": false,
       "vlm_required": true,
       "vlm_model": "Qwen2.5-VL-3B-Instruct (GGUF Q4_K_M)",
-      "views_used": 0,
+      "views_used": 1,
       "prediction": "UNKNOWN",
       "abstained": true,
-      "decision_latency_ms": 0.047,
-      "inference_latency_ms": 0.0,
+      "decision_latency_ms": 0.124,
+      "inference_latency_ms": 31799.67,
       "cached_latency_ms": null,
-      "token_usage": null,
+      "token_usage": {
+        "completion_tokens": 75,
+        "prompt_tokens": 540,
+        "total_tokens": 615,
+        "prompt_tokens_details": {
+          "cached_tokens": 0
+        }
+      },
       "observed_motion": "DISPLACED",
       "world_displacement_m": 0.2649,
       "displacement_uncertainty_m": 0.0469,
@@ -573,8 +582,7 @@
           ]
         ]
       },
-      "execution_mode": "replay",
-      "validation_error": "replay_cache_miss",
+      "execution_mode": "LIVE_INFERENCE",
       "ground_truth": "MOVABLE",
       "semantic_class": "chair"
     },
@@ -589,29 +597,29 @@
         "ESTIMATOR_INFLUENCE_0.97",
         "PROVENANCE_PROXY_SUPPORT"
       ],
-      "query_utility": 0.4665,
-      "estimator_influence": 0.9665,
+      "query_utility": 0.4686,
+      "estimator_influence": 0.9686,
       "evidence_valid": true,
       "evidence_provenance": "MEASURED_FULL",
       "vlm_query_requested": true,
-      "vlm_inference_executed": false,
-      "vlm_cache_hit": true,
-      "vlm_output_valid": true,
-      "vlm_prediction_accepted": true,
+      "vlm_inference_executed": true,
+      "vlm_cache_hit": false,
+      "vlm_output_valid": false,
+      "vlm_prediction_accepted": false,
       "vlm_required": true,
       "vlm_model": "Qwen2.5-VL-3B-Instruct (GGUF Q4_K_M)",
       "views_used": 2,
-      "prediction": "MOVABLE",
-      "abstained": false,
-      "decision_latency_ms": 0.035,
-      "inference_latency_ms": 0.0,
-      "cached_latency_ms": 6817.29,
+      "prediction": "UNKNOWN",
+      "abstained": true,
+      "decision_latency_ms": 0.053,
+      "inference_latency_ms": 42298.12,
+      "cached_latency_ms": null,
       "token_usage": {
-        "completion_tokens": 55,
-        "prompt_tokens": 389,
-        "total_tokens": 444,
+        "completion_tokens": 75,
+        "prompt_tokens": 647,
+        "total_tokens": 722,
         "prompt_tokens_details": {
-          "cached_tokens": 388
+          "cached_tokens": 0
         }
       },
       "observed_motion": "DISPLACED",
@@ -675,7 +683,7 @@
           ]
         ]
       },
-      "execution_mode": "replay",
+      "execution_mode": "LIVE_INFERENCE",
       "ground_truth": "MOVABLE",
       "semantic_class": "storage box"
     },
@@ -695,24 +703,24 @@
       "evidence_valid": true,
       "evidence_provenance": "MEASURED_FULL",
       "vlm_query_requested": true,
-      "vlm_inference_executed": false,
-      "vlm_cache_hit": true,
-      "vlm_output_valid": true,
-      "vlm_prediction_accepted": true,
+      "vlm_inference_executed": true,
+      "vlm_cache_hit": false,
+      "vlm_output_valid": false,
+      "vlm_prediction_accepted": false,
       "vlm_required": true,
       "vlm_model": "Qwen2.5-VL-3B-Instruct (GGUF Q4_K_M)",
       "views_used": 1,
-      "prediction": "MOVABLE",
-      "abstained": false,
-      "decision_latency_ms": 0.038,
-      "inference_latency_ms": 0.0,
-      "cached_latency_ms": 6815.86,
+      "prediction": "UNKNOWN",
+      "abstained": true,
+      "decision_latency_ms": 0.055,
+      "inference_latency_ms": 38969.56,
+      "cached_latency_ms": null,
       "token_usage": {
-        "completion_tokens": 60,
-        "prompt_tokens": 311,
-        "total_tokens": 371,
+        "completion_tokens": 75,
+        "prompt_tokens": 567,
+        "total_tokens": 642,
         "prompt_tokens_details": {
-          "cached_tokens": 310
+          "cached_tokens": 0
         }
       },
       "observed_motion": "STATIC",
@@ -756,7 +764,7 @@
           ]
         ]
       },
-      "execution_mode": "replay",
+      "execution_mode": "LIVE_INFERENCE",
       "ground_truth": "MOVABLE",
       "semantic_class": "pedestal fan"
     },
@@ -768,7 +776,7 @@
         "STATIC_CANONICAL_MOVABLE_PRIOR"
       ],
       "query_utility": 0.0,
-      "estimator_influence": 0.8137,
+      "estimator_influence": 0.8126,
       "evidence_valid": true,
       "evidence_provenance": "MEASURED_FULL",
       "vlm_query_requested": false,
@@ -781,16 +789,16 @@
       "views_used": 0,
       "prediction": "MOVABLE",
       "abstained": false,
-      "decision_latency_ms": 0.028,
+      "decision_latency_ms": 0.054,
       "inference_latency_ms": 0.0,
       "cached_latency_ms": null,
       "token_usage": null,
-      "observed_motion": "STATIC",
+      "observed_motion": "MOVING",
       "world_displacement_m": 0.1657,
       "displacement_uncertainty_m": 0.04,
       "relocation_evaluable": false,
       "image_telemetry": null,
-      "execution_mode": "replay",
+      "execution_mode": "LIVE_INFERENCE",
       "ground_truth": "MOVABLE",
       "semantic_class": "computer monitor"
     }
