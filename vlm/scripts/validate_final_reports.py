@@ -62,7 +62,8 @@ def validate_reports(final_report_dir: Path) -> Dict[str, Any]:
             mdata = json.load(f)
 
         for rel_p, meta in mdata.get("artifacts", {}).items():
-            full_p = final_report_dir / rel_p if not (repo_root / rel_p).exists() else (repo_root / rel_p)
+            norm_rel = Path(rel_p.replace("\\", "/"))
+            full_p = final_report_dir / norm_rel if not (repo_root / norm_rel).exists() else (repo_root / norm_rel)
             if not full_p.exists():
                 errors.append(f"Artifact in manifest does not exist: {rel_p}")
                 continue

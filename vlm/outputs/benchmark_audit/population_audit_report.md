@@ -1,7 +1,7 @@
 # Population Audit Report: Dynamic 3D Scene Graph VLM Subsystem
 
 **Audited Repository Commit:** `7a71ddc7ff39bec53c4edf40685fee706e59e5db`  
-**Audit Directory:** `vlm\outputs\benchmark_audit`  
+**Audit Directory:** `vlm/outputs/benchmark_audit`  
 
 ---
 

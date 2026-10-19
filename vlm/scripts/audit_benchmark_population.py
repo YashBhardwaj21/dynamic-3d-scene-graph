@@ -54,6 +54,8 @@ class InstanceAuditRecord:
     in_held_out_furniture: bool
     is_excluded_from_visual: bool
     is_excluded_from_router: bool
+    estimator_has_valid_pose: bool = True
+    estimator_depth_valid: bool = True
     exclusion_reasons: List[str] = field(default_factory=list)
 
     def to_dict(self) -> Dict[str, Any]:
@@ -170,12 +172,29 @@ def audit_population(output_dir: Optional[Path] = None) -> Dict[str, Any]:
         obs_count = t_obj.get("total_observations", 0) if t_obj else 0
         sessions_obs = gt_obj.get("sessions_observed") or c_entity.get("sessions_observed") or (t_obj.get("sessions", []) if t_obj else [])
 
-        # Estimator evidence inspection
+        # Estimator evidence inspection (Strict zero-GT fallback)
         est_evidence = p_inp.get("estimator_evidence", {})
-        has_est = bool(est_evidence) or bool(disp_gt is not None)
+        has_est = bool(est_evidence) or bool(t_obj)
         obs_motion = est_evidence.get("observed_motion")
-        est_disp = est_evidence.get("world_displacement_m") if est_evidence else (float(disp_gt) if disp_gt is not None else None)
-        est_unc = est_evidence.get("displacement_uncertainty_m") if est_evidence else (0.05 if est_disp is not None else None)
+
+        # Measured displacement from estimator only (never source from disp_gt)
+        est_disp = None
+        if "measured_displacement_m" in est_evidence and est_evidence["measured_displacement_m"] is not None:
+            est_disp = float(est_evidence["measured_displacement_m"])
+        elif "world_displacement_m" in est_evidence and est_evidence["world_displacement_m"] is not None:
+            est_disp = float(est_evidence["world_displacement_m"])
+
+        est_unc = est_evidence.get("displacement_uncertainty_m")
+        if est_unc is None and est_disp is not None:
+            est_unc = 0.05
+
+        has_valid_pose = est_evidence.get("has_valid_pose")
+        if has_valid_pose is None:
+            has_valid_pose = True if (has_crop or t_obj) else False
+
+        depth_valid = est_evidence.get("depth_valid")
+        if depth_valid is None:
+            depth_valid = True if has_valid_pose else False
 
         # Memberships
         in_pilot_r = eid in pilot_inputs
@@ -225,6 +244,8 @@ def audit_population(output_dir: Optional[Path] = None) -> Dict[str, Any]:
             estimator_observed_motion=obs_motion,
             estimator_displacement_m=est_disp,
             estimator_displacement_uncertainty_m=est_unc,
+            estimator_has_valid_pose=has_valid_pose,
+            estimator_depth_valid=depth_valid,
             in_frozen_pilot_router=in_pilot_r,
             in_frozen_pilot_visual=in_pilot_v,
             in_expanded_visual=in_exp_visual,

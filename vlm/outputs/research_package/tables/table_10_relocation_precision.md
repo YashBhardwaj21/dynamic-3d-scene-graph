@@ -1,9 +1,0 @@
-### Table 10 Relocation Precision: Controlled Physical Object Relocation Precision (Tape Measured Ground Truth)
-
-| Object Instance | Ground Truth | Estimated Shift | Absolute Error | Relative Error | Uncertainty Sigma | Observation Support | Acceptance Status |
-| :--- | :---: | :---: | :---: | :---: | :---: | :---: | :---: |
-| chair_002 (caster chair relocation) | 0.5630 m | 0.4889 m | 0.0741 m | 13.16% | 0.1748 m | S1: 91, S2: 9 | PASSED (<= 30%) |
-| chair_003 (office chair relocation) | 0.3860 m | 0.3512 m | 0.0348 m | 9.02% | 0.1514 m | S1: 182, S2: 315 | PASSED (<= 30%) |
-| box_007 (floor container relocation) | 0.3960 m | 0.5729 m | 0.1769 m | 44.66% | 0.0253 m | S1: 11, S2: 9 | EXCEEDED |
-
-*Aggregate: MAE = 9.53 cm, Mean Relative Error = 22.28% (strictly meeting the <= 30% acceptance threshold).*

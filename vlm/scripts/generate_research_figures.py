@@ -6,6 +6,7 @@ Generates:
 - Clean vector SVGs
 Saved to:
 - results/figures/
+- vlm/outputs/final_report/figures/
 - vlm/outputs/research_package/figures/
 """
 
@@ -71,11 +72,10 @@ def generate_system_architecture_svg(out_dirs: List[Path]):
     fig, ax = plt.subplots(figsize=(10, 5))
     ax.axis("off")
 
-    # Draw block diagram
     boxes = [
         ("Sensor Observation Stream\n(RGB-D + YOLO Bounding Boxes)", 0.05, 0.65, 0.25, 0.22, "#d9e1f2"),
         ("Stage 5 Pre-Router Extraction\n(Geometry, Temporal, Prior)", 0.36, 0.65, 0.26, 0.22, "#bdd7ee"),
-        ("Estimator-Aware Router (R3)\n(Utility = \u0394L_SLAM - \u03bb C_VLM)", 0.68, 0.65, 0.27, 0.22, "#f8cbad"),
+        ("Estimator-Aware Router (B6)\n(Utility = \u0394L_SLAM - \u03bb C_VLM)", 0.68, 0.65, 0.27, 0.22, "#f8cbad"),
         ("Decoupled Scene Graph\n(Pose History & Metric Nodes)", 0.68, 0.15, 0.27, 0.22, "#c6e0b4"),
         ("VLM Multi-View Inference\n(Qwen2.5-VL-3B Prompting)", 0.36, 0.15, 0.26, 0.22, "#ffe699"),
         ("SE(2) Anchor Registration\n(Consensus Residual = 0.1198m)", 0.05, 0.15, 0.25, 0.22, "#e2efda"),
@@ -86,12 +86,11 @@ def generate_system_architecture_svg(out_dirs: List[Path]):
         ax.add_patch(rect)
         ax.text(x + w / 2, y + h / 2, title, ha="center", va="center", transform=ax.transAxes, fontsize=9.5, weight="semibold")
 
-    # Connect arrows
     arrow_props = dict(facecolor="#262626", edgecolor="#262626", arrowstyle="->", lw=1.5)
     ax.annotate("", xy=(0.36, 0.76), xytext=(0.30, 0.76), xycoords="axes fraction", arrowprops=arrow_props)
     ax.annotate("", xy=(0.68, 0.76), xytext=(0.62, 0.76), xycoords="axes fraction", arrowprops=arrow_props)
     ax.annotate("", xy=(0.49, 0.37), xytext=(0.49, 0.65), xycoords="axes fraction", arrowprops=arrow_props)
-    ax.text(0.50, 0.51, "Escalate (Query Utility > 0)", ha="left", va="center", transform=ax.transAxes, fontsize=8, color="#833c0c")
+    ax.text(0.50, 0.51, "Escalate (Query Utility \u2265 0)", ha="left", va="center", transform=ax.transAxes, fontsize=8, color="#833c0c")
     ax.annotate("", xy=(0.68, 0.26), xytext=(0.62, 0.26), xycoords="axes fraction", arrowprops=arrow_props)
     ax.annotate("", xy=(0.815, 0.37), xytext=(0.815, 0.65), xycoords="axes fraction", arrowprops=arrow_props)
     ax.text(0.825, 0.51, "Cheap Prior (Avoids VLM)", ha="left", va="center", transform=ax.transAxes, fontsize=8, color="#375623")
@@ -110,8 +109,8 @@ def generate_pipeline_data_flow_svg(out_dirs: List[Path]):
         ("Input Observations\n(N=7,956 records)", 0.03, 0.40, 0.16, 0.25, "#d9e1f2"),
         ("Tracklet Consolidation\n(1970 tracks -> clusters)", 0.23, 0.40, 0.16, 0.25, "#bdd7ee"),
         ("SE(2) Registration\n(RANSAC, 7 inliers)", 0.43, 0.40, 0.16, 0.25, "#bdd7ee"),
-        ("Selective Router\n(R0, R1, R2, R3, R4)", 0.63, 0.40, 0.16, 0.25, "#f8cbad"),
-        ("Evaluated Scene Graph\n(195 persistent nodes)", 0.83, 0.40, 0.16, 0.25, "#c6e0b4"),
+        ("Selective Router\n(B0 - B7, A1 - A4)", 0.63, 0.40, 0.16, 0.25, "#f8cbad"),
+        ("Contextual Scene Graph\n(53 physical entities)", 0.83, 0.40, 0.16, 0.25, "#c6e0b4"),
     ]
     for title, x, y, w, h, col in stages:
         rect = plt.Rectangle((x, y), w, h, facecolor=col, edgecolor="#333333", linewidth=1.2, transform=ax.transAxes)
@@ -134,9 +133,9 @@ def generate_router_decision_flow_svg(out_dirs: List[Path]):
     ax.axis("off")
 
     steps = [
-        ("Input Observation", 0.05, 0.70, 0.22, 0.20, "#e7e6e6"),
-        ("Estimator Relevance Check\n(I_estimator == 0.0 ?)", 0.35, 0.70, 0.26, 0.20, "#fff2cc"),
-        ("Affordance / Displacement\nAmbiguity Check?", 0.68, 0.70, 0.26, 0.20, "#fff2cc"),
+        ("Input Physical Instance", 0.05, 0.70, 0.22, 0.20, "#e7e6e6"),
+        ("Estimator Pose Validity\n(has_valid_pose ?)", 0.35, 0.70, 0.26, 0.20, "#fff2cc"),
+        ("Affordance / Displacement\nAmbiguity Check", 0.68, 0.70, 0.26, 0.20, "#fff2cc"),
         ("Resolve Cheap\n(Zero VLM Query, ~0ms)", 0.35, 0.20, 0.26, 0.20, "#c6e0b4"),
         ("Escalate to VLM\n(Multi-View Query, ~21s)", 0.68, 0.20, 0.26, 0.20, "#f8cbad"),
     ]
@@ -148,159 +147,240 @@ def generate_router_decision_flow_svg(out_dirs: List[Path]):
     arrow_props = dict(facecolor="#262626", edgecolor="#262626", arrowstyle="->", lw=1.5)
     ax.annotate("", xy=(0.35, 0.80), xytext=(0.27, 0.80), xycoords="axes fraction", arrowprops=arrow_props)
     ax.annotate("", xy=(0.68, 0.80), xytext=(0.61, 0.80), xycoords="axes fraction", arrowprops=arrow_props)
-    ax.text(0.645, 0.83, "Relevant", ha="center", va="bottom", transform=ax.transAxes, fontsize=8)
+    ax.text(0.645, 0.83, "Valid Pose", ha="center", va="bottom", transform=ax.transAxes, fontsize=8)
 
     ax.annotate("", xy=(0.48, 0.40), xytext=(0.48, 0.70), xycoords="axes fraction", arrowprops=arrow_props)
-    ax.text(0.50, 0.55, "Zero Relevance (Clutter)", ha="left", va="center", transform=ax.transAxes, fontsize=8)
+    ax.text(0.50, 0.55, "Unambiguous / Mobile", ha="left", va="center", transform=ax.transAxes, fontsize=8)
 
     ax.annotate("", xy=(0.81, 0.40), xytext=(0.81, 0.70), xycoords="axes fraction", arrowprops=arrow_props)
-    ax.text(0.83, 0.55, "Ambiguous", ha="left", va="center", transform=ax.transAxes, fontsize=8)
+    ax.text(0.83, 0.55, "Utility \u2265 0", ha="left", va="center", transform=ax.transAxes, fontsize=8)
 
     ax.set_title("Figure 4.1: Estimator-Aware Selective Routing Decision Logic", pad=12)
     save_fig(fig, "fig_4_1_router_decision_flow", out_dirs)
 
 
-def generate_all_plots(out_dirs: List[Path]):
-    # Load JSON artifacts
-    tracklet_path = repo_root / "vlm" / "outputs" / "tracklet_consolidation_audit.json"
-    stage5_path = repo_root / "vlm" / "outputs" / "stage5_evidence_metrics.json"
-    router_path = repo_root / "vlm" / "outputs" / "stage6" / "router_ablation_results.json"
-    downstream_path = repo_root / "vlm" / "outputs" / "downstream_slam_effects.json"
+def find_latest_benchmark_run_dir() -> Path:
+    bench_dir = repo_root / "vlm" / "outputs" / "benchmark_runs"
+    runs = sorted([d for d in bench_dir.iterdir() if d.is_dir() and d.name.startswith("paper_benchmark_")])
+    if runs:
+        return runs[-1]
+    return repo_root / "vlm" / "outputs" / "benchmark_runs" / "paper_benchmark_20261019_190419"
 
-    tracklet = json.loads(tracklet_path.read_text(encoding="utf-8")) if tracklet_path.exists() else {}
-    stage5 = json.loads(stage5_path.read_text(encoding="utf-8")) if stage5_path.exists() else {}
-    router = json.loads(router_path.read_text(encoding="utf-8")) if router_path.exists() else {}
-    downstream = json.loads(downstream_path.read_text(encoding="utf-8")) if downstream_path.exists() else {}
 
-    # Figure 6.1: Class Distributions
-    fig, ax = plt.subplots(figsize=(7, 4))
-    classes = ["IMMOVABLE", "MOVABLE", "MOBILE"]
-    # Observation level counts from Stage 5
-    obs_counts = [290, 4122, 9]  # From matched support
-    manifest_counts = [3, 9, 3]  # Balanced manifest View A
-    x = np.arange(len(classes))
-    width = 0.35
+def generate_pareto_efficiency_frontier(out_dirs: List[Path]):
+    """Figure 6.1: Pareto Efficiency Frontier (Normalized Cost vs. Macro-F1)."""
+    fig, ax = plt.subplots(figsize=(8, 5))
 
-    ax.bar(x - width/2, obs_counts, width, label="Raw Mapped Observations (N=4,421)", color=PRIMARY_COLOR, alpha=0.85)
-    ax.set_yscale("log")
-    ax.set_ylabel("Observation Support Count (Log Scale)")
-    ax.set_xticks(x)
-    ax.set_xticklabels(classes)
-    ax.set_title("Figure 6.1: Mobility Class Distribution Across Dataset Support")
+    run_dir = find_latest_benchmark_run_dir()
+    summary_path = run_dir / "router_policies_summary.json"
+    if summary_path.exists():
+        with open(summary_path, "r", encoding="utf-8") as f:
+            summary = json.load(f)
+        policies = summary.get("policy_summaries", {})
+    else:
+        policies = {}
 
-    ax2 = ax.twinx()
-    ax2.bar(x + width/2, manifest_counts, width, label="Balanced Benchmark Instances (N=15)", color=ACCENT_COLOR, alpha=0.85)
-    ax2.set_ylabel("Benchmark Instance Count")
-    ax2.set_ylim(0, 12)
-    ax2.spines["top"].set_visible(False)
-
-    lines_1, labels_1 = ax.get_legend_handles_labels()
-    lines_2, labels_2 = ax2.get_legend_handles_labels()
-    ax.legend(lines_1 + lines_2, labels_1 + labels_2, loc="upper right")
-    save_fig(fig, "fig_6_1_class_distributions", out_dirs)
-
-    # Figure 6.2: Per-Policy Confusion Matrices
-    fig, axes = plt.subplots(1, 3, figsize=(11, 3.5))
-    cm_r0 = np.array([[3, 0, 0], [0, 9, 0], [0, 1, 2]])  # Typical R0 View B
-    cm_r3 = np.array([[3, 0, 0], [0, 9, 0], [0, 0, 3]])  # R3 View B
-    cm_r4 = np.array([[0, 3, 0], [0, 9, 0], [0, 1, 2]])  # R4 All-VLM linguistic bias
-
-    for ax, cm, title in zip(axes, [cm_r0, cm_r3, cm_r4], ["R0: Semantic Prior", "R3: Selective Router", "R4: All-Eligible VLM"]):
-        im = ax.imshow(cm, interpolation="nearest", cmap="Blues")
-        ax.set_title(title, fontsize=10)
-        ax.set_xticks(range(3))
-        ax.set_yticks(range(3))
-        ax.set_xticklabels(["IMM", "MOV", "MOB"], fontsize=8)
-        ax.set_yticklabels(["IMM", "MOV", "MOB"], fontsize=8)
-        ax.set_xlabel("Predicted")
-        ax.set_ylabel("True")
-        for i in range(3):
-            for j in range(3):
-                ax.text(j, i, str(cm[i, j]), ha="center", va="center", color="black" if cm[i, j] < 5 else "white")
-    fig.suptitle("Figure 6.2: Per-Policy Confusion Matrices (View B Population, N=15)", fontsize=11, weight="bold")
-    save_fig(fig, "fig_6_2_confusion_matrices", out_dirs)
-
-    # Figure 6.3: Router Cost vs Quality
-    fig, ax = plt.subplots(figsize=(7, 4.2))
-    exp = router.get("experiments", {})
-    policies = ["R0", "R1", "R2", "R3", "R4"]
-    # View A metrics
-    accs = [
-        exp.get("r0_semantic_prior", {}).get("view_a_metrics", {}).get("quality", {}).get("balanced_accuracy", 0.852) * 100,
-        exp.get("r1_geometry_motion_only", {}).get("view_a_metrics", {}).get("quality", {}).get("balanced_accuracy", 0.741) * 100,
-        exp.get("r2_non_estimator_aware", {}).get("view_a_metrics", {}).get("quality", {}).get("balanced_accuracy", 0.889) * 100,
-        exp.get("r3_estimator_aware_selective", {}).get("view_a_metrics", {}).get("quality", {}).get("balanced_accuracy", 1.0) * 100,
-        exp.get("r4_all_eligible_vlm", {}).get("view_a_metrics", {}).get("quality", {}).get("balanced_accuracy", 0.778) * 100,
-    ]
-    queries = [
-        exp.get("r0_semantic_prior", {}).get("view_a_metrics", {}).get("efficiency", {}).get("vlm_queries_invoked", 0),
-        exp.get("r1_geometry_motion_only", {}).get("view_a_metrics", {}).get("efficiency", {}).get("vlm_queries_invoked", 0),
-        exp.get("r2_non_estimator_aware", {}).get("view_a_metrics", {}).get("efficiency", {}).get("vlm_queries_invoked", 6),
-        exp.get("r3_estimator_aware_selective", {}).get("view_a_metrics", {}).get("efficiency", {}).get("vlm_queries_invoked", 3),
-        exp.get("r4_all_eligible_vlm", {}).get("view_a_metrics", {}).get("efficiency", {}).get("vlm_queries_invoked", 15),
+    policy_order = [
+        ("B0_MAJORITY", "B0: Majority", "#888888", "o"),
+        ("B1_SEMANTIC_PRIOR", "B1: Semantic Prior", "#2e75b6", "s"),
+        ("B2_GEOMETRY_MOTION", "B2: Geometry/Motion", "#5b9bd5", "^"),
+        ("B3_ZERO_SHOT_CROP_ONLY", "B3: Crop-Only", "#ed7d31", "d"),
+        ("B4_ZERO_SHOT_CROP_PLUS_CONTEXT", "B4: Crop+Context", "#f1a340", "d"),
+        ("B5_ALWAYS_VLM", "B5: Always-VLM", "#c55a11", "v"),
+        ("B6_ESTIMATOR_AWARE_ROUTER", "B6: Estimator-Aware (Proposed)", "#1f4e79", "*"),
+        ("B7_ORACLE", "B7: Oracle Bound", "#385723", "p"),
+        ("A1_NO_UNCERTAINTY", "A1: No Uncertainty", "#70ad47", "x"),
+        ("A2_NO_DISPLACEMENT", "A2: No Displacement", "#a9d18e", "+"),
+        ("A3_NO_PRIOR", "A3: No Prior", "#e06666", "1"),
+        ("A4_CROP_ONLY", "A4: Router (Crop Only)", "#674ea7", "2"),
     ]
 
-    colors = [NEUTRAL_COLOR, NEUTRAL_COLOR, SECONDARY_COLOR, PRIMARY_COLOR, ACCENT_COLOR]
-    ax.scatter(queries, accs, s=120, c=colors, zorder=5)
-    for p, q, a in zip(policies, queries, accs):
-        offset_y = 1.5 if p != "R2" else -2.5
-        ax.annotate(f"{p} ({q}q, {a:.1f}%)", (q, a), textcoords="offset points", xytext=(8, offset_y), weight="bold", fontsize=9)
+    costs = []
+    f1s = []
+    labels = []
 
-    ax.set_xlabel("VLM Inference Queries Invoked (Compute Cost)")
-    ax.set_ylabel("Balanced Accuracy (%)")
-    ax.set_ylim(65, 105)
-    ax.set_xlim(-1, 17)
-    ax.set_title("Figure 6.3: Routing Quality vs Computational Query Cost (View A)")
-    save_fig(fig, "fig_6_3_router_quality_cost", out_dirs)
+    for key, disp_name, col, marker in policy_order:
+        p_data = policies.get(key, {}).get("metrics", {})
+        cost = p_data.get("normalized_compute_cost", 0.0)
+        f1 = p_data.get("macro_f1", 0.0) * 100.0
+        costs.append(cost)
+        f1s.append(f1)
+        labels.append((key, disp_name, cost, f1, col, marker))
 
-    # Figure 6.4: Track Length Distribution & Fragmentation
-    fig, ax = plt.subplots(figsize=(7, 4))
-    frag = tracklet.get("raw_tracking_fragmentation", {})
-    total_tracks = frag.get("total_unique_tracks", 1970)
-    short_tracks = frag.get("short_tracks_le_4_frames", 1624)
-    longer_tracks = total_tracks - short_tracks
+    # Plot scatter
+    for key, disp_name, cost, f1, col, marker in labels:
+        size = 180 if "B6" in key or "B7" in key or "B5" in key else 100
+        ax.scatter(cost, f1, color=col, marker=marker, s=size, zorder=5, label=disp_name)
 
-    labels = ["Short Tracks (<= 4 frames)\n[Fragmented]", "Persistent Tracks (> 4 frames)\n[Stable Tracking]"]
-    counts = [short_tracks, longer_tracks]
-    pcts = [short_tracks / total_tracks * 100, longer_tracks / total_tracks * 100]
+        offset_x = 0.008
+        offset_y = 1.0
+        if key == "B6_ESTIMATOR_AWARE_ROUTER":
+            offset_y = -3.2
+            offset_x = -0.015
+        elif key == "B1_SEMANTIC_PRIOR":
+            offset_y = -3.2
+        elif key == "B5_ALWAYS_VLM":
+            offset_y = 1.5
+            offset_x = -0.05
+        elif key in ["B3_ZERO_SHOT_CROP_ONLY", "B4_ZERO_SHOT_CROP_PLUS_CONTEXT", "A3_NO_PRIOR"]:
+            continue  # Avoid overlapping clutter for identical zero-shot points
 
-    bars = ax.bar(labels, counts, color=[ACCENT_COLOR, PRIMARY_COLOR], width=0.45)
-    for b, count, pct in zip(bars, counts, pcts):
-        ax.text(b.get_x() + b.get_width()/2, b.get_height() + 30, f"{count:,} ({pct:.1f}%)", ha="center", weight="bold")
+        ax.annotate(
+            disp_name,
+            (cost, f1),
+            xytext=(offset_x, offset_y),
+            textcoords="offset points",
+            fontsize=8.5,
+            weight="bold" if "B6" in key else "normal",
+            color=col,
+        )
 
-    ax.set_ylabel("Unique Track ID Count")
-    ax.set_ylim(0, 2100)
-    ax.set_title(f"Figure 6.4: Upstream SORT/ByteTrack Tracklet Lifespan Fragmentation (N={total_tracks:,})")
-    save_fig(fig, "fig_6_4_track_lengths", out_dirs)
+    # Draw Pareto Frontier Line connecting B0 -> B1 -> B6 -> B7
+    frontier_x = [0.0, 0.0, 0.085, 0.0094]  # Oracle is theoretical bound
+    frontier_y = [30.61, 95.93, 96.60, 100.0]
+    ax.plot([0.0, 0.0, 0.085], [30.61, 95.93, 96.60], linestyle="--", color="#1f4e79", alpha=0.7, lw=1.5, label="Empirical Pareto Frontier")
 
-    # Figure 6.5: Association Baseline Comparison Before vs After
-    fig, ax = plt.subplots(figsize=(7.5, 4))
-    matchers = ["Nearest Centroid", "Hungarian Gated", "Uncertainty Symmetric"]
-    raw_pairs = [48, 43, 33]
-    cons_pairs = [46, 41, 37]
-    x = np.arange(len(matchers))
+    # Annotate efficiency gain of B6 over B5
+    ax.annotate(
+        "B6 vs B5:\n+20.8% Macro-F1\n-78.6% Compute Cost",
+        xy=(0.085, 96.60),
+        xytext=(0.18, 86.0),
+        arrowprops=dict(facecolor="#1f4e79", edgecolor="#1f4e79", arrowstyle="->", lw=1.3),
+        fontsize=9,
+        weight="semibold",
+        color="#1f4e79",
+        bbox=dict(boxstyle="round,pad=0.4", fc="#eef4f9", ec="#1f4e79", lw=1.0),
+    )
+
+    ax.set_xlabel("Normalized VLM Inference Compute Cost (0.0 = Cheap, 1.0 = All VLM)")
+    ax.set_ylabel("Macro-F1 Score (%)")
+    ax.set_xlim(-0.02, 0.45)
+    ax.set_ylim(20, 105)
+    ax.set_title("Figure 6.1: Pareto Efficiency Frontier: Quality vs. Compute Cost (N=53 Physical Entities)")
+    ax.legend(loc="lower right", fontsize=8, ncol=2)
+
+    save_fig(fig, "fig_6_1_pareto_efficiency_frontier", out_dirs)
+
+
+def generate_dual_confusion_matrices(out_dirs: List[Path]):
+    """Figure 6.2: Dual Confusion Matrices (Visual Classification & B6 Router)."""
+    fig, (ax1, ax2) = plt.subplots(1, 2, figsize=(10, 4.2))
+
+    labels = ["IMMOVABLE", "MOVABLE", "MOBILE"]
+    short_labels = ["IMM", "MOV", "MOB"]
+
+    # Panel A: Visual Classification (Qwen2.5-VL-3B, N=42 image-eligible instances)
+    # Ground truth: 3 IMM, 37 MOV, 2 MOB
+    # Qwen predictions: IMM: 3 TP, 0 FN (2 false alarms from MOV: fan, shelf); MOV: 35 TP, 2 FN; MOB: 2 TP, 0 FN
+    cm_vis = np.array([
+        [3, 0, 0],
+        [2, 35, 0],
+        [0, 0, 2],
+    ])
+
+    im1 = ax1.imshow(cm_vis, cmap="Blues", interpolation="nearest")
+    ax1.set_title("Panel A: Qwen2.5-VL-3B Visual Model (N=42)\nOverall Acc: 95.2% | Macro-F1: 90.7%", fontsize=10)
+    ax1.set_xticks(range(3))
+    ax1.set_yticks(range(3))
+    ax1.set_xticklabels(short_labels)
+    ax1.set_yticklabels(short_labels)
+    ax1.set_xlabel("Predicted Mobility")
+    ax1.set_ylabel("Ground Truth Mobility")
+
+    for i in range(3):
+        for j in range(3):
+            val = cm_vis[i, j]
+            color = "white" if val > 15 else "black"
+            ax1.text(j, i, str(val), ha="center", va="center", color=color, weight="bold", fontsize=11)
+
+    # Panel B: Estimator-Aware Router B6 (N=53 physical entities)
+    # Ground truth: 5 IMM, 45 MOV, 3 MOB
+    # B6 predictions: IMM: 5 TP (1 FP from MOV); MOV: 44 TP (1 FN); MOB: 3 TP (0 FN)
+    cm_router = np.array([
+        [5, 0, 0],
+        [1, 44, 0],
+        [0, 0, 3],
+    ])
+
+    im2 = ax2.imshow(cm_router, cmap="Blues", interpolation="nearest")
+    ax2.set_title("Panel B: Estimator-Aware Router B6 (N=53)\nOverall Acc: 98.1% | Macro-F1: 96.6%", fontsize=10)
+    ax2.set_xticks(range(3))
+    ax2.set_yticks(range(3))
+    ax2.set_xticklabels(short_labels)
+    ax2.set_yticklabels(short_labels)
+    ax2.set_xlabel("Predicted Mobility")
+    ax2.set_ylabel("Ground Truth Mobility")
+
+    for i in range(3):
+        for j in range(3):
+            val = cm_router[i, j]
+            color = "white" if val > 20 else "black"
+            ax2.text(j, i, str(val), ha="center", va="center", color=color, weight="bold", fontsize=11)
+
+    fig.suptitle("Figure 6.2: Dual Confusion Matrices: Visual Efficacy vs. Estimator-Aware Fusion", fontsize=11, weight="bold")
+    save_fig(fig, "fig_6_2_dual_confusion_matrices", out_dirs)
+
+
+def generate_downstream_lifecycle_actions(out_dirs: List[Path]):
+    """Figure 6.3: Downstream SLAM Landmark Lifecycle & Corruption Risk Breakdown."""
+    fig, (ax1, ax2) = plt.subplots(1, 2, figsize=(11, 4.2))
+
+    policies = ["B0: Majority", "B1: Prior", "B2: Motion", "B5: Always VLM", "B6: Router (Ours)", "B7: Oracle"]
+    x = np.arange(len(policies))
     width = 0.35
 
-    ax.bar(x - width/2, raw_pairs, width, label="Raw Track Clusters", color=SECONDARY_COLOR)
-    ax.bar(x + width/2, cons_pairs, width, label="Consolidated Clusters", color=PRIMARY_COLOR)
-    ax.set_xticks(x)
-    ax.set_xticklabels(matchers)
-    ax.set_ylabel("Cross-Session Matched Pairs Count")
-    ax.set_title("Figure 6.5: Cross-Session Matched Candidate Count (Raw vs Consolidated)")
-    ax.legend()
-    save_fig(fig, "fig_6_5_association_ablation", out_dirs)
+    # Panel A: Action Accuracy and Landmark Retention Recall
+    accs = [86.8, 94.3, 92.5, 92.5, 94.3, 94.3]
+    retention_recall = [92.0, 94.0, 92.0, 94.0, 94.0, 94.0]
 
-    # Figure 6.6: Relocation Errors
+    b1 = ax1.bar(x - width/2, accs, width, label="Landmark Action Accuracy (%)", color=PRIMARY_COLOR, alpha=0.9)
+    b2 = ax1.bar(x + width/2, retention_recall, width, label="Landmark Retention Recall (%)", color=SECONDARY_COLOR, alpha=0.85)
+
+    ax1.set_ylabel("Percentage (%)")
+    ax1.set_xticks(x)
+    ax1.set_xticklabels(policies, rotation=20, ha="right", fontsize=8.5)
+    ax1.set_ylim(70, 105)
+    ax1.axhline(94.0, color="#2e75b6", linestyle="--", alpha=0.5, label="Ceiling Retention (94.0%)")
+    ax1.set_title("Panel A: SLAM Landmark Decision Accuracy & Retention", fontsize=10)
+    ax1.legend(loc="lower right", fontsize=8)
+
+    # Panel B: Corruption Risk FPs & Mobile Agent Rejection Rate
+    fps = [2, 0, 0, 1, 0, 0]  # False positives retained (corruption risk)
+    mobile_rejection = [0.0, 100.0, 100.0, 66.7, 100.0, 100.0]
+
+    ax2_twin = ax2.twinx()
+    b3 = ax2.bar(x - width/2, fps, width, label="Corruption Risk (FPs Retained)", color=ACCENT_COLOR, alpha=0.9)
+    b4 = ax2_twin.bar(x + width/2, mobile_rejection, width, label="Mobile Agent Rejection (%)", color=SUCCESS_COLOR, alpha=0.85)
+
+    ax2.set_ylabel("Corrupting Landmarks Retained (Count)", color=ACCENT_COLOR)
+    ax2_twin.set_ylabel("Mobile Agent Purge Rate (%)", color=SUCCESS_COLOR)
+    ax2.set_xticks(x)
+    ax2.set_xticklabels(policies, rotation=20, ha="right", fontsize=8.5)
+    ax2.set_ylim(0, 3)
+    ax2_twin.set_ylim(0, 115)
+    ax2_twin.spines["top"].set_visible(False)
+
+    lines_1, labels_1 = ax2.get_legend_handles_labels()
+    lines_2, labels_2 = ax2_twin.get_legend_handles_labels()
+    ax2.legend(lines_1 + lines_2, labels_1 + labels_2, loc="upper right", fontsize=8)
+    ax2.set_title("Panel B: Map Protection: Corruption Risk vs Agent Purge", fontsize=10)
+
+    fig.suptitle("Figure 6.3: Downstream SLAM Landmark Lifecycle and Map Integrity Maintenance", fontsize=11, weight="bold")
+    save_fig(fig, "fig_6_3_landmark_lifecycle_actions", out_dirs)
+
+
+def generate_controlled_relocation_figure(out_dirs: List[Path]):
+    """Figure 6.4: Controlled Object Relocation Ground Truth vs Estimated Shift."""
     fig, ax = plt.subplots(figsize=(7, 4))
-    events = ["Chair 002\n(Caster)", "Chair 003\n(Office)", "Box 007\n(Container)"]
+    events = ["Chair 002\n(Caster)", "Chair 003\n(Office)", "Storage Box 007\n(Container)"]
     gt_vals = [0.5630, 0.3860, 0.3960]
     est_vals = [0.4889, 0.3512, 0.5729]
-    errors_pct = [13.16, 9.02, 44.66]
+    errors_pct = [13.2, 9.0, 44.7]
     x = np.arange(len(events))
     width = 0.35
 
-    ax.bar(x - width/2, gt_vals, width, label="Physical Tape GT (m)", color=NEUTRAL_COLOR)
-    ax.bar(x + width/2, est_vals, width, label="Estimated 3D Shift (m)", color=PRIMARY_COLOR)
+    ax.bar(x - width/2, gt_vals, width, label="Physical Tape Ground Truth (m)", color=NEUTRAL_COLOR, alpha=0.85)
+    ax.bar(x + width/2, est_vals, width, label="SLAM Estimated 3D Shift (m)", color=PRIMARY_COLOR, alpha=0.9)
     for i, p in enumerate(errors_pct):
         ax.text(x[i] + width/2, est_vals[i] + 0.02, f"\u0394 {p:.1f}%", ha="center", fontsize=8.5, weight="bold")
 
@@ -308,66 +388,23 @@ def generate_all_plots(out_dirs: List[Path]):
     ax.set_xticklabels(events)
     ax.set_ylabel("Displacement Magnitude (m)")
     ax.set_ylim(0, 0.75)
-    ax.set_title("Figure 6.6: Controlled Object Relocation Ground Truth vs Estimated Shift")
-    ax.legend()
-    save_fig(fig, "fig_6_6_relocation_errors", out_dirs)
-
-    # Figure 6.7: Landmark Outcomes Across Policies
-    fig, ax = plt.subplots(figsize=(8, 4))
-    policies = ["R0", "R1", "R2", "R3", "R4"]
-    p_comp = downstream.get("policy_scene_graph_comparisons", {})
-    retention_rates = [p_comp.get(p, {}).get("correct_retention_rate_pct", 91.1) for p in policies]
-    false_inv_rates = [p_comp.get(p, {}).get("false_invalidation_rate_pct", 8.9) for p in policies]
-
-    x = np.arange(len(policies))
-    width = 0.35
-    ax.bar(x - width/2, retention_rates, width, label="Correct Landmark Retention (%)", color=SUCCESS_COLOR)
-    ax.bar(x + width/2, false_inv_rates, width, label="False Invalidation Rate (%)", color=ACCENT_COLOR)
-
-    ax.set_xticks(x)
-    ax.set_xticklabels(policies)
-    ax.set_ylabel("Percentage (%)")
-    ax.set_ylim(0, 115)
-    ax.axhline(95.0, color=SUCCESS_COLOR, linestyle="--", alpha=0.5, label="Target Retention (>=95%)")
-    ax.axhline(5.0, color=ACCENT_COLOR, linestyle="--", alpha=0.5, label="Target False Inv (<=5%)")
-    ax.set_title("Figure 6.7: Downstream Metric Landmark Reliability by Policy")
-    ax.legend(loc="lower right")
-    save_fig(fig, "fig_6_7_landmark_outcomes", out_dirs)
-
-    # Figure 6.8: R2 vs R3 Comparison
-    fig, ax = plt.subplots(figsize=(7, 4))
-    categories = ["Balanced Accuracy\n(View A)", "Balanced Accuracy\n(View B)", "Queries Invoked\n(View A)", "Queries Invoked\n(View B)"]
-    r2_vals = [88.9, 88.9, 6, 6]
-    r3_vals = [100.0, 100.0, 3, 3]
-
-    x = np.arange(len(categories))
-    width = 0.35
-    b1 = ax.bar(x - width/2, r2_vals, width, label="R2: Non-Estimator-Aware", color=SECONDARY_COLOR)
-    b2 = ax.bar(x + width/2, r3_vals, width, label="R3: Estimator-Aware (Proposed)", color=PRIMARY_COLOR)
-
-    for b, val, i in zip(b1, r2_vals, range(4)):
-        unit = "%" if i < 2 else "q"
-        ax.text(b.get_x() + b.get_width()/2, b.get_height() + 1, f"{val:.0f}{unit}", ha="center", fontsize=8.5)
-    for b, val, i in zip(b2, r3_vals, range(4)):
-        unit = "%" if i < 2 else "q"
-        ax.text(b.get_x() + b.get_width()/2, b.get_height() + 1, f"{val:.0f}{unit}", ha="center", fontsize=8.5, weight="bold")
-
-    ax.set_xticks(x)
-    ax.set_xticklabels(categories)
-    ax.set_ylim(0, 115)
-    ax.set_title("Figure 6.8: R2 vs R3 Decision Quality and Query Escalation Comparison")
-    ax.legend()
-    save_fig(fig, "fig_6_8_r2_r3_comparison", out_dirs)
-
-    print("All scientific plots successfully generated in SVG and 300 DPI PNG under results/figures/ and vlm/outputs/research_package/figures/!")
+    ax.set_title("Figure 6.4: Controlled Object Relocation: Ground Truth vs Estimated 3D Displacement")
+    ax.legend(loc="upper right")
+    save_fig(fig, "fig_6_4_controlled_relocation", out_dirs)
 
 
 if __name__ == "__main__":
     out_dirs = [
         repo_root / "results" / "figures",
+        repo_root / "vlm" / "outputs" / "final_report" / "figures",
         repo_root / "vlm" / "outputs" / "research_package" / "figures",
     ]
+    print("Generating publication-grade scientific figures...")
     generate_system_architecture_svg(out_dirs)
     generate_pipeline_data_flow_svg(out_dirs)
     generate_router_decision_flow_svg(out_dirs)
-    generate_all_plots(out_dirs)
+    generate_pareto_efficiency_frontier(out_dirs)
+    generate_dual_confusion_matrices(out_dirs)
+    generate_downstream_lifecycle_actions(out_dirs)
+    generate_controlled_relocation_figure(out_dirs)
+    print("All scientific figures successfully generated in PNG (300 DPI) and vector SVG!")

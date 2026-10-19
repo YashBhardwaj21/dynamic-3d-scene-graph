@@ -46,6 +46,23 @@ ENTROPY_AMBIGUITY_THRESHOLD = 0.35
 DEFAULT_VLM_COST = 0.50
 
 
+def extract_displacement_evidence(evidence: Dict[str, Any]) -> Optional[float]:
+    """Safely extract measured or world displacement in meters.
+
+    Supports both 'world_displacement_m' and 'measured_displacement_m',
+    correctly handling 0.0, None, and numeric strings.
+    """
+    disp = evidence.get("world_displacement_m")
+    if disp is None:
+        disp = evidence.get("measured_displacement_m")
+    if disp is not None:
+        try:
+            return float(disp)
+        except (ValueError, TypeError):
+            return None
+    return None
+
+
 @dataclass
 class RouterDecision:
     """Outcome contract for an evaluated evidence record."""
@@ -126,7 +143,7 @@ def compute_estimator_influence_with_provenance(evidence: Dict[str, Any]) -> Tup
         if mean_residual is not None and mean_residual > 20.0:
             res_factor = max(0.0, 1.0 - (float(mean_residual) - 20.0) / 80.0)
 
-        world_disp = evidence.get("world_displacement_m")
+        world_disp = extract_displacement_evidence(evidence)
         disp_factor = 1.25 if (world_disp is not None and world_disp > 0.25) else 1.0
 
         influence = min(1.0, obs_factor * ratio_val * res_factor * disp_factor)
@@ -139,7 +156,7 @@ def compute_estimator_influence_with_provenance(evidence: Dict[str, Any]) -> Tup
     else:
         geo_factor = max(0.0, min(1.0, float(geo_score)))  # Strict: no artificial 0.2 floor
 
-    world_disp = evidence.get("world_displacement_m")
+    world_disp = extract_displacement_evidence(evidence)
     disp_factor = 1.25 if (world_disp is not None and world_disp > 0.25) else 1.0
 
     influence = min(1.0, obs_factor * geo_factor * disp_factor)
@@ -200,7 +217,7 @@ def evaluate_policy_r1(evidence: Dict[str, Any]) -> RouterDecision:
     entity_id = str(evidence.get("entity_id", "unknown"))
     sem_class = str(evidence.get("semantic_class", "object")).lower().strip()
     observed_motion = str(evidence.get("observed_motion", "STATIC")).upper()
-    world_disp = evidence.get("world_displacement_m")
+    world_disp = extract_displacement_evidence(evidence)
 
     # If observed moving, classify passively movable objects as MOVABLE and agents as MOBILE
     if observed_motion in ["MOVING", "DISPLACED"] or (world_disp and world_disp > 0.25):
@@ -227,7 +244,7 @@ def evaluate_policy_r2(evidence: Dict[str, Any]) -> RouterDecision:
     sem_class = str(evidence.get("semantic_class", "object")).lower().strip()
     prior_mobility = evidence.get("class_prior_mobility")
     observed_motion = str(evidence.get("observed_motion", "STATIC")).upper()
-    world_disp = evidence.get("world_displacement_m")
+    world_disp = extract_displacement_evidence(evidence)
     disp_sigma = evidence.get("displacement_uncertainty_m", 0.04) or 0.04
     semantic_entropy = float(evidence.get("semantic_entropy", 0.0) or 0.0)
     has_valid_pose = evidence.get("has_valid_pose")
@@ -355,7 +372,7 @@ def evaluate_policy_r3(
     sem_class = str(evidence.get("semantic_class", "object")).lower().strip()
     prior_mobility = evidence.get("class_prior_mobility")
     observed_motion = str(evidence.get("observed_motion", "STATIC")).upper()
-    world_disp = evidence.get("world_displacement_m")
+    world_disp = extract_displacement_evidence(evidence)
     disp_sigma = evidence.get("displacement_uncertainty_m", 0.04) or 0.04
     semantic_entropy = float(evidence.get("semantic_entropy", 0.0) or 0.0)
 

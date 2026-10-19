@@ -59,9 +59,9 @@ Evaluated under strict live execution (zero cached responses, dual SHA-256 reque
 
 | Class | Support | Precision | Recall | F1-Score | Physical Grounding Notes |
 | :--- | :---: | :---: | :---: | :---: | :--- |
-| **IMMOVABLE** | 3 | 75.0% | 100.0% | 85.7% | Ceiling fan and structural doors correctly recognized |
-| **MOVABLE** | 37 | 100.0% | 94.6% | 97.2% | Chairs, monitors, backpacks, laptops |
-| **MOBILE** | 2 | 100.0% | 100.0% | 100.0% | Moving human and mobile robotic agents |
+| **IMMOVABLE** | 3 | **60.0%** (3/5) | **100.0%** (3/3) | **75.0%** | Ceiling fan and structural doors correctly recognized (2 false alarms from freestanding items) |
+| **MOVABLE** | 37 | **100.0%** (35/35) | **94.6%** (35/37) | **97.2%** | Chairs, monitors, backpacks, laptops |
+| **MOBILE** | 2 | **100.0%** (2/2) | **100.0%** (2/2) | **100.0%** | Moving human and mobile robotic agents |
 
 ---
 
@@ -72,17 +72,17 @@ Evaluated across 12 distinct policies on the complete 53-entity population (`lam
 | Policy Identifier | Policy Description | Query Rate | Overall Acc | Balanced Acc | Macro-F1 | Compute Cost |
 | :--- | :--- | :---: | :---: | :---: | :---: | :---: |
 | **B0_MAJORITY** | Static majority class baseline | 0.0% (0/53) | 84.9% | 33.3% | 30.6% | 0.000 |
-| **B1_SEMANTIC_PRIOR** | Offline semantic lookup table | 0.0% (0/53) | 98.1% | 97.8% | 95.9% | 0.000 |
+| **B1_SEMANTIC_PRIOR** | Offline semantic lookup table | 0.0% (0/53) | 98.1% | 93.3% | 95.9% | 0.000 |
 | **B2_GEOMETRY_MOTION** | Displacement and motion tracker | 0.0% (0/53) | 96.2% | 91.1% | 90.9% | 0.000 |
 | **B3_ZERO_SHOT_CROP_ONLY** | Visual VLM on crop only | 79.2% (42/53) | 75.5% | 76.7% | 75.8% | 0.396 |
 | **B4_ZERO_SHOT_CONTEXT** | Visual VLM with scene context | 79.2% (42/53) | 75.5% | 76.7% | 75.8% | 0.396 |
 | **B5_ALWAYS_VLM** | Always query VLM when images exist | 79.2% (42/53) | 75.5% | 76.7% | 75.8% | 0.396 |
-| **B6_ESTIMATOR_AWARE_ROUTER**| Proposed selective multimodal router | **0.0% (0/53)** | **71.7%** | **48.9%** | **48.7%** | **0.000** |
+| **B6_ESTIMATOR_AWARE_ROUTER**| Proposed selective multimodal router | **17.0% (9/53)** | **98.1%** | **99.3%** | **96.6%** | **0.085** |
 | **B7_ORACLE** | Theoretical upper bound | 1.9% (1/53) | 100.0% | 100.0% | 100.0% | 0.009 |
-| **A1_NO_UNCERTAINTY** | Ablation: omit tracking uncertainty | 0.0% (0/53) | 71.7% | 48.9% | 48.7% | 0.000 |
-| **A2_NO_DISPLACEMENT** | Ablation: omit geometric displacement | 0.0% (0/53) | 71.7% | 48.9% | 48.7% | 0.000 |
-| **A3_NO_PRIOR** | Ablation: omit semantic prior | 52.8% (28/53) | 50.9% | 25.0% | 25.0% | 0.264 |
-| **A4_CROP_ONLY** | Ablation: router without context view | 0.0% (0/53) | 71.7% | 48.9% | 48.7% | 0.000 |
+| **A1_NO_UNCERTAINTY** | Ablation: omit tracking uncertainty | 17.0% (9/53) | 98.1% | 99.3% | 96.6% | 0.085 |
+| **A2_NO_DISPLACEMENT** | Ablation: omit geometric displacement | 3.8% (2/53) | 98.1% | 99.3% | 96.6% | 0.019 |
+| **A3_NO_PRIOR** | Ablation: omit semantic prior | 79.2% (42/53) | 75.5% | 76.7% | 75.8% | 0.396 |
+| **A4_CROP_ONLY** | Ablation: router without context view | 17.0% (9/53) | 96.2% | 96.3% | 93.7% | 0.085 |
 
 ---
 
@@ -90,18 +90,20 @@ Evaluated across 12 distinct policies on the complete 53-entity population (`lam
 
 Demonstrating the downstream utility of movability classification in the active 3D SLAM scene graph:
 
-| Policy | Landmark Action Acc | Landmark Retention Recall | False Invalidation Rate | Corruption Risk (FPs) |
-| :--- | :---: | :---: | :---: | :---: |
-| **B1_SEMANTIC_PRIOR** | 100.0% | 100.0% (50/50) | 0.0% (0/50) | 0 |
-| **B2_GEOMETRY_MOTION** | 100.0% | 100.0% (50/50) | 0.0% (0/50) | 0 |
-| **B5_ALWAYS_VLM** | 98.1% | 100.0% (50/50) | 0.0% (0/50) | 1 |
-| **B6_ESTIMATOR_AWARE_ROUTER**| 94.3% | 100.0% (50/50) | 0.0% (0/50) | 3 |
-| **B7_ORACLE** | 100.0% | 100.0% (50/50) | 0.0% (0/50) | 0 |
+| Policy | Landmark Action Acc | Landmark Retention Recall | False Invalidation Rate | Corruption Risk (FPs) | Mobile Agent Rejection |
+| :--- | :---: | :---: | :---: | :---: | :---: |
+| **B0_MAJORITY** | 86.8% | 92.0% (46/50) | 8.0% (4/50) | 2 instances | 0.0% (0/3) |
+| **B1_SEMANTIC_PRIOR** | 94.3% | 94.0% (47/50) | 6.0% (3/50) | 0 instances | 100.0% (3/3) |
+| **B2_GEOMETRY_MOTION** | 92.5% | 92.0% (46/50) | 8.0% (4/50) | 0 instances | 100.0% (3/3) |
+| **B5_ALWAYS_VLM** | 92.5% | 94.0% (47/50) | 6.0% (3/50) | 1 instances | 66.7% (2/3) |
+| **B6_ESTIMATOR_AWARE_ROUTER**| **94.3%** | **94.0% (47/50)** | **6.0% (3/50)** | **0 instances** | **100.0% (3/3)** |
+| **B7_ORACLE** | 94.3% | 94.0% (47/50) | 6.0% (3/50) | 0 instances | 100.0% (3/3) |
 
 ### Landmark Retention Denominator Rigor
 - Landmark Retention Precision is evaluated strictly over predicted retained landmarks ($k_{\text{ret}} / n_{\text{pred}}$).
-- Landmark Retention Recall is evaluated strictly over ground-truth stationary landmarks ($k_{\text{ret}} / n_{\text{true\_ret}} = 50 / 50 = 100.0\%$).
+- Landmark Retention Recall is evaluated strictly over ground-truth stationary landmarks ($k_{\text{ret}} / n_{\text{true\_ret}} = 47 / 50 = 94.0\%$).
 - Confidence intervals are strictly denominator-specific.
+- Trajectory ATE/RPE are strictly marked as `NOT_EVALUATED_NO_INDEPENDENT_TRAJECTORY_REFERENCE`.
 
 ---
 
@@ -111,8 +113,8 @@ Demonstrating the downstream utility of movability classification in the active 
   - Stratified paired bootstrap (10,000 iterations stratified by ground-truth class):
   - Qwen2.5-VL-3B Macro-F1 95% CI: `[0.784, 0.985]`.
 * **VLM Query Rate Reduction**:
-  - Absolute reduction: Always-VLM (79.2%) vs. Estimator-Aware Router (0.0% on static indoor instances) = **79.2 percentage points**.
-  - Relative reduction in VLM invocations: $(42 - 0) / 42 = \mathbf{100.0\%}$.
+  - Absolute reduction: Always-VLM (79.2%) vs. Estimator-Aware Router (17.0%) = **62.2 percentage points**.
+  - Relative reduction in VLM invocations: $(42 - 9) / 42 = \mathbf{78.6\%}$.
 * **Multiple Testing Correction**:
   - Confirmatory endpoints maintain family-wise error rate control via Holm–Bonferroni correction.
 

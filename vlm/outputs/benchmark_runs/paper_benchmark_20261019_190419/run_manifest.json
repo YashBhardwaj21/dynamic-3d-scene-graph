@@ -1,0 +1,186 @@
+{
+  "manifest_version": "1.0.0",
+  "run_id": "paper_benchmark_20261019_190419",
+  "protocol": "policy-replay",
+  "timestamp_iso": "2026-10-19T13:34:43.033742+00:00",
+  "git_commit_sha": "aad69b46221a79e1c2fccaac93df4fbe0b6f8ab2",
+  "execution_parameters": {
+    "protocol": "policy-replay",
+    "models": [
+      "qwen2_5_vl_3b"
+    ],
+    "view_modes": [
+      "CROP_ONLY",
+      "CROP_PLUS_CONTEXT"
+    ],
+    "task_mode": "class-conditioned",
+    "replay_source_dir": "/mnt/c/Users/Yash Bhardwaj/Desktop/perception/vlm/outputs/benchmark_runs/paper_benchmark_20261019_144106",
+    "policies": [
+      "B0_MAJORITY",
+      "B1_SEMANTIC_PRIOR",
+      "B2_GEOMETRY_MOTION",
+      "B3_ZERO_SHOT_CROP_ONLY",
+      "B4_ZERO_SHOT_CROP_PLUS_CONTEXT",
+      "B5_ALWAYS_VLM",
+      "B6_ESTIMATOR_AWARE_ROUTER",
+      "B7_ORACLE",
+      "A1_NO_UNCERTAINTY",
+      "A2_NO_DISPLACEMENT",
+      "A3_NO_PRIOR",
+      "A4_CROP_ONLY"
+    ],
+    "skip_offline": false,
+    "inputs_manifest": "vlm/benchmarks/router_benchmark_inputs_expanded.json",
+    "ground_truth_manifest": "vlm/benchmarks/router_benchmark_ground_truth_expanded.json"
+  },
+  "input_manifests": {
+    "inputs_json": {
+      "path": "vlm/benchmarks/router_benchmark_inputs_expanded.json",
+      "sha256": "125e82ce260a662a53953eab937da5e24a62809b7f01ab80ff15a8fa87258c0b"
+    },
+    "ground_truth_json": {
+      "path": "vlm/benchmarks/router_benchmark_ground_truth_expanded.json",
+      "sha256": "8ca7fdd4dd77de317b10d1be01b890fc1727a01350f93216b4173145083d2fe1"
+    },
+    "model_registry_json": {
+      "path": "vlm/benchmarks/model_registry.json",
+      "sha256": "8e85c1be5260c0f57ba2e297121e27a9dfb33b68353c1f716a7450aea8c6304d"
+    }
+  },
+  "registered_models": {
+    "qwen2_5_vl_3b": {
+      "model_identifier": "Qwen2.5-VL-3B-Instruct",
+      "model_family": "qwen2.5-vl",
+      "architecture": "multimodal_vision_language",
+      "parameter_count": "3B",
+      "quantization": "Q4_K_M",
+      "weights_file": "Qwen2.5-VL-3B-Instruct-Q4_K_M.gguf",
+      "multimodal_projector_file": "mmproj-Qwen2.5-VL-3B-Instruct-Q8_0.gguf",
+      "weights_sha256": "d02fe9b69ad8cadbbd228e387667af66612c44bed29ffc8eb1e7caf9ac486c12",
+      "multimodal_projector_sha256": "980c9b2f78c04e6cff93d277ada09e768394f112d75db3b4e9dea8a69f9fb904",
+      "backend": "llama.cpp",
+      "backend_binary": "/home/saturn/llama.cpp/build/bin/llama-server",
+      "server_url": "http://127.0.0.1:8089/v1/chat/completions",
+      "health_url": "http://127.0.0.1:8089/health",
+      "protocol": "openai_compatible_http",
+      "generation_parameters": {
+        "temperature": 0.0,
+        "max_tokens": 150,
+        "top_p": 1.0
+      },
+      "image_input_specification": {
+        "format": "jpeg_base64",
+        "max_crop_dim": 240,
+        "max_scene_dim": 320,
+        "supported_view_modes": [
+          "CROP_ONLY",
+          "CROP_PLUS_CONTEXT"
+        ]
+      }
+    }
+  },
+  "elapsed_seconds": 22.53,
+  "status": "COMPLETED",
+  "output_artifacts": {
+    "claim_to_evidence_matrix.md": {
+      "relative_path": "vlm/outputs/benchmark_runs/paper_benchmark_20261019_190419/claim_to_evidence_matrix.md",
+      "size_bytes": 2391,
+      "sha256": "12efd4ab9f9e980b6ebb474703bb4fe14e7cf3ff5faa2931be75033d510d9867"
+    },
+    "downstream_lifecycle_summary.json": {
+      "relative_path": "vlm/outputs/benchmark_runs/paper_benchmark_20261019_190419/downstream_lifecycle_summary.json",
+      "size_bytes": 306511,
+      "sha256": "3a8d47cbbf6372b73b3fb99a6a3e403862de839b01f820fda48bc8ef6113c742"
+    },
+    "paper_benchmark_report.md": {
+      "relative_path": "vlm/outputs/benchmark_runs/paper_benchmark_20261019_190419/paper_benchmark_report.md",
+      "size_bytes": 4064,
+      "sha256": "929d8575c76b76edd976ec59d3e58d7d6657d9719cb5861f4ca76f2dd8db4140"
+    },
+    "router_decisions_a1_no_uncertainty.jsonl": {
+      "relative_path": "vlm/outputs/benchmark_runs/paper_benchmark_20261019_190419/router_decisions_a1_no_uncertainty.jsonl",
+      "size_bytes": 44639,
+      "sha256": "6135a3d9550453bc297bb6f442a92f9d71b1aaab96c34acfac548bfc5496227b"
+    },
+    "router_decisions_a2_no_displacement.jsonl": {
+      "relative_path": "vlm/outputs/benchmark_runs/paper_benchmark_20261019_190419/router_decisions_a2_no_displacement.jsonl",
+      "size_bytes": 26949,
+      "sha256": "5935ab22093ebc273bafcfa82fa386b5f5e1f3c13950a47257d63d622e7fbc89"
+    },
+    "router_decisions_a3_no_prior.jsonl": {
+      "relative_path": "vlm/outputs/benchmark_runs/paper_benchmark_20261019_190419/router_decisions_a3_no_prior.jsonl",
+      "size_bytes": 123414,
+      "sha256": "ad00ed20fe559ac09c9053f03c363b9ff91728dbffee5d16d5f47bef18c3ff4a"
+    },
+    "router_decisions_a4_crop_only.jsonl": {
+      "relative_path": "vlm/outputs/benchmark_runs/paper_benchmark_20261019_190419/router_decisions_a4_crop_only.jsonl",
+      "size_bytes": 39722,
+      "sha256": "a59812b102ffb224c797e5604810881b317a5441fdfc939d8844187b1d13a7b5"
+    },
+    "router_decisions_b0_majority.jsonl": {
+      "relative_path": "vlm/outputs/benchmark_runs/paper_benchmark_20261019_190419/router_decisions_b0_majority.jsonl",
+      "size_bytes": 21127,
+      "sha256": "918eeca12862a9966e8d66d0e0d2e8f17d23b045357b143047fc19a7e58c1d0d"
+    },
+    "router_decisions_b1_semantic_prior.jsonl": {
+      "relative_path": "vlm/outputs/benchmark_runs/paper_benchmark_20261019_190419/router_decisions_b1_semantic_prior.jsonl",
+      "size_bytes": 21513,
+      "sha256": "ea5049137db8e0f9934245879dc47260c5c10b2efcf7740c9d70e65890c09aa8"
+    },
+    "router_decisions_b2_geometry_motion.jsonl": {
+      "relative_path": "vlm/outputs/benchmark_runs/paper_benchmark_20261019_190419/router_decisions_b2_geometry_motion.jsonl",
+      "size_bytes": 21577,
+      "sha256": "9ce2ef3b2e63e1bf71d7a549d69264baa99a2c093faec392b18073e9485342e3"
+    },
+    "router_decisions_b3_zero_shot_crop_only.jsonl": {
+      "relative_path": "vlm/outputs/benchmark_runs/paper_benchmark_20261019_190419/router_decisions_b3_zero_shot_crop_only.jsonl",
+      "size_bytes": 102541,
+      "sha256": "99c5857d57d34225540494b8fb10122090fe7e3618259d9bb8ac9c93a8c0573c"
+    },
+    "router_decisions_b4_zero_shot_crop_plus_context.jsonl": {
+      "relative_path": "vlm/outputs/benchmark_runs/paper_benchmark_20261019_190419/router_decisions_b4_zero_shot_crop_plus_context.jsonl",
+      "size_bytes": 123513,
+      "sha256": "ccacf65e9912eedd7f6fbbb49a0ecb9ba18a6b6949c0ef9693b135c6c90f5963"
+    },
+    "router_decisions_b5_always_vlm.jsonl": {
+      "relative_path": "vlm/outputs/benchmark_runs/paper_benchmark_20261019_190419/router_decisions_b5_always_vlm.jsonl",
+      "size_bytes": 122024,
+      "sha256": "754113e517dd9e7318a62d157fda1b2aae1a6f3a285d58c612d318c2e8fe07b2"
+    },
+    "router_decisions_b6_estimator_aware_router.jsonl": {
+      "relative_path": "vlm/outputs/benchmark_runs/paper_benchmark_20261019_190419/router_decisions_b6_estimator_aware_router.jsonl",
+      "size_bytes": 45063,
+      "sha256": "3458317d7c936b107d851d8af95645ce98b9febf0e155a12550c05e1c28f9162"
+    },
+    "router_decisions_b7_oracle.jsonl": {
+      "relative_path": "vlm/outputs/benchmark_runs/paper_benchmark_20261019_190419/router_decisions_b7_oracle.jsonl",
+      "size_bytes": 23384,
+      "sha256": "3a762d9644cc2c524a043a6798cae738d3b9d776487f7ea53b8337941db3bef1"
+    },
+    "router_policies_summary.json": {
+      "relative_path": "vlm/outputs/benchmark_runs/paper_benchmark_20261019_190419/router_policies_summary.json",
+      "size_bytes": 19565,
+      "sha256": "280cf71e3220008a5c30a0106a2a5b5d32808c490f4d02a17cb45bb7d1e447c2"
+    },
+    "statistical_metrics_summary.json": {
+      "relative_path": "vlm/outputs/benchmark_runs/paper_benchmark_20261019_190419/statistical_metrics_summary.json",
+      "size_bytes": 5108,
+      "sha256": "90e3f23434cb158518d1b47072951e90db98c215a57428ef1417c38f4051a573"
+    },
+    "visual_classification_predictions_qwen2_5_vl_3b_crop_only_class_conditioned.jsonl": {
+      "relative_path": "vlm/outputs/benchmark_runs/paper_benchmark_20261019_190419/visual_classification_predictions_qwen2_5_vl_3b_crop_only_class_conditioned.jsonl",
+      "size_bytes": 81979,
+      "sha256": "57bc15688b5cb852c3b205701b3673f2633c2811a363520f9b0e9433164b640c"
+    },
+    "visual_classification_predictions_qwen2_5_vl_3b_crop_plus_context_class_conditioned.jsonl": {
+      "relative_path": "vlm/outputs/benchmark_runs/paper_benchmark_20261019_190419/visual_classification_predictions_qwen2_5_vl_3b_crop_plus_context_class_conditioned.jsonl",
+      "size_bytes": 101763,
+      "sha256": "f316e092109a7e5e9ccddcdbc23e1132cf5b24ba5ec73cf98a3d30c0281fe040"
+    },
+    "visual_classification_summary.json": {
+      "relative_path": "vlm/outputs/benchmark_runs/paper_benchmark_20261019_190419/visual_classification_summary.json",
+      "size_bytes": 3963,
+      "sha256": "0644e13d4b508ca24ddd6abf8b689fec6facc157d76710ed4da392944e2cf846"
+    }
+  }
+}

@@ -1,8 +1,0 @@
-### Table 04 Non Functional Requirements: System Non-Functional Requirements and Operating Constraints
-
-| Req ID | Constraint / Requirement | Target Metric | Observed Value | Status |
-| :--- | :---: | :---: | :---: | :---: |
-| NFR-01 | Fail-closed trajectory reporting | Null ATE/RPE without MoCap | Reported as UNEVALUATED | PASSED |
-| NFR-02 | Deterministic prediction replay | Zero synthetic drift across runs | Deterministic cache replay | PASSED |
-| NFR-03 | Memory consumption | Peak RAM < 16 GB | < 4.2 GB | PASSED |
-| NFR-04 | Scientific reproducibility | 100% reproducible manifests | Complete SHA-256 provenance | PASSED |

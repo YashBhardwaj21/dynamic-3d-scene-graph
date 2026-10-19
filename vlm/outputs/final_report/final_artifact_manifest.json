@@ -1,52 +1,80 @@
 {
   "manifest_version": "1.0.0",
-  "timestamp_iso": "2026-10-19T11:56:37.913051+00:00",
+  "timestamp_iso": "2026-10-19T13:45:07.051328+00:00",
   "report_title": "Dynamic 3D Scene Graph - Estimator-Aware VLM Final Report Package",
-  "total_artifacts": 11,
+  "total_artifacts": 18,
   "artifacts": {
-    "figures\\accuracy_vs_latency_tradeoff.png": {
-      "sha256": "2ad105e8352ad19d297831fa5ce3140228ffe36b684877632060f24cf15b5350",
-      "size_bytes": 98434
-    },
-    "figures\\confusion_matrices_crop_plus_context.png": {
-      "sha256": "a475a888efc72e181f1798645d64ab6f773aa5fac541912122df15ffce290161",
-      "size_bytes": 97841
-    },
-    "figures\\grouped_metrics_comparison.png": {
-      "sha256": "2ecd941d6f3d21f7918568d1e392dc698874a1122d4f4dbbf97397b037d87292",
-      "size_bytes": 119896
-    },
-    "figures\\latency_percentiles_comparison.png": {
-      "sha256": "96c44999b0d9b7b154e54b5a37ac586b91211e35e5aa3faa76372002e6b3a1bf",
-      "size_bytes": 94851
-    },
-    "figures\\per_class_recall_comparison.png": {
-      "sha256": "52e1f1d0767ae4ffe73be9821e782b8038fdc787310a7ce4f76c16401ca86ed9",
-      "size_bytes": 88082
-    },
     "FINAL_RESULTS.md": {
-      "sha256": "646c6d129342c7472ccc5e1ffd463b8f3306abca6f7760f888f7fa460975c149",
-      "size_bytes": 9066
-    },
-    "model_comparison.csv": {
-      "sha256": "cb03e57d50386e7d2070d2f367cd02e9c7d681675b14ff3308226226f9c15cbe",
-      "size_bytes": 678
+      "sha256": "1f6472e2fa6bd18ac0f160d3af7570bea3cf2470e3e47105424cf2b0d408a9bf",
+      "size_bytes": 9509
     },
     "model_comparison.md": {
-      "sha256": "43f49758b551d78138ffdf4db8e407312b9ee22e0935ff2693fc6ee72adcd378",
-      "size_bytes": 2780
+      "sha256": "2c88a756fbf08337d88e1b701a4668176b907b6c0e62582f80c45fb26d64ccfc",
+      "size_bytes": 2717
+    },
+    "model_comparison.csv": {
+      "sha256": "542f559b19172ffed446782e74658b2e7848a91e419c77694b3875819fa9d046",
+      "size_bytes": 675
     },
     "per_instance_comparison.csv": {
-      "sha256": "998dda3efb35b8fbecf35d41df839ea34ea76d29cd5c3cba58965dbdc9828c27",
-      "size_bytes": 3517
+      "sha256": "7cb06eb81a6a815c2e2e81ed21a802919a2378041eba552dea55e6ca20fb2f89",
+      "size_bytes": 3474
     },
     "router_policy_comparison.csv": {
-      "sha256": "f7f020c208ce1bc596ec80a069be4a13958eda29b8603e1f2f95c72af8bbdc6d",
-      "size_bytes": 1798
+      "sha256": "3b0aa67a753a0ef27987472eea0424c41c8b5cb6d132f04a426ac14b2c3889c8",
+      "size_bytes": 1883
     },
     "statistical_comparison.json": {
-      "sha256": "8193172223a34acb582161ce7c4dfa96324231e40102d66e81c31e6452fb2589",
-      "size_bytes": 564
+      "sha256": "9bb9bb5812352fd3318fcaa4d60dd96d7625787bb2ba5154566c0f81eb504c04",
+      "size_bytes": 539
+    },
+    "figures/accuracy_vs_latency_tradeoff.png": {
+      "sha256": "39a2be4ff6f43634a4c1ee2110772ae41f3496e0ec103fe9cc9d0f50fb3622f7",
+      "size_bytes": 99077
+    },
+    "figures/confusion_matrices_crop_plus_context.png": {
+      "sha256": "3a8d84924e05640f85befc2849422b885cc5330b3370389e7d56cb2e4631f476",
+      "size_bytes": 95629
+    },
+    "figures/fig_3_1_system_architecture.png": {
+      "sha256": "09e0fe696d6fb05e9ce22c924fd1fa70e082053e4c21c7196181ab3738bb0c36",
+      "size_bytes": 208184
+    },
+    "figures/fig_3_2_pipeline_data_flow.png": {
+      "sha256": "bd2385ad1253ee7d4c4d3f92df655f3f6e64f39f1e9669f458e61fe7d38186a0",
+      "size_bytes": 130471
+    },
+    "figures/fig_4_1_router_decision_flow.png": {
+      "sha256": "8179b5b6898a6494f875ddd7a1bb8e8d36936f8ae24533a465ba277f5294fa91",
+      "size_bytes": 134630
+    },
+    "figures/fig_6_1_pareto_efficiency_frontier.png": {
+      "sha256": "6451d7dd9ee056cdd659032d43a4c2634ab83fcbab8dfb2e133adadac5855c58",
+      "size_bytes": 315119
+    },
+    "figures/fig_6_2_dual_confusion_matrices.png": {
+      "sha256": "186f4279701f1d21597d0aa8a67c25e21f9140972cd598531e4cf658ca48a2df",
+      "size_bytes": 163835
+    },
+    "figures/fig_6_3_landmark_lifecycle_actions.png": {
+      "sha256": "f2e82344c6f957916605f2ea29bddf63e9f1f1da842d1dcc00355aea4a016c90",
+      "size_bytes": 328311
+    },
+    "figures/fig_6_4_controlled_relocation.png": {
+      "sha256": "80625693b36a968871c94b7f90edb31aeb2e6452aa430c1873c36e86adb59a8e",
+      "size_bytes": 147460
+    },
+    "figures/grouped_metrics_comparison.png": {
+      "sha256": "9d563b25a791e4fe2a8821e62061effa6995d188f912fcccd457e016850bc816",
+      "size_bytes": 120386
+    },
+    "figures/latency_percentiles_comparison.png": {
+      "sha256": "7bdb55a94993b97c25ba7b493019224f636d762edac740299a1f3ef5a91a6faf",
+      "size_bytes": 95493
+    },
+    "figures/per_class_recall_comparison.png": {
+      "sha256": "df0f44fbed29245c78fab67423014dc315e5a3d3316f3f92e045bc709ab15604",
+      "size_bytes": 87464
     }
   }
 }

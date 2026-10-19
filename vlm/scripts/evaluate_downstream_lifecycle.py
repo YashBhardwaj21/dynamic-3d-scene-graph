@@ -88,9 +88,10 @@ def determine_downstream_landmark_action(
     return "RETAIN_LANDMARK", "CONSERVATIVE_UNRESOLVED_RETENTION", False
 
 
-def load_real_observations() -> Dict[str, List[Dict[str, Any]]]:
-    """Load real multi-session observation history indexed by entity ID."""
+def load_real_observations() -> Dict[str, Any]:
+    """Load real multi-session observation history indexed by entity ID and observation ID."""
     obs_by_entity: Dict[str, List[Dict[str, Any]]] = defaultdict(list)
+    obs_by_id: Dict[str, Dict[str, Any]] = {}
     for cand in [
         repo_root / "vlm" / "data" / "observations" / "object_observations.jsonl",
         repo_root / "vlm" / "outputs" / "object_observations.jsonl",
@@ -102,12 +103,18 @@ def load_real_observations() -> Dict[str, List[Dict[str, Any]]]:
                         try:
                             rec = json.loads(line)
                             gid = rec.get("global_entity_id")
+                            oid = rec.get("obs_id")
                             if gid:
                                 obs_by_entity[gid].append(rec)
+                            if oid:
+                                obs_by_id[oid] = rec
                         except Exception:
                             pass
             break
-    return obs_by_entity
+    combined: Dict[str, Any] = dict(obs_by_entity)
+    combined["_by_id"] = obs_by_id
+    combined["_by_entity"] = obs_by_entity
+    return combined
 
 
 def evaluate_policy_lifecycle(
@@ -115,7 +122,7 @@ def evaluate_policy_lifecycle(
     router_records: List[Dict[str, Any]],
     inputs_map: Dict[str, Dict[str, Any]],
     ground_truth_map: Dict[str, Dict[str, Any]],
-    real_obs_map: Optional[Dict[str, List[Dict[str, Any]]]] = None,
+    real_obs_map: Optional[Dict[str, Any]] = None,
 ) -> Dict[str, Any]:
     """Evaluate downstream SLAM landmark lifecycle for a single router policy."""
     fusion = ContextualSceneGraphFusion()
@@ -149,6 +156,8 @@ def evaluate_policy_lifecycle(
         # Strictly extract measured quantities (fail closed: None if unmeasured)
         obs_motion = est_data.get("observed_motion", "UNKNOWN")
         disp_m = est_data.get("measured_displacement_m")
+        if disp_m is None:
+            disp_m = est_data.get("world_displacement_m")
         disp_sigma = est_data.get("displacement_uncertainty_m")
 
         # Execute downstream SLAM landmark policy
@@ -193,28 +202,39 @@ def evaluate_policy_lifecycle(
         # Check for real observations associated with this instance
         src_obs_ids = input_data.get("source_obs_ids", [])
         matched_obs: List[Dict[str, Any]] = []
+        if eid in real_obs_map:
+            val = real_obs_map[eid]
+            if isinstance(val, list):
+                matched_obs.extend(val)
+        by_id_map = real_obs_map.get("_by_id", real_obs_map)
         for soid in src_obs_ids:
-            if soid in real_obs_map:
-                matched_obs.extend(real_obs_map[soid])
+            if soid in by_id_map:
+                o = by_id_map[soid]
+                if isinstance(o, dict) and o not in matched_obs:
+                    matched_obs.append(o)
+                elif isinstance(o, list):
+                    for item in o:
+                        if item not in matched_obs:
+                            matched_obs.append(item)
 
         node = None
         if matched_obs:
             # Sort chronologically by timestamp
-            matched_obs.sort(key=lambda o: float(o.get("timestamp", 0.0)))
+            matched_obs.sort(key=lambda o: float(o.get("timestamp", 0.0) or 0.0))
             # Feed real observations sequentially into fusion
             for o_idx, ro in enumerate(matched_obs):
                 is_last_obs = (o_idx == len(matched_obs) - 1)
                 obs_meta = {
-                    "timestamp": ro.get("timestamp", 10.0),
-                    "timestamp_raw": ro.get("timestamp", 10.0),
-                    "timestamp_session_s": ro.get("timestamp", 10.0),
+                    "timestamp": ro.get("timestamp"),
+                    "timestamp_raw": ro.get("timestamp"),
+                    "timestamp_session_s": ro.get("timestamp"),
                     "temporal_valid": True,
                     "source_session": ro.get("source_session", "session_01"),
                     "obs_id": ro.get("obs_id", f"obs_{eid}_{o_idx}"),
                     "local_track_id": ro.get("local_track_id", eid),
                     "centroid_floor": ro.get("centroid_floor"),
-                    "spatial_extent_m": 0.5,
-                    "depth_valid": True,
+                    "spatial_extent_m": ro.get("spatial_extent_m", 0.5),
+                    "depth_valid": ro.get("depth_valid", True),
                     "coordinate_frame": "floor_map",
                     "is_relocation_event": decouple_pose and is_last_obs,
                 }
@@ -225,19 +245,20 @@ def evaluate_policy_lifecycle(
                     observation_meta=obs_meta,
                 )
         else:
-            # Fallback observation when raw tracking log is absent
+            # Zero fake spatial coordinates when observation logs are absent
             obs_meta = {
-                "timestamp": 10.0,
-                "timestamp_raw": 10.0,
-                "timestamp_session_s": 10.0,
-                "temporal_valid": True,
+                "timestamp": None,
+                "timestamp_raw": None,
+                "timestamp_session_s": None,
+                "temporal_valid": False,
                 "source_session": input_data.get("source_session", "session_01"),
-                "obs_id": f"obs_{eid}_0",
+                "obs_id": f"unobserved_{eid}",
                 "local_track_id": eid,
-                "centroid": [1.0, 2.0, 0.0],
-                "spatial_extent_m": 0.5,
-                "depth_valid": True,
-                "coordinate_frame": "floor_map",
+                "centroid": None,
+                "centroid_floor": None,
+                "spatial_extent_m": None,
+                "depth_valid": False,
+                "coordinate_frame": "unobserved",
                 "is_relocation_event": decouple_pose,
             }
             node = fusion.update_or_create_node(

@@ -68,6 +68,8 @@
       "in_held_out_furniture": false,
       "is_excluded_from_visual": false,
       "is_excluded_from_router": false,
+      "estimator_has_valid_pose": true,
+      "estimator_depth_valid": true,
       "exclusion_reasons": []
     },
     {
@@ -107,8 +109,8 @@
       ],
       "has_estimator_evidence": true,
       "estimator_observed_motion": null,
-      "estimator_displacement_m": 0.0,
-      "estimator_displacement_uncertainty_m": 0.05,
+      "estimator_displacement_m": null,
+      "estimator_displacement_uncertainty_m": null,
       "in_frozen_pilot_router": false,
       "in_frozen_pilot_visual": false,
       "in_expanded_visual": true,
@@ -116,6 +118,8 @@
       "in_held_out_furniture": true,
       "is_excluded_from_visual": false,
       "is_excluded_from_router": false,
+      "estimator_has_valid_pose": true,
+      "estimator_depth_valid": true,
       "exclusion_reasons": [
         "HELD_OUT_FURNITURE_SUBSET"
       ]
@@ -154,7 +158,7 @@
       ],
       "has_estimator_evidence": true,
       "estimator_observed_motion": "DISPLACED",
-      "estimator_displacement_m": null,
+      "estimator_displacement_m": 5.2844,
       "estimator_displacement_uncertainty_m": 0.0821,
       "in_frozen_pilot_router": true,
       "in_frozen_pilot_visual": true,
@@ -163,6 +167,8 @@
       "in_held_out_furniture": false,
       "is_excluded_from_visual": false,
       "is_excluded_from_router": false,
+      "estimator_has_valid_pose": true,
+      "estimator_depth_valid": true,
       "exclusion_reasons": []
     },
     {
@@ -204,8 +210,8 @@
       ],
       "has_estimator_evidence": true,
       "estimator_observed_motion": null,
-      "estimator_displacement_m": 0.0,
-      "estimator_displacement_uncertainty_m": 0.05,
+      "estimator_displacement_m": null,
+      "estimator_displacement_uncertainty_m": null,
       "in_frozen_pilot_router": false,
       "in_frozen_pilot_visual": false,
       "in_expanded_visual": true,
@@ -213,6 +219,8 @@
       "in_held_out_furniture": true,
       "is_excluded_from_visual": false,
       "is_excluded_from_router": false,
+      "estimator_has_valid_pose": true,
+      "estimator_depth_valid": true,
       "exclusion_reasons": [
         "HELD_OUT_FURNITURE_SUBSET"
       ]
@@ -259,7 +267,7 @@
       ],
       "has_estimator_evidence": true,
       "estimator_observed_motion": "DISPLACED",
-      "estimator_displacement_m": null,
+      "estimator_displacement_m": 0.6161,
       "estimator_displacement_uncertainty_m": 0.067,
       "in_frozen_pilot_router": true,
       "in_frozen_pilot_visual": true,
@@ -268,6 +276,8 @@
       "in_held_out_furniture": false,
       "is_excluded_from_visual": false,
       "is_excluded_from_router": false,
+      "estimator_has_valid_pose": true,
+      "estimator_depth_valid": true,
       "exclusion_reasons": []
     },
     {
@@ -312,7 +322,7 @@
       ],
       "has_estimator_evidence": true,
       "estimator_observed_motion": "DISPLACED",
-      "estimator_displacement_m": null,
+      "estimator_displacement_m": 0.2649,
       "estimator_displacement_uncertainty_m": 0.0469,
       "in_frozen_pilot_router": true,
       "in_frozen_pilot_visual": true,
@@ -321,6 +331,8 @@
       "in_held_out_furniture": false,
       "is_excluded_from_visual": false,
       "is_excluded_from_router": false,
+      "estimator_has_valid_pose": true,
+      "estimator_depth_valid": true,
       "exclusion_reasons": []
     },
     {
@@ -360,8 +372,8 @@
       ],
       "has_estimator_evidence": true,
       "estimator_observed_motion": null,
-      "estimator_displacement_m": 0.0,
-      "estimator_displacement_uncertainty_m": 0.05,
+      "estimator_displacement_m": null,
+      "estimator_displacement_uncertainty_m": null,
       "in_frozen_pilot_router": false,
       "in_frozen_pilot_visual": false,
       "in_expanded_visual": true,
@@ -369,6 +381,8 @@
       "in_held_out_furniture": true,
       "is_excluded_from_visual": false,
       "is_excluded_from_router": false,
+      "estimator_has_valid_pose": true,
+      "estimator_depth_valid": true,
       "exclusion_reasons": [
         "HELD_OUT_FURNITURE_SUBSET"
       ]
@@ -414,8 +428,8 @@
       ],
       "has_estimator_evidence": true,
       "estimator_observed_motion": null,
-      "estimator_displacement_m": 0.0,
-      "estimator_displacement_uncertainty_m": 0.05,
+      "estimator_displacement_m": null,
+      "estimator_displacement_uncertainty_m": null,
       "in_frozen_pilot_router": false,
       "in_frozen_pilot_visual": false,
       "in_expanded_visual": true,
@@ -423,6 +437,8 @@
       "in_held_out_furniture": true,
       "is_excluded_from_visual": false,
       "is_excluded_from_router": false,
+      "estimator_has_valid_pose": true,
+      "estimator_depth_valid": true,
       "exclusion_reasons": [
         "HELD_OUT_FURNITURE_SUBSET"
       ]
@@ -470,8 +486,8 @@
       ],
       "has_estimator_evidence": true,
       "estimator_observed_motion": null,
-      "estimator_displacement_m": 0.0,
-      "estimator_displacement_uncertainty_m": 0.05,
+      "estimator_displacement_m": null,
+      "estimator_displacement_uncertainty_m": null,
       "in_frozen_pilot_router": false,
       "in_frozen_pilot_visual": false,
       "in_expanded_visual": true,
@@ -479,6 +495,8 @@
       "in_held_out_furniture": true,
       "is_excluded_from_visual": false,
       "is_excluded_from_router": false,
+      "estimator_has_valid_pose": true,
+      "estimator_depth_valid": true,
       "exclusion_reasons": [
         "HELD_OUT_FURNITURE_SUBSET"
       ]
@@ -520,8 +538,8 @@
       ],
       "has_estimator_evidence": true,
       "estimator_observed_motion": null,
-      "estimator_displacement_m": 0.0,
-      "estimator_displacement_uncertainty_m": 0.05,
+      "estimator_displacement_m": null,
+      "estimator_displacement_uncertainty_m": null,
       "in_frozen_pilot_router": false,
       "in_frozen_pilot_visual": false,
       "in_expanded_visual": true,
@@ -529,6 +547,8 @@
       "in_held_out_furniture": true,
       "is_excluded_from_visual": false,
       "is_excluded_from_router": false,
+      "estimator_has_valid_pose": true,
+      "estimator_depth_valid": true,
       "exclusion_reasons": [
         "HELD_OUT_FURNITURE_SUBSET"
       ]
@@ -566,8 +586,8 @@
       ],
       "has_estimator_evidence": true,
       "estimator_observed_motion": null,
-      "estimator_displacement_m": 0.0,
-      "estimator_displacement_uncertainty_m": 0.05,
+      "estimator_displacement_m": null,
+      "estimator_displacement_uncertainty_m": null,
       "in_frozen_pilot_router": false,
       "in_frozen_pilot_visual": false,
       "in_expanded_visual": true,
@@ -575,6 +595,8 @@
       "in_held_out_furniture": true,
       "is_excluded_from_visual": false,
       "is_excluded_from_router": false,
+      "estimator_has_valid_pose": true,
+      "estimator_depth_valid": true,
       "exclusion_reasons": [
         "HELD_OUT_FURNITURE_SUBSET"
       ]
@@ -614,8 +636,8 @@
       ],
       "has_estimator_evidence": true,
       "estimator_observed_motion": null,
-      "estimator_displacement_m": 0.0,
-      "estimator_displacement_uncertainty_m": 0.05,
+      "estimator_displacement_m": null,
+      "estimator_displacement_uncertainty_m": null,
       "in_frozen_pilot_router": false,
       "in_frozen_pilot_visual": false,
       "in_expanded_visual": true,
@@ -623,6 +645,8 @@
       "in_held_out_furniture": true,
       "is_excluded_from_visual": false,
       "is_excluded_from_router": false,
+      "estimator_has_valid_pose": true,
+      "estimator_depth_valid": true,
       "exclusion_reasons": [
         "HELD_OUT_FURNITURE_SUBSET"
       ]
@@ -660,8 +684,8 @@
       ],
       "has_estimator_evidence": true,
       "estimator_observed_motion": null,
-      "estimator_displacement_m": 0.0,
-      "estimator_displacement_uncertainty_m": 0.05,
+      "estimator_displacement_m": null,
+      "estimator_displacement_uncertainty_m": null,
       "in_frozen_pilot_router": false,
       "in_frozen_pilot_visual": false,
       "in_expanded_visual": true,
@@ -669,6 +693,8 @@
       "in_held_out_furniture": true,
       "is_excluded_from_visual": false,
       "is_excluded_from_router": false,
+      "estimator_has_valid_pose": true,
+      "estimator_depth_valid": true,
       "exclusion_reasons": [
         "HELD_OUT_FURNITURE_SUBSET"
       ]
@@ -712,8 +738,8 @@
       ],
       "has_estimator_evidence": true,
       "estimator_observed_motion": null,
-      "estimator_displacement_m": 0.0,
-      "estimator_displacement_uncertainty_m": 0.05,
+      "estimator_displacement_m": null,
+      "estimator_displacement_uncertainty_m": null,
       "in_frozen_pilot_router": false,
       "in_frozen_pilot_visual": false,
       "in_expanded_visual": true,
@@ -721,6 +747,8 @@
       "in_held_out_furniture": true,
       "is_excluded_from_visual": false,
       "is_excluded_from_router": false,
+      "estimator_has_valid_pose": true,
+      "estimator_depth_valid": true,
       "exclusion_reasons": [
         "HELD_OUT_FURNITURE_SUBSET"
       ]
@@ -758,8 +786,8 @@
       ],
       "has_estimator_evidence": true,
       "estimator_observed_motion": null,
-      "estimator_displacement_m": 0.0,
-      "estimator_displacement_uncertainty_m": 0.05,
+      "estimator_displacement_m": null,
+      "estimator_displacement_uncertainty_m": null,
       "in_frozen_pilot_router": false,
       "in_frozen_pilot_visual": false,
       "in_expanded_visual": true,
@@ -767,6 +795,8 @@
       "in_held_out_furniture": true,
       "is_excluded_from_visual": false,
       "is_excluded_from_router": false,
+      "estimator_has_valid_pose": true,
+      "estimator_depth_valid": true,
       "exclusion_reasons": [
         "HELD_OUT_FURNITURE_SUBSET"
       ]
@@ -808,8 +838,8 @@
       ],
       "has_estimator_evidence": true,
       "estimator_observed_motion": null,
-      "estimator_displacement_m": 0.0,
-      "estimator_displacement_uncertainty_m": 0.05,
+      "estimator_displacement_m": null,
+      "estimator_displacement_uncertainty_m": null,
       "in_frozen_pilot_router": false,
       "in_frozen_pilot_visual": false,
       "in_expanded_visual": true,
@@ -817,6 +847,8 @@
       "in_held_out_furniture": true,
       "is_excluded_from_visual": false,
       "is_excluded_from_router": false,
+      "estimator_has_valid_pose": true,
+      "estimator_depth_valid": true,
       "exclusion_reasons": [
         "HELD_OUT_FURNITURE_SUBSET"
       ]
@@ -862,8 +894,8 @@
       ],
       "has_estimator_evidence": true,
       "estimator_observed_motion": null,
-      "estimator_displacement_m": 0.0,
-      "estimator_displacement_uncertainty_m": 0.05,
+      "estimator_displacement_m": null,
+      "estimator_displacement_uncertainty_m": null,
       "in_frozen_pilot_router": false,
       "in_frozen_pilot_visual": false,
       "in_expanded_visual": true,
@@ -871,6 +903,8 @@
       "in_held_out_furniture": true,
       "is_excluded_from_visual": false,
       "is_excluded_from_router": false,
+      "estimator_has_valid_pose": true,
+      "estimator_depth_valid": true,
       "exclusion_reasons": [
         "HELD_OUT_FURNITURE_SUBSET"
       ]
@@ -912,8 +946,8 @@
       ],
       "has_estimator_evidence": true,
       "estimator_observed_motion": null,
-      "estimator_displacement_m": 0.0,
-      "estimator_displacement_uncertainty_m": 0.05,
+      "estimator_displacement_m": null,
+      "estimator_displacement_uncertainty_m": null,
       "in_frozen_pilot_router": false,
       "in_frozen_pilot_visual": false,
       "in_expanded_visual": true,
@@ -921,6 +955,8 @@
       "in_held_out_furniture": true,
       "is_excluded_from_visual": false,
       "is_excluded_from_router": false,
+      "estimator_has_valid_pose": true,
+      "estimator_depth_valid": true,
       "exclusion_reasons": [
         "HELD_OUT_FURNITURE_SUBSET"
       ]
@@ -964,8 +1000,8 @@
       ],
       "has_estimator_evidence": true,
       "estimator_observed_motion": null,
-      "estimator_displacement_m": 0.0,
-      "estimator_displacement_uncertainty_m": 0.05,
+      "estimator_displacement_m": null,
+      "estimator_displacement_uncertainty_m": null,
       "in_frozen_pilot_router": false,
       "in_frozen_pilot_visual": false,
       "in_expanded_visual": true,
@@ -973,6 +1009,8 @@
       "in_held_out_furniture": true,
       "is_excluded_from_visual": false,
       "is_excluded_from_router": false,
+      "estimator_has_valid_pose": true,
+      "estimator_depth_valid": true,
       "exclusion_reasons": [
         "HELD_OUT_FURNITURE_SUBSET"
       ]
@@ -1010,8 +1048,8 @@
       ],
       "has_estimator_evidence": true,
       "estimator_observed_motion": null,
-      "estimator_displacement_m": 0.0,
-      "estimator_displacement_uncertainty_m": 0.05,
+      "estimator_displacement_m": null,
+      "estimator_displacement_uncertainty_m": null,
       "in_frozen_pilot_router": false,
       "in_frozen_pilot_visual": false,
       "in_expanded_visual": true,
@@ -1019,6 +1057,8 @@
       "in_held_out_furniture": true,
       "is_excluded_from_visual": false,
       "is_excluded_from_router": false,
+      "estimator_has_valid_pose": true,
+      "estimator_depth_valid": true,
       "exclusion_reasons": [
         "HELD_OUT_FURNITURE_SUBSET"
       ]
@@ -1066,7 +1106,7 @@
       ],
       "has_estimator_evidence": true,
       "estimator_observed_motion": "STATIC",
-      "estimator_displacement_m": null,
+      "estimator_displacement_m": 0.0816,
       "estimator_displacement_uncertainty_m": 0.0561,
       "in_frozen_pilot_router": true,
       "in_frozen_pilot_visual": true,
@@ -1075,6 +1115,8 @@
       "in_held_out_furniture": false,
       "is_excluded_from_visual": false,
       "is_excluded_from_router": false,
+      "estimator_has_valid_pose": true,
+      "estimator_depth_valid": true,
       "exclusion_reasons": []
     },
     {
@@ -1116,8 +1158,8 @@
       ],
       "has_estimator_evidence": true,
       "estimator_observed_motion": null,
-      "estimator_displacement_m": 0.0,
-      "estimator_displacement_uncertainty_m": 0.05,
+      "estimator_displacement_m": null,
+      "estimator_displacement_uncertainty_m": null,
       "in_frozen_pilot_router": false,
       "in_frozen_pilot_visual": false,
       "in_expanded_visual": true,
@@ -1125,6 +1167,8 @@
       "in_held_out_furniture": true,
       "is_excluded_from_visual": false,
       "is_excluded_from_router": false,
+      "estimator_has_valid_pose": true,
+      "estimator_depth_valid": true,
       "exclusion_reasons": [
         "HELD_OUT_FURNITURE_SUBSET"
       ]
@@ -1164,8 +1208,8 @@
       ],
       "has_estimator_evidence": true,
       "estimator_observed_motion": null,
-      "estimator_displacement_m": 0.0,
-      "estimator_displacement_uncertainty_m": 0.05,
+      "estimator_displacement_m": null,
+      "estimator_displacement_uncertainty_m": null,
       "in_frozen_pilot_router": false,
       "in_frozen_pilot_visual": false,
       "in_expanded_visual": true,
@@ -1173,6 +1217,8 @@
       "in_held_out_furniture": true,
       "is_excluded_from_visual": false,
       "is_excluded_from_router": false,
+      "estimator_has_valid_pose": true,
+      "estimator_depth_valid": true,
       "exclusion_reasons": [
         "HELD_OUT_FURNITURE_SUBSET"
       ]
@@ -1203,8 +1249,8 @@
       ],
       "has_estimator_evidence": true,
       "estimator_observed_motion": null,
-      "estimator_displacement_m": 0.0,
-      "estimator_displacement_uncertainty_m": 0.05,
+      "estimator_displacement_m": null,
+      "estimator_displacement_uncertainty_m": null,
       "in_frozen_pilot_router": false,
       "in_frozen_pilot_visual": false,
       "in_expanded_visual": false,
@@ -1212,6 +1258,8 @@
       "in_held_out_furniture": false,
       "is_excluded_from_visual": true,
       "is_excluded_from_router": false,
+      "estimator_has_valid_pose": true,
+      "estimator_depth_valid": true,
       "exclusion_reasons": [
         "MISSING_IMAGE_ASSETS"
       ]
@@ -1251,8 +1299,8 @@
       ],
       "has_estimator_evidence": true,
       "estimator_observed_motion": null,
-      "estimator_displacement_m": 0.0,
-      "estimator_displacement_uncertainty_m": 0.05,
+      "estimator_displacement_m": null,
+      "estimator_displacement_uncertainty_m": null,
       "in_frozen_pilot_router": false,
       "in_frozen_pilot_visual": false,
       "in_expanded_visual": true,
@@ -1260,6 +1308,8 @@
       "in_held_out_furniture": true,
       "is_excluded_from_visual": false,
       "is_excluded_from_router": false,
+      "estimator_has_valid_pose": true,
+      "estimator_depth_valid": true,
       "exclusion_reasons": [
         "HELD_OUT_FURNITURE_SUBSET"
       ]
@@ -1290,8 +1340,8 @@
       ],
       "has_estimator_evidence": true,
       "estimator_observed_motion": null,
-      "estimator_displacement_m": 0.0,
-      "estimator_displacement_uncertainty_m": 0.05,
+      "estimator_displacement_m": null,
+      "estimator_displacement_uncertainty_m": null,
       "in_frozen_pilot_router": false,
       "in_frozen_pilot_visual": false,
       "in_expanded_visual": false,
@@ -1299,6 +1349,8 @@
       "in_held_out_furniture": false,
       "is_excluded_from_visual": true,
       "is_excluded_from_router": false,
+      "estimator_has_valid_pose": true,
+      "estimator_depth_valid": true,
       "exclusion_reasons": [
         "MISSING_IMAGE_ASSETS"
       ]
@@ -1338,8 +1390,8 @@
       ],
       "has_estimator_evidence": true,
       "estimator_observed_motion": null,
-      "estimator_displacement_m": 0.0,
-      "estimator_displacement_uncertainty_m": 0.05,
+      "estimator_displacement_m": null,
+      "estimator_displacement_uncertainty_m": null,
       "in_frozen_pilot_router": false,
       "in_frozen_pilot_visual": false,
       "in_expanded_visual": true,
@@ -1347,6 +1399,8 @@
       "in_held_out_furniture": true,
       "is_excluded_from_visual": false,
       "is_excluded_from_router": false,
+      "estimator_has_valid_pose": true,
+      "estimator_depth_valid": true,
       "exclusion_reasons": [
         "HELD_OUT_FURNITURE_SUBSET"
       ]
@@ -1386,8 +1440,8 @@
       ],
       "has_estimator_evidence": true,
       "estimator_observed_motion": null,
-      "estimator_displacement_m": 0.0,
-      "estimator_displacement_uncertainty_m": 0.05,
+      "estimator_displacement_m": null,
+      "estimator_displacement_uncertainty_m": null,
       "in_frozen_pilot_router": false,
       "in_frozen_pilot_visual": false,
       "in_expanded_visual": true,
@@ -1395,6 +1449,8 @@
       "in_held_out_furniture": true,
       "is_excluded_from_visual": false,
       "is_excluded_from_router": false,
+      "estimator_has_valid_pose": true,
+      "estimator_depth_valid": true,
       "exclusion_reasons": [
         "HELD_OUT_FURNITURE_SUBSET"
       ]
@@ -1438,8 +1494,8 @@
       ],
       "has_estimator_evidence": true,
       "estimator_observed_motion": null,
-      "estimator_displacement_m": 0.0,
-      "estimator_displacement_uncertainty_m": 0.05,
+      "estimator_displacement_m": null,
+      "estimator_displacement_uncertainty_m": null,
       "in_frozen_pilot_router": false,
       "in_frozen_pilot_visual": false,
       "in_expanded_visual": true,
@@ -1447,6 +1503,8 @@
       "in_held_out_furniture": true,
       "is_excluded_from_visual": false,
       "is_excluded_from_router": false,
+      "estimator_has_valid_pose": true,
+      "estimator_depth_valid": true,
       "exclusion_reasons": [
         "HELD_OUT_FURNITURE_SUBSET"
       ]
@@ -1486,7 +1544,7 @@
       ],
       "has_estimator_evidence": true,
       "estimator_observed_motion": "STATIC",
-      "estimator_displacement_m": null,
+      "estimator_displacement_m": 0.1025,
       "estimator_displacement_uncertainty_m": 0.0477,
       "in_frozen_pilot_router": true,
       "in_frozen_pilot_visual": true,
@@ -1495,6 +1553,8 @@
       "in_held_out_furniture": false,
       "is_excluded_from_visual": false,
       "is_excluded_from_router": false,
+      "estimator_has_valid_pose": true,
+      "estimator_depth_valid": true,
       "exclusion_reasons": []
     },
     {
@@ -1532,8 +1592,8 @@
       ],
       "has_estimator_evidence": true,
       "estimator_observed_motion": null,
-      "estimator_displacement_m": 0.0,
-      "estimator_displacement_uncertainty_m": 0.05,
+      "estimator_displacement_m": null,
+      "estimator_displacement_uncertainty_m": null,
       "in_frozen_pilot_router": false,
       "in_frozen_pilot_visual": false,
       "in_expanded_visual": true,
@@ -1541,6 +1601,8 @@
       "in_held_out_furniture": true,
       "is_excluded_from_visual": false,
       "is_excluded_from_router": false,
+      "estimator_has_valid_pose": true,
+      "estimator_depth_valid": true,
       "exclusion_reasons": [
         "HELD_OUT_FURNITURE_SUBSET"
       ]
@@ -1588,8 +1650,8 @@
       ],
       "has_estimator_evidence": true,
       "estimator_observed_motion": null,
-      "estimator_displacement_m": 0.0,
-      "estimator_displacement_uncertainty_m": 0.05,
+      "estimator_displacement_m": null,
+      "estimator_displacement_uncertainty_m": null,
       "in_frozen_pilot_router": false,
       "in_frozen_pilot_visual": false,
       "in_expanded_visual": true,
@@ -1597,6 +1659,8 @@
       "in_held_out_furniture": true,
       "is_excluded_from_visual": false,
       "is_excluded_from_router": false,
+      "estimator_has_valid_pose": true,
+      "estimator_depth_valid": true,
       "exclusion_reasons": [
         "HELD_OUT_FURNITURE_SUBSET"
       ]
@@ -1636,8 +1700,8 @@
       ],
       "has_estimator_evidence": true,
       "estimator_observed_motion": null,
-      "estimator_displacement_m": 0.0,
-      "estimator_displacement_uncertainty_m": 0.05,
+      "estimator_displacement_m": null,
+      "estimator_displacement_uncertainty_m": null,
       "in_frozen_pilot_router": false,
       "in_frozen_pilot_visual": false,
       "in_expanded_visual": true,
@@ -1645,6 +1709,8 @@
       "in_held_out_furniture": true,
       "is_excluded_from_visual": false,
       "is_excluded_from_router": false,
+      "estimator_has_valid_pose": true,
+      "estimator_depth_valid": true,
       "exclusion_reasons": [
         "HELD_OUT_FURNITURE_SUBSET"
       ]
@@ -1688,8 +1754,8 @@
       ],
       "has_estimator_evidence": true,
       "estimator_observed_motion": null,
-      "estimator_displacement_m": 0.0,
-      "estimator_displacement_uncertainty_m": 0.05,
+      "estimator_displacement_m": null,
+      "estimator_displacement_uncertainty_m": null,
       "in_frozen_pilot_router": false,
       "in_frozen_pilot_visual": false,
       "in_expanded_visual": true,
@@ -1697,6 +1763,8 @@
       "in_held_out_furniture": true,
       "is_excluded_from_visual": false,
       "is_excluded_from_router": false,
+      "estimator_has_valid_pose": true,
+      "estimator_depth_valid": true,
       "exclusion_reasons": [
         "HELD_OUT_FURNITURE_SUBSET"
       ]
@@ -1744,6 +1812,8 @@
       "in_held_out_furniture": false,
       "is_excluded_from_visual": false,
       "is_excluded_from_router": false,
+      "estimator_has_valid_pose": true,
+      "estimator_depth_valid": true,
       "exclusion_reasons": []
     },
     {
@@ -1772,8 +1842,8 @@
       ],
       "has_estimator_evidence": true,
       "estimator_observed_motion": null,
-      "estimator_displacement_m": 0.0,
-      "estimator_displacement_uncertainty_m": 0.05,
+      "estimator_displacement_m": null,
+      "estimator_displacement_uncertainty_m": null,
       "in_frozen_pilot_router": false,
       "in_frozen_pilot_visual": false,
       "in_expanded_visual": false,
@@ -1781,6 +1851,8 @@
       "in_held_out_furniture": false,
       "is_excluded_from_visual": true,
       "is_excluded_from_router": false,
+      "estimator_has_valid_pose": true,
+      "estimator_depth_valid": true,
       "exclusion_reasons": [
         "MISSING_IMAGE_ASSETS"
       ]
@@ -1819,7 +1891,7 @@
       ],
       "has_estimator_evidence": true,
       "estimator_observed_motion": "DISPLACED",
-      "estimator_displacement_m": null,
+      "estimator_displacement_m": 1.3941,
       "estimator_displacement_uncertainty_m": 0.0616,
       "in_frozen_pilot_router": true,
       "in_frozen_pilot_visual": true,
@@ -1828,6 +1900,8 @@
       "in_held_out_furniture": false,
       "is_excluded_from_visual": false,
       "is_excluded_from_router": false,
+      "estimator_has_valid_pose": true,
+      "estimator_depth_valid": true,
       "exclusion_reasons": []
     },
     {
@@ -1856,8 +1930,8 @@
       ],
       "has_estimator_evidence": true,
       "estimator_observed_motion": null,
-      "estimator_displacement_m": 0.0,
-      "estimator_displacement_uncertainty_m": 0.05,
+      "estimator_displacement_m": null,
+      "estimator_displacement_uncertainty_m": null,
       "in_frozen_pilot_router": false,
       "in_frozen_pilot_visual": false,
       "in_expanded_visual": false,
@@ -1865,6 +1939,8 @@
       "in_held_out_furniture": false,
       "is_excluded_from_visual": true,
       "is_excluded_from_router": false,
+      "estimator_has_valid_pose": true,
+      "estimator_depth_valid": true,
       "exclusion_reasons": [
         "MISSING_IMAGE_ASSETS"
       ]
@@ -1917,6 +1993,8 @@
       "in_held_out_furniture": false,
       "is_excluded_from_visual": false,
       "is_excluded_from_router": false,
+      "estimator_has_valid_pose": true,
+      "estimator_depth_valid": true,
       "exclusion_reasons": []
     },
     {
@@ -1945,8 +2023,8 @@
       ],
       "has_estimator_evidence": true,
       "estimator_observed_motion": null,
-      "estimator_displacement_m": 0.0,
-      "estimator_displacement_uncertainty_m": 0.05,
+      "estimator_displacement_m": null,
+      "estimator_displacement_uncertainty_m": null,
       "in_frozen_pilot_router": false,
       "in_frozen_pilot_visual": false,
       "in_expanded_visual": false,
@@ -1954,6 +2032,8 @@
       "in_held_out_furniture": false,
       "is_excluded_from_visual": true,
       "is_excluded_from_router": false,
+      "estimator_has_valid_pose": true,
+      "estimator_depth_valid": true,
       "exclusion_reasons": [
         "MISSING_IMAGE_ASSETS"
       ]
@@ -1984,8 +2064,8 @@
       ],
       "has_estimator_evidence": true,
       "estimator_observed_motion": null,
-      "estimator_displacement_m": 0.0,
-      "estimator_displacement_uncertainty_m": 0.05,
+      "estimator_displacement_m": null,
+      "estimator_displacement_uncertainty_m": null,
       "in_frozen_pilot_router": false,
       "in_frozen_pilot_visual": false,
       "in_expanded_visual": false,
@@ -1993,6 +2073,8 @@
       "in_held_out_furniture": false,
       "is_excluded_from_visual": true,
       "is_excluded_from_router": false,
+      "estimator_has_valid_pose": true,
+      "estimator_depth_valid": true,
       "exclusion_reasons": [
         "MISSING_IMAGE_ASSETS"
       ]
@@ -2023,8 +2105,8 @@
       ],
       "has_estimator_evidence": true,
       "estimator_observed_motion": null,
-      "estimator_displacement_m": 0.0,
-      "estimator_displacement_uncertainty_m": 0.05,
+      "estimator_displacement_m": null,
+      "estimator_displacement_uncertainty_m": null,
       "in_frozen_pilot_router": false,
       "in_frozen_pilot_visual": false,
       "in_expanded_visual": false,
@@ -2032,6 +2114,8 @@
       "in_held_out_furniture": false,
       "is_excluded_from_visual": true,
       "is_excluded_from_router": false,
+      "estimator_has_valid_pose": true,
+      "estimator_depth_valid": true,
       "exclusion_reasons": [
         "MISSING_IMAGE_ASSETS"
       ]
@@ -2084,6 +2168,8 @@
       "in_held_out_furniture": false,
       "is_excluded_from_visual": false,
       "is_excluded_from_router": false,
+      "estimator_has_valid_pose": true,
+      "estimator_depth_valid": true,
       "exclusion_reasons": []
     },
     {
@@ -2112,8 +2198,8 @@
       ],
       "has_estimator_evidence": true,
       "estimator_observed_motion": null,
-      "estimator_displacement_m": 0.0,
-      "estimator_displacement_uncertainty_m": 0.05,
+      "estimator_displacement_m": null,
+      "estimator_displacement_uncertainty_m": null,
       "in_frozen_pilot_router": false,
       "in_frozen_pilot_visual": false,
       "in_expanded_visual": false,
@@ -2121,6 +2207,8 @@
       "in_held_out_furniture": false,
       "is_excluded_from_visual": true,
       "is_excluded_from_router": false,
+      "estimator_has_valid_pose": true,
+      "estimator_depth_valid": true,
       "exclusion_reasons": [
         "MISSING_IMAGE_ASSETS"
       ]
@@ -2167,6 +2255,8 @@
       "in_held_out_furniture": false,
       "is_excluded_from_visual": false,
       "is_excluded_from_router": false,
+      "estimator_has_valid_pose": true,
+      "estimator_depth_valid": true,
       "exclusion_reasons": []
     },
     {
@@ -2211,6 +2301,8 @@
       "in_held_out_furniture": false,
       "is_excluded_from_visual": false,
       "is_excluded_from_router": false,
+      "estimator_has_valid_pose": true,
+      "estimator_depth_valid": true,
       "exclusion_reasons": []
     },
     {
@@ -2250,6 +2342,8 @@
       "in_held_out_furniture": false,
       "is_excluded_from_visual": true,
       "is_excluded_from_router": false,
+      "estimator_has_valid_pose": true,
+      "estimator_depth_valid": true,
       "exclusion_reasons": [
         "MISSING_IMAGE_ASSETS"
       ]
@@ -2293,8 +2387,8 @@
       ],
       "has_estimator_evidence": true,
       "estimator_observed_motion": null,
-      "estimator_displacement_m": 0.0,
-      "estimator_displacement_uncertainty_m": 0.05,
+      "estimator_displacement_m": null,
+      "estimator_displacement_uncertainty_m": null,
       "in_frozen_pilot_router": false,
       "in_frozen_pilot_visual": false,
       "in_expanded_visual": true,
@@ -2302,6 +2396,8 @@
       "in_held_out_furniture": true,
       "is_excluded_from_visual": false,
       "is_excluded_from_router": false,
+      "estimator_has_valid_pose": true,
+      "estimator_depth_valid": true,
       "exclusion_reasons": [
         "HELD_OUT_FURNITURE_SUBSET"
       ]
@@ -2345,8 +2441,8 @@
       ],
       "has_estimator_evidence": true,
       "estimator_observed_motion": null,
-      "estimator_displacement_m": 0.0,
-      "estimator_displacement_uncertainty_m": 0.05,
+      "estimator_displacement_m": null,
+      "estimator_displacement_uncertainty_m": null,
       "in_frozen_pilot_router": false,
       "in_frozen_pilot_visual": false,
       "in_expanded_visual": true,
@@ -2354,6 +2450,8 @@
       "in_held_out_furniture": true,
       "is_excluded_from_visual": false,
       "is_excluded_from_router": false,
+      "estimator_has_valid_pose": true,
+      "estimator_depth_valid": true,
       "exclusion_reasons": [
         "HELD_OUT_FURNITURE_SUBSET"
       ]
@@ -2397,7 +2495,7 @@
       ],
       "has_estimator_evidence": true,
       "estimator_observed_motion": "DISPLACED",
-      "estimator_displacement_m": null,
+      "estimator_displacement_m": 0.5913,
       "estimator_displacement_uncertainty_m": 0.0487,
       "in_frozen_pilot_router": true,
       "in_frozen_pilot_visual": true,
@@ -2406,6 +2504,8 @@
       "in_held_out_furniture": false,
       "is_excluded_from_visual": false,
       "is_excluded_from_router": false,
+      "estimator_has_valid_pose": true,
+      "estimator_depth_valid": true,
       "exclusion_reasons": []
     },
     {
@@ -2435,8 +2535,8 @@
       ],
       "has_estimator_evidence": true,
       "estimator_observed_motion": null,
-      "estimator_displacement_m": 0.0,
-      "estimator_displacement_uncertainty_m": 0.05,
+      "estimator_displacement_m": null,
+      "estimator_displacement_uncertainty_m": null,
       "in_frozen_pilot_router": false,
       "in_frozen_pilot_visual": false,
       "in_expanded_visual": false,
@@ -2444,6 +2544,8 @@
       "in_held_out_furniture": false,
       "is_excluded_from_visual": true,
       "is_excluded_from_router": false,
+      "estimator_has_valid_pose": true,
+      "estimator_depth_valid": true,
       "exclusion_reasons": [
         "MISSING_IMAGE_ASSETS"
       ]
@@ -2475,8 +2577,8 @@
       ],
       "has_estimator_evidence": true,
       "estimator_observed_motion": null,
-      "estimator_displacement_m": 0.0,
-      "estimator_displacement_uncertainty_m": 0.05,
+      "estimator_displacement_m": null,
+      "estimator_displacement_uncertainty_m": null,
       "in_frozen_pilot_router": false,
       "in_frozen_pilot_visual": false,
       "in_expanded_visual": false,
@@ -2484,6 +2586,8 @@
       "in_held_out_furniture": false,
       "is_excluded_from_visual": true,
       "is_excluded_from_router": false,
+      "estimator_has_valid_pose": true,
+      "estimator_depth_valid": true,
       "exclusion_reasons": [
         "MISSING_IMAGE_ASSETS"
       ]
@@ -2526,6 +2630,8 @@
       "in_held_out_furniture": false,
       "is_excluded_from_visual": false,
       "is_excluded_from_router": false,
+      "estimator_has_valid_pose": true,
+      "estimator_depth_valid": true,
       "exclusion_reasons": []
     }
   ]

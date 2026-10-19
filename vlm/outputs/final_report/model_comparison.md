@@ -1,6 +1,6 @@
 # Visual Movability Classification: Qwen2.5-VL-3B Evaluation
 
-**Run Directory:** `paper_benchmark_20261019_144106`  
+**Run Directory:** `paper_benchmark_20261019_190419`  
 **Evaluator Ground Truth:** `paper_benchmark_ground_truth_expanded.json`  
 **Total Unique Physical Instances:** `42`
 

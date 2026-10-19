@@ -230,7 +230,8 @@ class ContextualSceneGraphFusion:
         - source_track_ids strictly stores tracker IDs, not observation IDs.
         """
         obs_meta = observation_meta or {}
-        ts = float(obs_meta.get("timestamp", time.time()))
+        ts_val = obs_meta.get("timestamp")
+        ts = float(ts_val) if ts_val is not None else 0.0
         session = obs_meta.get("source_session", "session_01")
         obs_id = obs_meta.get("obs_id", "")
         track_id = obs_meta.get("local_track_id", "")

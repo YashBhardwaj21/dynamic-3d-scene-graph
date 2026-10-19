@@ -130,22 +130,26 @@ def build_expanded_manifests():
             else:
                 obs_motion = "UNKNOWN"
 
+        has_pose = rec.get("estimator_has_valid_pose", True if (rec.get("has_crop_image") or rec.get("total_observations_count", 0) > 0) else False)
+        depth_val = rec.get("estimator_depth_valid", True if has_pose else False)
+
         estimator_block = {
             "observed_motion": obs_motion,
             "measurement_status": "MEASURED_METRIC" if est_disp is not None else "MEASUREMENT_UNAVAILABLE",
             "world_displacement_m": est_disp,
+            "measured_displacement_m": est_disp,
             "displacement_uncertainty_m": est_unc if est_unc is not None else (0.05 if est_disp is not None else None),
             "displacement_uncertainty_heuristic_m": est_unc,
             "relocation_evaluable": (est_disp is not None and est_unc is not None),
-            "depth_valid": True if est_disp is not None else False,
-            "has_valid_pose": True if est_disp is not None else False,
+            "depth_valid": depth_val,
+            "has_valid_pose": has_pose,
             "semantic_entropy": 0.0,
-            "geometric_consistency_score": 1.0 if est_disp is not None else 0.5,
-            "evidence_provenance": "MULTI_SESSION_SLAM_ODOMETRY" if est_disp is not None else "EVIDENCE_UNAVAILABLE",
+            "geometric_consistency_score": 1.0 if est_disp is not None else (0.85 if has_pose else 0.5),
+            "evidence_provenance": "MULTI_SESSION_SLAM_ODOMETRY" if est_disp is not None else ("OBSERVED_TRACKS" if has_pose else "EVIDENCE_UNAVAILABLE"),
             "observation_count": rec["total_observations_count"],
             "s1_obs_count": rec["total_observations_count"],
             "s2_obs_count": 0,
-            "registration_status": "REGISTERED_SE2" if est_disp is not None else "UNREGISTERED",
+            "registration_status": "REGISTERED_SE2" if est_disp is not None else ("REGISTERED" if has_pose else "UNREGISTERED"),
         }
 
         router_input_record = {

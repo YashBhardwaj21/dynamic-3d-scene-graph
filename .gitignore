@@ -69,7 +69,7 @@ ros2_ws/**/log/
 
 # 6. Python Artifacts, Tests & Caches
 __pycache__/
-**/__pycache__/
+/**/__pycache__/
 *.py[cod]
 *$py.class
 *.egg-info/
@@ -78,7 +78,11 @@ __pycache__/
 htmlcov/
 .pytest-tmp/
 .pytest_cache/
+.pytest_tmp_run/
 pytest_temp/
+pytest_temp_dir/
+pytest_temp*/
+.pytest_temp*/
 *.ipynb
 .ruff_cache/
 .mypy_cache/
@@ -109,6 +113,8 @@ outputs/**/robot_navigation_state.json
 *.tmp.jpg
 .dashboard_preview.jpg
 scratch/
+vlm/scratch/
+c*
 
 # 10. Whitelist / Keep All Visual Deliverables & Documentation Images
 !*.png
@@ -153,7 +159,6 @@ scratch/
 /traced_path_map.png
 /vlm_chair_001_scene_0.jpg
 !/vlm/**
-!vlm/**
 !vlm/**/*.jsonl
 !vlm/**/*.ply
 vlm/**/__pycache__/
@@ -162,3 +167,6 @@ vlm/tests/_test_run_tmp/
 vlm/tests/basetemp*/
 vlm/tests/pytest_basetemp/
 vlm/tests/test_tmp*/
+vlm/tests/.pytest_cache/
+vlm/scratch/
+vlm/report/
