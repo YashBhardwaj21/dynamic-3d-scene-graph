@@ -51,9 +51,7 @@ yolov8s*.pt
 runs/
 wandb/
 
-# ------------------------------------------------------------------------------
 # 5. Virtual Environments & Binary Builds
-# ------------------------------------------------------------------------------
 .venv/
 venv/
 env/
@@ -69,9 +67,7 @@ ros2_ws/**/build/
 ros2_ws/**/install/
 ros2_ws/**/log/
 
-# ------------------------------------------------------------------------------
 # 6. Python Artifacts, Tests & Caches
-# ------------------------------------------------------------------------------
 __pycache__/
 **/__pycache__/
 *.py[cod]
@@ -88,9 +84,7 @@ pytest_temp/
 .mypy_cache/
 *.log
 
-# ------------------------------------------------------------------------------
 # 7. IDE, OS & Agent System Files
-# ------------------------------------------------------------------------------
 .vscode/
 .idea/
 *.swp
@@ -101,16 +95,12 @@ Thumbs.db
 desktop.ini
 .agents/
 
-# ------------------------------------------------------------------------------
 # 8. Environment Secrets & Configs
-# ------------------------------------------------------------------------------
 .env
 .env.local
 .env.*.local
 
-# ------------------------------------------------------------------------------
 # 9. Dynamic Robot Runtime States & Temporary Files
-# ------------------------------------------------------------------------------
 robot_state.json
 robot_navigation_state.json
 outputs/**/robot_navigation_state.json
@@ -120,9 +110,7 @@ outputs/**/robot_navigation_state.json
 .dashboard_preview.jpg
 scratch/
 
-# ------------------------------------------------------------------------------
 # 10. Whitelist / Keep All Visual Deliverables & Documentation Images
-# ------------------------------------------------------------------------------
 !*.png
 !*.jpg
 !*.jpeg
@@ -170,3 +158,7 @@ scratch/
 !vlm/**/*.ply
 vlm/**/__pycache__/
 vlm/**/*.py[cod]
+vlm/tests/_test_run_tmp/
+vlm/tests/basetemp*/
+vlm/tests/pytest_basetemp/
+vlm/tests/test_tmp*/

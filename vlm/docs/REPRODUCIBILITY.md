@@ -16,97 +16,50 @@ The experimental pipeline is designed for fully deterministic, offline reproduci
 
 ---
 
-## 2. Step-by-Step Reproduction Protocol
+## 2. Paper-Grade Benchmark Protocols & Execution
 
-Execute the following sequential commands from the repository root:
+The primary evaluation suite is executed through the unified orchestrator `vlm/scripts/run_paper_benchmark.py`:
 
-### Step 1: Execute Full Unit & Regression Test Suite
-Runs all 113 unit tests across 13 test modules covering visual input contracts, schema parsing, decoupled routing policies, adapter zero-leakage, and report consistency:
+### Protocol 1: Live Multimodal Visual Movability Classification (`visual-live`)
+Executes strict live inference across evaluated vision models (Qwen2.5-VL-3B-Instruct on llama.cpp, Gemma 3 4B on Ollama) over the wire with dual hashing (source asset and wire payload SHA-256):
 ```bash
-py -3 -m pytest vlm/tests -v
+python vlm/scripts/run_paper_benchmark.py --protocol visual-live --models qwen2_5_vl_3b gemma3_4b --view-modes CROP_ONLY CROP_PLUS_CONTEXT
 ```
-*Expected Result:* `113 passed in ~4.5s`.
+*Outputs:* `visual_classification_predictions_<model>_<view_mode>.jsonl`, `visual_classification_summary.json`, `run_manifest.json`.
 
 ---
 
-### Step 2: Generate Authoritative Canonical Manifest
-Scans all 52 physical ground-truth entities, 39 multi-view image crop directories, computes cryptographic SHA-256 hashes for all JPEG assets, indexes split memberships, and compiles the 10-case counterexample suite:
+### Protocol 2: Deterministic Policy Evaluation Replay (`policy-replay`)
+Evaluates estimator-aware router policies and downstream SLAM landmark lifecycles from immutable recorded visual predictions. Strictly enforces copying of source prediction files into the run directory for standalone reproducibility:
 ```bash
-py -3 vlm/scripts/generate_canonical_manifest.py
+python vlm/scripts/run_paper_benchmark.py --protocol policy-replay --replay-source-dir vlm/outputs/benchmark_runs/<prior_visual_run>
 ```
-*Output Deliverable:* `vlm/benchmarks/canonical_benchmark_manifest.json`
+*Outputs:* `router_policies_summary.json`, `downstream_lifecycle_summary.json`, `statistical_metrics_summary.json`, `claim_to_evidence_matrix.md`, `paper_benchmark_report.md`, `run_manifest.json`.
 
 ---
 
-### Step 3: Run Stage 6 Decoupled Router Ablation Matrix
-Evaluates policies R0, R1, R2, R3, R4, the 1,000-seed Monte-Carlo random baseline, the oracle diagnostic upper bound, and the counterexample suite under dual evaluation views (View A: Matched Image-Eligible; View B: End-to-End System):
+### Protocol 3: Dynamic Live Router Evaluation (`router-live`)
+Executes selective routing with dynamic dispatch, issuing live multimodal VLM queries strictly when the policy decides to escalate:
 ```bash
-py -3 vlm/scripts/run_stage6_ablation.py
+python vlm/scripts/run_paper_benchmark.py --protocol router-live --models qwen2_5_vl_3b
 ```
-*Output Deliverables:*
-- `vlm/outputs/stage6/router_ablation_results.json`
-- `vlm/outputs/stage6/router_evaluation_report.md`
-
-*Key Target Metrics (View B):*
-- R0 Balanced Accuracy: `85.2%` (Query Rate: `0.0%`)
-- R1 Balanced Accuracy: `74.1%` (Query Rate: `0.0%`)
-- R3 Balanced Accuracy: `77.8%` (Query Rate: `33.3%`)
-- R4 Balanced Accuracy: `33.3%` (Query Rate: `73.3%`)
-- Random Query Baseline (1,000 seeds): `89.7% (+/- 7.3%)`
-- Counterexample Suite Accuracy: R0 = `30.0%` vs R3 = `90.0%` (`+60.0%` gain)
 
 ---
 
-### Step 4: Run Phase 6 Controlled VLM Ablation Study
-Executes matched prompt formulation ablations (P1 vs P2 vs P3), view-count ablations on strictly matched subsets (matched 3-view N=8, matched 2-view N=24), input representation ablations, and failure taxonomy compilation:
-```bash
-py -3 vlm/scripts/run_vlm_controlled_ablations.py
-```
-*Output Deliverables:*
-- `vlm/outputs/vlm_controlled_ablations.json`
-- `vlm/outputs/vlm_controlled_ablations_report.md`
+## 3. Historical Development & Diagnostic Scripts
+
+The following scripts represent early development diagnostics and historical exploratory baselines:
+- `vlm/scripts/run_stage6_ablation.py`: Initial Stage 6 development ablations.
+- `vlm/scripts/run_vlm_controlled_ablations.py`: Development prompt formulation ablations.
+- `vlm/scripts/evaluate_downstream_slam_effects.py`: Diagnostic downstream simulation tests.
+- `vlm/scripts/run_full_experiment.py`: Multi-session pipeline orchestrator.
 
 ---
 
-### Step 5: Execute Complete Multi-Session Pipeline Orchestration
-Executes the full pipeline from 7,956 multi-session observations through Stage 5 evidence extraction, SE(2) registration, cross-session candidate matching, and contextual scene graph fusion:
+## 4. Verification & Full Test Suite
+
+To execute the complete 217-test verification suite covering zero-leakage, cryptographic provenance, inference wire quality, router gating, empirical SLAM lifecycle, statistical bootstrapping, and report consistency:
 ```bash
-py -3 vlm/scripts/run_full_experiment.py
+python -m pytest vlm/tests/ -v
 ```
-*Output Deliverables:*
-- `vlm/outputs/full_experiment_run/scene_graph.json` (195 persistent 3D nodes)
-- `vlm/outputs/full_experiment_run/association_baselines_summary.json`
-- `vlm/outputs/full_experiment_run/per_instance_association_diagnostics.json`
-- `vlm/outputs/full_experiment_run/run_manifest.json`
-
----
-
-### Step 6: Evaluate Downstream SLAM Effects & Landmark Reliability
-Directly evaluates downstream metric SLAM landmark retention, false invalidation, tracking telemetry, and compute reduction:
-```bash
-# Evaluate downstream landmark reliability and compute avoidance
-py -3 vlm/scripts/evaluate_downstream_slam_effects.py
-```
-*Output Deliverables:*
-- `vlm/outputs/downstream_slam_effects.json`
-- `vlm/outputs/downstream_slam_effects_report.md`
-
-*Key Target Metrics:*
-- Total Scene Graph Nodes: `195`
-- Correct Landmark Retention Rate: `91.1%` (41 / 45 stationary entities)
-- False Invalidation Rate: `8.9%` (4 / 45)
-- Relocation Invalidation Rate: `100.0%`
-- SLAM Tracking Ratio: `88.75%` (71 / 80 valid poses on `my_desk_sequence`)
-- SLAM Trajectory ATE/RPE: `null` / `UNEVALUATED_NO_MOCAP_GROUND_TRUTH` (fail-closed boundary: no continuous optical MoCap on room sequence)
-- VLM Compute Reduction: `72.7%` queries avoided vs All-VLM (3 queries in R3 vs 11 in R4)
-- Latency Speedup: `2.92x`
-
----
-
-## 3. Verification & Report Agreement Checks
-
-To programmatically verify that all Markdown reports strictly match the underlying JSON outputs:
-```bash
-py -3 -m pytest vlm/tests/test_report_consistency.py -v
-```
-*Expected Result:* `2 passed in ~0.5s`.
+*Expected Result:* `217 passed in ~60s (100% passing)`.

@@ -97,15 +97,38 @@ class MockClassificationServer(BaseHTTPRequestHandler):
         self.send_header("Content-Type", "application/json")
         self.end_headers()
 
+        prompt_text = ""
+        msgs = data.get("messages", [])
+        if msgs:
+            content = msgs[0].get("content")
+            if isinstance(content, list):
+                for item in content:
+                    if isinstance(item, dict) and item.get("type") == "text":
+                        prompt_text = item.get("text", "")
+            elif isinstance(content, str):
+                prompt_text = content
+
+        obj_id = "inst_door_001"
+        obj_class = "door"
+        if "Target Instance ID: " in prompt_text:
+            obj_id = prompt_text.split("Target Instance ID: ")[1].split("\n")[0].strip()
+        if "Expected Semantic Class: " in prompt_text:
+            obj_class = prompt_text.split("Expected Semantic Class: ")[1].split("\n")[0].strip()
+        elif "Target Semantic Class: " in prompt_text:
+            obj_class = prompt_text.split("Target Semantic Class: ")[1].split("\n")[0].strip()
+        elif "preflight_test_001" in prompt_text:
+            obj_id = "preflight_test_001"
+            obj_class = "chair"
+
         payload = {
-            "object_id": "inst_door_001",
-            "object_class": "door",
+            "object_id": obj_id,
+            "object_class": obj_class,
             "movability": "IMMOVABLE",
             "physical_support": "mounted_to_structure",
             "transport_context": "stationary_environment",
             "confidence": 0.95,
             "abstain": False,
-            "short_explanation": "Standard hinged interior door mounted to wall frame.",
+            "short_explanation": f"Evaluation for {obj_id} ({obj_class}).",
         }
 
         if self.path == "/v1/chat/completions":
@@ -156,7 +179,7 @@ def test_evaluate_visual_classification_mock(mock_server, tmp_path, monkeypatch)
     assert metrics["wire_quality"]["valid_schema_count"] == 2
 
     # Check that output jsonl file was written
-    pred_file = tmp_path / "test_run" / "visual_classification_predictions_qwen2_5_vl_3b_crop_only.jsonl"
+    pred_file = tmp_path / "test_run" / "visual_classification_predictions_qwen2_5_vl_3b_crop_only_class_conditioned.jsonl"
     assert pred_file.exists()
     lines = [json.loads(line) for line in pred_file.read_text(encoding="utf-8").strip().split("\n")]
     assert len(lines) == 2

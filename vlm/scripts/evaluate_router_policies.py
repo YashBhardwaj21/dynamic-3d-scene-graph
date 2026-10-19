@@ -96,44 +96,31 @@ POLICY_KEYS = [
 
 
 def extract_evidence_from_input_record(input_rec: Dict[str, Any]) -> Dict[str, Any]:
-    """Format inference-visible instance metadata into evidence dictionary for router policies."""
+    """Format inference-visible instance metadata into evidence dictionary for router policies.
+    
+    Strictly fail-closed: If estimator evidence or displacement is missing, world_displacement_m
+    and displacement_uncertainty_m remain None, and observed_motion defaults to 'UNKNOWN'.
+    Never infers motion or displacement from entity ID or semantic class.
+    """
     eid = input_rec["physical_instance_id"]
     scls = input_rec["semantic_class"]
     vis = input_rec.get("visual_inputs", {})
     usable_views = vis.get("usable_views", 0)
     has_images = vis.get("has_images", False) and (usable_views > 0)
 
-    # Check for explicit estimator_evidence block, or fall back to instance attributes
+    # Read verified estimator evidence block
     est = input_rec.get("estimator_evidence", {})
 
-    obs_motion = est.get("observed_motion", "STATIC")
-    # Displaced instances in the benchmark
-    if not est and eid in ["inst_chair_002", "inst_chair_003", "inst_storage_box_007"]:
-        obs_motion = "DISPLACED"
-    elif not est and eid in ["inst_human_operator_001", "inst_rc_car_robot_001"]:
-        obs_motion = "DYNAMIC"
-
+    # Extract strictly measured quantities (fail closed: None if unavailable)
+    obs_motion = est.get("observed_motion", "UNKNOWN")
     world_disp = est.get("measured_displacement_m")
-    if world_disp is None and obs_motion == "DISPLACED":
-        disp_map = {"inst_chair_002": 0.616, "inst_chair_003": 0.542, "inst_storage_box_007": 0.435}
-        world_disp = disp_map.get(eid, 0.50)
-    elif world_disp is None and obs_motion == "DYNAMIC":
-        world_disp = 1.85 if eid == "inst_human_operator_001" else 0.95
-    elif world_disp is None:
-        world_disp = 0.0
-
     disp_sigma = est.get("displacement_uncertainty_m")
-    if disp_sigma is None:
-        sigma_map = {"inst_chair_002": 0.067, "inst_chair_003": 0.055, "inst_storage_box_007": 0.055}
-        disp_sigma = sigma_map.get(eid, 0.02)
+    has_valid_pose = est.get("has_valid_pose", False)
+    depth_valid = est.get("depth_valid", False)
+    total_obs = est.get("observation_count", 0)
+    measurement_status = est.get("measurement_status", "MEASUREMENT_UNAVAILABLE")
 
-    has_valid_pose = est.get("has_valid_pose", True)
-    depth_valid = est.get("depth_valid", True)
-    total_obs = est.get("observation_count", est.get("total_observations"))
-    if total_obs is None:
-        total_obs = 10 if obs_motion == "DISPLACED" else 8
-
-    # Semantic class prior mobility
+    # Semantic class prior mobility (derived strictly from ontology categories, never entity ID)
     prior_mobility = "MOVABLE"
     if scls in CANONICAL_IMMOVABLE:
         prior_mobility = "IMMOVABLE"
@@ -145,6 +132,7 @@ def extract_evidence_from_input_record(input_rec: Dict[str, Any]) -> Dict[str, A
         "semantic_class": scls,
         "class_prior_mobility": prior_mobility,
         "observed_motion": obs_motion,
+        "measurement_status": measurement_status,
         "world_displacement_m": world_disp,
         "displacement_uncertainty_m": disp_sigma,
         "has_valid_pose": has_valid_pose,
@@ -444,6 +432,8 @@ def evaluate_router_policies(
         # Load predictions for both view modes
         for vmode in ["crop_only", "crop_plus_context"]:
             pfile = replay_run_dir / f"visual_classification_predictions_{model_key}_{vmode}.jsonl"
+            if not pfile.exists():
+                pfile = replay_run_dir / f"visual_classification_predictions_{model_key}_{vmode}_class_conditioned.jsonl"
             if pfile.exists():
                 with open(pfile, "r", encoding="utf-8") as pf:
                     for line in pf:
@@ -566,7 +556,11 @@ def evaluate_router_policies(
 
         # Compute metrics using independent ground truth
         metrics = compute_policy_evaluation_metrics(policy_records, gt_map, vlm_cost=lambda_cost)
+        is_deployable = (pkey != "B7_ORACLE")
+        policy_type = "ORACLE_DIAGNOSTIC_ONLY" if pkey == "B7_ORACLE" else ("ABLATION" if pkey.startswith("A") else "DEPLOYABLE_BASELINE")
         summary["policy_summaries"][pkey] = {
+            "policy_type": policy_type,
+            "is_deployable": is_deployable,
             "metrics": metrics,
             "decisions_file": str(pfile_out.relative_to(repo_root)).replace("\\", "/"),
         }

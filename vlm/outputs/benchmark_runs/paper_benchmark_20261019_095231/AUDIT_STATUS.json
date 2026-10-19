@@ -1,0 +1,13 @@
+{
+  "run_id": "paper_benchmark_20261019_095231",
+  "audit_date": "2026-10-19",
+  "run_status": "HISTORICAL_PILOT_REPLAY_UNVALIDATED",
+  "audit_version": "2.0.0",
+  "limitations": [
+    "Evidence pipeline in this run used hard-coded object-ID-based displacement and motion fallbacks.",
+    "Downstream lifecycle results describe a synthetic single-observation simulation rather than empirical multi-session SLAM tracking.",
+    "Statistical claim matrix in paper_benchmark_report.md was a static Markdown template that contradicted the non-significant accuracy difference (p=0.2292) stored in statistical_metrics_summary.json.",
+    "B7 Oracle policy was included in the policy summary without an explicit non-deployable diagnostic designation."
+  ],
+  "remediation_status": "SUPERSEDED_BY_REMEDIATION_PLAN_V2"
+}

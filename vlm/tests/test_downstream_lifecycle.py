@@ -48,9 +48,9 @@ def test_determine_downstream_landmark_action():
 
 def test_evaluate_policy_lifecycle_metrics():
     inputs_map = {
-        "inst_1": {"physical_instance_id": "inst_1", "semantic_class": "door", "estimator_evidence": {"observed_motion": "STATIC", "measured_displacement_m": 0.0}},
-        "inst_2": {"physical_instance_id": "inst_2", "semantic_class": "chair", "estimator_evidence": {"observed_motion": "DISPLACED", "measured_displacement_m": 0.55}},
-        "inst_3": {"physical_instance_id": "inst_3", "semantic_class": "person", "estimator_evidence": {"observed_motion": "DYNAMIC", "measured_displacement_m": 1.5}},
+        "inst_1": {"physical_instance_id": "inst_1", "semantic_class": "door", "estimator_evidence": {"observed_motion": "STATIC", "measured_displacement_m": 0.0, "displacement_uncertainty_m": 0.02}},
+        "inst_2": {"physical_instance_id": "inst_2", "semantic_class": "chair", "estimator_evidence": {"observed_motion": "DISPLACED", "measured_displacement_m": 0.55, "displacement_uncertainty_m": 0.05}},
+        "inst_3": {"physical_instance_id": "inst_3", "semantic_class": "person", "estimator_evidence": {"observed_motion": "DYNAMIC", "measured_displacement_m": 1.5, "displacement_uncertainty_m": 0.10}},
     }
 
     gt_map = {
@@ -77,8 +77,8 @@ def test_evaluate_policy_lifecycle_metrics():
     assert metrics["trajectory_metrics"]["trajectory_ate_m"] == "NOT_EVALUATED"
 
 
-def test_evaluate_downstream_lifecycle_mock(tmp_path):
-    """Test full downstream lifecycle evaluation against mock decision file."""
+def test_unit_test_synthetic_lifecycle_policy(tmp_path):
+    """UNIT_TEST_SYNTHETIC_LIFECYCLE_POLICY: Test full downstream lifecycle evaluation against synthetic mock decisions."""
     mock_run_dir = tmp_path / "mock_router_run"
     mock_run_dir.mkdir(parents=True)
 
@@ -90,19 +90,26 @@ def test_evaluate_downstream_lifecycle_mock(tmp_path):
     with open(gt_path, "r", encoding="utf-8") as f:
         gt_map = json.load(f)["labels"]
 
-    # Write a mock router decision file
+    # Write a synthetic mock router decision file
     decision_file = mock_run_dir / "router_decisions_b6_estimator_aware_router.jsonl"
     with open(decision_file, "w", encoding="utf-8") as f:
         for inst in instances:
             eid = inst["physical_instance_id"]
             gt_mov = gt_map.get(eid, {}).get("contextual_movability_gt", "MOVABLE")
+            # Synthesize escalate for ambiguous classes or measured displaced instances
+            est = inst.get("estimator_evidence", {})
+            is_displaced = est.get("observed_motion") == "DISPLACED"
+            scls = inst["semantic_class"]
+            is_ambiguous = scls in ["chair", "desk", "storage box", "pedestal fan", "whiteboard"]
+            should_escalate = is_displaced or is_ambiguous
+
             rec = {
                 "physical_instance_id": eid,
-                "semantic_class": inst["semantic_class"],
+                "semantic_class": scls,
                 "policy_key": "B6_ESTIMATOR_AWARE_ROUTER",
-                "decision": "ESCALATE" if eid in ["inst_chair_002", "inst_chair_003", "inst_storage_box_007", "inst_pedestal_fan_001", "inst_whiteboard_001"] else "RESOLVE_CHEAP",
+                "decision": "ESCALATE" if should_escalate else "RESOLVE_CHEAP",
                 "final_prediction": gt_mov,
-                "vlm_invoked": (eid in ["inst_chair_002", "inst_chair_003", "inst_storage_box_007", "inst_pedestal_fan_001", "inst_whiteboard_001"]),
+                "vlm_invoked": should_escalate,
             }
             f.write(json.dumps(rec) + "\n")
 
@@ -111,7 +118,7 @@ def test_evaluate_downstream_lifecycle_mock(tmp_path):
     assert "B6_ESTIMATOR_AWARE_ROUTER" in summary["policies"]
 
     p_summary = summary["policies"]["B6_ESTIMATOR_AWARE_ROUTER"]
-    assert p_summary["total_instances_evaluated"] == 15
+    assert p_summary["total_instances_evaluated"] == len(instances)
     assert p_summary["overall_landmark_action_accuracy"] == 1.0
     assert p_summary["landmark_retention"]["precision"] == 1.0
     assert p_summary["relocation_handling"]["decoupled_pose_count"] == 3

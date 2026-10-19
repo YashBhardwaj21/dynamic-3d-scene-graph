@@ -8,7 +8,11 @@ import json
 from pathlib import Path
 from PIL import Image
 
+import sys
 repo_root = Path(__file__).resolve().parent.parent.parent
+sys.path.insert(0, str(repo_root))
+
+from vlm.src.stage5_adapter import Stage5EvidenceAdapter
 
 
 def hash_file(path: Path) -> str:
@@ -16,7 +20,7 @@ def hash_file(path: Path) -> str:
     with open(path, "rb") as f:
         while chunk := f.read(65536):
             h.update(chunk)
-    return h.hexdigest()[:16]
+    return h.hexdigest()
 
 
 def build_decoupled_manifests():
@@ -25,6 +29,7 @@ def build_decoupled_manifests():
         data = json.load(f)
 
     instances = data["evaluation_instances"]
+    adapter = Stage5EvidenceAdapter(repo_root=repo_root)
 
     inputs_list = []
     ground_truth_map = {}
@@ -61,12 +66,33 @@ def build_decoupled_manifests():
                         except Exception as e:
                             print(f"Image decode error for {eid}: {e}")
 
+        # Extract genuine estimator evidence strictly from SLAM/Stage 5 registration & observations
+        est_evidence = adapter.build_instance_evidence(inst)
+        estimator_block = {
+            "observed_motion": est_evidence["observed_motion"],
+            "measurement_status": est_evidence["measurement_status"],
+            "measured_displacement_m": est_evidence["world_displacement_m"],
+            "displacement_uncertainty_m": est_evidence["displacement_uncertainty_m"],
+            "displacement_uncertainty_heuristic_m": est_evidence["displacement_uncertainty_heuristic_m"],
+            "relocation_evaluable": est_evidence["relocation_evaluable"],
+            "depth_valid": est_evidence["depth_valid"],
+            "has_valid_pose": est_evidence["has_valid_pose"],
+            "semantic_entropy": est_evidence["semantic_entropy"],
+            "geometric_consistency_score": est_evidence["geometric_consistency_score"],
+            "evidence_provenance": est_evidence["evidence_provenance"],
+            "observation_count": est_evidence["s1_obs_count"] + est_evidence["s2_obs_count"],
+            "s1_obs_count": est_evidence["s1_obs_count"],
+            "s2_obs_count": est_evidence["s2_obs_count"],
+            "registration_status": est_evidence["registration_status"],
+        }
+
         # 1. Pure Inference-Visible Input Record (ZERO GT fields, zero expected decisions)
         input_record = {
             "physical_instance_id": eid,
             "semantic_class": scls,
             "source_session": "semantic_mapping_my_desk_recording_01" if inst.get("s1_obs_id") else "semantic_mapping_my_desk_recording_02",
             "source_obs_ids": [oid for oid in [inst.get("s1_obs_id"), inst.get("s2_obs_id")] if oid],
+            "estimator_evidence": estimator_block,
             "visual_inputs": {
                 "has_images": (usable_views > 0),
                 "usable_views": usable_views,
@@ -93,17 +119,18 @@ def build_decoupled_manifests():
             "semantic_class": scls,
             "contextual_movability_gt": movability,
             "current_motion_gt": obs_motion,
-            "measured_displacement_m": 0.616 if eid == "inst_chair_002" else (0.542 if eid == "inst_chair_003" else (0.435 if eid == "inst_storage_box_007" else (0.0 if obs_motion == "STATIC" else None))),
-            "displacement_uncertainty_m": 0.067 if eid == "inst_chair_002" else (0.055 if eid in ["inst_chair_003", "inst_storage_box_007"] else 0.02),
             "slam_landmark_validity_gt": landmark_action,
-            "annotation_provenance": "HUMAN_ADJUDICATED_INDEPENDENT",
-            "adjudication_status": "VERIFIED_FROZEN",
+            "displacement_ground_truth_status": "UNAVAILABLE_NO_OPTICAL_MOCAP",
+            "annotation_provenance": "PROVENANCE_UNVERIFIED_PILOT",
+            "adjudication_status": "PILOT_CONSENSUS_UNVERIFIED",
         }
 
     inputs_manifest = {
         "manifest_title": "Estimator-Aware Selective VLM Benchmark: Inference Inputs (Inference-Visible Only)",
         "manifest_version": "1.0.0",
         "description": "Inference-visible metadata only. Contains zero ground-truth fields, zero expected decisions, and zero expected reasons.",
+        "dataset_tier": "PILOT_CASE_STUDY_15_INSTANCE",
+        "dataset_scope_limitations": "In-domain pilot evaluation set of 15 physical instances (3 IMMOVABLE, 9 MOVABLE, 3 MOBILE, with 14 image-eligible and only 2 image-eligible MOBILE instances). Does not demonstrate broad multi-environment generalization.",
         "instances": inputs_list,
     }
 

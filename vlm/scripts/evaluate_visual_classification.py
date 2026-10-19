@@ -73,11 +73,46 @@ OUTPUT SCHEMA (Respond ONLY with a valid JSON object matching these fields):
 }}
 """
 
+CANONICAL_UNCONDITIONED_VISUAL_PROMPT = """You are an expert robotics perception system evaluating physical affordance and contextual movability for indoor scene understanding.
+Target Instance ID: {entity_id}
 
-def build_canonical_prompt(entity_id: str, semantic_class: str) -> str:
+ONTOLOGY DEFINITIONS (Canonical Embodied Affordance Schema):
+- IMMOVABLE: Fixed architectural infrastructure (e.g., walls, structural doors, ceiling fans, built-in cabinets). Cannot be relocated without deconstruction.
+- MOVABLE: Passively transportable objects lacking intrinsic locomotion (e.g., chairs, desks, boxes, backpacks, laptops, pedestal fans). An object currently being carried by an agent remains strictly MOVABLE.
+- MOBILE: Active embodied agents whose defining category is self-propelled locomotion (e.g., humans, mobile robots, drones), even if temporarily stationary.
+
+EVALUATION INSTRUCTIONS:
+1. Inspect the visual view(s) of the target instance and infer what object it is.
+2. Identify physical_support: 'mounted_to_structure', 'freestanding_on_surface', 'wheeled_base', 'carried_by_agent', or 'unknown'.
+3. Identify transport_context: 'active_carrier', 'stationary_environment', or 'unknown'.
+4. Assign movability strictly as IMMOVABLE, MOVABLE, or MOBILE based on physical affordance, not temporary motion.
+5. If visual evidence is severely occluded, corrupted, or missing, set abstain to true.
+6. Provide a concise short_explanation citing visual cues.
+
+OUTPUT SCHEMA (Respond ONLY with a valid JSON object matching these fields):
+{{
+  "object_id": "<must match Target Instance ID: {entity_id}>",
+  "object_class": "<inferred semantic class of the target object>",
+  "movability": "<IMMOVABLE | MOVABLE | MOBILE | UNKNOWN>",
+  "physical_support": "<mounted_to_structure | freestanding_on_surface | wheeled_base | carried_by_agent | unknown>",
+  "transport_context": "<stationary_environment | active_carrier | unknown>",
+  "confidence": <float between 0.0 and 1.0>,
+  "abstain": <true | false>,
+  "short_explanation": "<concise justification>"
+}}
+"""
+
+
+def build_canonical_prompt(
+    entity_id: str,
+    semantic_class: Optional[str] = None,
+    task_mode: Literal["class-conditioned", "unconditioned"] = "class-conditioned",
+) -> str:
+    if task_mode == "unconditioned":
+        return CANONICAL_UNCONDITIONED_VISUAL_PROMPT.format(entity_id=entity_id)
     return CANONICAL_VISUAL_PROMPT.format(
         entity_id=entity_id,
-        semantic_class=semantic_class,
+        semantic_class=semantic_class or "UNKNOWN",
     )
 
 
@@ -172,12 +207,13 @@ def compute_classification_metrics(
 
 def evaluate_visual_classification(
     model_keys: List[Literal["qwen2_5_vl_3b", "gemma3_4b"]],
-    view_modes: List[Literal["CROP_ONLY", "CROP_PLUS_CONTEXT"]] = ["CROP_ONLY", "CROP_PLUS_CONTEXT"],
+    view_modes: List[Literal["CROP_ONLY", "CROP_PLUS_CONTEXT", "MULTI_VIEW"]] = ["CROP_ONLY", "CROP_PLUS_CONTEXT"],
+    task_mode: Literal["class-conditioned", "unconditioned"] = "class-conditioned",
     run_dir: Optional[Path] = None,
     max_instances: Optional[int] = None,
     skip_offline_models: bool = False,
 ) -> Dict[str, Any]:
-    """Execute visual classification evaluation across models and view modes."""
+    """Execute visual classification evaluation across models, view modes, and task modes."""
     inputs_manifest = repo_root / "vlm" / "benchmarks" / "paper_benchmark_inputs.json"
     gt_manifest = repo_root / "vlm" / "benchmarks" / "paper_benchmark_ground_truth.json"
 
@@ -205,11 +241,13 @@ def evaluate_visual_classification(
     print(f"Total Image-Eligible Physical Instances: {len(image_instances)}")
     print(f"Target Models: {model_keys}")
     print(f"Target View Modes: {view_modes}")
+    print(f"Task Mode: {task_mode}")
     print(f"Output Run Directory: {run_dir}")
     print("=" * 80)
 
     summary_results: Dict[str, Any] = {
         "benchmark_axis": "Axis 1: Visual Classification",
+        "task_mode": task_mode,
         "timestamp": time.time(),
         "total_physical_instances": len(image_instances),
         "evaluations": {},
@@ -236,10 +274,11 @@ def evaluate_visual_classification(
         summary_results["evaluations"][mkey] = {}
 
         for vmode in view_modes:
-            print(f"\n  --- Evaluating {mkey} under {vmode} ({len(image_instances)} instances) ---")
+            print(f"\n  --- Evaluating {mkey} under {vmode} [{task_mode}] ({len(image_instances)} instances) ---")
             predictions: List[Dict[str, Any]] = []
 
-            pred_file = run_dir / f"visual_classification_predictions_{mkey}_{vmode.lower()}.jsonl"
+            mode_tag = f"{vmode.lower()}_{task_mode.replace('-', '_')}"
+            pred_file = run_dir / f"visual_classification_predictions_{mkey}_{mode_tag}.jsonl"
 
             with open(pred_file, "w", encoding="utf-8") as pf:
                 for idx, inst in enumerate(image_instances, start=1):
@@ -248,22 +287,26 @@ def evaluate_visual_classification(
                     vis = inst["visual_inputs"]
                     crop_p = repo_root / vis["crop_view_paths"][0]
                     scene_p = repo_root / vis["scene_view_paths"][0] if vis.get("scene_view_paths") else None
+                    add_crops = [repo_root / p for p in vis.get("crop_view_paths", [])[1:]] if len(vis.get("crop_view_paths", [])) > 1 else None
 
-                    prompt = build_canonical_prompt(eid, scls)
+                    prompt = build_canonical_prompt(eid, scls, task_mode=task_mode)
+                    expected_class = scls if task_mode == "class-conditioned" else None
 
-                    print(f"    [{idx}/{len(image_instances)}] Querying {mkey} ({vmode}) for {eid} ({scls})...", end="", flush=True)
+                    print(f"    [{idx}/{len(image_instances)}] Querying {mkey} ({vmode}|{task_mode}) for {eid} ({scls})...", end="", flush=True)
 
                     rec: WireInferenceRecord = engine.execute_live_query(
                         physical_instance_id=eid,
-                        semantic_class=scls,
+                        semantic_class=expected_class,
                         prompt=prompt,
                         crop_image_path=crop_p,
                         scene_image_path=scene_p,
+                        additional_crop_paths=add_crops,
                         view_mode=vmode,
                         image_hashes=vis.get("image_sha256", []),
                     )
 
                     rec_dict = rec.to_dict()
+                    rec_dict["task_mode"] = task_mode
                     pf.write(json.dumps(rec_dict) + "\n")
                     predictions.append(rec_dict)
 
@@ -291,7 +334,18 @@ def evaluate_visual_classification(
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description="Evaluate visual physical movability classification across models.")
     parser.add_argument("--models", nargs="+", default=["qwen2_5_vl_3b"], choices=["qwen2_5_vl_3b", "gemma3_4b"])
-    parser.add_argument("--view-modes", nargs="+", default=["CROP_ONLY", "CROP_PLUS_CONTEXT"], choices=["CROP_ONLY", "CROP_PLUS_CONTEXT"])
+    parser.add_argument(
+        "--view-modes",
+        nargs="+",
+        default=["CROP_ONLY", "CROP_PLUS_CONTEXT"],
+        choices=["CROP_ONLY", "CROP_PLUS_CONTEXT", "MULTI_VIEW"],
+    )
+    parser.add_argument(
+        "--task-mode",
+        default="class-conditioned",
+        choices=["class-conditioned", "unconditioned"],
+        help="class-conditioned (provides expected class) vs unconditioned (withholds class from prompt)",
+    )
     parser.add_argument("--max-instances", type=int, default=None)
     parser.add_argument("--skip-offline", action="store_true", help="Skip models whose servers are offline instead of hard error")
     args = parser.parse_args()
@@ -299,6 +353,7 @@ if __name__ == "__main__":
     evaluate_visual_classification(
         model_keys=args.models,
         view_modes=args.view_modes,
+        task_mode=args.task_mode,
         max_instances=args.max_instances,
         skip_offline_models=args.skip_offline,
     )

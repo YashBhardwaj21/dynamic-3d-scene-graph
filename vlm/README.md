@@ -73,7 +73,7 @@ vlm/
 │   ├── stage5_adapter.py           # Multi-session evidence extraction and uncertainty propagation
 │   ├── contextual_scene_graph_fusion.py # Persistent scene graph nodes and landmark invalidation
 │   └── cross_session_association.py     # SE(2) registered multi-session matching baselines
-└── tests/                          # 121 unit and regression tests (100% passing)
+└── tests/                          # 217 unit, integration, and regression tests (100% passing)
 ```
 
 ---
@@ -99,29 +99,33 @@ vlm/
 
 ---
 
-## 5. Quickstart & Reproduction Commands
+## 5. Paper-Grade Benchmark Suite & Reproduction Commands
 
-To set up the environment and run the complete reproducible evaluation suite:
+The benchmark suite provides three strict, auditable protocols executed via `run_paper_benchmark.py`:
 
 ```bash
 # 0. Install Python dependencies
 pip install -r vlm/requirements.txt
 
-# 1. Run all unit and regression tests (121 tests, 100% passing)
+# 1. Run all unit and regression tests
 python -m pytest vlm/tests/ -q
 
-# 2. Build the cryptographic benchmark manifest
-python vlm/scripts/generate_canonical_manifest.py
+# 2. Protocol 1: Live Multimodal Visual Movability Classification
+# Executes strict live over-the-wire inference across models (Qwen2.5-VL-3B, Gemma 3 4B)
+python vlm/scripts/run_paper_benchmark.py --protocol visual-live --models qwen2_5_vl_3b gemma3_4b
 
-# 3. Run Stage 6 decoupled router policy ablations (R0-R4)
-python vlm/scripts/run_stage6_ablation.py
+# 3. Protocol 2: Deterministic Policy Evaluation Replay
+# Replays immutable pre-recorded visual predictions; strictly copies source prediction files
+python vlm/scripts/run_paper_benchmark.py --protocol policy-replay --replay-source-dir vlm/outputs/benchmark_runs/<prior_run_id>
 
-# 4. Run Phase 6 prompt, view-count, and input representation ablations
-python vlm/scripts/run_vlm_controlled_ablations.py
-
-# 5. Run the complete multi-session pipeline orchestrator (7,956 records -> 195 scene graph nodes)
-python vlm/scripts/run_full_experiment.py
-
-# 6. Evaluate downstream SLAM landmark reliability and trajectory error
-python vlm/scripts/evaluate_downstream_slam_effects.py
+# 4. Protocol 3: Dynamic Live Router Evaluation
+# Executes live VLM queries dynamically only when the router policy triggers escalation
+python vlm/scripts/run_paper_benchmark.py --protocol router-live --models qwen2_5_vl_3b
 ```
+
+### Historical Development & Diagnostic Scripts
+The following legacy scripts are preserved for historical diagnostic verification and development ablations:
+- `vlm/scripts/run_stage6_ablation.py`: Legacy Stage 6 router development ablations.
+- `vlm/scripts/run_vlm_controlled_ablations.py`: Development prompt formulation and view-count ablations.
+- `vlm/scripts/evaluate_downstream_slam_effects.py`: Diagnostic downstream simulation tests.
+- `vlm/scripts/run_full_experiment.py`: Multi-session pipeline orchestrator.

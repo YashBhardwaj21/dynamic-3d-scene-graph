@@ -1,11 +1,11 @@
 #!/usr/bin/env python3
-"""Build authentic independent annotator records and track-to-instance ground truth.
+"""HISTORICAL MOCK SCRIPT / SYNTHETIC TEST ARTIFACT ONLY.
 
-Establishes:
-1. annotator_a_robotics.json: Independent evaluation by robotics & SLAM engineer
-2. annotator_b_vision.json: Independent evaluation by computer vision researcher
-3. annotation_adjudication.json: Documented adjudication procedure and resolutions
-4. track_to_instance_ground_truth.json: Ground-truth clustering of 78 front-end tracks
+WARNING (Audit Status 2026-10-19):
+This script programmatically derived Annotator B records by copying ground-truth
+fields and overriding two objects. It does NOT constitute evidence of an independent,
+blinded double-annotation process.
+Inter-annotator agreement statistics must NOT be calculated or claimed from these files.
 """
 
 import json

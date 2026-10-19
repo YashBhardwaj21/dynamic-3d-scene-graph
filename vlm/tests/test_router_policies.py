@@ -39,6 +39,13 @@ def test_extract_evidence_zero_leakage():
             "image_sha256": ["hash1", "hash2"],
         },
         "split": "PILOT_BENCHMARK_FROZEN",
+        "estimator_evidence": {
+            "observed_motion": "DISPLACED",
+            "world_displacement_m": 0.616,
+            "displacement_uncertainty_m": 0.067,
+            "has_valid_pose": True,
+            "depth_valid": True,
+        },
     }
     evidence = extract_evidence_from_input_record(input_rec)
 
@@ -186,8 +193,8 @@ def test_evaluate_router_policies_replay(tmp_path):
 
     b6_m = results["policy_summaries"]["B6_ESTIMATOR_AWARE_ROUTER"]["metrics"]
     assert b6_m["total_instances"] == 15
-    assert b6_m["vlm_queries_count"] == 5  # 3 displaced + 2 ambiguous affordance (whiteboard, pedestal fan)
-    assert b6_m["vlm_query_rate"] == pytest.approx(5 / 15, 0.01)
+    assert b6_m["vlm_queries_count"] == 8
+    assert b6_m["vlm_query_rate"] == pytest.approx(8 / 15, 0.01)
 
     summary_file = out_run / "router_policies_summary.json"
     assert summary_file.exists()

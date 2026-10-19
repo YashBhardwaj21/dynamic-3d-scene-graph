@@ -704,10 +704,17 @@ class Stage5EvidenceAdapter:
         'observed_motion_gt', 'expected_decision', 'expected_reason') are NEVER
         used as routing features or passed to the policy.
         """
-        entity_id = manifest_entry["entity_id"]
+        entity_id = manifest_entry.get("entity_id") or manifest_entry.get("physical_instance_id") or "unknown"
         sem_class = manifest_entry.get("semantic_class", "object")
         s1_id = manifest_entry.get("s1_obs_id")
         s2_id = manifest_entry.get("s2_obs_id")
+
+        if not s1_id and not s2_id and "source_obs_ids" in manifest_entry:
+            s_ids = manifest_entry.get("source_obs_ids", [])
+            if len(s_ids) >= 1:
+                s1_id = s_ids[0]
+            if len(s_ids) >= 2:
+                s2_id = s_ids[1]
 
         diagnostics: List[str] = []
 
@@ -751,23 +758,26 @@ class Stage5EvidenceAdapter:
         # 4. Cross-Session Relocation Calculation with Rigorous Uncertainty Propagation
         estimated_disp_m: Optional[float] = None
         disp_uncertainty_m: Optional[float] = None
-        observed_motion = "STATIC"
+        observed_motion = "UNKNOWN"
+        measurement_status = "MEASUREMENT_UNAVAILABLE"
         relocation_evaluable = False
 
         if s1_points and s2_points:
             if not self.registration.is_valid:
                 relocation_evaluable = False
-                observed_motion = "UNCERTAIN"
+                observed_motion = "UNKNOWN"
+                measurement_status = f"REGISTRATION_INVALID_{self.registration.status}"
                 diagnostics.append(f"Cross-session registration failed: {self.registration.status}")
             else:
                 relocation_evaluable = True
+                measurement_status = "SE2_REGISTERED_EVALUATED"
                 p1_arr = np.array(s1_points)
                 p2_arr = np.array(s2_points)
 
                 c1 = np.median(p1_arr, axis=0)
                 c2 = np.median(p2_arr, axis=0)
 
-                # Transform session 2 centroid into session 1 reference frame
+                # Transform session 2 centroid into session 1 reference frame: c2_trans = R_12 @ c2 + t_12
                 c2_transformed = self.registration.R_12 @ c2 + self.registration.translation_m
 
                 estimated_disp_m = float(np.linalg.norm(c2_transformed - c1))
@@ -797,27 +807,31 @@ class Stage5EvidenceAdapter:
 
         elif all_fused:
             # Single-session motion tracking within a single recording
-            disps = [f["temporal"]["world_displacement_m"] for f in all_fused if "temporal" in f]
-            sigmas = [f["temporal"]["world_displacement_sigma_m"] for f in all_fused if "temporal" in f]
-            motions = [f["temporal"]["current_motion"] for f in all_fused if "temporal" in f]
-
-            estimated_disp_m = float(np.max(disps)) if disps else 0.0
-            disp_uncertainty_m = float(np.mean(sigmas)) if sigmas else 0.04
-            if "MOVING" in motions:
-                observed_motion = "MOVING"
-            elif "DISPLACED" in motions:
-                observed_motion = "DISPLACED"
-            else:
-                observed_motion = "STATIC"
-            relocation_evaluable = False
-            diagnostics.append("Cross-session displacement not evaluable: only single-session observations available.")
-
-        elif sem_class in ["person", "robot"]:
-            observed_motion = "DYNAMIC"
+            # Cross-session displacement is strictly unavailable; do not manufacture 0.0 or 0.04 defaults
             estimated_disp_m = None
             disp_uncertainty_m = None
+            measurement_status = "SINGLE_SESSION_CROSS_DISPLACEMENT_UNAVAILABLE"
             relocation_evaluable = False
-            diagnostics.append("Cross-session displacement not evaluable: dynamic class affordance prior indicates MOBILE entity, but displacement was not measured from geometric observations.")
+
+            intra_motions = [f["temporal"]["current_motion"] for f in all_fused if "temporal" in f and "current_motion" in f["temporal"]]
+            if "MOVING" in intra_motions:
+                observed_motion = "MOVING"
+            elif "DISPLACED" in intra_motions:
+                observed_motion = "DISPLACED"
+            elif "STATIC" in intra_motions:
+                observed_motion = "STATIC"
+            else:
+                observed_motion = "UNKNOWN"
+            diagnostics.append("Cross-session displacement not evaluable: only single-session observations available.")
+
+        else:
+            # No geometric observations available
+            estimated_disp_m = None
+            disp_uncertainty_m = None
+            measurement_status = "NO_OBSERVATIONS_AVAILABLE"
+            observed_motion = "UNKNOWN"
+            relocation_evaluable = False
+            diagnostics.append("Cross-session displacement not evaluable: no valid geometric observations.")
 
         # 5. Extract Semantic & Geometric Aggregates from Fused Evidence
         entropy_vals = [f["semantics"]["semantic_entropy"] for f in all_fused if "semantics" in f and "semantic_entropy" in f["semantics"]]
@@ -836,7 +850,9 @@ class Stage5EvidenceAdapter:
             "entity_id": entity_id,
             "semantic_class": sem_class,
             "observed_motion": observed_motion,
+            "measurement_status": measurement_status,
             "world_displacement_m": round(estimated_disp_m, 4) if estimated_disp_m is not None else None,
+            "measured_displacement_m": round(estimated_disp_m, 4) if estimated_disp_m is not None else None,
             "displacement_uncertainty_m": round(disp_uncertainty_m, 4) if disp_uncertainty_m is not None else None,
             "displacement_uncertainty_heuristic_m": round(disp_uncertainty_m, 4) if disp_uncertainty_m is not None else None,
             "registration_residual_dispersion_m": round(reg_disp, 4) if 'reg_disp' in locals() else None,

@@ -71,14 +71,14 @@ def determine_downstream_landmark_action(
     if mov == "MOBILE" or mot == "DYNAMIC":
         return "INVALIDATE_DYNAMIC_AGENT", "PURGED_MOBILE_AGENT_NON_STATIC", False
 
-    # Rule 2: Statistically significant physical displacement
-    # If the object physically relocated between sessions, invalidate static anchor
-    disp = measured_displacement_m or 0.0
-    sigma = displacement_uncertainty_m or 0.02
-    is_displaced = (mot == "DISPLACED") or (disp >= 0.25 and disp >= 3.0 * sigma)
-
-    if is_displaced:
-        return "INVALIDATE_RELOCATED", f"PURGED_RELOCATED_DISPLACEMENT_{disp:.3f}M", True
+    # Rule 2: Statistically significant physical displacement of movable entities
+    # Fixed infrastructure (IMMOVABLE) cannot physically relocate; only transportable objects (MOVABLE)
+    # or unresolved entities with measured displacement undergo relocation invalidation.
+    if mov != "IMMOVABLE" and measured_displacement_m is not None and displacement_uncertainty_m is not None:
+        disp = float(measured_displacement_m)
+        sigma = float(displacement_uncertainty_m)
+        if disp >= 0.25 and disp >= 2.5 * sigma:
+            return "INVALIDATE_RELOCATED", f"PURGED_RELOCATED_DISPLACEMENT_{disp:.3f}M", True
 
     # Rule 3: Confirmed stationary object or infrastructure
     if mov in ["IMMOVABLE", "MOVABLE"] and mot in ["STATIC", "UNKNOWN"]:
@@ -88,14 +88,39 @@ def determine_downstream_landmark_action(
     return "RETAIN_LANDMARK", "CONSERVATIVE_UNRESOLVED_RETENTION", False
 
 
+def load_real_observations() -> Dict[str, List[Dict[str, Any]]]:
+    """Load real multi-session observation history indexed by entity ID."""
+    obs_by_entity: Dict[str, List[Dict[str, Any]]] = defaultdict(list)
+    for cand in [
+        repo_root / "vlm" / "data" / "observations" / "object_observations.jsonl",
+        repo_root / "vlm" / "outputs" / "object_observations.jsonl",
+    ]:
+        if cand.exists():
+            with open(cand, "r", encoding="utf-8") as f:
+                for line in f:
+                    if line.strip():
+                        try:
+                            rec = json.loads(line)
+                            gid = rec.get("global_entity_id")
+                            if gid:
+                                obs_by_entity[gid].append(rec)
+                        except Exception:
+                            pass
+            break
+    return obs_by_entity
+
+
 def evaluate_policy_lifecycle(
     policy_key: str,
     router_records: List[Dict[str, Any]],
     inputs_map: Dict[str, Dict[str, Any]],
     ground_truth_map: Dict[str, Dict[str, Any]],
+    real_obs_map: Optional[Dict[str, List[Dict[str, Any]]]] = None,
 ) -> Dict[str, Any]:
     """Evaluate downstream SLAM landmark lifecycle for a single router policy."""
     fusion = ContextualSceneGraphFusion()
+    if real_obs_map is None:
+        real_obs_map = load_real_observations()
 
     # Denominators & Counters
     total_instances = len(router_records)
@@ -121,23 +146,10 @@ def evaluate_policy_lifecycle(
         input_data = inputs_map.get(eid, {})
         est_data = input_data.get("estimator_evidence", {})
 
-        obs_motion = est_data.get("observed_motion")
-        if obs_motion is None:
-            # Fall back to evidence from router record or known motion
-            if eid in ["inst_chair_002", "inst_chair_003", "inst_storage_box_007"]:
-                obs_motion = "DISPLACED"
-            elif eid in ["inst_human_operator_001", "inst_rc_car_robot_001"]:
-                obs_motion = "DYNAMIC"
-            else:
-                obs_motion = "STATIC"
-
+        # Strictly extract measured quantities (fail closed: None if unmeasured)
+        obs_motion = est_data.get("observed_motion", "UNKNOWN")
         disp_m = est_data.get("measured_displacement_m")
-        if disp_m is None and obs_motion == "DISPLACED":
-            disp_m = 0.616 if eid == "inst_chair_002" else (0.542 if eid == "inst_chair_003" else 0.435)
-        elif disp_m is None:
-            disp_m = 0.0
-
-        disp_sigma = est_data.get("displacement_uncertainty_m", 0.02)
+        disp_sigma = est_data.get("displacement_uncertainty_m")
 
         # Execute downstream SLAM landmark policy
         downstream_action, reason, decouple_pose = determine_downstream_landmark_action(
@@ -174,30 +186,66 @@ def evaluate_policy_lifecycle(
             "predicted_landmark_action": "RETAIN" if downstream_action == "RETAIN_LANDMARK" else "INVALIDATE",
             "landmark_action_reason": reason,
             "motion_confidence": 0.95,
+            "world_displacement_m": disp_m,
+            "displacement_uncertainty_m": disp_sigma,
         }
 
-        # Simulated floor map observation
-        obs_meta = {
-            "timestamp": 10.0,
-            "timestamp_raw": 10.0,
-            "timestamp_session_s": 10.0,
-            "temporal_valid": True,
-            "source_session": input_data.get("source_session", "session_01"),
-            "obs_id": f"obs_{eid}_0",
-            "local_track_id": eid,
-            "centroid": [1.0, 2.0, 0.0],
-            "spatial_extent_m": 0.5,
-            "depth_valid": True,
-            "coordinate_frame": "floor_map",
-            "is_relocation_event": decouple_pose,
-        }
+        # Check for real observations associated with this instance
+        src_obs_ids = input_data.get("source_obs_ids", [])
+        matched_obs: List[Dict[str, Any]] = []
+        for soid in src_obs_ids:
+            if soid in real_obs_map:
+                matched_obs.extend(real_obs_map[soid])
 
-        node = fusion.update_or_create_node(
-            entity_id=eid,
-            semantic_class=scls,
-            routed_result=routed_result,
-            observation_meta=obs_meta,
-        )
+        node = None
+        if matched_obs:
+            # Sort chronologically by timestamp
+            matched_obs.sort(key=lambda o: float(o.get("timestamp", 0.0)))
+            # Feed real observations sequentially into fusion
+            for o_idx, ro in enumerate(matched_obs):
+                is_last_obs = (o_idx == len(matched_obs) - 1)
+                obs_meta = {
+                    "timestamp": ro.get("timestamp", 10.0),
+                    "timestamp_raw": ro.get("timestamp", 10.0),
+                    "timestamp_session_s": ro.get("timestamp", 10.0),
+                    "temporal_valid": True,
+                    "source_session": ro.get("source_session", "session_01"),
+                    "obs_id": ro.get("obs_id", f"obs_{eid}_{o_idx}"),
+                    "local_track_id": ro.get("local_track_id", eid),
+                    "centroid_floor": ro.get("centroid_floor"),
+                    "spatial_extent_m": 0.5,
+                    "depth_valid": True,
+                    "coordinate_frame": "floor_map",
+                    "is_relocation_event": decouple_pose and is_last_obs,
+                }
+                node = fusion.update_or_create_node(
+                    entity_id=eid,
+                    semantic_class=scls,
+                    routed_result=routed_result,
+                    observation_meta=obs_meta,
+                )
+        else:
+            # Fallback observation when raw tracking log is absent
+            obs_meta = {
+                "timestamp": 10.0,
+                "timestamp_raw": 10.0,
+                "timestamp_session_s": 10.0,
+                "temporal_valid": True,
+                "source_session": input_data.get("source_session", "session_01"),
+                "obs_id": f"obs_{eid}_0",
+                "local_track_id": eid,
+                "centroid": [1.0, 2.0, 0.0],
+                "spatial_extent_m": 0.5,
+                "depth_valid": True,
+                "coordinate_frame": "floor_map",
+                "is_relocation_event": decouple_pose,
+            }
+            node = fusion.update_or_create_node(
+                entity_id=eid,
+                semantic_class=scls,
+                routed_result=routed_result,
+                observation_meta=obs_meta,
+            )
 
         instance_outcomes.append({
             "physical_instance_id": eid,

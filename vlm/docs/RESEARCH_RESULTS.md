@@ -1,5 +1,11 @@
 # Research Results: Empirical Findings & Scientific Conclusions
 
+> [!WARNING]
+> **Audit Status Disclaimer (2026-10-19):**
+> The results and tables presented below summarize exploratory pre-audit diagnostics and historical runs (e.g., Stage 5/6 and pilot run `20261019_095231`).
+> Under the repository implementation audit, these historical runs were identified as containing entity-ID-based fallbacks in the evidence pipeline, synthetic single-observation lifecycle simulations, and static report templates.
+> These results represent preliminary exploratory findings and are currently quarantined under `remediation_implementation_plan.md (v2.0)`. They must not be cited as validated live paper claims until the remediation benchmark is executed.
+
 ## 1. Governing Research Question
 
 > **Does estimator-aware selective VLM reasoning improve the reliability of SLAM observations in changing indoor environments compared with strong geometry, temporal, semantic, and non-estimator-aware routing baselines, while reducing unnecessary VLM inference?**
