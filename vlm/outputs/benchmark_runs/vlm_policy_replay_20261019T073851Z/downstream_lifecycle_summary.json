@@ -1,0 +1,229 @@
+{
+  "benchmark_axis": "Axis 3: Downstream SLAM Landmark Lifecycle",
+  "timestamp": 1792395531.8179424,
+  "router_run_dir": "vlm/outputs/benchmark_runs/vlm_policy_replay_20261019T073851Z",
+  "policies": {
+    "B6_ESTIMATOR_AWARE_ROUTER": {
+      "policy_key": "B6_ESTIMATOR_AWARE_ROUTER",
+      "total_instances_evaluated": 15,
+      "overall_landmark_action_accuracy": 1.0,
+      "landmark_retention": {
+        "true_positives": 9,
+        "false_positives_corruption_risk": 0,
+        "false_negatives_lost_landmarks": 0,
+        "precision": 1.0,
+        "recall": 1.0,
+        "f1_score": 1.0,
+        "false_invalidation_rate": 0.0
+      },
+      "relocation_handling": {
+        "true_positives": 3,
+        "false_positives": 0,
+        "false_negatives": 0,
+        "precision": 1.0,
+        "recall": 1.0,
+        "f1_score": 1.0,
+        "decoupled_pose_count": 3,
+        "expected_decoupled_count": 3
+      },
+      "dynamic_agent_rejection": {
+        "true_positives": 3,
+        "false_positives": 0,
+        "false_negatives": 0,
+        "precision": 1.0,
+        "recall": 1.0,
+        "f1_score": 1.0
+      },
+      "action_confusion_matrix": {
+        "RETAIN_LANDMARK": {
+          "RETAIN_LANDMARK": 9,
+          "INVALIDATE_RELOCATED": 0,
+          "INVALIDATE_DYNAMIC_AGENT": 0
+        },
+        "INVALIDATE_RELOCATED": {
+          "RETAIN_LANDMARK": 0,
+          "INVALIDATE_RELOCATED": 3,
+          "INVALIDATE_DYNAMIC_AGENT": 0
+        },
+        "INVALIDATE_DYNAMIC_AGENT": {
+          "RETAIN_LANDMARK": 0,
+          "INVALIDATE_RELOCATED": 0,
+          "INVALIDATE_DYNAMIC_AGENT": 3
+        }
+      },
+      "trajectory_metrics": {
+        "trajectory_ate_m": "NOT_EVALUATED",
+        "trajectory_rpe_m": "NOT_EVALUATED",
+        "status": "EXCLUDED_NO_GROUND_TRUTH_TRAJECTORY_RIG",
+        "scientific_rationale": "Trajectory ATE/RPE requires a calibrated external mocap or survey-grade LiDAR trajectory ground truth rig, which is not present in this dataset. We report exact landmark lifecycle precision, recall, and false invalidation rates rather than unverified synthetic error estimates."
+      },
+      "instance_outcomes": [
+        {
+          "physical_instance_id": "inst_door_001",
+          "semantic_class": "door",
+          "predicted_movability": "IMMOVABLE",
+          "downstream_action": "RETAIN_LANDMARK",
+          "ground_truth_action": "RETAIN_LANDMARK",
+          "action_correct": true,
+          "decouple_pose_applied": false,
+          "slam_invalidated": false,
+          "action_reason": "CONFIRMED_STATISTICALLY_STATIONARY_LANDMARK"
+        },
+        {
+          "physical_instance_id": "inst_ceiling_fan_001",
+          "semantic_class": "ceiling fan",
+          "predicted_movability": "IMMOVABLE",
+          "downstream_action": "RETAIN_LANDMARK",
+          "ground_truth_action": "RETAIN_LANDMARK",
+          "action_correct": true,
+          "decouple_pose_applied": false,
+          "slam_invalidated": true,
+          "action_reason": "CONSERVATIVE_UNRESOLVED_RETENTION"
+        },
+        {
+          "physical_instance_id": "inst_whiteboard_001",
+          "semantic_class": "whiteboard",
+          "predicted_movability": "IMMOVABLE",
+          "downstream_action": "RETAIN_LANDMARK",
+          "ground_truth_action": "RETAIN_LANDMARK",
+          "action_correct": true,
+          "decouple_pose_applied": false,
+          "slam_invalidated": false,
+          "action_reason": "CONFIRMED_STATISTICALLY_STATIONARY_LANDMARK"
+        },
+        {
+          "physical_instance_id": "inst_human_operator_001",
+          "semantic_class": "person",
+          "predicted_movability": "MOBILE",
+          "downstream_action": "INVALIDATE_DYNAMIC_AGENT",
+          "ground_truth_action": "INVALIDATE_DYNAMIC_AGENT",
+          "action_correct": true,
+          "decouple_pose_applied": false,
+          "slam_invalidated": true,
+          "action_reason": "PURGED_MOBILE_AGENT_NON_STATIC"
+        },
+        {
+          "physical_instance_id": "inst_rc_car_robot_001",
+          "semantic_class": "robot",
+          "predicted_movability": "MOBILE",
+          "downstream_action": "INVALIDATE_DYNAMIC_AGENT",
+          "ground_truth_action": "INVALIDATE_DYNAMIC_AGENT",
+          "action_correct": true,
+          "decouple_pose_applied": false,
+          "slam_invalidated": false,
+          "action_reason": "PURGED_MOBILE_AGENT_NON_STATIC"
+        },
+        {
+          "physical_instance_id": "inst_quadcopter_drone_001",
+          "semantic_class": "robot",
+          "predicted_movability": "MOBILE",
+          "downstream_action": "INVALIDATE_DYNAMIC_AGENT",
+          "ground_truth_action": "INVALIDATE_DYNAMIC_AGENT",
+          "action_correct": true,
+          "decouple_pose_applied": false,
+          "slam_invalidated": false,
+          "action_reason": "PURGED_MOBILE_AGENT_NON_STATIC"
+        },
+        {
+          "physical_instance_id": "inst_desk_001",
+          "semantic_class": "desk",
+          "predicted_movability": "MOVABLE",
+          "downstream_action": "RETAIN_LANDMARK",
+          "ground_truth_action": "RETAIN_LANDMARK",
+          "action_correct": true,
+          "decouple_pose_applied": false,
+          "slam_invalidated": false,
+          "action_reason": "CONFIRMED_STATISTICALLY_STATIONARY_LANDMARK"
+        },
+        {
+          "physical_instance_id": "inst_desk_018",
+          "semantic_class": "desk",
+          "predicted_movability": "MOVABLE",
+          "downstream_action": "RETAIN_LANDMARK",
+          "ground_truth_action": "RETAIN_LANDMARK",
+          "action_correct": true,
+          "decouple_pose_applied": false,
+          "slam_invalidated": false,
+          "action_reason": "CONFIRMED_STATISTICALLY_STATIONARY_LANDMARK"
+        },
+        {
+          "physical_instance_id": "inst_laptop_001",
+          "semantic_class": "laptop",
+          "predicted_movability": "MOVABLE",
+          "downstream_action": "RETAIN_LANDMARK",
+          "ground_truth_action": "RETAIN_LANDMARK",
+          "action_correct": true,
+          "decouple_pose_applied": false,
+          "slam_invalidated": false,
+          "action_reason": "CONSERVATIVE_UNRESOLVED_RETENTION"
+        },
+        {
+          "physical_instance_id": "inst_backpack_001",
+          "semantic_class": "backpack",
+          "predicted_movability": "MOVABLE",
+          "downstream_action": "RETAIN_LANDMARK",
+          "ground_truth_action": "RETAIN_LANDMARK",
+          "action_correct": true,
+          "decouple_pose_applied": false,
+          "slam_invalidated": false,
+          "action_reason": "CONSERVATIVE_UNRESOLVED_RETENTION"
+        },
+        {
+          "physical_instance_id": "inst_chair_002",
+          "semantic_class": "chair",
+          "predicted_movability": "MOVABLE",
+          "downstream_action": "INVALIDATE_RELOCATED",
+          "ground_truth_action": "INVALIDATE_RELOCATED",
+          "action_correct": true,
+          "decouple_pose_applied": true,
+          "slam_invalidated": true,
+          "action_reason": "PURGED_RELOCATED_DISPLACEMENT_0.616M"
+        },
+        {
+          "physical_instance_id": "inst_chair_003",
+          "semantic_class": "chair",
+          "predicted_movability": "MOVABLE",
+          "downstream_action": "INVALIDATE_RELOCATED",
+          "ground_truth_action": "INVALIDATE_RELOCATED",
+          "action_correct": true,
+          "decouple_pose_applied": true,
+          "slam_invalidated": true,
+          "action_reason": "PURGED_RELOCATED_DISPLACEMENT_0.265M"
+        },
+        {
+          "physical_instance_id": "inst_storage_box_007",
+          "semantic_class": "storage box",
+          "predicted_movability": "MOVABLE",
+          "downstream_action": "INVALIDATE_RELOCATED",
+          "ground_truth_action": "INVALIDATE_RELOCATED",
+          "action_correct": true,
+          "decouple_pose_applied": true,
+          "slam_invalidated": true,
+          "action_reason": "PURGED_RELOCATED_DISPLACEMENT_0.591M"
+        },
+        {
+          "physical_instance_id": "inst_pedestal_fan_001",
+          "semantic_class": "pedestal fan",
+          "predicted_movability": "IMMOVABLE",
+          "downstream_action": "RETAIN_LANDMARK",
+          "ground_truth_action": "RETAIN_LANDMARK",
+          "action_correct": true,
+          "decouple_pose_applied": false,
+          "slam_invalidated": false,
+          "action_reason": "CONFIRMED_STATISTICALLY_STATIONARY_LANDMARK"
+        },
+        {
+          "physical_instance_id": "inst_monitor_001",
+          "semantic_class": "computer monitor",
+          "predicted_movability": "IMMOVABLE",
+          "downstream_action": "RETAIN_LANDMARK",
+          "ground_truth_action": "RETAIN_LANDMARK",
+          "action_correct": true,
+          "decouple_pose_applied": false,
+          "slam_invalidated": false,
+          "action_reason": "CONSERVATIVE_UNRESOLVED_RETENTION"
+        }
+      ]
+    }
+  }
+}

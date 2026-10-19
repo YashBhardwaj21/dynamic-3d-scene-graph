@@ -1,0 +1,70 @@
+{
+  "benchmark_axis": "Axis 2: Router Policy Suite",
+  "timestamp": 1792395389.2681067,
+  "execution_mode": "live",
+  "model_key": "qwen2_5_vl_3b",
+  "total_physical_instances": 15,
+  "lambda_cost": 0.5,
+  "policy_summaries": {
+    "B6_ESTIMATOR_AWARE_ROUTER": {
+      "policy_type": "DEPLOYABLE_BASELINE",
+      "is_deployable": true,
+      "metrics": {
+        "total_instances": 15,
+        "vlm_queries_count": 8,
+        "vlm_query_rate": 0.5333,
+        "overall_accuracy": 0.8667,
+        "balanced_accuracy": 0.9259,
+        "macro_f1": 0.875,
+        "selective_accuracy_on_vlm": 0.75,
+        "cheap_accuracy": 1.0,
+        "normalized_compute_cost": 0.2667,
+        "latency_per_object_ms": {
+          "mean": 4750.02,
+          "p50": 8329.46,
+          "p95": 9779.07
+        },
+        "decision_distribution": {
+          "RESOLVE_CHEAP": 7,
+          "ESCALATE": 8
+        },
+        "per_class_precision": {
+          "IMMOVABLE": 0.6,
+          "MOVABLE": 1.0,
+          "MOBILE": 1.0
+        },
+        "per_class_recall": {
+          "IMMOVABLE": 1.0,
+          "MOVABLE": 0.7778,
+          "MOBILE": 1.0
+        },
+        "per_class_f1": {
+          "IMMOVABLE": 0.75,
+          "MOVABLE": 0.875,
+          "MOBILE": 1.0
+        },
+        "confusion_matrix": {
+          "IMMOVABLE": {
+            "IMMOVABLE": 3,
+            "MOVABLE": 0,
+            "MOBILE": 0,
+            "UNKNOWN": 0
+          },
+          "MOVABLE": {
+            "IMMOVABLE": 2,
+            "MOVABLE": 7,
+            "MOBILE": 0,
+            "UNKNOWN": 0
+          },
+          "MOBILE": {
+            "IMMOVABLE": 0,
+            "MOVABLE": 0,
+            "MOBILE": 3,
+            "UNKNOWN": 0
+          }
+        }
+      },
+      "decisions_file": "vlm/outputs/benchmark_runs/vlm_b6_router_live_20261019T073619Z/router_decisions_b6_estimator_aware_router.jsonl"
+    }
+  }
+}

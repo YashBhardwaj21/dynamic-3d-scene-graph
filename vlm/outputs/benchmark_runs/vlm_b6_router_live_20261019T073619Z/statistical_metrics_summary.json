@@ -1,0 +1,18 @@
+{
+  "paired_bootstrap_resamples": 10000,
+  "comparisons": {},
+  "mcnemar_tests": {},
+  "holm_bonferroni_correction": {},
+  "wilson_score_intervals": {
+    "B6_ESTIMATOR_AWARE_ROUTER": {
+      "accuracy_wilson_ci": [
+        0.6212,
+        0.9626
+      ],
+      "query_rate_wilson_ci": [
+        0.3012,
+        0.7519
+      ]
+    }
+  }
+}

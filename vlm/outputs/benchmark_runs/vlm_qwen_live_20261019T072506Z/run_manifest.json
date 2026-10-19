@@ -1,0 +1,128 @@
+{
+  "manifest_version": "1.0.0",
+  "run_id": "paper_benchmark_20261019_125507",
+  "protocol": "visual-live",
+  "timestamp_iso": "2026-10-19T07:33:48.217549+00:00",
+  "git_commit_sha": "1d5101be6c66c56eeda3f48b76aa87d256391215",
+  "execution_parameters": {
+    "protocol": "visual-live",
+    "models": [
+      "qwen2_5_vl_3b"
+    ],
+    "view_modes": [
+      "CROP_ONLY",
+      "CROP_PLUS_CONTEXT"
+    ],
+    "task_mode": "class-conditioned",
+    "replay_source_dir": null,
+    "policies": [
+      "B0_MAJORITY",
+      "B1_SEMANTIC_PRIOR",
+      "B2_GEOMETRY_MOTION",
+      "B3_ZERO_SHOT_CROP_ONLY",
+      "B4_ZERO_SHOT_CROP_PLUS_CONTEXT",
+      "B5_ALWAYS_VLM",
+      "B6_ESTIMATOR_AWARE_ROUTER",
+      "B7_ORACLE",
+      "A1_NO_UNCERTAINTY",
+      "A2_NO_DISPLACEMENT",
+      "A3_NO_PRIOR",
+      "A4_CROP_ONLY"
+    ],
+    "skip_offline": false
+  },
+  "input_manifests": {
+    "inputs_json": {
+      "path": "vlm/benchmarks/paper_benchmark_inputs.json",
+      "sha256": "cba04dce7a8fef1ddea169b081e70bab59f214a3912f9b7cd58e1b5b66725301"
+    },
+    "ground_truth_json": {
+      "path": "vlm/benchmarks/paper_benchmark_ground_truth.json",
+      "sha256": "fa015f53ef418896143da3d7114d944ea4d8a0717ff3ca4e683a45d54ed38674"
+    },
+    "model_registry_json": {
+      "path": "vlm/benchmarks/model_registry.json",
+      "sha256": "0b499597ac8b07972b597a6ddb3ea3661f7165641bd6a0781c1ed4c48be4e53c"
+    }
+  },
+  "registered_models": {
+    "qwen2_5_vl_3b": {
+      "model_identifier": "Qwen2.5-VL-3B-Instruct",
+      "model_family": "qwen2.5-vl",
+      "architecture": "multimodal_vision_language",
+      "parameter_count": "3B",
+      "quantization": "Q4_K_M",
+      "weights_file": "Qwen2.5-VL-3B-Instruct-Q4_K_M.gguf",
+      "multimodal_projector_file": "mmproj-Qwen2.5-VL-3B-Instruct-Q8_0.gguf",
+      "weights_sha256": "d02fe9b69ad8cadbbd228e387667af66612c44bed29ffc8eb1e7caf9ac486c12",
+      "multimodal_projector_sha256": "980c9b2f78c04e6cff93d277ada09e768394f112d75db3b4e9dea8a69f9fb904",
+      "backend": "llama.cpp",
+      "backend_binary": "/home/saturn/llama.cpp/build/bin/llama-server",
+      "server_url": "http://127.0.0.1:8089/v1/chat/completions",
+      "health_url": "http://127.0.0.1:8089/health",
+      "protocol": "openai_compatible_http",
+      "generation_parameters": {
+        "temperature": 0.0,
+        "max_tokens": 150,
+        "top_p": 1.0
+      },
+      "image_input_specification": {
+        "format": "jpeg_base64",
+        "max_crop_dim": 240,
+        "max_scene_dim": 320,
+        "supported_view_modes": [
+          "CROP_ONLY",
+          "CROP_PLUS_CONTEXT"
+        ]
+      }
+    },
+    "gemma3_4b": {
+      "model_identifier": "gemma3:4b",
+      "model_family": "gemma3",
+      "architecture": "multimodal_vision_language",
+      "parameter_count": "4B",
+      "quantization": "Ollama default (4-bit quantized)",
+      "weights_file": "gemma3:4b",
+      "multimodal_projector_file": "integrated",
+      "weights_sha256": "a2af6cc3eb7fa8be8504abaf9b04e88f17a119ec3f04a3addf55f92841195f5a",
+      "backend": "ollama",
+      "backend_binary": "ollama",
+      "server_url": "http://127.0.0.1:11434/api/chat",
+      "health_url": "http://127.0.0.1:11434/api/tags",
+      "protocol": "ollama_native_http",
+      "generation_parameters": {
+        "temperature": 0.0,
+        "max_tokens": 150,
+        "top_p": 1.0
+      },
+      "image_input_specification": {
+        "format": "jpeg_base64",
+        "max_crop_dim": 240,
+        "max_scene_dim": 320,
+        "supported_view_modes": [
+          "CROP_ONLY",
+          "CROP_PLUS_CONTEXT"
+        ]
+      }
+    }
+  },
+  "elapsed_seconds": 520.52,
+  "status": "COMPLETED",
+  "output_artifacts": {
+    "visual_classification_predictions_qwen2_5_vl_3b_crop_only_class_conditioned.jsonl": {
+      "relative_path": "vlm/outputs/benchmark_runs/vlm_qwen_live_20261019T072506Z/visual_classification_predictions_qwen2_5_vl_3b_crop_only_class_conditioned.jsonl",
+      "size_bytes": 27380,
+      "sha256": "5626c61a0a3615d9ab7b0d9473219eb1a8626b7c3ba1215864a4cd641058be70"
+    },
+    "visual_classification_predictions_qwen2_5_vl_3b_crop_plus_context_class_conditioned.jsonl": {
+      "relative_path": "vlm/outputs/benchmark_runs/vlm_qwen_live_20261019T072506Z/visual_classification_predictions_qwen2_5_vl_3b_crop_plus_context_class_conditioned.jsonl",
+      "size_bytes": 34150,
+      "sha256": "aed3d4e660acff67c7e505de65692fb0b738eba6c1fec1e53f1ab24d4f24bae1"
+    },
+    "visual_classification_summary.json": {
+      "relative_path": "vlm/outputs/benchmark_runs/vlm_qwen_live_20261019T072506Z/visual_classification_summary.json",
+      "size_bytes": 3983,
+      "sha256": "f766dbdf77082302c462e2d814547509deb8be9cc2017004bcecf01eb427e15c"
+    }
+  }
+}

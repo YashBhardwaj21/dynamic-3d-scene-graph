@@ -1,0 +1,132 @@
+{
+  "manifest_version": "1.0.0",
+  "run_id": "paper_benchmark_20261019_130620",
+  "protocol": "router-live",
+  "timestamp_iso": "2026-10-19T07:37:40.824075+00:00",
+  "git_commit_sha": "1d5101be6c66c56eeda3f48b76aa87d256391215",
+  "execution_parameters": {
+    "protocol": "router-live",
+    "models": [
+      "qwen2_5_vl_3b"
+    ],
+    "view_modes": [
+      "CROP_ONLY",
+      "CROP_PLUS_CONTEXT"
+    ],
+    "task_mode": "class-conditioned",
+    "replay_source_dir": null,
+    "policies": [
+      "B6_ESTIMATOR_AWARE_ROUTER"
+    ],
+    "skip_offline": false
+  },
+  "input_manifests": {
+    "inputs_json": {
+      "path": "vlm/benchmarks/paper_benchmark_inputs.json",
+      "sha256": "cba04dce7a8fef1ddea169b081e70bab59f214a3912f9b7cd58e1b5b66725301"
+    },
+    "ground_truth_json": {
+      "path": "vlm/benchmarks/paper_benchmark_ground_truth.json",
+      "sha256": "fa015f53ef418896143da3d7114d944ea4d8a0717ff3ca4e683a45d54ed38674"
+    },
+    "model_registry_json": {
+      "path": "vlm/benchmarks/model_registry.json",
+      "sha256": "0b499597ac8b07972b597a6ddb3ea3661f7165641bd6a0781c1ed4c48be4e53c"
+    }
+  },
+  "registered_models": {
+    "qwen2_5_vl_3b": {
+      "model_identifier": "Qwen2.5-VL-3B-Instruct",
+      "model_family": "qwen2.5-vl",
+      "architecture": "multimodal_vision_language",
+      "parameter_count": "3B",
+      "quantization": "Q4_K_M",
+      "weights_file": "Qwen2.5-VL-3B-Instruct-Q4_K_M.gguf",
+      "multimodal_projector_file": "mmproj-Qwen2.5-VL-3B-Instruct-Q8_0.gguf",
+      "weights_sha256": "d02fe9b69ad8cadbbd228e387667af66612c44bed29ffc8eb1e7caf9ac486c12",
+      "multimodal_projector_sha256": "980c9b2f78c04e6cff93d277ada09e768394f112d75db3b4e9dea8a69f9fb904",
+      "backend": "llama.cpp",
+      "backend_binary": "/home/saturn/llama.cpp/build/bin/llama-server",
+      "server_url": "http://127.0.0.1:8089/v1/chat/completions",
+      "health_url": "http://127.0.0.1:8089/health",
+      "protocol": "openai_compatible_http",
+      "generation_parameters": {
+        "temperature": 0.0,
+        "max_tokens": 150,
+        "top_p": 1.0
+      },
+      "image_input_specification": {
+        "format": "jpeg_base64",
+        "max_crop_dim": 240,
+        "max_scene_dim": 320,
+        "supported_view_modes": [
+          "CROP_ONLY",
+          "CROP_PLUS_CONTEXT"
+        ]
+      }
+    },
+    "gemma3_4b": {
+      "model_identifier": "gemma3:4b",
+      "model_family": "gemma3",
+      "architecture": "multimodal_vision_language",
+      "parameter_count": "4B",
+      "quantization": "Ollama default (4-bit quantized)",
+      "weights_file": "gemma3:4b",
+      "multimodal_projector_file": "integrated",
+      "weights_sha256": "a2af6cc3eb7fa8be8504abaf9b04e88f17a119ec3f04a3addf55f92841195f5a",
+      "backend": "ollama",
+      "backend_binary": "ollama",
+      "server_url": "http://127.0.0.1:11434/api/chat",
+      "health_url": "http://127.0.0.1:11434/api/tags",
+      "protocol": "ollama_native_http",
+      "generation_parameters": {
+        "temperature": 0.0,
+        "max_tokens": 150,
+        "top_p": 1.0
+      },
+      "image_input_specification": {
+        "format": "jpeg_base64",
+        "max_crop_dim": 240,
+        "max_scene_dim": 320,
+        "supported_view_modes": [
+          "CROP_ONLY",
+          "CROP_PLUS_CONTEXT"
+        ]
+      }
+    }
+  },
+  "elapsed_seconds": 80.06,
+  "status": "COMPLETED",
+  "output_artifacts": {
+    "claim_to_evidence_matrix.md": {
+      "relative_path": "vlm/outputs/benchmark_runs/vlm_b6_router_live_20261019T073619Z/claim_to_evidence_matrix.md",
+      "size_bytes": 2593,
+      "sha256": "06c7b17f753554330b524895b4864b08141033b18fbaa4c8b39c2b674c4ad685"
+    },
+    "downstream_lifecycle_summary.json": {
+      "relative_path": "vlm/outputs/benchmark_runs/vlm_b6_router_live_20261019T073619Z/downstream_lifecycle_summary.json",
+      "size_bytes": 9128,
+      "sha256": "232f96831b68a6354f4bb1526ff77752c40ca0b2412e651599992583a5f4bae6"
+    },
+    "paper_benchmark_report.md": {
+      "relative_path": "vlm/outputs/benchmark_runs/vlm_b6_router_live_20261019T073619Z/paper_benchmark_report.md",
+      "size_bytes": 4301,
+      "sha256": "c3d302b8149cda9b0deb1617dfd18623d9527a1a22484653841cc8f0b0529e87"
+    },
+    "router_decisions_b6_estimator_aware_router.jsonl": {
+      "relative_path": "vlm/outputs/benchmark_runs/vlm_b6_router_live_20261019T073619Z/router_decisions_b6_estimator_aware_router.jsonl",
+      "size_bytes": 26522,
+      "sha256": "9f4f4e9d20af82d5191dc4daeb797e5532923803a7053c78b5588fda657a14dd"
+    },
+    "router_policies_summary.json": {
+      "relative_path": "vlm/outputs/benchmark_runs/vlm_b6_router_live_20261019T073619Z/router_policies_summary.json",
+      "size_bytes": 1942,
+      "sha256": "3dd09bd54d551eb07dc8251957f8de16b0a099959c0f37b2c126c4ecea65273c"
+    },
+    "statistical_metrics_summary.json": {
+      "relative_path": "vlm/outputs/benchmark_runs/vlm_b6_router_live_20261019T073619Z/statistical_metrics_summary.json",
+      "size_bytes": 355,
+      "sha256": "65420a31079ff722ec0cbed214ce1713a6bef85b4c17b09791cb1bd201c3b317"
+    }
+  }
+}
