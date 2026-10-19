@@ -1,0 +1,105 @@
+{
+  "manifest_version": "1.0.0",
+  "run_id": "paper_benchmark_20261019_170814",
+  "protocol": "router-live",
+  "timestamp_iso": "2026-10-19T11:38:29.801679+00:00",
+  "git_commit_sha": "7a71ddc7ff39bec53c4edf40685fee706e59e5db",
+  "execution_parameters": {
+    "protocol": "router-live",
+    "models": [
+      "qwen2_5_vl_3b"
+    ],
+    "view_modes": [
+      "CROP_ONLY",
+      "CROP_PLUS_CONTEXT"
+    ],
+    "task_mode": "class-conditioned",
+    "replay_source_dir": null,
+    "policies": [
+      "B6_ESTIMATOR_AWARE_ROUTER"
+    ],
+    "skip_offline": false,
+    "inputs_manifest": "vlm\\benchmarks\\router_benchmark_inputs_expanded.json",
+    "ground_truth_manifest": "vlm\\benchmarks\\router_benchmark_ground_truth_expanded.json"
+  },
+  "input_manifests": {
+    "inputs_json": {
+      "path": "vlm/benchmarks/router_benchmark_inputs_expanded.json",
+      "sha256": "df007b88061625155f95c3ae49e8885214c9af9777113d3e90244d4c6a544006"
+    },
+    "ground_truth_json": {
+      "path": "vlm/benchmarks/router_benchmark_ground_truth_expanded.json",
+      "sha256": "e07761b696704f3e93b62778b66e23203b33a9baf59c6930fa6a9e09dcc4830e"
+    },
+    "model_registry_json": {
+      "path": "vlm/benchmarks/model_registry.json",
+      "sha256": "0b499597ac8b07972b597a6ddb3ea3661f7165641bd6a0781c1ed4c48be4e53c"
+    }
+  },
+  "registered_models": {
+    "qwen2_5_vl_3b": {
+      "model_identifier": "Qwen2.5-VL-3B-Instruct",
+      "model_family": "qwen2.5-vl",
+      "architecture": "multimodal_vision_language",
+      "parameter_count": "3B",
+      "quantization": "Q4_K_M",
+      "weights_file": "Qwen2.5-VL-3B-Instruct-Q4_K_M.gguf",
+      "multimodal_projector_file": "mmproj-Qwen2.5-VL-3B-Instruct-Q8_0.gguf",
+      "weights_sha256": "d02fe9b69ad8cadbbd228e387667af66612c44bed29ffc8eb1e7caf9ac486c12",
+      "multimodal_projector_sha256": "980c9b2f78c04e6cff93d277ada09e768394f112d75db3b4e9dea8a69f9fb904",
+      "backend": "llama.cpp",
+      "backend_binary": "/home/saturn/llama.cpp/build/bin/llama-server",
+      "server_url": "http://127.0.0.1:8089/v1/chat/completions",
+      "health_url": "http://127.0.0.1:8089/health",
+      "protocol": "openai_compatible_http",
+      "generation_parameters": {
+        "temperature": 0.0,
+        "max_tokens": 150,
+        "top_p": 1.0
+      },
+      "image_input_specification": {
+        "format": "jpeg_base64",
+        "max_crop_dim": 240,
+        "max_scene_dim": 320,
+        "supported_view_modes": [
+          "CROP_ONLY",
+          "CROP_PLUS_CONTEXT"
+        ]
+      }
+    }
+  },
+  "elapsed_seconds": 14.89,
+  "status": "COMPLETED",
+  "output_artifacts": {
+    "claim_to_evidence_matrix.md": {
+      "relative_path": "vlm/outputs/benchmark_runs/paper_benchmark_20261019_170814/claim_to_evidence_matrix.md",
+      "size_bytes": 2716,
+      "sha256": "d016abb77cc8acc8a24a81993946b77948e3d99a9fa23d9ab98d53c33c19b068"
+    },
+    "downstream_lifecycle_summary.json": {
+      "relative_path": "vlm/outputs/benchmark_runs/paper_benchmark_20261019_170814/downstream_lifecycle_summary.json",
+      "size_bytes": 26332,
+      "sha256": "8075c46651cd1c0918f9596ad2c9b3d185582ca9b73074920f8fd156d82f9688"
+    },
+    "paper_benchmark_report.md": {
+      "relative_path": "vlm/outputs/benchmark_runs/paper_benchmark_20261019_170814/paper_benchmark_report.md",
+      "size_bytes": 4423,
+      "sha256": "e534fb160746404100d7b7b6e305bc4710009486591bf82ce14ba05f2a6a9d73"
+    },
+    "router_decisions_b6_estimator_aware_router.jsonl": {
+      "relative_path": "vlm/outputs/benchmark_runs/paper_benchmark_20261019_170814/router_decisions_b6_estimator_aware_router.jsonl",
+      "size_bytes": 21946,
+      "sha256": "bd38fb906dc60a27d2182ef18d6978e104b6a6dec8a28fa842042eb79838fef0"
+    },
+    "router_policies_summary.json": {
+      "relative_path": "vlm/outputs/benchmark_runs/paper_benchmark_20261019_170814/router_policies_summary.json",
+      "size_bytes": 1919,
+      "sha256": "79433d732e8b2ea06c94b94176f7964ef4b39fed890271130849cc74c4b9de82"
+    },
+    "statistical_metrics_summary.json": {
+      "relative_path": "vlm/outputs/benchmark_runs/paper_benchmark_20261019_170814/statistical_metrics_summary.json",
+      "size_bytes": 352,
+      "sha256": "a45e3d9b83476a0ce1424593bcfdafa5ac419d385f7b5f34be7d3306a98c8cb9"
+    }
+  }
+}

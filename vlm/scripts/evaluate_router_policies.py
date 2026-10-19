@@ -396,15 +396,17 @@ def compute_policy_evaluation_metrics(
 
 def evaluate_router_policies(
     policy_keys: List[str] = POLICY_KEYS,
-    model_key: Literal["qwen2_5_vl_3b", "gemma3_4b"] = "qwen2_5_vl_3b",
+    model_key: Literal["qwen2_5_vl_3b"] = "qwen2_5_vl_3b",
     execution_mode: Literal["replay", "live"] = "replay",
     replay_run_dir: Optional[Path] = None,
     run_dir: Optional[Path] = None,
     lambda_cost: float = DEFAULT_VLM_COST,
+    inputs_manifest_path: Optional[Path] = None,
+    ground_truth_manifest_path: Optional[Path] = None,
 ) -> Dict[str, Any]:
     """Execute evaluation suite across all router policies and ablations."""
-    inputs_manifest = repo_root / "vlm" / "benchmarks" / "paper_benchmark_inputs.json"
-    gt_manifest = repo_root / "vlm" / "benchmarks" / "paper_benchmark_ground_truth.json"
+    inputs_manifest = Path(inputs_manifest_path) if inputs_manifest_path else (repo_root / "vlm" / "benchmarks" / "paper_benchmark_inputs.json")
+    gt_manifest = Path(ground_truth_manifest_path) if ground_truth_manifest_path else (repo_root / "vlm" / "benchmarks" / "paper_benchmark_ground_truth.json")
 
     with open(inputs_manifest, "r", encoding="utf-8") as f:
         inputs_data = json.load(f)["instances"]
@@ -578,10 +580,12 @@ def evaluate_router_policies(
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description="Evaluate estimator-aware router policies and baselines.")
     parser.add_argument("--policies", nargs="+", default=POLICY_KEYS, choices=POLICY_KEYS)
-    parser.add_argument("--model", default="qwen2_5_vl_3b", choices=["qwen2_5_vl_3b", "gemma3_4b"])
+    parser.add_argument("--model", default="qwen2_5_vl_3b", choices=["qwen2_5_vl_3b"])
     parser.add_argument("--mode", default="replay", choices=["replay", "live"], help="Replay from visual eval run or execute live")
     parser.add_argument("--replay-dir", type=Path, default=None, help="Directory of visual eval run for replay mode")
     parser.add_argument("--lambda-cost", type=float, default=DEFAULT_VLM_COST)
+    parser.add_argument("--inputs-manifest", type=Path, default=None, help="Path to custom inputs manifest JSON")
+    parser.add_argument("--ground-truth-manifest", type=Path, default=None, help="Path to custom ground-truth manifest JSON")
     args = parser.parse_args()
 
     evaluate_router_policies(
@@ -590,4 +594,6 @@ if __name__ == "__main__":
         execution_mode=args.mode,
         replay_run_dir=args.replay_dir,
         lambda_cost=args.lambda_cost,
+        inputs_manifest_path=args.inputs_manifest,
+        ground_truth_manifest_path=args.ground_truth_manifest,
     )

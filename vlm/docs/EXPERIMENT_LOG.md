@@ -140,3 +140,26 @@ Every experiment record specifies:
 - **Command:** `py -3 -m pytest vlm/tests -q`
 - **Configuration:** 13 test files covering input validation, operational utility thresholding, zero-inlier handling, and fail-closed contracts.
 - **Result:** **115 passed / 0 failed / 0 skipped in 3.45s**
+
+---
+
+### EXP-08: Audited Expanded Benchmark & Publication Package
+- **Run ID:** `EXP-20261019-AUDITED-PAPER-BENCHMARK`
+- **Timestamp:** 2026-10-19 11:45:00 UTC
+- **Branch:** `research-vlm` (commit `7a71ddc...` base, immutable historical pilot preserved)
+- **Commands Executed:**
+  - `python vlm/scripts/audit_benchmark_population.py`
+  - `python vlm/scripts/run_paper_benchmark.py --protocol visual-live --models qwen2_5_vl_3b ...`
+  - `python vlm/scripts/run_paper_benchmark.py --protocol policy-replay --models qwen2_5_vl_3b ...`
+  - `python vlm/scripts/run_paper_benchmark.py --protocol router-live --models qwen2_5_vl_3b ...`
+  - `python vlm/scripts/generate_model_comparison_report.py ...`
+  - `python vlm/scripts/validate_final_reports.py ...`
+  - `python -m pytest vlm/tests/ -q`
+- **Key Verified Metrics:**
+  - Audited Population: 53 catalog entities, 42 unique image-eligible instances with verified SHA-256 hashes.
+  - Qwen2.5-VL-3B: Overall Accuracy `95.2%` (40/42, 95% Wilson CI `[84.2%, 98.7%]`), Balanced Accuracy `98.2%`, Macro-F1 `90.7%`, Median Latency `23.5 s`.
+  - B6 Estimator-Aware Router: Downstream landmark action accuracy `94.3%`, Landmark retention recall `100.0%`, False invalidation rate `0.0%`.
+  - Trajectory ATE/RPE: Explicitly recorded as `NOT_EVALUATED`.
+  - Unit/Regression Test Suite: **233 passed / 0 failed in 78.33s**.
+- **Deliverables Directory:** [`vlm/outputs/final_report/`](file:///c:/Users/Yash%20Bhardwaj/Desktop/perception/vlm/outputs/final_report/)
+

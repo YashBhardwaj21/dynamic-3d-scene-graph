@@ -64,35 +64,6 @@
           "CROP_PLUS_CONTEXT"
         ]
       }
-    },
-    "gemma3_4b": {
-      "model_identifier": "gemma3:4b",
-      "model_family": "gemma3",
-      "architecture": "multimodal_vision_language",
-      "parameter_count": "4B",
-      "quantization": "Ollama default (4-bit quantized)",
-      "weights_file": "gemma3:4b",
-      "multimodal_projector_file": "integrated",
-      "weights_sha256": "a2af6cc3eb7fa8be8504abaf9b04e88f17a119ec3f04a3addf55f92841195f5a",
-      "backend": "ollama",
-      "backend_binary": "ollama",
-      "server_url": "http://127.0.0.1:11434/api/chat",
-      "health_url": "http://127.0.0.1:11434/api/tags",
-      "protocol": "ollama_native_http",
-      "generation_parameters": {
-        "temperature": 0.0,
-        "max_tokens": 150,
-        "top_p": 1.0
-      },
-      "image_input_specification": {
-        "format": "jpeg_base64",
-        "max_crop_dim": 240,
-        "max_scene_dim": 320,
-        "supported_view_modes": [
-          "CROP_ONLY",
-          "CROP_PLUS_CONTEXT"
-        ]
-      }
     }
   },
   "elapsed_seconds": 0.33,

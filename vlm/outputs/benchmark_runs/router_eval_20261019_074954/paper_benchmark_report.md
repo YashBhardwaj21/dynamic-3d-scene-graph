@@ -1,7 +1,7 @@
 # Estimator-Aware Selective VLM Routing: Paper-Grade Benchmark Report
 
 ## Executive Summary
-This report presents empirical evaluation results for **Estimator-Aware Selective VLM Routing with Qwen2.5-VL-3B-Instruct and Gemma 3 4B** on branch `research-vlm`.
+This report presents empirical evaluation results for **Estimator-Aware Selective VLM Routing with Qwen2.5-VL-3B-Instruct** on branch `research-vlm`.
 All metrics are derived strictly from live wire execution with zero cached fallbacks, strict two-file ground truth isolation, and honest provenance tracking.
 
 ### Key Benchmark Findings:

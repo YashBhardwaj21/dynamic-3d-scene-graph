@@ -73,17 +73,14 @@ def test_compute_classification_metrics():
 
 
 class MockClassificationServer(BaseHTTPRequestHandler):
-    """Mock server serving both Qwen and Gemma mock responses."""
+    """Mock server serving Qwen mock responses."""
 
     def do_GET(self):
-        if self.path in ["/health", "/api/tags"]:
+        if self.path in ["/health"]:
             self.send_response(200)
             self.send_header("Content-Type", "application/json")
             self.end_headers()
-            if self.path == "/health":
-                self.wfile.write(b'{"status": "ok"}')
-            else:
-                self.wfile.write(b'{"models": [{"name": "gemma3:4b"}]}')
+            self.wfile.write(b'{"status": "ok"}')
         else:
             self.send_response(404)
             self.end_headers()
@@ -131,17 +128,10 @@ class MockClassificationServer(BaseHTTPRequestHandler):
             "short_explanation": f"Evaluation for {obj_id} ({obj_class}).",
         }
 
-        if self.path == "/v1/chat/completions":
-            resp = {
-                "choices": [{"message": {"role": "assistant", "content": json.dumps(payload)}}],
-                "usage": {"prompt_tokens": 120, "completion_tokens": 45},
-            }
-        else:
-            resp = {
-                "message": {"role": "assistant", "content": json.dumps(payload)},
-                "prompt_eval_count": 120,
-                "eval_count": 45,
-            }
+        resp = {
+            "choices": [{"message": {"role": "assistant", "content": json.dumps(payload)}}],
+            "usage": {"prompt_tokens": 120, "completion_tokens": 45},
+        }
         self.wfile.write(json.dumps(resp).encode("utf-8"))
 
     def log_message(self, format, *args):
@@ -193,13 +183,13 @@ def test_evaluate_visual_classification_mock(mock_server, tmp_path, monkeypatch)
 
 def test_skip_offline_models(tmp_path, monkeypatch):
     """Test that skip_offline_models=True skips offline endpoints without crashing."""
-    monkeypatch.setenv("GEMMA_SERVER_URL", "http://127.0.0.1:59999/api/chat")
+    monkeypatch.setenv("QWEN_SERVER_URL", "http://127.0.0.1:59999/v1/chat/completions")
     results = evaluate_visual_classification(
-        model_keys=["gemma3_4b"],
+        model_keys=["qwen2_5_vl_3b"],
         view_modes=["CROP_ONLY"],
         run_dir=tmp_path / "offline_run",
         max_instances=1,
         skip_offline_models=True,
     )
-    assert "gemma3_4b" in results["evaluations"]
-    assert results["evaluations"]["gemma3_4b"].get("status") == "SKIPPED_OFFLINE"
+    assert "qwen2_5_vl_3b" in results["evaluations"]
+    assert results["evaluations"]["qwen2_5_vl_3b"].get("status") == "SKIPPED_OFFLINE"

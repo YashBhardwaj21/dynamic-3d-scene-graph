@@ -4,7 +4,7 @@ Verifies:
 1. Strict two-file isolation: paper_benchmark_inputs.json contains ZERO ground truth or decision fields.
 2. paper_benchmark_ground_truth.json correctly matches physical instance IDs.
 3. All image files exist, decode cleanly with PIL, and SHA-256 hashes match.
-4. Model registry specifies complete configurations for both qwen2_5_vl_3b and gemma3_4b.
+4. Model registry specifies complete configurations for qwen2_5_vl_3b.
 """
 
 from __future__ import annotations
@@ -114,14 +114,14 @@ def test_image_integrity_and_hashes():
 
 
 def test_model_registry_schema():
-    """Verify model_registry.json contains required entries and parameters for Qwen and Gemma."""
+    """Verify model_registry.json contains required entries and parameters for Qwen."""
     reg_path = repo_root / "vlm" / "benchmarks" / "model_registry.json"
     assert reg_path.exists()
 
     with open(reg_path, "r", encoding="utf-8") as f:
         registry = json.load(f)["models"]
 
-    for mkey in ["qwen2_5_vl_3b", "gemma3_4b"]:
+    for mkey in ["qwen2_5_vl_3b"]:
         assert mkey in registry, f"Missing model {mkey} in registry"
         m = registry[mkey]
         for field in ["model_identifier", "server_url", "generation_parameters", "image_input_specification"]:

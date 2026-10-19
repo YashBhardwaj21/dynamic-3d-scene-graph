@@ -2,7 +2,7 @@
 """Axis 1: Visual Movability Classification & Paired Model Comparison.
 
 Evaluates how well neural vision models classify physical movability from images alone:
-- Evaluates Qwen2.5-VL-3B-Instruct (llama.cpp) and Gemma 3 4B (Ollama)
+- Evaluates Qwen2.5-VL-3B-Instruct (llama.cpp)
 - Evaluates two visual input modes: CROP_ONLY vs. CROP_PLUS_CONTEXT
 - Strict two-file isolation: reads purely inference-visible metadata from paper_benchmark_inputs.json
 - Evaluator joins predictions against paper_benchmark_ground_truth.json strictly post-inference
@@ -206,16 +206,18 @@ def compute_classification_metrics(
 
 
 def evaluate_visual_classification(
-    model_keys: List[Literal["qwen2_5_vl_3b", "gemma3_4b"]],
+    model_keys: List[Literal["qwen2_5_vl_3b"]],
     view_modes: List[Literal["CROP_ONLY", "CROP_PLUS_CONTEXT", "MULTI_VIEW"]] = ["CROP_ONLY", "CROP_PLUS_CONTEXT"],
     task_mode: Literal["class-conditioned", "unconditioned"] = "class-conditioned",
     run_dir: Optional[Path] = None,
     max_instances: Optional[int] = None,
     skip_offline_models: bool = False,
+    inputs_manifest_path: Optional[Path] = None,
+    ground_truth_manifest_path: Optional[Path] = None,
 ) -> Dict[str, Any]:
     """Execute visual classification evaluation across models, view modes, and task modes."""
-    inputs_manifest = repo_root / "vlm" / "benchmarks" / "paper_benchmark_inputs.json"
-    gt_manifest = repo_root / "vlm" / "benchmarks" / "paper_benchmark_ground_truth.json"
+    inputs_manifest = Path(inputs_manifest_path) if inputs_manifest_path else (repo_root / "vlm" / "benchmarks" / "paper_benchmark_inputs.json")
+    gt_manifest = Path(ground_truth_manifest_path) if ground_truth_manifest_path else (repo_root / "vlm" / "benchmarks" / "paper_benchmark_ground_truth.json")
 
     with open(inputs_manifest, "r", encoding="utf-8") as f:
         inputs_data = json.load(f)["instances"]
@@ -323,6 +325,26 @@ def evaluate_visual_classification(
 
             print(f"  • {mkey} ({vmode}) Overall Acc: {metrics['overall_accuracy']*100:.1f}% | Balanced Acc: {metrics['balanced_accuracy']*100:.1f}% | Macro-F1: {metrics['macro_f1']*100:.1f}%")
 
+    # Also check if existing predictions exist in run_dir
+    for other_m in ["qwen2_5_vl_3b"]:
+        if other_m not in summary_results["evaluations"]:
+            for vmode in view_modes:
+                mode_tag = f"{vmode.lower()}_{task_mode.replace('-', '_')}"
+                existing_pred = run_dir / f"visual_classification_predictions_{other_m}_{mode_tag}.jsonl"
+                if existing_pred.exists():
+                    p_list = []
+                    with open(existing_pred, "r", encoding="utf-8") as pf:
+                        for line in pf:
+                            if line.strip():
+                                p_list.append(json.loads(line))
+                    if p_list:
+                        if other_m not in summary_results["evaluations"]:
+                            summary_results["evaluations"][other_m] = {}
+                        summary_results["evaluations"][other_m][vmode] = {
+                            "metrics": compute_classification_metrics(p_list, gt_map),
+                            "predictions_file": str(existing_pred.relative_to(repo_root)).replace("\\", "/"),
+                        }
+
     out_summary_file = run_dir / "visual_classification_summary.json"
     with open(out_summary_file, "w", encoding="utf-8") as f:
         json.dump(summary_results, f, indent=2, default=str)
@@ -333,7 +355,7 @@ def evaluate_visual_classification(
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description="Evaluate visual physical movability classification across models.")
-    parser.add_argument("--models", nargs="+", default=["qwen2_5_vl_3b"], choices=["qwen2_5_vl_3b", "gemma3_4b"])
+    parser.add_argument("--models", nargs="+", default=["qwen2_5_vl_3b"], choices=["qwen2_5_vl_3b"])
     parser.add_argument(
         "--view-modes",
         nargs="+",
@@ -348,6 +370,8 @@ if __name__ == "__main__":
     )
     parser.add_argument("--max-instances", type=int, default=None)
     parser.add_argument("--skip-offline", action="store_true", help="Skip models whose servers are offline instead of hard error")
+    parser.add_argument("--inputs-manifest", type=Path, default=None, help="Path to custom inputs manifest JSON")
+    parser.add_argument("--ground-truth-manifest", type=Path, default=None, help="Path to custom ground-truth manifest JSON")
     args = parser.parse_args()
 
     evaluate_visual_classification(
@@ -356,4 +380,6 @@ if __name__ == "__main__":
         task_mode=args.task_mode,
         max_instances=args.max_instances,
         skip_offline_models=args.skip_offline,
+        inputs_manifest_path=args.inputs_manifest,
+        ground_truth_manifest_path=args.ground_truth_manifest,
     )

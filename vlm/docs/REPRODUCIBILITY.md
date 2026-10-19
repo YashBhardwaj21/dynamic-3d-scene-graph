@@ -21,9 +21,9 @@ The experimental pipeline is designed for fully deterministic, offline reproduci
 The primary evaluation suite is executed through the unified orchestrator `vlm/scripts/run_paper_benchmark.py`:
 
 ### Protocol 1: Live Multimodal Visual Movability Classification (`visual-live`)
-Executes strict live inference across evaluated vision models (Qwen2.5-VL-3B-Instruct on llama.cpp, Gemma 3 4B on Ollama) over the wire with dual hashing (source asset and wire payload SHA-256):
+Executes strict live inference for Qwen2.5-VL-3B-Instruct (llama.cpp) over the wire with dual hashing (source asset and wire payload SHA-256):
 ```bash
-python vlm/scripts/run_paper_benchmark.py --protocol visual-live --models qwen2_5_vl_3b gemma3_4b --view-modes CROP_ONLY CROP_PLUS_CONTEXT
+python vlm/scripts/run_paper_benchmark.py --protocol visual-live --models qwen2_5_vl_3b --view-modes CROP_ONLY CROP_PLUS_CONTEXT
 ```
 *Outputs:* `visual_classification_predictions_<model>_<view_mode>.jsonl`, `visual_classification_summary.json`, `run_manifest.json`.
 

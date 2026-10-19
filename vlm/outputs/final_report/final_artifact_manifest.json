@@ -1,0 +1,52 @@
+{
+  "manifest_version": "1.0.0",
+  "timestamp_iso": "2026-10-19T11:56:37.913051+00:00",
+  "report_title": "Dynamic 3D Scene Graph - Estimator-Aware VLM Final Report Package",
+  "total_artifacts": 11,
+  "artifacts": {
+    "figures\\accuracy_vs_latency_tradeoff.png": {
+      "sha256": "2ad105e8352ad19d297831fa5ce3140228ffe36b684877632060f24cf15b5350",
+      "size_bytes": 98434
+    },
+    "figures\\confusion_matrices_crop_plus_context.png": {
+      "sha256": "a475a888efc72e181f1798645d64ab6f773aa5fac541912122df15ffce290161",
+      "size_bytes": 97841
+    },
+    "figures\\grouped_metrics_comparison.png": {
+      "sha256": "2ecd941d6f3d21f7918568d1e392dc698874a1122d4f4dbbf97397b037d87292",
+      "size_bytes": 119896
+    },
+    "figures\\latency_percentiles_comparison.png": {
+      "sha256": "96c44999b0d9b7b154e54b5a37ac586b91211e35e5aa3faa76372002e6b3a1bf",
+      "size_bytes": 94851
+    },
+    "figures\\per_class_recall_comparison.png": {
+      "sha256": "52e1f1d0767ae4ffe73be9821e782b8038fdc787310a7ce4f76c16401ca86ed9",
+      "size_bytes": 88082
+    },
+    "FINAL_RESULTS.md": {
+      "sha256": "646c6d129342c7472ccc5e1ffd463b8f3306abca6f7760f888f7fa460975c149",
+      "size_bytes": 9066
+    },
+    "model_comparison.csv": {
+      "sha256": "cb03e57d50386e7d2070d2f367cd02e9c7d681675b14ff3308226226f9c15cbe",
+      "size_bytes": 678
+    },
+    "model_comparison.md": {
+      "sha256": "43f49758b551d78138ffdf4db8e407312b9ee22e0935ff2693fc6ee72adcd378",
+      "size_bytes": 2780
+    },
+    "per_instance_comparison.csv": {
+      "sha256": "998dda3efb35b8fbecf35d41df839ea34ea76d29cd5c3cba58965dbdc9828c27",
+      "size_bytes": 3517
+    },
+    "router_policy_comparison.csv": {
+      "sha256": "f7f020c208ce1bc596ec80a069be4a13958eda29b8603e1f2f95c72af8bbdc6d",
+      "size_bytes": 1798
+    },
+    "statistical_comparison.json": {
+      "sha256": "8193172223a34acb582161ce7c4dfa96324231e40102d66e81c31e6452fb2589",
+      "size_bytes": 564
+    }
+  }
+}

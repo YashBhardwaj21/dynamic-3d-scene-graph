@@ -1,0 +1,40 @@
+physical_instance_id,semantic_class,exclusion_reasons,has_crop,has_ground_truth,is_held_out
+inst_backpack_002,backpack,HELD_OUT_FURNITURE_SUBSET,True,True,True
+inst_chair_001,chair,HELD_OUT_FURNITURE_SUBSET,True,True,True
+inst_chair_004,chair,HELD_OUT_FURNITURE_SUBSET,True,True,True
+inst_chair_005,chair,HELD_OUT_FURNITURE_SUBSET,True,True,True
+inst_chair_007,chair,HELD_OUT_FURNITURE_SUBSET,True,True,True
+inst_chair_008,chair,HELD_OUT_FURNITURE_SUBSET,True,True,True
+inst_chair_009,chair,HELD_OUT_FURNITURE_SUBSET,True,True,True
+inst_chair_011,chair,HELD_OUT_FURNITURE_SUBSET,True,True,True
+inst_chair_017,chair,HELD_OUT_FURNITURE_SUBSET,True,True,True
+inst_chair_018,chair,HELD_OUT_FURNITURE_SUBSET,True,True,True
+inst_chair_019,chair,HELD_OUT_FURNITURE_SUBSET,True,True,True
+inst_chair_021,chair,HELD_OUT_FURNITURE_SUBSET,True,True,True
+inst_chair_027,chair,HELD_OUT_FURNITURE_SUBSET,True,True,True
+inst_chair_030,chair,HELD_OUT_FURNITURE_SUBSET,True,True,True
+inst_chair_032,chair,HELD_OUT_FURNITURE_SUBSET,True,True,True
+inst_chair_035,chair,HELD_OUT_FURNITURE_SUBSET,True,True,True
+inst_desk_003,desk,HELD_OUT_FURNITURE_SUBSET,True,True,True
+inst_desk_005,desk,HELD_OUT_FURNITURE_SUBSET,True,True,True
+inst_desk_007_s2,desk,MISSING_IMAGE_ASSETS,False,True,False
+inst_desk_008,desk,HELD_OUT_FURNITURE_SUBSET,True,True,True
+inst_desk_010_s2,desk,MISSING_IMAGE_ASSETS,False,True,False
+inst_desk_012,desk,HELD_OUT_FURNITURE_SUBSET,True,True,True
+inst_desk_016,desk,HELD_OUT_FURNITURE_SUBSET,True,True,True
+inst_desk_017,desk,HELD_OUT_FURNITURE_SUBSET,True,True,True
+inst_desk_023,desk,HELD_OUT_FURNITURE_SUBSET,True,True,True
+inst_desk_024,desk,HELD_OUT_FURNITURE_SUBSET,True,True,True
+inst_desk_025,desk,HELD_OUT_FURNITURE_SUBSET,True,True,True
+inst_desk_031,desk,HELD_OUT_FURNITURE_SUBSET,True,True,True
+inst_handbag_001,handbag,MISSING_IMAGE_ASSETS,False,True,False
+inst_keyboard_001,keyboard,MISSING_IMAGE_ASSETS,False,True,False
+inst_laptop_002,laptop,MISSING_IMAGE_ASSETS,False,True,False
+inst_laptop_003,laptop,MISSING_IMAGE_ASSETS,False,True,False
+inst_laptop_004,laptop,MISSING_IMAGE_ASSETS,False,True,False
+inst_monitor_002,computer monitor,MISSING_IMAGE_ASSETS,False,True,False
+inst_rc_car_robot_001,robot,MISSING_IMAGE_ASSETS,False,True,False
+inst_storage_box_001,storage box,HELD_OUT_FURNITURE_SUBSET,True,True,True
+inst_storage_box_004,storage box,HELD_OUT_FURNITURE_SUBSET,True,True,True
+inst_wall_north_001,wall,MISSING_IMAGE_ASSETS,False,True,False
+inst_wall_west_001,wall,MISSING_IMAGE_ASSETS,False,True,False

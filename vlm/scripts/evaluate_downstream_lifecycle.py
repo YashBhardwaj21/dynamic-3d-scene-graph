@@ -343,10 +343,12 @@ def evaluate_policy_lifecycle(
 def evaluate_downstream_lifecycle(
     router_run_dir: Path,
     output_run_dir: Optional[Path] = None,
+    inputs_manifest_path: Optional[Path] = None,
+    ground_truth_manifest_path: Optional[Path] = None,
 ) -> Dict[str, Any]:
     """Execute Axis 3 Downstream SLAM Lifecycle benchmark across all router policies."""
-    inputs_manifest = repo_root / "vlm" / "benchmarks" / "paper_benchmark_inputs.json"
-    gt_manifest = repo_root / "vlm" / "benchmarks" / "paper_benchmark_ground_truth.json"
+    inputs_manifest = Path(inputs_manifest_path) if inputs_manifest_path else (repo_root / "vlm" / "benchmarks" / "paper_benchmark_inputs.json")
+    gt_manifest = Path(ground_truth_manifest_path) if ground_truth_manifest_path else (repo_root / "vlm" / "benchmarks" / "paper_benchmark_ground_truth.json")
 
     with open(inputs_manifest, "r", encoding="utf-8") as f:
         inputs_list = json.load(f)["instances"]
@@ -421,6 +423,8 @@ def evaluate_downstream_lifecycle(
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description="Evaluate downstream SLAM landmark lifecycle for router policies.")
     parser.add_argument("--router-dir", type=Path, default=None, help="Directory containing router_decisions_*.jsonl files")
+    parser.add_argument("--inputs-manifest", type=Path, default=None, help="Path to custom inputs manifest JSON")
+    parser.add_argument("--ground-truth-manifest", type=Path, default=None, help="Path to custom ground-truth manifest JSON")
     args = parser.parse_args()
 
     rdir = args.router_dir
@@ -434,4 +438,8 @@ if __name__ == "__main__":
         else:
             raise FileNotFoundError("No router_eval_* directories found in vlm/outputs/benchmark_runs")
 
-    evaluate_downstream_lifecycle(router_run_dir=rdir)
+    evaluate_downstream_lifecycle(
+        router_run_dir=rdir,
+        inputs_manifest_path=args.inputs_manifest,
+        ground_truth_manifest_path=args.ground_truth_manifest,
+    )

@@ -1,0 +1,26 @@
+{
+  "view_mode_effect": {
+    "mcnemar_exact_test": {
+      "contingency": {
+        "both_correct": 39,
+        "both_incorrect": 1,
+        "only_a_correct": 1,
+        "only_b_correct": 1
+      },
+      "discordant_pairs": 2,
+      "p_value": 1.0,
+      "significant_p05": false
+    },
+    "macro_f1_bootstrap": {
+      "observed_diff": 0.0,
+      "ci_95": [
+        -0.1002,
+        0.1002
+      ],
+      "bootstrap_samples": 5000,
+      "stratified": true
+    },
+    "crop_median_ms": 23409.21,
+    "context_median_ms": 18509.56
+  }
+}

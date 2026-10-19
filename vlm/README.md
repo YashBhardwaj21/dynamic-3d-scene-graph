@@ -60,7 +60,8 @@ vlm/
 │   │   ├── scene_graph.json        # 195 persistent 3D nodes with decoupled pose histories
 │   │   └── association_baselines_summary.json
 │   ├── vlm_controlled_ablations.json # Phase 6 prompt, view-count, and input representation ablations
-│   └── downstream_slam_effects.json  # Phase 8 landmark reliability and ATE/RPE trajectory metrics
+│   ├── downstream_slam_effects.json  # Phase 8 landmark reliability and ATE/RPE trajectory metrics
+│   └── final_report/               # Paper deliverables: FINAL_RESULTS.md, comparison tables, 300-DPI figures
 ├── scripts/                        # Evaluation, ablation, and orchestrator scripts
 │   ├── run_full_experiment.py      # End-to-end multi-session pipeline orchestrator
 │   ├── run_stage6_ablation.py      # Decoupled router ablation runner (R0-R4, Random, Oracle)
@@ -73,7 +74,7 @@ vlm/
 │   ├── stage5_adapter.py           # Multi-session evidence extraction and uncertainty propagation
 │   ├── contextual_scene_graph_fusion.py # Persistent scene graph nodes and landmark invalidation
 │   └── cross_session_association.py     # SE(2) registered multi-session matching baselines
-└── tests/                          # 217 unit, integration, and regression tests (100% passing)
+└── tests/                          # 233 unit, integration, and regression tests (100% passing)
 ```
 
 ---
@@ -111,8 +112,8 @@ pip install -r vlm/requirements.txt
 python -m pytest vlm/tests/ -q
 
 # 2. Protocol 1: Live Multimodal Visual Movability Classification
-# Executes strict live over-the-wire inference across models (Qwen2.5-VL-3B, Gemma 3 4B)
-python vlm/scripts/run_paper_benchmark.py --protocol visual-live --models qwen2_5_vl_3b gemma3_4b
+# Executes strict live over-the-wire inference for Qwen2.5-VL-3B
+python vlm/scripts/run_paper_benchmark.py --protocol visual-live --models qwen2_5_vl_3b
 
 # 3. Protocol 2: Deterministic Policy Evaluation Replay
 # Replays immutable pre-recorded visual predictions; strictly copies source prediction files

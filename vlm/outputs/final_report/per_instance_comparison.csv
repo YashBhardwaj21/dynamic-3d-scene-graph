@@ -1,0 +1,43 @@
+physical_instance_id,semantic_class,ground_truth,crop_prediction,crop_correct,crop_latency_ms,context_prediction,context_correct,context_latency_ms,context_agreement
+inst_backpack_001,backpack,MOVABLE,MOVABLE,True,9370.3,MOVABLE,True,18661.4,True
+inst_backpack_002,backpack,MOVABLE,MOVABLE,True,26980.8,MOVABLE,True,19921.8,True
+inst_ceiling_fan_001,ceiling fan,IMMOVABLE,IMMOVABLE,True,11278.9,IMMOVABLE,True,18540.1,True
+inst_chair_001,chair,MOVABLE,MOVABLE,True,24819.6,MOVABLE,True,17775.0,True
+inst_chair_002,chair,MOVABLE,MOVABLE,True,10812.1,MOVABLE,True,18141.8,True
+inst_chair_003,chair,MOVABLE,MOVABLE,True,11014.4,MOVABLE,True,18040.2,True
+inst_chair_004,chair,MOVABLE,MOVABLE,True,24394.5,MOVABLE,True,19135.1,True
+inst_chair_005,chair,MOVABLE,MOVABLE,True,24622.2,MOVABLE,True,19308.8,True
+inst_chair_007,chair,MOVABLE,MOVABLE,True,26903.9,MOVABLE,True,18835.3,True
+inst_chair_008,chair,MOVABLE,MOVABLE,True,24603.5,MOVABLE,True,18428.8,True
+inst_chair_009,chair,MOVABLE,MOVABLE,True,23858.2,MOVABLE,True,18476.0,True
+inst_chair_011,chair,MOVABLE,MOVABLE,True,29770.3,MOVABLE,True,18435.0,True
+inst_chair_017,chair,MOVABLE,MOVABLE,True,22947.7,MOVABLE,True,18609.1,True
+inst_chair_018,chair,MOVABLE,MOVABLE,True,21283.6,MOVABLE,True,18054.6,True
+inst_chair_019,chair,MOVABLE,MOVABLE,True,22675.2,MOVABLE,True,18201.0,True
+inst_chair_021,chair,MOVABLE,MOVABLE,True,23504.9,MOVABLE,True,17876.5,True
+inst_chair_027,chair,MOVABLE,MOVABLE,True,24647.6,MOVABLE,True,17810.3,True
+inst_chair_030,chair,MOVABLE,MOVABLE,True,26992.7,MOVABLE,True,17571.5,True
+inst_chair_032,chair,MOVABLE,MOVABLE,True,26767.5,IMMOVABLE,False,19915.3,False
+inst_chair_035,chair,MOVABLE,MOVABLE,True,26435.6,MOVABLE,True,18447.8,True
+inst_desk_001,desk,MOVABLE,MOVABLE,True,11381.8,MOVABLE,True,19125.7,True
+inst_desk_003,desk,MOVABLE,MOVABLE,True,23634.0,MOVABLE,True,17162.4,True
+inst_desk_005,desk,MOVABLE,MOVABLE,True,27570.0,MOVABLE,True,18726.2,True
+inst_desk_008,desk,MOVABLE,MOVABLE,True,24794.6,MOVABLE,True,18887.0,True
+inst_desk_012,desk,MOVABLE,MOVABLE,True,23127.8,MOVABLE,True,18940.2,True
+inst_desk_016,desk,MOVABLE,MOVABLE,True,26745.7,MOVABLE,True,18234.4,True
+inst_desk_017,desk,MOVABLE,MOVABLE,True,24823.3,MOVABLE,True,17607.0,True
+inst_desk_018,desk,MOVABLE,MOVABLE,True,9992.3,MOVABLE,True,19684.6,True
+inst_desk_023,desk,MOVABLE,MOVABLE,True,23611.6,MOVABLE,True,18856.1,True
+inst_desk_024,desk,MOVABLE,MOVABLE,True,24765.0,MOVABLE,True,18719.9,True
+inst_desk_025,desk,MOVABLE,MOVABLE,True,24101.3,MOVABLE,True,17742.4,True
+inst_desk_031,desk,MOVABLE,MOVABLE,True,22479.9,MOVABLE,True,18639.5,True
+inst_door_001,door,IMMOVABLE,IMMOVABLE,True,9464.7,IMMOVABLE,True,18139.3,True
+inst_human_operator_001,person,MOBILE,MOBILE,True,10438.5,MOBILE,True,17923.0,True
+inst_laptop_001,laptop,MOVABLE,MOVABLE,True,10983.8,MOVABLE,True,17946.5,True
+inst_monitor_001,computer monitor,MOVABLE,IMMOVABLE,False,10770.1,MOVABLE,True,18632.2,False
+inst_pedestal_fan_001,pedestal fan,MOVABLE,IMMOVABLE,False,11356.4,IMMOVABLE,False,18479.0,True
+inst_quadcopter_drone_001,robot,MOBILE,MOBILE,True,9944.1,MOBILE,True,21281.2,True
+inst_storage_box_001,storage box,MOVABLE,MOVABLE,True,23070.5,MOVABLE,True,24371.0,True
+inst_storage_box_004,storage box,MOVABLE,MOVABLE,True,23313.5,MOVABLE,True,18683.8,True
+inst_storage_box_007,storage box,MOVABLE,MOVABLE,True,10264.0,MOVABLE,True,17298.3,True
+inst_whiteboard_001,whiteboard,IMMOVABLE,IMMOVABLE,True,10119.1,IMMOVABLE,True,19250.3,True

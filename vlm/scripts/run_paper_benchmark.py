@@ -3,7 +3,7 @@
 
 Implements three distinct, auditable benchmark evaluation protocols:
 1. 'visual-live':
-   Evaluates visual physical movability classification across models (Qwen2.5-VL-3B, Gemma 3 4B)
+   Evaluates visual physical movability classification for Qwen2.5-VL-3B
    using live over-the-wire inference. Records strict wire records, dual hashing, and latencies.
 2. 'policy-replay':
    Evaluates estimator-aware router policies and downstream SLAM effects deterministically using
@@ -77,21 +77,23 @@ def generate_run_manifest(
     args_dict: Dict[str, Any],
     elapsed_seconds: float,
     status: str = "COMPLETED",
+    inputs_manifest: Optional[Path] = None,
+    gt_manifest: Optional[Path] = None,
 ) -> Path:
     """Build unified, auditable run manifest recording all inputs, models, and outputs."""
-    inputs_manifest = repo_root / "vlm" / "benchmarks" / "paper_benchmark_inputs.json"
-    gt_manifest = repo_root / "vlm" / "benchmarks" / "paper_benchmark_ground_truth.json"
+    in_manifest_path = (repo_root / inputs_manifest).resolve() if inputs_manifest and not Path(inputs_manifest).is_absolute() else (Path(inputs_manifest).resolve() if inputs_manifest else (repo_root / "vlm" / "benchmarks" / "paper_benchmark_inputs.json"))
+    gt_manifest_path = (repo_root / gt_manifest).resolve() if gt_manifest and not Path(gt_manifest).is_absolute() else (Path(gt_manifest).resolve() if gt_manifest else (repo_root / "vlm" / "benchmarks" / "paper_benchmark_ground_truth.json"))
     model_reg = repo_root / "vlm" / "benchmarks" / "model_registry.json"
 
     # Compute checksums for benchmark inputs
     input_manifests = {
         "inputs_json": {
-            "path": str(inputs_manifest.relative_to(repo_root)).replace("\\", "/"),
-            "sha256": compute_file_sha256(inputs_manifest) if inputs_manifest.exists() else None,
+            "path": str(in_manifest_path.relative_to(repo_root)).replace("\\", "/"),
+            "sha256": compute_file_sha256(in_manifest_path) if in_manifest_path.exists() else None,
         },
         "ground_truth_json": {
-            "path": str(gt_manifest.relative_to(repo_root)).replace("\\", "/"),
-            "sha256": compute_file_sha256(gt_manifest) if gt_manifest.exists() else None,
+            "path": str(gt_manifest_path.relative_to(repo_root)).replace("\\", "/"),
+            "sha256": compute_file_sha256(gt_manifest_path) if gt_manifest_path.exists() else None,
         },
         "model_registry_json": {
             "path": str(model_reg.relative_to(repo_root)).replace("\\", "/"),
@@ -147,12 +149,17 @@ def run_paper_benchmark(
     policies: List[str] = POLICY_KEYS,
     output_dir: Optional[Path] = None,
     skip_offline: bool = True,
+    inputs_manifest: Optional[Path] = None,
+    ground_truth_manifest: Optional[Path] = None,
 ) -> Dict[str, Any]:
     """Execute paper-grade benchmark across specified protocol."""
     t0 = time.time()
-    run_id = f"paper_benchmark_{datetime.datetime.now().strftime('%Y%m%d_%H%M%S')}"
 
-    if output_dir is None:
+    if output_dir is not None:
+        output_dir = Path(output_dir).resolve()
+        run_id = output_dir.name
+    else:
+        run_id = f"paper_benchmark_{datetime.datetime.now().strftime('%Y%m%d_%H%M%S')}"
         output_dir = repo_root / "vlm" / "outputs" / "benchmark_runs" / run_id
     output_dir.mkdir(parents=True, exist_ok=True)
 
@@ -181,6 +188,8 @@ def run_paper_benchmark(
             task_mode=task_mode,
             run_dir=output_dir,
             skip_offline_models=skip_offline,
+            inputs_manifest_path=inputs_manifest,
+            ground_truth_manifest_path=ground_truth_manifest,
         )
         results["visual_summary"] = vis_summary
 
@@ -217,6 +226,8 @@ def run_paper_benchmark(
             execution_mode="replay",
             replay_run_dir=output_dir,
             run_dir=output_dir,
+            inputs_manifest_path=inputs_manifest,
+            ground_truth_manifest_path=ground_truth_manifest,
         )
         results["router_summary"] = router_summary
 
@@ -224,6 +235,8 @@ def run_paper_benchmark(
         lifecycle_summary = evaluate_downstream_lifecycle(
             router_run_dir=output_dir,
             output_run_dir=output_dir,
+            inputs_manifest_path=inputs_manifest,
+            ground_truth_manifest_path=ground_truth_manifest,
         )
         results["lifecycle_summary"] = lifecycle_summary
 
@@ -231,6 +244,7 @@ def run_paper_benchmark(
         stats_summary = run_statistical_analysis(
             router_run_dir=output_dir,
             output_dir=output_dir,
+            ground_truth_manifest_path=ground_truth_manifest,
         )
         results["statistical_summary"] = stats_summary
 
@@ -243,6 +257,8 @@ def run_paper_benchmark(
             model_key=models[0],  # type: ignore
             execution_mode="live",
             run_dir=output_dir,
+            inputs_manifest_path=inputs_manifest,
+            ground_truth_manifest_path=ground_truth_manifest,
         )
         results["router_summary"] = router_summary
 
@@ -250,6 +266,8 @@ def run_paper_benchmark(
         lifecycle_summary = evaluate_downstream_lifecycle(
             router_run_dir=output_dir,
             output_run_dir=output_dir,
+            inputs_manifest_path=inputs_manifest,
+            ground_truth_manifest_path=ground_truth_manifest,
         )
         results["lifecycle_summary"] = lifecycle_summary
 
@@ -257,6 +275,7 @@ def run_paper_benchmark(
         stats_summary = run_statistical_analysis(
             router_run_dir=output_dir,
             output_dir=output_dir,
+            ground_truth_manifest_path=ground_truth_manifest,
         )
         results["statistical_summary"] = stats_summary
 
@@ -279,8 +298,12 @@ def run_paper_benchmark(
             "replay_source_dir": str(replay_source_dir) if replay_source_dir else None,
             "policies": policies,
             "skip_offline": skip_offline,
+            "inputs_manifest": str(inputs_manifest) if inputs_manifest else None,
+            "ground_truth_manifest": str(ground_truth_manifest) if ground_truth_manifest else None,
         },
         elapsed_seconds=elapsed_s,
+        inputs_manifest=inputs_manifest,
+        gt_manifest=ground_truth_manifest,
     )
     results["run_manifest"] = str(manifest_p.relative_to(repo_root)).replace("\\", "/")
 
@@ -312,7 +335,7 @@ if __name__ == "__main__":
         "--models",
         nargs="+",
         default=["qwen2_5_vl_3b"],
-        choices=["qwen2_5_vl_3b", "gemma3_4b"],
+        choices=["qwen2_5_vl_3b"],
     )
     parser.add_argument(
         "--view-modes",
@@ -339,6 +362,8 @@ if __name__ == "__main__":
     )
     parser.add_argument("--output-dir", type=Path, default=None)
     parser.add_argument("--skip-offline", action="store_true")
+    parser.add_argument("--inputs-manifest", type=Path, default=None, help="Path to custom inputs manifest JSON")
+    parser.add_argument("--ground-truth-manifest", type=Path, default=None, help="Path to custom ground-truth manifest JSON")
     args = parser.parse_args()
 
     # Handle legacy --mode alias if provided
@@ -355,4 +380,6 @@ if __name__ == "__main__":
         policies=args.policies,
         output_dir=args.output_dir,
         skip_offline=args.skip_offline,
+        inputs_manifest=args.inputs_manifest,
+        ground_truth_manifest=args.ground_truth_manifest,
     )

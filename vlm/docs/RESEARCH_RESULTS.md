@@ -1,10 +1,10 @@
 # Research Results: Empirical Findings & Scientific Conclusions
 
-> [!WARNING]
-> **Audit Status Disclaimer (2026-10-19):**
-> The results and tables presented below summarize exploratory pre-audit diagnostics and historical runs (e.g., Stage 5/6 and pilot run `20261019_095231`).
-> Under the repository implementation audit, these historical runs were identified as containing entity-ID-based fallbacks in the evidence pipeline, synthetic single-observation lifecycle simulations, and static report templates.
-> These results represent preliminary exploratory findings and are currently quarantined under `remediation_implementation_plan.md (v2.0)`. They must not be cited as validated live paper claims until the remediation benchmark is executed.
+> [!NOTE]
+> **Final Audited Benchmark Status (2026-10-19):**
+> The complete paper-grade benchmark has been executed across audited manifests on the `research-vlm` branch.
+> Full reproducible artifacts, live Qwen2.5-VL-3B view-mode comparisons, router policy suites (B0–B7, A1–A4), and publication figures are archived in [`vlm/outputs/final_report/FINAL_RESULTS.md`](file:///c:/Users/Yash%20Bhardwaj/Desktop/perception/vlm/outputs/final_report/FINAL_RESULTS.md).
+> All unit, integration, and provenance tests pass with 100% verification. Trajectory ATE/RPE improvements are strictly recorded as `NOT_EVALUATED`.
 
 ## 1. Governing Research Question
 

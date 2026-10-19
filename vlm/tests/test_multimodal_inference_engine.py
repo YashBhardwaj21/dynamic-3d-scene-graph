@@ -16,18 +16,15 @@ from vlm.src.multimodal_inference_engine import (
 )
 
 
-class MockDualModelServer(BaseHTTPRequestHandler):
-    """Local server simulating both OpenAI-compatible (Qwen) and Ollama (Gemma) endpoints."""
+class MockQwenServer(BaseHTTPRequestHandler):
+    """Local server simulating OpenAI-compatible (Qwen) endpoint."""
 
     def do_GET(self):
-        if self.path in ["/health", "/api/tags"]:
+        if self.path in ["/health"]:
             self.send_response(200)
             self.send_header("Content-Type", "application/json")
             self.end_headers()
-            if self.path == "/health":
-                self.wfile.write(b'{"status": "ok"}')
-            else:
-                self.wfile.write(b'{"models": [{"name": "gemma3:4b"}]}')
+            self.wfile.write(b'{"status": "ok"}')
         else:
             self.send_response(404)
             self.end_headers()
@@ -52,29 +49,16 @@ class MockDualModelServer(BaseHTTPRequestHandler):
             "abstain": False,
         }
 
-        if self.path == "/v1/chat/completions":
-            # OpenAI / llama.cpp format
-            resp = {
-                "choices": [{"message": {"role": "assistant", "content": json.dumps(mock_payload)}}],
-                "usage": {"prompt_tokens": 120, "completion_tokens": 45},
-            }
-        elif self.path == "/api/chat":
-            # Ollama format
-            resp = {
-                "message": {"role": "assistant", "content": json.dumps(mock_payload)},
-                "prompt_eval_count": 130,
-                "eval_count": 42,
-                "total_duration": 500000000,
-            }
-        else:
-            resp = {"error": "unsupported_endpoint"}
-
+        resp = {
+            "choices": [{"message": {"role": "assistant", "content": json.dumps(mock_payload)}}],
+            "usage": {"prompt_tokens": 120, "completion_tokens": 45},
+        }
         self.wfile.write(json.dumps(resp).encode("utf-8"))
 
 
 @pytest.fixture(scope="module")
 def mock_server():
-    server = HTTPServer(("127.0.0.1", 0), MockDualModelServer)
+    server = HTTPServer(("127.0.0.1", 0), MockQwenServer)
     port = server.server_port
     thread = threading.Thread(target=server.serve_forever, daemon=True)
     thread.start()
@@ -145,40 +129,6 @@ def test_qwen_wire_execution_mock(mock_server, tmp_path):
     assert record.parsed_prediction == "MOVABLE"
     assert record.client_latency_ms > 0.0
     assert record.token_usage["prompt_tokens"] == 120
-
-
-def test_gemma_wire_execution_mock(mock_server, tmp_path):
-    """Verify Gemma Ollama wire inference format and telemetry recording."""
-    dummy_crop = tmp_path / "crop.jpg"
-    im = Image.new("RGB", (64, 64), color="green")
-    im.save(dummy_crop)
-
-    client = MultimodalInferenceEngine(
-        model_key="gemma3_4b",
-        server_url=f"{mock_server}/api/chat",
-        model_name="gemma3:4b",
-    )
-
-    record = client.execute_live_query(
-        physical_instance_id="inst_chair_002",
-        semantic_class="chair",
-        prompt="Classify this object",
-        crop_image_path=dummy_crop,
-        view_mode="CROP_ONLY",
-        image_hashes=["hash1"],
-    )
-
-    assert record.request_attempted is True
-    assert record.http_success is True
-    assert record.response_received is True
-    assert record.parse_valid is True
-    assert record.schema_valid is True
-    assert record.prediction_accepted is True
-    assert record.cache_hit is False
-    assert record.parsed_prediction == "MOVABLE"
-    assert record.client_latency_ms > 0.0
-    assert record.token_usage["prompt_tokens"] == 130
-    assert record.server_timing is not None
 
 
 def test_offline_server_error_handling(tmp_path):
