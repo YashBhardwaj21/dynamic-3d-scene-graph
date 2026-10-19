@@ -1,0 +1,377 @@
+{
+  "manifest_title": "Estimator-Aware Selective VLM Benchmark: Inference Inputs (Inference-Visible Only)",
+  "manifest_version": "1.0.0",
+  "description": "Inference-visible metadata only. Contains zero ground-truth fields, zero expected decisions, and zero expected reasons.",
+  "instances": [
+    {
+      "physical_instance_id": "inst_door_001",
+      "semantic_class": "door",
+      "source_session": "semantic_mapping_my_desk_recording_01",
+      "source_obs_ids": [
+        "door_001",
+        "door_005"
+      ],
+      "visual_inputs": {
+        "has_images": true,
+        "usable_views": 1,
+        "crop_view_paths": [
+          "vlm/outputs/multiview_samples/inst_door_001/crop_view_0.jpg"
+        ],
+        "scene_view_paths": [
+          "vlm/outputs/multiview_samples/inst_door_001/scene_view_0.jpg"
+        ],
+        "image_sha256": [
+          "7fae9d47182f776e",
+          "61c3cb33efac2bcc"
+        ]
+      },
+      "split": "PILOT_BENCHMARK_FROZEN"
+    },
+    {
+      "physical_instance_id": "inst_ceiling_fan_001",
+      "semantic_class": "ceiling fan",
+      "source_session": "semantic_mapping_my_desk_recording_01",
+      "source_obs_ids": [
+        "ceiling fan_001",
+        "ceiling fan_004"
+      ],
+      "visual_inputs": {
+        "has_images": true,
+        "usable_views": 1,
+        "crop_view_paths": [
+          "vlm/outputs/multiview_samples/inst_ceiling_fan_001/crop_view_0.jpg"
+        ],
+        "scene_view_paths": [
+          "vlm/outputs/multiview_samples/inst_ceiling_fan_001/scene_view_0.jpg"
+        ],
+        "image_sha256": [
+          "154e49df280b4982",
+          "3637c75c13b20b4b"
+        ]
+      },
+      "split": "PILOT_BENCHMARK_FROZEN"
+    },
+    {
+      "physical_instance_id": "inst_whiteboard_001",
+      "semantic_class": "whiteboard",
+      "source_session": "semantic_mapping_my_desk_recording_01",
+      "source_obs_ids": [
+        "whiteboard_001"
+      ],
+      "visual_inputs": {
+        "has_images": true,
+        "usable_views": 1,
+        "crop_view_paths": [
+          "vlm/outputs/multiview_samples/inst_whiteboard_001/crop_view_0.jpg"
+        ],
+        "scene_view_paths": [
+          "vlm/outputs/multiview_samples/inst_whiteboard_001/scene_view_0.jpg"
+        ],
+        "image_sha256": [
+          "a1996a650534d3ac",
+          "e7835e3f3088a7cd"
+        ]
+      },
+      "split": "PILOT_BENCHMARK_FROZEN"
+    },
+    {
+      "physical_instance_id": "inst_human_operator_001",
+      "semantic_class": "person",
+      "source_session": "semantic_mapping_my_desk_recording_01",
+      "source_obs_ids": [
+        "person_003",
+        "person_006"
+      ],
+      "visual_inputs": {
+        "has_images": true,
+        "usable_views": 1,
+        "crop_view_paths": [
+          "vlm/outputs/multiview_samples/inst_human_operator_001/crop_view_0.jpg"
+        ],
+        "scene_view_paths": [
+          "vlm/outputs/multiview_samples/inst_human_operator_001/scene_view_0.jpg"
+        ],
+        "image_sha256": [
+          "51a597a95b3d470e",
+          "8ed70968e7825d8e"
+        ]
+      },
+      "split": "PILOT_BENCHMARK_FROZEN"
+    },
+    {
+      "physical_instance_id": "inst_rc_car_robot_001",
+      "semantic_class": "robot",
+      "source_session": "semantic_mapping_my_desk_recording_01",
+      "source_obs_ids": [
+        "robot_001"
+      ],
+      "visual_inputs": {
+        "has_images": false,
+        "usable_views": 0,
+        "crop_view_paths": [],
+        "scene_view_paths": [],
+        "image_sha256": []
+      },
+      "split": "PILOT_BENCHMARK_FROZEN"
+    },
+    {
+      "physical_instance_id": "inst_quadcopter_drone_001",
+      "semantic_class": "robot",
+      "source_session": "semantic_mapping_my_desk_recording_01",
+      "source_obs_ids": [
+        "quadcopter drone_001"
+      ],
+      "visual_inputs": {
+        "has_images": true,
+        "usable_views": 1,
+        "crop_view_paths": [
+          "vlm/outputs/multiview_samples/inst_quadcopter_drone_001/crop_view_0.jpg"
+        ],
+        "scene_view_paths": [
+          "vlm/outputs/multiview_samples/inst_quadcopter_drone_001/scene_view_0.jpg"
+        ],
+        "image_sha256": [
+          "a55328dfaa8b288b",
+          "90a7cd0f8eaccc89"
+        ]
+      },
+      "split": "PILOT_BENCHMARK_FROZEN"
+    },
+    {
+      "physical_instance_id": "inst_desk_001",
+      "semantic_class": "desk",
+      "source_session": "semantic_mapping_my_desk_recording_01",
+      "source_obs_ids": [
+        "desk_001",
+        "desk_001"
+      ],
+      "visual_inputs": {
+        "has_images": true,
+        "usable_views": 3,
+        "crop_view_paths": [
+          "vlm/outputs/multiview_samples/inst_desk_001/crop_view_0.jpg",
+          "vlm/outputs/multiview_samples/inst_desk_001/crop_view_1.jpg",
+          "vlm/outputs/multiview_samples/inst_desk_001/crop_view_2.jpg"
+        ],
+        "scene_view_paths": [
+          "vlm/outputs/multiview_samples/inst_desk_001/scene_view_0.jpg",
+          "vlm/outputs/multiview_samples/inst_desk_001/scene_view_1.jpg",
+          "vlm/outputs/multiview_samples/inst_desk_001/scene_view_2.jpg"
+        ],
+        "image_sha256": [
+          "2be7fe7f0e1e2cff",
+          "e7324d918dfb6f4e",
+          "a6088fcf4d1ad19f",
+          "554f0e773998e345",
+          "83d7a29dd07edc3d",
+          "4725c2a5e6247c3c"
+        ]
+      },
+      "split": "PILOT_BENCHMARK_FROZEN"
+    },
+    {
+      "physical_instance_id": "inst_desk_018",
+      "semantic_class": "desk",
+      "source_session": "semantic_mapping_my_desk_recording_01",
+      "source_obs_ids": [
+        "desk_018",
+        "desk_029"
+      ],
+      "visual_inputs": {
+        "has_images": true,
+        "usable_views": 1,
+        "crop_view_paths": [
+          "vlm/outputs/multiview_samples/inst_desk_018/crop_view_0.jpg"
+        ],
+        "scene_view_paths": [
+          "vlm/outputs/multiview_samples/inst_desk_018/scene_view_0.jpg"
+        ],
+        "image_sha256": [
+          "21ce5f04e7bb747f",
+          "442fd6e2ecd277f9"
+        ]
+      },
+      "split": "PILOT_BENCHMARK_FROZEN"
+    },
+    {
+      "physical_instance_id": "inst_laptop_001",
+      "semantic_class": "laptop",
+      "source_session": "semantic_mapping_my_desk_recording_01",
+      "source_obs_ids": [
+        "laptop_006"
+      ],
+      "visual_inputs": {
+        "has_images": true,
+        "usable_views": 2,
+        "crop_view_paths": [
+          "vlm/outputs/multiview_samples/inst_laptop_001/crop_view_0.jpg",
+          "vlm/outputs/multiview_samples/inst_laptop_001/crop_view_1.jpg"
+        ],
+        "scene_view_paths": [
+          "vlm/outputs/multiview_samples/inst_laptop_001/scene_view_0.jpg",
+          "vlm/outputs/multiview_samples/inst_laptop_001/scene_view_1.jpg"
+        ],
+        "image_sha256": [
+          "32e395cb4513aad7",
+          "6ef442178b838967",
+          "76cccc22fe4c7490",
+          "51f77a45257f94c1"
+        ]
+      },
+      "split": "PILOT_BENCHMARK_FROZEN"
+    },
+    {
+      "physical_instance_id": "inst_backpack_001",
+      "semantic_class": "backpack",
+      "source_session": "semantic_mapping_my_desk_recording_01",
+      "source_obs_ids": [
+        "backpack_002"
+      ],
+      "visual_inputs": {
+        "has_images": true,
+        "usable_views": 2,
+        "crop_view_paths": [
+          "vlm/outputs/multiview_samples/inst_backpack_001/crop_view_0.jpg",
+          "vlm/outputs/multiview_samples/inst_backpack_001/crop_view_1.jpg"
+        ],
+        "scene_view_paths": [
+          "vlm/outputs/multiview_samples/inst_backpack_001/scene_view_0.jpg",
+          "vlm/outputs/multiview_samples/inst_backpack_001/scene_view_1.jpg"
+        ],
+        "image_sha256": [
+          "deafb175b85836d1",
+          "a594059607736491",
+          "ff89a1d2f531a108",
+          "b88d8d06ef490124"
+        ]
+      },
+      "split": "PILOT_BENCHMARK_FROZEN"
+    },
+    {
+      "physical_instance_id": "inst_chair_002",
+      "semantic_class": "chair",
+      "source_session": "semantic_mapping_my_desk_recording_01",
+      "source_obs_ids": [
+        "chair_002",
+        "chair_001"
+      ],
+      "visual_inputs": {
+        "has_images": true,
+        "usable_views": 1,
+        "crop_view_paths": [
+          "vlm/outputs/multiview_samples/inst_chair_002/crop_view_0.jpg"
+        ],
+        "scene_view_paths": [
+          "vlm/outputs/multiview_samples/inst_chair_002/scene_view_0.jpg"
+        ],
+        "image_sha256": [
+          "c14e671dcef8c3b7",
+          "8313b730f3bbf1b1"
+        ]
+      },
+      "split": "PILOT_BENCHMARK_FROZEN"
+    },
+    {
+      "physical_instance_id": "inst_chair_003",
+      "semantic_class": "chair",
+      "source_session": "semantic_mapping_my_desk_recording_01",
+      "source_obs_ids": [
+        "chair_003",
+        "chair_006"
+      ],
+      "visual_inputs": {
+        "has_images": true,
+        "usable_views": 1,
+        "crop_view_paths": [
+          "vlm/outputs/multiview_samples/inst_chair_003/crop_view_0.jpg"
+        ],
+        "scene_view_paths": [
+          "vlm/outputs/multiview_samples/inst_chair_003/scene_view_0.jpg"
+        ],
+        "image_sha256": [
+          "909796e27394fc2f",
+          "cc1c4a5074191622"
+        ]
+      },
+      "split": "PILOT_BENCHMARK_FROZEN"
+    },
+    {
+      "physical_instance_id": "inst_storage_box_007",
+      "semantic_class": "storage box",
+      "source_session": "semantic_mapping_my_desk_recording_01",
+      "source_obs_ids": [
+        "storage box_007",
+        "storage box_013"
+      ],
+      "visual_inputs": {
+        "has_images": true,
+        "usable_views": 2,
+        "crop_view_paths": [
+          "vlm/outputs/multiview_samples/inst_storage_box_007/crop_view_0.jpg",
+          "vlm/outputs/multiview_samples/inst_storage_box_007/crop_view_1.jpg"
+        ],
+        "scene_view_paths": [
+          "vlm/outputs/multiview_samples/inst_storage_box_007/scene_view_0.jpg",
+          "vlm/outputs/multiview_samples/inst_storage_box_007/scene_view_1.jpg"
+        ],
+        "image_sha256": [
+          "a9321cb0cb6b6d40",
+          "bd3db9bdd3283f4a",
+          "aceb67e8a77111c7",
+          "e308fc0a792073b1"
+        ]
+      },
+      "split": "PILOT_BENCHMARK_FROZEN"
+    },
+    {
+      "physical_instance_id": "inst_pedestal_fan_001",
+      "semantic_class": "pedestal fan",
+      "source_session": "semantic_mapping_my_desk_recording_01",
+      "source_obs_ids": [
+        "pedestal fan_003"
+      ],
+      "visual_inputs": {
+        "has_images": true,
+        "usable_views": 1,
+        "crop_view_paths": [
+          "vlm/outputs/multiview_samples/inst_pedestal_fan_001/crop_view_0.jpg"
+        ],
+        "scene_view_paths": [
+          "vlm/outputs/multiview_samples/inst_pedestal_fan_001/scene_view_0.jpg"
+        ],
+        "image_sha256": [
+          "84f20235be1de4ad",
+          "889954148e0c0582"
+        ]
+      },
+      "split": "PILOT_BENCHMARK_FROZEN"
+    },
+    {
+      "physical_instance_id": "inst_monitor_001",
+      "semantic_class": "computer monitor",
+      "source_session": "semantic_mapping_my_desk_recording_01",
+      "source_obs_ids": [
+        "computer monitor_001"
+      ],
+      "visual_inputs": {
+        "has_images": true,
+        "usable_views": 2,
+        "crop_view_paths": [
+          "vlm/outputs/multiview_samples/inst_monitor_001/crop_view_0.jpg",
+          "vlm/outputs/multiview_samples/inst_monitor_001/crop_view_1.jpg"
+        ],
+        "scene_view_paths": [
+          "vlm/outputs/multiview_samples/inst_monitor_001/scene_view_0.jpg",
+          "vlm/outputs/multiview_samples/inst_monitor_001/scene_view_1.jpg"
+        ],
+        "image_sha256": [
+          "db41f94e3a3339f8",
+          "3fb5d2654996919f",
+          "0b5de96891a7e75c",
+          "ebb697ec7162d09f"
+        ]
+      },
+      "split": "PILOT_BENCHMARK_FROZEN"
+    }
+  ]
+}

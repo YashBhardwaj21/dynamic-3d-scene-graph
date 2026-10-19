@@ -54,9 +54,9 @@ ZERO_SHOT_PROMPT_TEMPLATE = """You are an embodied robotics vision-language expe
 Examine the provided image(s) showing a physical object in an indoor environment.
 
 Determine the physical contextual movability of the focused object into exactly one of three categories:
-1. IMMOVABLE: Permanently affixed to the building structure or architectural infrastructure (walls, fixed doors, ceiling fixtures).
-2. MOVABLE: Passively transportable objects or furniture that humans can relocate or carry (chairs, desks, laptops, backpacks, pedestal fans, storage boxes).
-3. MOBILE: Active agents capable of self-propelled locomotion (people, robots, drones).
+1. IMMOVABLE: Fixed architectural infrastructure permanently affixed to the building structure (walls, structural doors, ceiling fans, built-in cabinets).
+2. MOVABLE: Passively transportable objects lacking intrinsic locomotion (chairs, desks, laptops, backpacks, pedestal fans, storage boxes). An object being carried by an agent remains strictly MOVABLE.
+3. MOBILE: Active embodied agents whose defining category is self-propelled locomotion (humans, mobile robots, drones), even if temporarily stationary.
 
 Respond with STRICT JSON ONLY conforming to:
 {{
